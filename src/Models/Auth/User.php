@@ -7,7 +7,7 @@
 
 namespace Callcocam\LaravelRaptor\Models\Auth;
 
-use Callcocam\LaravelRaptor\Core\Shinobi\Concerns\HasRolesAndPermissions;
+use Callcocam\LaravelRaptor\Support\Shinobi\Concerns\HasRolesAndPermissions;
 use Callcocam\LaravelRaptor\Models\AbstractModel;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
