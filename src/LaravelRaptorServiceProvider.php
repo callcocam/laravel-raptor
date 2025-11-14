@@ -10,6 +10,10 @@ namespace Callcocam\LaravelRaptor;
 
 use Callcocam\LaravelRaptor\Commands\LaravelRaptorCommand;
 use Callcocam\LaravelRaptor\Commands\SyncCommand;
+use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
+use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
+use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
+use Illuminate\Routing\Router;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -27,7 +31,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->name('laravel-raptor')
             ->hasConfigFile()
             ->hasViews()
-
+            ->hasRoutes(['web'])
             ->hasMigrations([
                 // Tabelas principais (ordem de dependência)
                 'create_tenants_table',
@@ -69,4 +73,27 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 // Optional: You can customize the install command here
             });
     }
+
+    /**
+     * Bootstrap any package services.
+     */
+    public function packageBooted(): void
+    {
+        // Registra os middlewares
+        $this->registerMiddleware();
+    }
+
+    /**
+     * Register the package middlewares.
+     */
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app->make(Router::class);
+
+        // Registra os middlewares com alias
+        $router->aliasMiddleware('landlord', LandlordMiddleware::class);
+        $router->aliasMiddleware('tenant', TenantMiddleware::class);
+        $router->aliasMiddleware('tenant.custom.domain', TenantCustomDomainMiddleware::class);
+    }
 }
+

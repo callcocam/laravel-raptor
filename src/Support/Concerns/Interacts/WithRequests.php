@@ -10,5 +10,32 @@ namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 trait WithRequests
 {
-    //
+   
+    protected function getHeaderActions(): array
+    {
+        return [
+            // Ações de cabeçalho padrão
+        ];
+    }
+
+    protected function getImportActions(): array
+    {
+        return [
+            // Ações para importação
+        ];
+    }
+
+    protected function getExportActions(): array
+    {
+        return [
+            // Ações para exportação
+        ];
+    }
+
+    protected function getTableHeaderActions(): array
+    {
+        return [
+            // Ações de cabeçalho da tabela
+        ];
+    }
 }
