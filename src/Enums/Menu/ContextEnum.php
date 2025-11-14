@@ -41,8 +41,8 @@ enum ContextEnum: string
     public function getRoutePrefix(): string
     {
         return match ($this) {
-            self::LANDLORD => 'api/landlord',
-            self::TENANT => 'api/tenant',
+            self::LANDLORD => 'landlord',
+            self::TENANT => 'tenant',
         };
     }
 
@@ -52,8 +52,8 @@ enum ContextEnum: string
     public function getRouteNames(): string
     {
         return match ($this) {
-            self::LANDLORD => 'api.landlord.',
-            self::TENANT => 'api.tenant.',
+            self::LANDLORD => 'landlord.',
+            self::TENANT => 'tenant.',
         };
     }
 

@@ -26,11 +26,14 @@ class SyncCommand extends Command
             return self::FAILURE;
         }
 
+        $this->createBackupDirectory();
         $this->syncUserModel();
         $this->backupAndUpdateUserMigration();
 
         $this->newLine();
         $this->info('✅ Laravel Raptor sync completed successfully!');
+        $this->newLine();
+        $this->comment('Backups saved in: storage/raptor-backups/' . date('Y-m-d_His'));
         $this->newLine();
         $this->comment('Next steps:');
         $this->comment('  1. Review the changes in app/Models/User.php');
@@ -38,6 +41,33 @@ class SyncCommand extends Command
         $this->comment('  3. Run: php artisan migrate');
 
         return self::SUCCESS;
+    }
+
+    protected function createBackupDirectory(): void
+    {
+        $backupPath = storage_path('raptor-backups/' . date('Y-m-d_His'));
+        
+        if (!File::exists($backupPath)) {
+            File::makeDirectory($backupPath, 0755, true);
+        }
+
+        $this->info('📦 Creating backups in: ' . $backupPath);
+
+        // Backup User model
+        $userModelPath = app_path('Models/User.php');
+        if (File::exists($userModelPath)) {
+            File::copy($userModelPath, $backupPath . '/User.php');
+            $this->comment('   ✓ User.php backed up');
+        }
+
+        // Backup migrations folder
+        $migrationsPath = database_path('migrations');
+        if (File::exists($migrationsPath)) {
+            File::copyDirectory($migrationsPath, $backupPath . '/migrations');
+            $this->comment('   ✓ Migrations folder backed up');
+        }
+
+        $this->newLine();
     }
 
     protected function syncUserModel(): void
@@ -52,11 +82,6 @@ class SyncCommand extends Command
         $this->info('📝 Updating User model...');
 
         $content = File::get($userModelPath);
-
-        // Backup original
-        $backupPath = $userModelPath . '.backup';
-        File::put($backupPath, $content);
-        $this->comment('   Backup created: ' . $backupPath);
 
         // Check if already extends AbstractModel
         if (str_contains($content, 'extends AbstractModel')) {
@@ -108,11 +133,6 @@ class SyncCommand extends Command
         $this->info('📝 Updating users migration...');
 
         $content = File::get($migrationPath);
-
-        // Backup original
-        $backupPath = $migrationPath . '.backup';
-        File::put($backupPath, $content);
-        $this->comment('   Backup created: ' . $backupPath);
 
         // Replace $table->id() with $table->ulid('id')->primary()
         $updated = preg_replace(

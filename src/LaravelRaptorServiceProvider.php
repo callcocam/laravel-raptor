@@ -27,7 +27,30 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->name('laravel-raptor')
             ->hasConfigFile()
             ->hasViews()
-            ->hasMigration('create_laravel_raptor_table')
+
+            ->hasMigrations([
+                // Tabelas principais (ordem de dependência)
+                'create_tenants_table',
+                'create_users_table',
+                'create_roles_table',
+                'create_permissions_table',
+
+                // Tabelas pivot (relacionamentos muitos-para-muitos)
+                'create_role_user_table',
+                'create_permission_role_table',
+                'create_permission_user_table',
+
+                // Outras tabelas
+                'create_addresses_table',
+
+                // Modificações de tabelas
+                'add_two_factor_columns_to_users_table',
+
+                // Tabelas de sistema
+                'create_personal_access_tokens_table',
+                'create_cache_table',
+                'create_jobs_table',
+            ])
             ->hasCommands([
                 LaravelRaptorCommand::class,
                 SyncCommand::class,
