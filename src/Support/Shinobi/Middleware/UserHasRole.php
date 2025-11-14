@@ -1,9 +1,11 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Middleware;
 
 use Closure;
@@ -18,8 +20,6 @@ class UserHasRole
 
     /**
      * Create a new UserHasPermission instance.
-     *
-     * @param Guard $auth
      */
     public function __construct(Guard $auth)
     {
@@ -29,10 +29,9 @@ class UserHasRole
     /**
      * Run the request filter.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \Closure                 $closure
-     * @param string                   $role
-     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $closure
+     * @param  string  $role
      * @return mixed
      */
     public function handle($request, Closure $next, $role)

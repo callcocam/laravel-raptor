@@ -10,14 +10,13 @@ namespace Callcocam\LaravelRaptor\Support\Shinobi\Concerns;
 
 trait HasRolesAndPermissions
 {
-    use HasRoles, HasPermissions;
+    use HasPermissions, HasRoles;
 
     /**
      * Run through the roles assigned to the permission and
      * checks if the user has any of them assigned.
-     * 
+     *
      * @param  \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission  $permission
-     * @return boolean
      */
     protected function hasPermissionThroughRole($permission): bool
     {
@@ -33,10 +32,10 @@ trait HasRolesAndPermissions
     }
 
     protected function hasPermissionThroughRoleFlag(): bool
-    { 
+    {
         if ($this->hasRoles()) {
-            return  $this->roles
-                ->filter(function ($role) { 
+            return $this->roles
+                ->filter(function ($role) {
                     return $role->blocked;
                 })->count() <= 0;
         }

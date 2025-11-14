@@ -8,11 +8,11 @@
 
 namespace Callcocam\LaravelRaptor;
 
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Callcocam\LaravelRaptor\Commands\LaravelRaptorCommand;
 use Callcocam\LaravelRaptor\Commands\SyncCommand;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class LaravelRaptorServiceProvider extends PackageServiceProvider
 {

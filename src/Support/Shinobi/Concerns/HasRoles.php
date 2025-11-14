@@ -8,18 +8,16 @@
 
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Concerns;
 
+use Callcocam\LaravelRaptor\Models\Role as ModelsRole;
+use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Role;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Role;
-use Callcocam\LaravelRaptor\Models\Role as ModelsRole;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 trait HasRoles
 {
     /**
      * Users can have many roles.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles(): BelongsToMany
     {
@@ -28,9 +26,8 @@ trait HasRoles
 
     /**
      * Checks if the model has the given role assigned.
-     * 
+     *
      * @param  string  $role
-     * @return boolean
      */
     public function hasRole($role): bool
     {
@@ -41,9 +38,8 @@ trait HasRoles
 
     /**
      * Checks if the model has any of the given roles assigned.
-     * 
+     *
      * @param  array  $roles
-     * @return bool
      */
     public function hasAnyRole(...$roles): bool
     {
@@ -58,9 +54,8 @@ trait HasRoles
 
     /**
      * Checks if the model has all of the given roles assigned.
-     * 
+     *
      * @param  array  $roles
-     * @return bool
      */
     public function hasAllRoles(...$roles): bool
     {
@@ -80,9 +75,8 @@ trait HasRoles
 
     /**
      * Assign the specified roles to the model.
-     * 
+     *
      * @param  mixed  $roles,...
-     * @return self
      */
     public function assignRoles(...$roles): self
     {
@@ -100,9 +94,8 @@ trait HasRoles
 
     /**
      * Remove the specified roles from the model.
-     * 
+     *
      * @param  mixed  $roles,...
-     * @return self
      */
     public function removeRoles(...$roles): self
     {
@@ -116,9 +109,8 @@ trait HasRoles
 
     /**
      * Sync the specified roles to the model.
-     * 
+     *
      * @param  mixed  $roles,...
-     * @return self
      */
     public function syncRoles(...$roles): self
     {
@@ -132,8 +124,7 @@ trait HasRoles
 
     /**
      * Get the specified roles.
-     * 
-     * @param  array  $roles
+     *
      * @return Role
      */
     protected function getRoles(array $roles)
@@ -154,10 +145,10 @@ trait HasRoles
     public function hasPermissionRoleFlags()
     {
         if ($this->hasRoles()) {
-            return ($this->roles
+            return $this->roles
                 ->filter(function ($role) {
-                    return  $role->special;
-                })->count()) >= 1;
+                    return $role->special;
+                })->count() >= 1;
         }
 
         return false;
@@ -165,8 +156,6 @@ trait HasRoles
 
     /**
      * Get the model instance responsible for permissions.
-     * 
-     * @return \Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Role
      */
     protected function getRoleModel(): Role
     {

@@ -1,26 +1,26 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Callcocam\LaravelRaptor\Models\AbstractModel;
 use Callcocam\LaravelRaptor\Support\Shinobi\Concerns\HasPermissions;
 use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Role as RoleContract;
-use Callcocam\LaravelRaptor\Models\AbstractModel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Role extends AbstractModel implements RoleContract
 {
     use HasPermissions;
-     
 
     /**
      * Create a new Role instance.
-     * 
-     * @param  array  $attributes
+     *
      * @return void
      */
     public function __construct(array $attributes = [])
@@ -42,8 +42,6 @@ class Role extends AbstractModel implements RoleContract
 
     /**
      * Determine if role has permission flags.
-     * 
-     * @return bool
      */
     public function hasPermissionFlags(): bool
     {
@@ -53,8 +51,6 @@ class Role extends AbstractModel implements RoleContract
     /**
      * Determine if the requested permission is permitted or denied
      * through a special role flag.
-     * 
-     * @return bool
      */
     public function hasPermissionThroughFlag(): bool
     {

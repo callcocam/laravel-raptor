@@ -1,14 +1,16 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Tactics;
 
-use Illuminate\Support\Arr;
-use Illuminate\Database\Eloquent\Model;
 use Callcocam\LaravelRaptor\Support\Shinobi\Facades\Shinobi;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 
 class RevokePermissionFrom
 {

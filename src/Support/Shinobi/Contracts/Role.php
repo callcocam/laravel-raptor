@@ -1,9 +1,11 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Contracts;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -16,7 +18,8 @@ interface Role
      * @return Model
      */
     public function users(): BelongsToMany;
-    
+
     public function hasPermissionFlags(): bool;
+
     public function hasPermissionThroughFlag(): bool;
 }

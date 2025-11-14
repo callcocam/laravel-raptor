@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
@@ -9,13 +10,13 @@ namespace Callcocam\LaravelRaptor\Enums;
 
 enum TenantStatus: string
 {
-     case Draft = 'draft';
+    case Draft = 'draft';
     case Published = 'published';
     case Suspended = 'suspended';
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::Draft => 'Rascunho',
             self::Published => 'Publicado',
             self::Suspended => 'Suspenso',
@@ -34,9 +35,9 @@ enum TenantStatus: string
     public static function options(): array
     {
         return collect(self::cases())
-        ->map(fn($case) => ['value' => $case->value, 'label' => $case->label()])
-        ->values()
-        ->toArray();
+            ->map(fn ($case) => ['value' => $case->value, 'label' => $case->label()])
+            ->values()
+            ->toArray();
     }
 
     public static function getOptions(): array
@@ -51,9 +52,9 @@ enum TenantStatus: string
     public static function variantOptions(): array
     {
         return [
-            static::Published->value => 'success',
-            static::Draft->value => 'secondary',
-            static::Suspended->value => 'warning',
+            self::Published->value => 'success',
+            self::Draft->value => 'secondary',
+            self::Suspended->value => 'warning',
         ];
     }
 }

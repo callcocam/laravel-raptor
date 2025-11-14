@@ -2,9 +2,9 @@
 
 namespace Callcocam\LaravelRaptor\Tests;
 
+use Callcocam\LaravelRaptor\LaravelRaptorServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Callcocam\LaravelRaptor\LaravelRaptorServiceProvider;
 
 class TestCase extends Orchestra
 {
