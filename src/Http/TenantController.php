@@ -7,10 +7,8 @@
  */
 
 namespace Callcocam\LaravelRaptor\Http\Controllers;
- 
 
 abstract class TenantController extends AbstractController
 {
-    
     //
 }
