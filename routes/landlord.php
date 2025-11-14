@@ -30,10 +30,7 @@ Route::prefix('admin')->name('landlord.')->group(function () {
     | Gerenciamento de Tenants
     |--------------------------------------------------------------------------
     */
-    Route::prefix('tenants')->name('tenants.')->group(function () {
-        // Resources de tenants serão implementados aqui
-        // Route::resource('/', TenantController::class);
-    });
+    
 
     /*
     |--------------------------------------------------------------------------

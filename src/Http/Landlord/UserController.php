@@ -14,4 +14,20 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 class UserController extends LandlordController
 {
     use WithRequests;
+
+    /**
+     * Define o model que será usado pelo controller
+     */
+    protected function model(): string
+    {
+        return config('raptor.models.user', \Callcocam\LaravelRaptor\Models\Auth\User::class);
+    }
+
+    /**
+     * Define o resource path para as views
+     */
+    protected function resourcePath(): string
+    {
+        return 'landlord';
+    }
 }

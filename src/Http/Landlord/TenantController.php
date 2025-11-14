@@ -9,18 +9,15 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
-use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 
-class PermissionController extends LandlordController
+class TenantController extends LandlordController
 {
-    use WithRequests;
-
     /**
      * Define o model que será usado pelo controller
      */
     protected function model(): string
     {
-        return \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class;
+        return config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
     }
 
     /**

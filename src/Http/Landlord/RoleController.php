@@ -14,4 +14,20 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 class RoleController extends LandlordController
 {
     use WithRequests;
+
+    /**
+     * Define o model que será usado pelo controller
+     */
+    protected function model(): string
+    {
+        return \Callcocam\LaravelRaptor\Support\Shinobi\Models\Role::class;
+    }
+
+    /**
+     * Define o resource path para as views
+     */
+    protected function resourcePath(): string
+    {
+        return 'landlord';
+    }
 }

@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 // Detecta o ambiente e configuração
 $landlordSubdomain = config('raptor.landlord.subdomain', 'landlord');
-$mainDomain = config('raptor.main_domain');
+$mainDomain = config('raptor.main_domain', config('app.url') ? parse_url(config('app.url'), PHP_URL_HOST) : 'localhost');
 
 /*
 |--------------------------------------------------------------------------
