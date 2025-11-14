@@ -32,7 +32,7 @@ enum UserStatus: string
     public static function options(): array
     {
         return collect(self::cases())
-            ->map(fn($case) => ['value' => $case->value, 'label' => $case->label()])
+            ->map(fn ($case) => ['value' => $case->value, 'label' => $case->label()])
             ->values()
             ->toArray();
     }
@@ -48,8 +48,8 @@ enum UserStatus: string
     public static function variantOptions(): array
     {
         return [
-            static::Published->value => 'success',
-            static::Draft->value => 'secondary',
+            self::Published->value => 'success',
+            self::Draft->value => 'secondary',
         ];
     }
 }

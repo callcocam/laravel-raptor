@@ -1,9 +1,11 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi;
 
 use Callcocam\LaravelRaptor\Support\Shinobi\Tactics\AssignRoleTo;
@@ -14,7 +16,7 @@ class Shinobi
 {
     /**
      * Fetch an instance of the Role model.
-     * 
+     *
      * @return Role
      */
     public function role()
@@ -24,7 +26,7 @@ class Shinobi
 
     /**
      * Fetch an instance of the Permission model.
-     * 
+     *
      * @return Permission
      */
     public function permission()
@@ -34,7 +36,7 @@ class Shinobi
 
     /**
      * Assign roles to a user.
-     * 
+     *
      * @param  string|array  $roles
      * @return \Callcocam\LaravelRaptor\Support\Shinobi\Tactic\AssignRoleTo
      */
@@ -42,10 +44,10 @@ class Shinobi
     {
         return new AssignRoleTo($roles);
     }
-    
+
     /**
      * Give permissions to a user or role
-     * 
+     *
      * @param  string|array  $permissions
      * @return \Callcocam\LaravelRaptor\Support\Shinobi\Tactic\GivePermissionTo
      */
@@ -53,10 +55,10 @@ class Shinobi
     {
         return new GivePermissionTo($permissions);
     }
-    
+
     /**
      * Revoke permissions from a user or role
-     * 
+     *
      * @param  string|array  $permissions
      * @return \Callcocam\LaravelRaptor\Support\Shinobi\Tactic\RevokePermissionFrom
      */

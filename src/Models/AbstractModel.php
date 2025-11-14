@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
@@ -7,19 +8,17 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
-use App\Models\User; 
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 use Callcocam\LaravelRaptor\Support\Sluggable\HasSlug;
 use Callcocam\LaravelRaptor\Support\Sluggable\SlugOptions;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
 
 class AbstractModel extends Model
 {
-    use HasUlids, HasSlug;
-
+    use HasSlug, HasUlids;
 
     protected $guarded = ['id'];
-
 
     public function user()
     {

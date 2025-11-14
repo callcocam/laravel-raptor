@@ -28,10 +28,10 @@ enum ContextEnum: string
      * Obtém o caminho dos controllers para o contexto
      */
     public function getPath(): string
-    { 
+    {
         return match ($this) {
-            self::LANDLORD =>  '/Landlord',
-            self::TENANT =>  '/Tenant',
+            self::LANDLORD => '/Landlord',
+            self::TENANT => '/Tenant',
         };
     }
 

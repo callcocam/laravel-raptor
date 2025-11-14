@@ -21,8 +21,9 @@ class SyncCommand extends Command
     {
         $this->info('🚀 Starting Laravel Raptor sync...');
 
-        if (!$this->option('force') && !$this->confirm('This will modify your User model and migrations. Continue?', false)) {
+        if (! $this->option('force') && ! $this->confirm('This will modify your User model and migrations. Continue?', false)) {
             $this->warn('Sync cancelled.');
+
             return self::FAILURE;
         }
 
@@ -33,7 +34,7 @@ class SyncCommand extends Command
         $this->newLine();
         $this->info('✅ Laravel Raptor sync completed successfully!');
         $this->newLine();
-        $this->comment('Backups saved in: storage/raptor-backups/' . date('Y-m-d_His'));
+        $this->comment('Backups saved in: storage/raptor-backups/'.date('Y-m-d_His'));
         $this->newLine();
         $this->comment('Next steps:');
         $this->comment('  1. Review the changes in app/Models/User.php');
@@ -45,25 +46,25 @@ class SyncCommand extends Command
 
     protected function createBackupDirectory(): void
     {
-        $backupPath = storage_path('raptor-backups/' . date('Y-m-d_His'));
-        
-        if (!File::exists($backupPath)) {
+        $backupPath = storage_path('raptor-backups/'.date('Y-m-d_His'));
+
+        if (! File::exists($backupPath)) {
             File::makeDirectory($backupPath, 0755, true);
         }
 
-        $this->info('📦 Creating backups in: ' . $backupPath);
+        $this->info('📦 Creating backups in: '.$backupPath);
 
         // Backup User model
         $userModelPath = app_path('Models/User.php');
         if (File::exists($userModelPath)) {
-            File::copy($userModelPath, $backupPath . '/User.php');
+            File::copy($userModelPath, $backupPath.'/User.php');
             $this->comment('   ✓ User.php backed up');
         }
 
         // Backup migrations folder
         $migrationsPath = database_path('migrations');
         if (File::exists($migrationsPath)) {
-            File::copyDirectory($migrationsPath, $backupPath . '/migrations');
+            File::copyDirectory($migrationsPath, $backupPath.'/migrations');
             $this->comment('   ✓ Migrations folder backed up');
         }
 
@@ -74,8 +75,9 @@ class SyncCommand extends Command
     {
         $userModelPath = app_path('Models/User.php');
 
-        if (!File::exists($userModelPath)) {
-            $this->warn('User model not found at ' . $userModelPath);
+        if (! File::exists($userModelPath)) {
+            $this->warn('User model not found at '.$userModelPath);
+
             return;
         }
 
@@ -86,19 +88,20 @@ class SyncCommand extends Command
         // Check if already extends Auth\User from package
         if (str_contains($content, 'use Callcocam\LaravelRaptor\Models\Auth\User') || str_contains($content, 'extends User')) {
             $this->comment('   User model already extends Raptor Auth\User');
+
             return;
         }
 
         // Replace extends Authenticatable with extends User from package
         $updated = preg_replace(
             '/use Illuminate\\\\Foundation\\\\Auth\\\\User as Authenticatable;/',
-            "use Callcocam\\LaravelRaptor\\Models\\Auth\\User as RaptorUser;",
+            'use Callcocam\\LaravelRaptor\\Models\\Auth\\User as RaptorUser;',
             $content
         );
 
         $updated = preg_replace(
             '/class User extends Authenticatable/',
-            "class User extends RaptorUser",
+            'class User extends RaptorUser',
             $updated
         );
 
@@ -115,10 +118,11 @@ class SyncCommand extends Command
     protected function backupAndUpdateUserMigration(): void
     {
         $migrationsPath = database_path('migrations');
-        $userMigrations = File::glob($migrationsPath . '/*_create_users_table.php');
+        $userMigrations = File::glob($migrationsPath.'/*_create_users_table.php');
 
         if (empty($userMigrations)) {
             $this->warn('Users migration not found');
+
             return;
         }
 
@@ -137,6 +141,7 @@ class SyncCommand extends Command
         // Check if already uses ulid
         if ($content === $updated) {
             $this->comment('   Migration already uses ULID or has custom ID');
+
             return;
         }
 

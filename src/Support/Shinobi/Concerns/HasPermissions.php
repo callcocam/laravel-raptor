@@ -1,17 +1,19 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Concerns;
 
-use Illuminate\Support\Arr;
-use Callcocam\LaravelRaptor\Support\Shinobi\Facades\Shinobi;
-use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Permission;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Callcocam\LaravelRaptor\Support\Shinobi\Exceptions\PermissionNotFoundException;
 use Callcocam\LaravelRaptor\Models\Permission as ModelsPermission;
+use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Permission;
+use Callcocam\LaravelRaptor\Support\Shinobi\Exceptions\PermissionNotFoundException;
+use Callcocam\LaravelRaptor\Support\Shinobi\Facades\Shinobi;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Arr;
 
 trait HasPermissions
 {
@@ -29,9 +31,8 @@ trait HasPermissions
      * The mothergoose check. Runs through each scenario provided
      * by Shinobi - checking for special flags, role permissions, and
      * individual user permissions; in that order.
-     * 
-     * @param  Permission|String  $permission
-     * @return boolean
+     *
+     * @param  Permission|string  $permission
      */
     public function hasPermissionTo($permission): bool
     {
@@ -43,19 +44,19 @@ trait HasPermissions
             return $this->hasPermissionThroughFlag();
         }
         // Fetch permission if we pass through a string
-        if (is_string($permission)) { 
+        if (is_string($permission)) {
             $permission = $this->getPermissionModel()->where('slug', $permission)->first();
 
             if (! $permission) {
                 throw new PermissionNotFoundException;
             }
         }
-        
+
         // Check role permissions
         if (method_exists($this, 'hasPermissionThroughRole') and $this->hasPermissionThroughRole($permission)) {
             return true;
         }
-        
+
         // Check user permission
         if ($this->hasPermission($permission)) {
             return true;
@@ -63,15 +64,14 @@ trait HasPermissions
 
         return false;
     }
-    
+
     /**
      * Give the specified permissions to the model.
-     * 
+     *
      * @param  array  $permissions
-     * @return self
      */
     public function givePermissionTo(...$permissions): self
-    {        
+    {
         $permissions = Arr::flatten($permissions);
         $permissions = $this->getPermissions($permissions);
 
@@ -86,9 +86,8 @@ trait HasPermissions
 
     /**
      * Revoke the specified permissions from the model.
-     * 
+     *
      * @param  array  $permissions
-     * @return self
      */
     public function revokePermissionTo(...$permissions): self
     {
@@ -102,9 +101,8 @@ trait HasPermissions
 
     /**
      * Sync the specified permissions against the model.
-     * 
+     *
      * @param  array  $permissions
-     * @return self
      */
     public function syncPermissions(...$permissions): self
     {
@@ -118,13 +116,13 @@ trait HasPermissions
 
     /**
      * Get the specified permissions.
-     * 
+     *
      * @param  array  $permissions
      * @return Permission
      */
     protected function getPermissions(array $collection)
     {
-        return array_map(function($permission) {
+        return array_map(function ($permission) {
             $model = $this->getPermissionModel();
 
             if ($permission instanceof Permission) {
@@ -139,9 +137,8 @@ trait HasPermissions
 
     /**
      * Checks if the user has the given permission assigned.
-     * 
+     *
      * @param  \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission  $permission
-     * @return boolean
      */
     protected function hasPermission($permission): bool
     {
@@ -156,16 +153,16 @@ trait HasPermissions
 
     /**
      * Get the model instance responsible for permissions.
-     * 
+     *
      * @return \Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Permission|\Illuminate\Database\Eloquent\Collection
      */
     protected function getPermissionModel()
-    {  
+    {
         if (config('shinobi.cache.enabled')) {
             return cache()->tags(config('shinobi.cache.tag'))->remember(
                 'permissions',
                 config('shinobi.cache.length'),
-                function() {
+                function () {
                     return app()->make(config('shinobi.models.permission'))->get();
                 }
             );

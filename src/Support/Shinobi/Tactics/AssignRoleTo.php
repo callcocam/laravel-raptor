@@ -1,9 +1,11 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Shinobi\Tactics;
 
 use Illuminate\Support\Arr;
@@ -17,7 +19,7 @@ class AssignRoleTo
 
     /**
      * Create a new AssignRoleTo instance.
-     * 
+     *
      * @param  array  $roles
      */
     public function __construct(...$roles)
