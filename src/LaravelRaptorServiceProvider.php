@@ -9,6 +9,7 @@ namespace Callcocam\LaravelRaptor;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Callcocam\LaravelRaptor\Commands\LaravelRaptorCommand;
+use Spatie\LaravelPackageTools\Commands\InstallCommand;
 
 class LaravelRaptorServiceProvider extends PackageServiceProvider
 {
@@ -24,6 +25,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasMigration('create_laravel_raptor_table')
-            ->hasCommand(LaravelRaptorCommand::class);
+            ->hasCommand(LaravelRaptorCommand::class)
+            ->hasInstallCommand(function (InstallCommand $command) { 
+                // Optional: You can customize the install command here
+            });
     }
 }
