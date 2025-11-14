@@ -47,7 +47,7 @@ class LandlordServiceProvider extends ServiceProvider
      */
     public function getModel(): string
     {
-        return config('laravel-raptor.tenant_model', \Callcocam\LaravelRaptor\Models\Tenant::class);
+        return config('raptor.tenant_model', \Callcocam\LaravelRaptor\Models\Tenant::class);
     }
 
     /**

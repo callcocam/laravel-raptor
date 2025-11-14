@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = config('laravel-raptor.tables.users', 'users');
+        $tableName = config('raptor.tables.users', 'users');
 
         Schema::create($tableName, function (Blueprint $table) {
             $table->ulid('id')->primary();
@@ -66,7 +66,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = config('laravel-raptor.tables.users', 'users');
+        $tableName = config('raptor.tables.users', 'users');
 
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');

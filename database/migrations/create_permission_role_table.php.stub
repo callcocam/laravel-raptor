@@ -17,11 +17,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = config('laravel-raptor.tables.permission_role', 'permission_role');
+        $tableName = config('raptor.tables.permission_role', 'permission_role');
 
         Schema::create($tableName, function (Blueprint $table) {
-            $table->foreignUlid('permission_id')->constrained(config('laravel-raptor.tables.permissions', 'permissions'))->onDelete('cascade');
-            $table->foreignUlid('role_id')->constrained(config('laravel-raptor.tables.roles', 'roles'))->onDelete('cascade');
+            $table->foreignUlid('permission_id')->constrained(config('raptor.tables.permissions', 'permissions'))->onDelete('cascade');
+            $table->foreignUlid('role_id')->constrained(config('raptor.tables.roles', 'roles'))->onDelete('cascade');
             $table->primary(['permission_id', 'role_id']);
             $table->timestamps();
         });
@@ -32,7 +32,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = config('laravel-raptor.tables.permission_role', 'permission_role');
+        $tableName = config('raptor.tables.permission_role', 'permission_role');
         Schema::dropIfExists($tableName);
     }
 };
