@@ -10,7 +10,7 @@ use Callcocam\LaravelRaptor\Enums\PermissionStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Callcocam\Papaleguas\Enums\Menu\ContextEnum;
+use Callcocam\LaravelRaptor\Enums\Menu\ContextEnum;
 
 return new class extends Migration
 {
