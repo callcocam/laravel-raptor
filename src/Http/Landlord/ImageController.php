@@ -14,6 +14,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 class ImageController extends LandlordController
 {
     use WithRequests;
+
     /**
      * Define o model que será usado pelo controller
      */
@@ -21,6 +22,7 @@ class ImageController extends LandlordController
     {
         return config('raptor.models.image', \Callcocam\LaravelRaptor\Models\Landlord\Image::class);
     }
+
     /**
      * Define o resource path para as views
      */
