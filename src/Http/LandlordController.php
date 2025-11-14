@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam, contato@sigasmart.com.br
@@ -7,6 +8,4 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
-abstract class LandlordController extends AbstractController
-{ 
-}
+abstract class LandlordController extends AbstractController {}
