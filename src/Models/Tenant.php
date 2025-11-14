@@ -20,14 +20,19 @@ class Tenant extends AbstractModel
      */
     protected $fillable = [
         'name',
+        'slug',
         'subdomain',
         'custom_domain',
-        'status',
+        'database',
+        'prefix',
         'email',
         'phone',
-        'description',
+        'document',
         'logo',
         'settings',
+        'status',
+        'is_primary',
+        'description',
     ];
 
     /**
