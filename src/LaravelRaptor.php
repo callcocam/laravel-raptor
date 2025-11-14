@@ -4,6 +4,6 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace VendorName\Skeleton;
+namespace Callcocam\LaravelRaptor;
 
-class Skeleton {}
+class LaravelRaptor {}

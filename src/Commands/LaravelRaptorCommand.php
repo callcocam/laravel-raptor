@@ -4,13 +4,13 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-namespace VendorName\Skeleton\Commands;
+namespace Callcocam\LaravelRaptor\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class LaravelRaptorCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'laravel-raptor';
 
     public $description = 'My command';
 
