@@ -22,6 +22,7 @@ class UserController extends TenantController
     {
         return config('raptor.models.user', \Callcocam\LaravelRaptor\Models\Auth\User::class);
     }
+
     /**
      * Define o resource path para as views
      */

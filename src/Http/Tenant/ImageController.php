@@ -14,7 +14,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 class ImageController extends TenantController
 {
     use WithRequests;
-    
+
     /**
      * Define o model que será usado pelo controller
      */
