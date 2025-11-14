@@ -18,7 +18,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = config('papa-leguas.tables.roles', 'roles');
+        $tableName = config('laravel-raptor.tables.roles', 'roles');
 
         Schema::create($tableName, function (Blueprint $table) {
             $table->ulid('id')->primary();
@@ -29,7 +29,7 @@ return new class extends Migration
                 ->default(RoleStatus::Draft->value)
                 ->comment('Status do papel (ativo, inativo, etc.)');
             $table->boolean('special')->default(false)->nullable()->comment('Papel especial com permissões all-access ou no-access');
-            $table->foreignUlid('tenant_id')->nullable()->constrained(config('papa-leguas.tables.tenants', 'tenants'))->nullOnDelete()->comment('Tenant ao qual o papel pertence');
+            $table->foreignUlid('tenant_id')->nullable()->constrained(config('laravel-raptor.tables.tenants', 'tenants'))->nullOnDelete()->comment('Tenant ao qual o papel pertence');
             $table->timestamps();
             $table->softDeletes()->comment('Data de exclusão lógica');
         });
@@ -40,7 +40,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = config('papa-leguas.tables.roles', 'roles');
+        $tableName = config('laravel-raptor.tables.roles', 'roles');
         Schema::dropIfExists($tableName);
     }
 };

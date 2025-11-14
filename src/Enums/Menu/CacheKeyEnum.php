@@ -28,6 +28,6 @@ enum CacheKeyEnum: string
 
     public function getTtl(): int
     {
-        return config('papa-leguas-menu.cache.ttl', 86400);
+        return config('laravel-raptor-menu.cache.ttl', 86400);
     }
 }

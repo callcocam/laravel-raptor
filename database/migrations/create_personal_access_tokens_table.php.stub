@@ -17,7 +17,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = config('papa-leguas.tables.personal_access_tokens', 'personal_access_tokens');
+        $tableName = config('laravel-raptor.tables.personal_access_tokens', 'personal_access_tokens');
 
         Schema::create($tableName, function (Blueprint $table) {
             $table->ulid('id')->primary();
@@ -36,7 +36,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = config('papa-leguas.tables.personal_access_tokens', 'personal_access_tokens');
+        $tableName = config('laravel-raptor.tables.personal_access_tokens', 'personal_access_tokens');
         Schema::dropIfExists($tableName);
     }
 };

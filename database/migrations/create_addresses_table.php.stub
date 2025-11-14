@@ -16,7 +16,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $tableName = config('papa-leguas.tables.addresses', 'addresses');
+        $tableName = config('laravel-raptor.tables.addresses', 'addresses');
 
         Schema::create($tableName, function (Blueprint $table) {
             $table->ulid('id')->primary();
@@ -43,7 +43,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        $tableName = config('papa-leguas.tables.addresses', 'addresses');
+        $tableName = config('laravel-raptor.tables.addresses', 'addresses');
         Schema::dropIfExists($tableName);
     }
 };
