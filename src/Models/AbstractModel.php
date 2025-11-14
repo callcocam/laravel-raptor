@@ -10,8 +10,8 @@ namespace Callcocam\LaravelRaptor\Models;
 use App\Models\User; 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
-use Tall\Sluggable\HasSlug;
-use Tall\Sluggable\SlugOptions;
+use Callcocam\LaravelRaptor\Support\Sluggable\HasSlug;
+use Callcocam\LaravelRaptor\Support\Sluggable\SlugOptions;
 
 class AbstractModel extends Model
 {
