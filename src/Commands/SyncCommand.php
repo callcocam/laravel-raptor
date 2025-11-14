@@ -102,22 +102,9 @@ class SyncCommand extends Command
             $updated
         );
 
-        // Remove unnecessary imports and traits that are already in RaptorUser
-        $unnecessaryImports = [
-            'use Illuminate\Contracts\Auth\MustVerifyEmail;',
-            'use Illuminate\Database\Eloquent\Factories\HasFactory;',
-            'use Illuminate\Foundation\Auth\User as Authenticatable;',
-            'use Illuminate\Notifications\Notifiable;',
-        ];
+        // Remove only the unnecessary import (Authenticatable)
+        $updated = str_replace('use Illuminate\Foundation\Auth\User as Authenticatable;', '', $updated);
 
-        foreach ($unnecessaryImports as $import) {
-            $updated = str_replace($import, '', $updated);
-        }
-
-        // Remove unnecessary traits
-        $updated = preg_replace('/use HasFactory,?\s*/', 'use ', $updated);
-        $updated = preg_replace('/use\s*,\s*Notifiable;/', 'use Notifiable;', $updated);
-        
         // Clean up multiple empty lines
         $updated = preg_replace('/\n{3,}/', "\n\n", $updated);
 
