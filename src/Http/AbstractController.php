@@ -8,12 +8,10 @@
 
 namespace Callcocam\LaravelRaptor\Http;
 
-use App\Http\Controllers\Controller; 
+use App\Http\Controllers\Controller;
 
 abstract class AbstractController extends Controller
-{ 
-
-
+{
     protected function getHeaderActions(): array
     {
         return [

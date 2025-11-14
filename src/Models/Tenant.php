@@ -103,7 +103,7 @@ class Tenant extends AbstractModel
      */
     public function hasCustomDomain(): bool
     {
-        return !empty($this->custom_domain);
+        return ! empty($this->custom_domain);
     }
 
     /**
@@ -112,10 +112,11 @@ class Tenant extends AbstractModel
     public function getUrl(): string
     {
         if ($this->hasCustomDomain()) {
-            return 'https://' . $this->custom_domain;
+            return 'https://'.$this->custom_domain;
         }
 
         $mainDomain = config('raptor.main_domain', 'localhost');
-        return 'https://' . $this->subdomain . '.' . $mainDomain;
+
+        return 'https://'.$this->subdomain.'.'.$mainDomain;
     }
 }

@@ -5,8 +5,7 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
-
-if (!function_exists('current_tenant')) {
+if (! function_exists('current_tenant')) {
     /**
      * Retorna o tenant atual
      */
@@ -16,7 +15,7 @@ if (!function_exists('current_tenant')) {
     }
 }
 
-if (!function_exists('tenant_id')) {
+if (! function_exists('tenant_id')) {
     /**
      * Retorna o ID do tenant atual
      */
@@ -26,7 +25,7 @@ if (!function_exists('tenant_id')) {
     }
 }
 
-if (!function_exists('is_landlord')) {
+if (! function_exists('is_landlord')) {
     /**
      * Verifica se está no contexto landlord
      */
@@ -36,7 +35,7 @@ if (!function_exists('is_landlord')) {
     }
 }
 
-if (!function_exists('is_tenant')) {
+if (! function_exists('is_tenant')) {
     /**
      * Verifica se está no contexto tenant
      */
@@ -46,7 +45,7 @@ if (!function_exists('is_tenant')) {
     }
 }
 
-if (!function_exists('is_site')) {
+if (! function_exists('is_site')) {
     /**
      * Verifica se está no contexto do site principal
      */
@@ -56,7 +55,7 @@ if (!function_exists('is_site')) {
     }
 }
 
-if (!function_exists('tenant_url')) {
+if (! function_exists('tenant_url')) {
     /**
      * Gera URL para um tenant específico
      */
@@ -64,12 +63,12 @@ if (!function_exists('tenant_url')) {
     {
         $mainDomain = config('raptor.main_domain', 'localhost');
         $protocol = request()->secure() ? 'https' : 'http';
-        
-        return "{$protocol}://{$subdomain}.{$mainDomain}" . ($path ? "/{$path}" : '');
+
+        return "{$protocol}://{$subdomain}.{$mainDomain}".($path ? "/{$path}" : '');
     }
 }
 
-if (!function_exists('landlord_url')) {
+if (! function_exists('landlord_url')) {
     /**
      * Gera URL para o landlord
      */
@@ -78,12 +77,12 @@ if (!function_exists('landlord_url')) {
         $mainDomain = config('raptor.main_domain', 'localhost');
         $landlordSubdomain = config('raptor.landlord.subdomain', 'landlord');
         $protocol = request()->secure() ? 'https' : 'http';
-        
-        return "{$protocol}://{$landlordSubdomain}.{$mainDomain}" . ($path ? "/{$path}" : '');
+
+        return "{$protocol}://{$landlordSubdomain}.{$mainDomain}".($path ? "/{$path}" : '');
     }
 }
 
-if (!function_exists('site_url')) {
+if (! function_exists('site_url')) {
     /**
      * Gera URL para o site principal
      */
@@ -91,7 +90,7 @@ if (!function_exists('site_url')) {
     {
         $mainDomain = config('raptor.main_domain', 'localhost');
         $protocol = request()->secure() ? 'https' : 'http';
-        
-        return "{$protocol}://{$mainDomain}" . ($path ? "/{$path}" : '');
+
+        return "{$protocol}://{$mainDomain}".($path ? "/{$path}" : '');
     }
 }

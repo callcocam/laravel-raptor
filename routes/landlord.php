@@ -6,10 +6,10 @@
  * https://www.sigasmart.com.br
  */
 
+use Callcocam\LaravelRaptor\Http\Landlord\ImageController;
 use Callcocam\LaravelRaptor\Http\Landlord\PermissionController;
 use Callcocam\LaravelRaptor\Http\Landlord\RoleController;
 use Callcocam\LaravelRaptor\Http\Landlord\UserController;
-use Callcocam\LaravelRaptor\Http\Landlord\ImageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -62,6 +62,5 @@ Route::prefix('admin')->name('landlord.')->group(function () {
         Route::post('upload', [ImageController::class, 'upload'])->name('upload');
         Route::delete('{id}', [ImageController::class, 'destroy'])->name('destroy');
     });
-
 
 });

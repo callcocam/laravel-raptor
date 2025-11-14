@@ -6,8 +6,6 @@
  * https://www.sigasmart.com.br
  */
 
-use Illuminate\Support\Facades\Route;
-
 /*
 |--------------------------------------------------------------------------
 | Site Routes

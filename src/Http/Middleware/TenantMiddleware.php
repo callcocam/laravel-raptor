@@ -26,7 +26,7 @@ class TenantMiddleware
         $host = $request->getHost();
         $subdomain = $this->extractSubdomain($host);
 
-        if (!$subdomain) {
+        if (! $subdomain) {
             abort(404, 'Tenant não encontrado.');
         }
 
@@ -36,7 +36,7 @@ class TenantMiddleware
 
         $tenant = $tenantModel::where($subdomainColumn, $subdomain)->first();
 
-        if (!$tenant) {
+        if (! $tenant) {
             abort(404, 'Tenant não encontrado.');
         }
 
@@ -63,10 +63,10 @@ class TenantMiddleware
     protected function extractSubdomain(string $host): ?string
     {
         $mainDomain = config('raptor.main_domain', 'localhost');
-        
+
         // Remove o domínio principal para obter o subdomínio
-        $subdomain = str_replace('.' . $mainDomain, '', $host);
-        
+        $subdomain = str_replace('.'.$mainDomain, '', $host);
+
         // Se for igual ao host original, não há subdomínio
         if ($subdomain === $host || $subdomain === 'www') {
             return null;

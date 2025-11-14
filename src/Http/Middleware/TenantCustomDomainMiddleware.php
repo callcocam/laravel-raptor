@@ -24,14 +24,14 @@ class TenantCustomDomainMiddleware
     {
         // Pega o domínio completo da requisição
         $host = $request->getHost();
-        
+
         // Busca o tenant pelo domínio customizado
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
         $customDomainColumn = config('raptor.tenant.custom_domain_column', 'custom_domain');
 
         $tenant = $tenantModel::where($customDomainColumn, $host)->first();
 
-        if (!$tenant) {
+        if (! $tenant) {
             abort(404, 'Tenant não encontrado para este domínio.');
         }
 

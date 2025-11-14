@@ -11,8 +11,8 @@ namespace Callcocam\LaravelRaptor;
 use Callcocam\LaravelRaptor\Commands\LaravelRaptorCommand;
 use Callcocam\LaravelRaptor\Commands\SyncCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
-use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
+use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
 use Illuminate\Routing\Router;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -96,4 +96,3 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         $router->aliasMiddleware('tenant.custom.domain', TenantCustomDomainMiddleware::class);
     }
 }
-

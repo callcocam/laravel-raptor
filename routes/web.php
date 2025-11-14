@@ -39,8 +39,8 @@ Route::domain($mainDomain)->group(function () {
     })->name('home');
 
     // Inclui rotas públicas do site se existirem
-    if (file_exists(__DIR__ . '/site.php')) {
-        require __DIR__ . '/site.php';
+    if (file_exists(__DIR__.'/site.php')) {
+        require __DIR__.'/site.php';
     }
 });
 
@@ -55,15 +55,15 @@ Route::domain($mainDomain)->group(function () {
 Route::domain("{$landlordSubdomain}.{$mainDomain}")->group(function () {
     // Middleware de autenticação e permissões de landlord
     Route::middleware(['web', 'auth', 'landlord'])->group(function () {
-        
+
         // Dashboard do Landlord
         Route::get('/dashboard', function () {
             return inertia('landlord/dashboard');
         })->name('landlord.dashboard');
 
         // Inclui rotas do landlord se existirem
-        if (file_exists(__DIR__ . '/landlord.php')) {
-            require __DIR__ . '/landlord.php';
+        if (file_exists(__DIR__.'/landlord.php')) {
+            require __DIR__.'/landlord.php';
         }
     });
 });
@@ -77,19 +77,19 @@ Route::domain("{$landlordSubdomain}.{$mainDomain}")->group(function () {
 | Também suporta domínios customizados configurados por tenant
 |
 */
-Route::domain('{tenant}.' . $mainDomain)
-    ->where('tenant', '^(?!' . $landlordSubdomain . '|www).*$') // Exclui 'landlord' e 'www'
+Route::domain('{tenant}.'.$mainDomain)
+    ->where('tenant', '^(?!'.$landlordSubdomain.'|www).*$') // Exclui 'landlord' e 'www'
     ->middleware(['web', 'tenant'])
     ->group(function () {
-        
+
         // Dashboard do Tenant
         Route::get('/dashboard', function () {
             return inertia('tenant/dashboard');
         })->middleware('auth')->name('tenant.dashboard');
 
         // Inclui rotas do tenant se existirem
-        if (file_exists(__DIR__ . '/tenant.php')) {
-            require __DIR__ . '/tenant.php';
+        if (file_exists(__DIR__.'/tenant.php')) {
+            require __DIR__.'/tenant.php';
         }
     });
 
@@ -105,14 +105,14 @@ if (config('raptor.enable_custom_domains', false)) {
     // Esta rota será processada pelo middleware tenant que identificará
     // o tenant pelo domínio customizado cadastrado no banco
     Route::middleware(['web', 'tenant.custom.domain'])->group(function () {
-        
+
         Route::get('/dashboard', function () {
             return inertia('tenant/dashboard');
         })->middleware('auth')->name('custom.tenant.dashboard');
 
         // Inclui rotas do tenant se existirem
-        if (file_exists(__DIR__ . '/tenant.php')) {
-            require __DIR__ . '/tenant.php';
+        if (file_exists(__DIR__.'/tenant.php')) {
+            require __DIR__.'/tenant.php';
         }
     });
 }
