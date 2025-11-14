@@ -83,37 +83,43 @@ class SyncCommand extends Command
 
         $content = File::get($userModelPath);
 
-        // Check if already extends AbstractModel
-        if (str_contains($content, 'extends AbstractModel')) {
-            $this->comment('   User model already extends AbstractModel');
+        // Check if already extends Auth\User from package
+        if (str_contains($content, 'use Callcocam\LaravelRaptor\Models\Auth\User') || str_contains($content, 'extends User')) {
+            $this->comment('   User model already extends Raptor Auth\User');
             return;
         }
 
-        // Replace extends Authenticatable with extends AbstractModel
+        // Replace extends Authenticatable with extends User from package
         $updated = preg_replace(
             '/use Illuminate\\\\Foundation\\\\Auth\\\\User as Authenticatable;/',
-            "use Callcocam\\LaravelRaptor\\Models\\AbstractModel;\nuse Illuminate\\Auth\\Authenticatable;\nuse Illuminate\\Auth\\MustVerifyEmail;\nuse Illuminate\\Auth\\Passwords\\CanResetPassword;\nuse Illuminate\\Contracts\\Auth\\Access\\Authorizable as AuthorizableContract;\nuse Illuminate\\Contracts\\Auth\\Authenticatable as AuthenticatableContract;\nuse Illuminate\\Contracts\\Auth\\CanResetPassword as CanResetPasswordContract;\nuse Illuminate\\Foundation\\Auth\\Access\\Authorizable;",
+            "use Callcocam\\LaravelRaptor\\Models\\Auth\\User as RaptorUser;",
             $content
         );
 
         $updated = preg_replace(
             '/class User extends Authenticatable/',
-            "class User extends AbstractModel implements\n    AuthenticatableContract,\n    AuthorizableContract,\n    CanResetPasswordContract",
+            "class User extends RaptorUser",
             $updated
         );
 
-        // Add traits if not present
-        if (!str_contains($updated, 'use Authenticatable')) {
-            $updated = preg_replace(
-                '/(class User extends AbstractModel.*?\{)/',
-                "$1\n    use Authenticatable, Authorizable, CanResetPassword, MustVerifyEmail;",
-                $updated
-            );
+        // Remove unnecessary imports and traits that are already in RaptorUser
+        $unnecessaryImports = [
+            'use Illuminate\Contracts\Auth\MustVerifyEmail;',
+            'use Illuminate\Database\Eloquent\Factories\HasFactory;',
+            'use Illuminate\Foundation\Auth\User as Authenticatable;',
+            'use Illuminate\Notifications\Notifiable;',
+        ];
+
+        foreach ($unnecessaryImports as $import) {
+            $updated = str_replace($import, '', $updated);
         }
 
-        // Remove HasFactory if present (AbstractModel handles this)
-        $updated = str_replace('use HasFactory;', '', $updated);
-        $updated = str_replace('use Illuminate\Database\Eloquent\Factories\HasFactory;', '', $updated);
+        // Remove unnecessary traits
+        $updated = preg_replace('/use HasFactory,?\s*/', 'use ', $updated);
+        $updated = preg_replace('/use\s*,\s*Notifiable;/', 'use Notifiable;', $updated);
+        
+        // Clean up multiple empty lines
+        $updated = preg_replace('/\n{3,}/', "\n\n", $updated);
 
         File::put($userModelPath, $updated);
         $this->info('   ✓ User model updated successfully');
