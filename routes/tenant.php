@@ -6,10 +6,10 @@
  * https://www.sigasmart.com.br
  */
 
+use Callcocam\LaravelRaptor\Http\Tenant\ImageController;
 use Callcocam\LaravelRaptor\Http\Tenant\PermissionController;
 use Callcocam\LaravelRaptor\Http\Tenant\RoleController;
 use Callcocam\LaravelRaptor\Http\Tenant\UserController;
-use Callcocam\LaravelRaptor\Http\Tenant\ImageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,7 +29,7 @@ Route::get('/', function () {
 
 // Rotas autenticadas do tenant
 Route::middleware('auth')->group(function () {
-    
+
     /*
     |--------------------------------------------------------------------------
     | Administração do Tenant
@@ -67,7 +67,6 @@ Route::middleware('auth')->group(function () {
             Route::post('upload', [ImageController::class, 'upload'])->name('upload');
             Route::delete('{id}', [ImageController::class, 'destroy'])->name('destroy');
         });
-
 
     });
 });

@@ -10,7 +10,6 @@ namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 trait WithRequests
 {
-   
     protected function getHeaderActions(): array
     {
         return [

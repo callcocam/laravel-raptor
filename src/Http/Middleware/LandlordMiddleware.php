@@ -22,12 +22,12 @@ class LandlordMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Verifica se o usuário tem permissão para acessar o landlord
-        if (!$request->user()) {
+        if (! $request->user()) {
             return redirect()->route('login');
         }
 
         // Verifica se o usuário tem a role de landlord/super-admin
-        if (!$request->user()->hasRole('super-admin')) {
+        if (! $request->user()->hasRole('super-admin')) {
             abort(403, 'Acesso negado. Você não tem permissão para acessar esta área.');
         }
 
