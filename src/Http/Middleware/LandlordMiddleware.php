@@ -49,9 +49,6 @@ class LandlordMiddleware
 
     /**
      * Extrai o subdomínio do host
-     *
-     * @param string $host
-     * @return string|null
      */
     protected function getSubdomain(string $host): ?string
     {
@@ -69,6 +66,7 @@ class LandlordMiddleware
         // Remove o domínio base do host para pegar apenas o subdomínio
         if (str_ends_with($host, ".{$baseDomain}")) {
             $subdomain = substr($host, 0, -(strlen($baseDomain) + 1));
+
             return $subdomain;
         }
 

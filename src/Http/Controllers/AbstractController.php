@@ -9,27 +9,22 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 abstract class AbstractController extends Controller
 {
-
     public function index(Request $request)
     {
-        
-        return Inertia::render(sprintf("admin/%s/index", $this->resourcePath()), [
+
+        return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',
         ]);
     }
 
-    
-
-
     /**
      * Trata erros do método store
-     * 
      */
     protected function handleStoreError(\Exception $e): BaseRedirectResponse
     {
@@ -43,7 +38,6 @@ abstract class AbstractController extends Controller
 
     /**
      * Trata erros do método update
-     * 
      */
     protected function handleUpdateError(\Exception $e, string $id): BaseRedirectResponse
     {
@@ -54,9 +48,9 @@ abstract class AbstractController extends Controller
             ->withInput()
             ->with('error', app()->environment('local') ? $e->getMessage() : 'Erro ao atualizar o item.');
     }
+
     /**
      * Trata erros do método destroy
-     * 
      */
     protected function handleDestroyError(\Exception $e, string $id): BaseRedirectResponse
     {
