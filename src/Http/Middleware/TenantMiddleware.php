@@ -30,6 +30,11 @@ class TenantMiddleware
             abort(404, 'Tenant não encontrado.');
         }
 
+        // Bloqueia o subdomínio "landlord" (reservado para o administrador)
+        if ($subdomain === 'landlord') {
+            abort(404, 'Tenant não encontrado.');
+        }
+
         // Busca o tenant pelo subdomínio
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
         $subdomainColumn = config('raptor.tenant.subdomain_column', 'subdomain');

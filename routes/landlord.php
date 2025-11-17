@@ -20,16 +20,28 @@ use Illuminate\Support\Facades\Route;
 | Rotas para gerenciamento da aplicação e tenants
 | Acesso: landlord.example.com
 |
+| Configuração de prefixo:
+| - RAPTOR_LANDLORD_ENABLE_PREFIX=false (padrão) -> /users, /roles
+| - RAPTOR_LANDLORD_ENABLE_PREFIX=true + RAPTOR_LANDLORD_PREFIX=admin -> /admin/users
+|
 */
 
-// Prefixo para organização das rotas
-Route::prefix('admin')->name('landlord.')->group(function () {
+// Função helper para aplicar prefixo condicionalmente
+$applyPrefix = function (callable $callback) {
+    $enablePrefix = config('raptor.landlord.enable_prefix', false);
+    $prefix = config('raptor.landlord.prefix');
 
-    /*
-    |--------------------------------------------------------------------------
-    | Gerenciamento de Tenants
-    |--------------------------------------------------------------------------
-    */
+    // Aplica prefixo apenas se habilitado E se houver um prefixo configurado
+    if ($enablePrefix && !empty($prefix)) {
+        return Route::prefix($prefix)->name('landlord.')->group($callback);
+    }
+
+    // Sem prefixo - rotas diretas
+    return Route::name('landlord.')->group($callback);
+};
+
+// Aplica as rotas com ou sem prefixo baseado na configuração
+$applyPrefix(function () {
 
     /*
     |--------------------------------------------------------------------------

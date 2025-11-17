@@ -36,8 +36,15 @@ return [
         // Middleware aplicado às rotas do landlord
         'middleware' => ['web', 'auth', 'landlord'],
 
-        // Prefixo das rotas (ex: /admin)
-        'prefix' => 'admin',
+        // Habilita prefixo nas rotas (true/false)
+        // Se false, as rotas não terão prefixo (ex: /users, /roles)
+        // Se true, as rotas terão o prefixo definido abaixo
+        'enable_prefix' => env('RAPTOR_LANDLORD_ENABLE_PREFIX', false),
+
+        // Prefixo das rotas (ex: 'admin' resulta em /admin/users)
+        // Será aplicado apenas se enable_prefix for true
+        // Se null ou vazio, mesmo com enable_prefix true, não haverá prefixo
+        'prefix' => env('RAPTOR_LANDLORD_PREFIX', null),
     ],
 
     /*
@@ -52,8 +59,15 @@ return [
         // Middleware aplicado às rotas dos tenants
         'middleware' => ['web', 'tenant'],
 
-        // Prefixo das rotas administrativas do tenant (ex: /admin)
-        'prefix' => 'admin',
+        // Habilita prefixo nas rotas administrativas (true/false)
+        // Se false, as rotas não terão prefixo (ex: /users, /roles)
+        // Se true, as rotas terão o prefixo definido abaixo
+        'enable_prefix' => env('RAPTOR_TENANT_ENABLE_PREFIX', false),
+
+        // Prefixo das rotas administrativas do tenant (ex: 'admin' resulta em /admin/users)
+        // Será aplicado apenas se enable_prefix for true
+        // Se null ou vazio, mesmo com enable_prefix true, não haverá prefixo
+        'prefix' => env('RAPTOR_TENANT_PREFIX', null),
 
         // Coluna na tabela de tenants que armazena o identificador do subdomínio
         'subdomain_column' => 'subdomain',

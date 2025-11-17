@@ -31,7 +31,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->name('laravel-raptor')
             ->hasConfigFile()
             ->hasViews()
-            ->hasRoutes(['web'])
+            // Rotas devem ser carregadas manualmente na aplicação
+            ->hasRoutes(['web','api'])
             ->hasMigrations([
                 // Tabelas principais (ordem de dependência)
                 'create_tenants_table',

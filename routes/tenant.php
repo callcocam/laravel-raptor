@@ -20,22 +20,46 @@ use Illuminate\Support\Facades\Route;
 | Rotas para tenants (clientes)
 | Acesso: {tenant}.example.com ou domínio customizado
 |
+| Configuração de prefixo:
+| - RAPTOR_TENANT_ENABLE_PREFIX=false (padrão) -> /users, /roles
+| - RAPTOR_TENANT_ENABLE_PREFIX=true + RAPTOR_TENANT_PREFIX=admin -> /admin/users
+|
 */
 
-// Rotas públicas do tenant (antes do login)
+/*
+|--------------------------------------------------------------------------
+| Rotas Públicas do Tenant
+|--------------------------------------------------------------------------
+| Rotas acessíveis sem autenticação
+*/
 Route::get('/', function () {
     return inertia('tenant/welcome');
 })->name('tenant.home');
 
-// Rotas autenticadas do tenant
+/*
+|--------------------------------------------------------------------------
+| Rotas Autenticadas do Tenant
+|--------------------------------------------------------------------------
+| Rotas que requerem login
+*/
 Route::middleware('auth')->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Administração do Tenant
-    |--------------------------------------------------------------------------
-    */
-    Route::prefix('admin')->name('tenant.')->group(function () {
+    // Função helper para aplicar prefixo condicionalmente
+    $applyPrefix = function (callable $callback) {
+        $enablePrefix = config('raptor.tenant.enable_prefix', false);
+        $prefix = config('raptor.tenant.prefix');
+
+        // Aplica prefixo apenas se habilitado E se houver um prefixo configurado
+        if ($enablePrefix && !empty($prefix)) {
+            return Route::prefix($prefix)->name('tenant.')->group($callback);
+        }
+
+        // Sem prefixo - rotas diretas
+        return Route::name('tenant.')->group($callback);
+    };
+
+    // Aplica as rotas com ou sem prefixo baseado na configuração
+    $applyPrefix(function () {
 
         /*
         |--------------------------------------------------------------------------

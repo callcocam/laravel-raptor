@@ -6,37 +6,32 @@
  * https://www.sigasmart.com.br
  */
 
-namespace Callcocam\LaravelRaptor\Http;
+namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
+use Inertia\Inertia;
 
 abstract class AbstractController extends Controller
 {
-    protected function getHeaderActions(): array
+
+    public function index(Request $request)
     {
-        return [
-            // Ações de cabeçalho padrão
-        ];
+        
+        return Inertia::render(sprintf("admin/%s/index", $this->resourcePath()), [
+            'message' => 'Welcome to Laravel Raptor!',
+        ]);
     }
 
-    protected function getImportActions(): array
-    {
-        return [
-            // Ações para importação
-        ];
-    }
+    
 
-    protected function getExportActions(): array
-    {
-        return [
-            // Ações para exportação
-        ];
-    }
 
     /**
      * Trata erros do método store
+     * 
      */
-    protected function handleStoreError(\Exception $e): RedirectResponse
+    protected function handleStoreError(\Exception $e): BaseRedirectResponse
     {
         report($e);
 
@@ -48,8 +43,9 @@ abstract class AbstractController extends Controller
 
     /**
      * Trata erros do método update
+     * 
      */
-    protected function handleUpdateError(\Exception $e, string $id): RedirectResponse
+    protected function handleUpdateError(\Exception $e, string $id): BaseRedirectResponse
     {
         report($e);
 
@@ -58,11 +54,11 @@ abstract class AbstractController extends Controller
             ->withInput()
             ->with('error', app()->environment('local') ? $e->getMessage() : 'Erro ao atualizar o item.');
     }
-
     /**
      * Trata erros do método destroy
+     * 
      */
-    protected function handleDestroyError(\Exception $e, string $id): RedirectResponse
+    protected function handleDestroyError(\Exception $e, string $id): BaseRedirectResponse
     {
         report($e);
 
