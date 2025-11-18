@@ -19,7 +19,7 @@ abstract class AbstractController extends ResourceController
 
     public function index(Request $request)
     {
-        return Inertia::render(sprintf("admin/%s/index", $this->resourcePath()), [
+        return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
@@ -28,9 +28,6 @@ abstract class AbstractController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
         ]);
     }
-
-
-
 
     /**
      * Trata erros do método store

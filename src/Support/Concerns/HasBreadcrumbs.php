@@ -39,13 +39,13 @@ trait HasBreadcrumbs
     {
         $currentRoute = request()->route();
 
-        if (!$currentRoute) {
+        if (! $currentRoute) {
             return [];
         }
 
         $routeName = $currentRoute->getName();
 
-        if (!$routeName) {
+        if (! $routeName) {
             return [];
         }
 
@@ -62,7 +62,7 @@ trait HasBreadcrumbs
         $context = $parts[0]; // 'landlord' ou 'tenant'
         $breadcrumbs[] = [
             'label' => 'Dashboard',
-            'url' => $this->getBreadcrumbUrl($context . '.dashboard'),
+            'url' => $this->getBreadcrumbUrl($context.'.dashboard'),
         ];
 
         // Breadcrumbs intermediários: recursos

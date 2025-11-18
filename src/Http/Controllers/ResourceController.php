@@ -23,22 +23,22 @@ abstract class ResourceController extends Controller
     /**
      * o nome do curto do recurso, ex: user, post, product
      */
-    protected Closure|string| null $resourceName = null;
+    protected Closure|string|null $resourceName = null;
 
     /**
      * o nome longo do recurso, ex: users, posts, products
      */
-    protected Closure|string| null $resourcePluralName = null;
+    protected Closure|string|null $resourcePluralName = null;
 
     /**
      * Retorna o label do nome do recurso
      */
-    protected Closure|string| null $resourceLabel = null;
+    protected Closure|string|null $resourceLabel = null;
 
     /**
      * Retorna o label do nome plural do recurso
      */
-    protected Closure|string| null $resourcePluralLabel = null;
+    protected Closure|string|null $resourcePluralLabel = null;
 
     /**
      * Define o model que será usado pelo controller
@@ -62,6 +62,7 @@ abstract class ResourceController extends Controller
         }
 
         $value = $this->evaluate($this->resourceName);
+
         return is_null($value) ? null : (string) $value;
     }
 
@@ -77,6 +78,7 @@ abstract class ResourceController extends Controller
         }
 
         $value = $this->evaluate($this->resourcePluralName);
+
         return is_null($value) ? null : (string) $value;
     }
 
@@ -89,6 +91,7 @@ abstract class ResourceController extends Controller
             $this->resourceLabel = str($this->getResourceName())->title()->toString();
         }
         $value = $this->evaluate($this->resourceLabel);
+
         return is_null($value) ? null : (string) $value;
     }
 
@@ -101,6 +104,7 @@ abstract class ResourceController extends Controller
             $this->resourcePluralLabel = str($this->getResourcePluralName())->title()->toString();
         }
         $value = $this->evaluate($this->resourcePluralLabel);
+
         return is_null($value) ? null : (string) $value;
     }
 
