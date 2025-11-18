@@ -8,23 +8,28 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use Callcocam\LaravelRaptor\Support\Concerns\HasBreadcrumbs;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Inertia\Inertia;
 
-abstract class AbstractController extends Controller
+abstract class AbstractController extends ResourceController
 {
+    use HasBreadcrumbs;
 
     public function index(Request $request)
     {
-        
         return Inertia::render(sprintf("admin/%s/index", $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',
+            'resourceName' => $this->getResourceName(),
+            'resourcePluralName' => $this->getResourcePluralName(),
+            'resourceLabel' => $this->getResourceLabel(),
+            'resourcePluralLabel' => $this->getResourcePluralLabel(),
+            'breadcrumbs' => $this->breadcrumbs(),
         ]);
     }
 
-    
+
 
 
     /**

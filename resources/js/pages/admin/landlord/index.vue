@@ -1,16 +1,31 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
-import { dashboard } from '@/routes';
-import { type BreadcrumbItem } from '@/types';
-import { Head } from '@inertiajs/vue3';
 import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
+import { useBreadcrumbs, type BackendBreadcrumb } from '@/composables/useBreadcrumbs';
+import { dashboard } from '@/routes';
+import { Head } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard().url,
-    },
-];
+interface Props {
+    message: string;
+    resourceName: string;
+    resourcePluralName: string;
+    resourceLabel: string;
+    resourcePluralLabel: string;
+    breadcrumbs?: BackendBreadcrumb[];
+}
+
+const props = defineProps<Props>();
+
+// Mapeia breadcrumbs do backend para o formato do frontend
+const breadcrumbs = useBreadcrumbs(
+    () => props.breadcrumbs,
+    [{ title: 'Dashboard', href: dashboard().url }]
+);
+
+onMounted(() => {
+    document.title = 'Dashboard';
+});
 </script>
 
 <template>
