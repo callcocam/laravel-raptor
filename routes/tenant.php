@@ -50,7 +50,7 @@ Route::middleware('auth')->group(function () {
         $prefix = config('raptor.tenant.prefix');
 
         // Aplica prefixo apenas se habilitado E se houver um prefixo configurado
-        if ($enablePrefix && !empty($prefix)) {
+        if ($enablePrefix && ! empty($prefix)) {
             return Route::prefix($prefix)->name('tenant.')->group($callback);
         }
 

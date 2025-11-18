@@ -32,7 +32,7 @@ $applyPrefix = function (callable $callback) {
     $prefix = config('raptor.landlord.prefix');
 
     // Aplica prefixo apenas se habilitado E se houver um prefixo configurado
-    if ($enablePrefix && !empty($prefix)) {
+    if ($enablePrefix && ! empty($prefix)) {
         return Route::prefix($prefix)->name('landlord.')->group($callback);
     }
 

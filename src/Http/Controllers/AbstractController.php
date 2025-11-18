@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Http\Controllers;
 use Callcocam\LaravelRaptor\Support\Concerns\HasBreadcrumbs;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
@@ -34,7 +35,6 @@ abstract class AbstractController extends ResourceController
 
     /**
      * Trata erros do método store
-     * 
      */
     protected function handleStoreError(\Exception $e): BaseRedirectResponse
     {
@@ -48,7 +48,6 @@ abstract class AbstractController extends ResourceController
 
     /**
      * Trata erros do método update
-     * 
      */
     protected function handleUpdateError(\Exception $e, string $id): BaseRedirectResponse
     {
@@ -59,9 +58,9 @@ abstract class AbstractController extends ResourceController
             ->withInput()
             ->with('error', app()->environment('local') ? $e->getMessage() : 'Erro ao atualizar o item.');
     }
+
     /**
      * Trata erros do método destroy
-     * 
      */
     protected function handleDestroyError(\Exception $e, string $id): BaseRedirectResponse
     {
