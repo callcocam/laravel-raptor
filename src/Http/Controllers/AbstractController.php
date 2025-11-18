@@ -9,8 +9,8 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use Callcocam\LaravelRaptor\Support\Concerns\HasBreadcrumbs;
+use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse as BaseRedirectResponse; 
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
