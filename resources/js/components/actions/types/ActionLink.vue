@@ -6,7 +6,7 @@
  -->
 <template>
   <Link
-    :to="to"
+    :href="to"
     :target="target"
     :class="linkClasses"
     @click="handleClick"
@@ -37,8 +37,7 @@ const target = computed(() => {
   return props.action.target === 'modal' ? '_self' : props.action.target
 })
 
-const to = computed(() => {
-
+const to = computed(() => { 
   return props.action.url || '#'
 })
 // Classes do link

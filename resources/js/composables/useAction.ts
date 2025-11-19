@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { router, useForm } from '@inertiajs/vue3'
-import { useNotifications } from './useNotifications'
+import { useNotifications } from '~/composables/useNotifications'
 
 interface ActionConfig {
   url: string
@@ -47,8 +47,7 @@ export function useAction() {
     try {
       const options: any = {
         preserveState: action.inertia?.preserveState ?? true,
-        preserveScroll: action.inertia?.preserveScroll ?? true,
-        only: action.inertia?.only,
+        preserveScroll: action.inertia?.preserveScroll ?? true, 
         onSuccess: (page: any) => {
           data.value = page
           if (action.successMessage) notifications.success(action.successMessage)
@@ -83,7 +82,7 @@ export function useAction() {
         })
         payload = formDataPayload
       }
-
+      console.log(options);
       // Executa usando router moderno do Inertia.js
       switch (action.method) {
         case 'GET':
@@ -99,7 +98,7 @@ export function useAction() {
           router.patch(action.url, payload || {}, options)
           break
         case 'DELETE':
-          router.delete(action.url, options)
+          router.delete(action.url,  options )
           break
       }
 

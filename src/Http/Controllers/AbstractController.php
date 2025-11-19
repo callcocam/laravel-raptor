@@ -70,9 +70,9 @@ abstract class AbstractController extends ResourceController
         }
     }
 
-    public function show(Request $request, string $id)
-    {
-        $model = $this->model()::findOrFail($id);
+    public function show(Request $request, string $record)
+    { 
+        $model = $this->model()::findOrFail($record);
 
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
@@ -86,9 +86,9 @@ abstract class AbstractController extends ResourceController
         ]);
     }
 
-    public function edit(Request $request, string $id)
+    public function edit(Request $request, string $record)
     {
-        $model = $this->model()::findOrFail($id);
+        $model = $this->model()::findOrFail($record);
 
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
@@ -102,12 +102,12 @@ abstract class AbstractController extends ResourceController
         ]);
     }
 
-    public function update(Request $request, string $id): BaseRedirectResponse
+    public function update(Request $request, string $record): BaseRedirectResponse
     {
         try {
-            $model = $this->model()::findOrFail($id);
+            $model = $this->model()::findOrFail($record);
             
-            $validated = $request->validate($this->rules($id));
+            $validated = $request->validate($this->rules($record));
             
             $model->update($validated);
 
@@ -115,14 +115,14 @@ abstract class AbstractController extends ResourceController
                 ->route(sprintf('%s.index', $this->getResourceName()))
                 ->with('success', 'Item atualizado com sucesso.');
         } catch (\Exception $e) {
-            return $this->handleUpdateError($e, $id);
+            return $this->handleUpdateError($e, $record);
         }
     }
 
-    public function destroy(string $id): BaseRedirectResponse
+    public function destroy(string $record): BaseRedirectResponse
     {
         try {
-            $model = $this->model()::findOrFail($id);
+            $model = $this->model()::findOrFail($record);
             
             $model->delete();
 
@@ -130,7 +130,7 @@ abstract class AbstractController extends ResourceController
                 ->route(sprintf('%s.index', $this->getResourceName()))
                 ->with('success', 'Item deletado com sucesso.');
         } catch (\Exception $e) {
-            return $this->handleDestroyError($e, $id);
+            return $this->handleDestroyError($e, $record);
         }
     }
 

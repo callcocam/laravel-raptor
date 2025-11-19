@@ -124,8 +124,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         $domain = parse_url(config('app.url'), PHP_URL_HOST);
 
-        Route::domain(sprintf('{tenant}.%s', $domain))
-            ->middleware(['web'])
+        Route::middleware(['web','auth'])
             ->name('tenant.')
             ->group(function () {
                 $injector = new TenantRouteInjector();

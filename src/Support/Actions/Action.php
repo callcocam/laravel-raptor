@@ -47,10 +47,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             $name = sprintf('%s.%s', $request->getContext(), $this->name);
             if (\Illuminate\Support\Facades\Route::has($name)) {
                 return $target instanceof Model
-                    ? route($name, [
-                        'tenant' => $request->getContext(),
-                        'record' => data_get($target, 'id'),
-                    ], false)
+                    ? route($name, ['record' => data_get($target, 'id')], false)
                     : route($name, [], false);
             }
             return null;

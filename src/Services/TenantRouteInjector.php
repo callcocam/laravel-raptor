@@ -71,7 +71,7 @@ class TenantRouteInjector
         try {
             $reflection = new ReflectionClass($className);
             return $reflection->hasMethod('getPages') &&
-                   $reflection->getMethod('getPages')->isPublic();
+                $reflection->getMethod('getPages')->isPublic();
         } catch (\Exception) {
             return false;
         }
@@ -117,16 +117,19 @@ class TenantRouteInjector
             $complementary['store']->name = $createPage->getName() ? str_replace('.create', '.store', $createPage->getName()) : '';
         }
 
-        if (isset($pages['edit']) && !isset($pages['update'])) {
+        if (isset($pages['edit'])) {
             $editPage = $pages['edit'];
             $updatePath = $editPage->getPath();
 
-            $complementary['update'] = clone $editPage;
-            $complementary['update']->path = $updatePath;
-            $complementary['update']->method = 'PUT';
-            $complementary['update']->action = 'update';
-            $complementary['update']->label = $editPage->getLabel() ? str_replace('Editar', 'Atualizar', $editPage->getLabel()) : '';
-            $complementary['update']->name = $editPage->getName() ? str_replace('.edit', '.update', $editPage->getName()) : '';
+            if (!isset($pages['update'])) {
+                $updatePath = $editPage->getPath();
+                $complementary['update'] = clone $editPage;
+                $complementary['update']->path = $updatePath;
+                $complementary['update']->method = 'PUT';
+                $complementary['update']->action = 'update';
+                $complementary['update']->label = $editPage->getLabel() ? str_replace('Editar', 'Atualizar', $editPage->getLabel()) : '';
+                $complementary['update']->name = $editPage->getName() ? str_replace('.edit', '.update', $editPage->getName()) : '';
+            }
         }
 
         if (isset($pages['index'])) {

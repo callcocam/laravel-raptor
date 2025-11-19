@@ -119,9 +119,12 @@ const typedWord = ref('');
 const showTypedError = ref(false);
 
 // Configuração de confirmação
-const confirmConfig = computed(
-  () =>
-    props.action.confirm || {
+const confirmConfig = computed(() => {
+  const config = props.action.confirm || true;
+  
+  // Se confirm for boolean true, retorna configuração padrão
+  if (config === true || !config) {
+    return {
       title: "",
       message: "",
       confirmText: "",
@@ -133,8 +136,24 @@ const confirmConfig = computed(
       successMessage: "",
       requiresTypedConfirmation: false,
       typedConfirmationWord: "EXCLUIR",
-    }
-);
+    };
+  }
+  
+  // Se for array ou objeto, retorna com valores padrão
+  return {
+    title: config.title || "",
+    message: config.message || "",
+    confirmText: config.confirmText || "",
+    cancelText: config.cancelText || "",
+    confirmColor: config.confirmColor || "",
+    text: config.text || "",
+    confirmButtonText: config.confirmButtonText || "",
+    cancelButtonText: config.cancelButtonText || "",
+    successMessage: config.successMessage || "",
+    requiresTypedConfirmation: config.requiresTypedConfirmation || false,
+    typedConfirmationWord: config.typedConfirmationWord || "EXCLUIR",
+  };
+});
 
 // Verifica se requer confirmação por digitação
 const requiresTypedConfirmation = computed(() => {
@@ -203,6 +222,7 @@ const questionIcon = computed(() => {
 // Confirma a ação
 const confirmAction = async () => {
   isSubmitting.value = true;
+  console.log(props.action);
 
   try {
     // Extrai o nome da action da URL ou do próprio name
