@@ -48,21 +48,8 @@
 import { computed } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { TableMeta } from '~/types/table';
 
-export interface TableMeta {
-  current_page: number
-  last_page: number
-  per_page: number
-  total: number
-  from: number
-  to: number
-  links: Array<{
-    url: string | null
-    label: string
-    page: number | null
-    active: boolean
-  }>
-}
 
 interface Props {
   meta: TableMeta

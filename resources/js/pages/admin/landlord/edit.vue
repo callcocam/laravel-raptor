@@ -1,44 +1,40 @@
 <script setup lang="ts">
-import AppShell from '@/components/layout/AppShell.vue';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ResourceLayout from './../../../layouts/ResourceLayout.vue'
+import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 
 interface Props {
-    resourceName: string;
-    resourcePluralName: string;
-    resourceLabel: string;
-    resourcePluralLabel: string;
-    maxWidth?: string;
-    breadcrumbs: Array<{ label: string; href?: string }>;
-    model: any;
-    form: {
-        columns: any[];
-    };
+  message?: string
+  resourceLabel?: string
+  breadcrumbs?: BackendBreadcrumb[]
+  model?: any
+  form?: any
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    maxWidth: '7xl',
-});
+const props = defineProps<Props>()
+
+const layoutProps = {
+  message: props.message,
+  resourceLabel: props.resourceLabel,
+  breadcrumbs: props.breadcrumbs,
+}
 </script>
 
 <template>
-    <AppShell
-        variant="sidebar"
-        :title="`Editar ${resourceLabel}`"
-        :breadcrumbs="breadcrumbs"
-        :max-width="maxWidth"
-    >
-        <Card>
-            <CardHeader>
-                <CardTitle>Editar {{ resourceLabel }}</CardTitle>
-                <CardDescription>
-                    Atualize os campos abaixo para editar o {{ resourceLabel.toLowerCase() }}.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <!-- Form will be rendered here -->
-                <p class="text-sm text-muted-foreground">Formulário em desenvolvimento...</p>
-                <pre class="mt-4 p-4 bg-muted rounded-md text-xs">{{ model }}</pre>
-            </CardContent>
-        </Card>
-    </AppShell>
+  <ResourceLayout v-bind="layoutProps" title="Editar">
+    <template #content>
+      <div class="space-y-4">
+        <div v-if="resourceLabel || message">
+          <h1 v-if="resourceLabel" class="text-2xl font-bold">Editar {{ resourceLabel }}</h1>
+          <p v-if="message" class="text-muted-foreground mt-1">{{ message }}</p>
+        </div>
+
+        <!-- Form will be rendered here -->
+        <div class="text-sm text-muted-foreground">
+          Formulário em desenvolvimento...
+        </div>
+
+        <pre v-if="model" class="mt-4 p-4 bg-muted rounded-md text-xs">{{ model }}</pre>
+      </div>
+    </template>
+  </ResourceLayout>
 </template>

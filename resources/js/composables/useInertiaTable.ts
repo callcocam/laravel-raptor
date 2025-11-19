@@ -1,11 +1,12 @@
 import { computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
+import { TableMeta } from '~/types/table'
 
 export function useInertiaTable(key = 'table') {
   const page = usePage()
   type TableData = {
     data?: any[]
-    meta?: Record<string, any>
+    meta: TableMeta
     columns?: any[]
     filters?: any[]
     actions?: any[]

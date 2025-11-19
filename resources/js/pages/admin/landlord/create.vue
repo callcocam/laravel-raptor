@@ -1,42 +1,37 @@
 <script setup lang="ts">
-import AppShell from '@/components/layout/AppShell.vue';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ResourceLayout from './../../../layouts/ResourceLayout.vue'
+import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 
 interface Props {
-    resourceName: string;
-    resourcePluralName: string;
-    resourceLabel: string;
-    resourcePluralLabel: string;
-    maxWidth?: string;
-    breadcrumbs: Array<{ label: string; href?: string }>;
-    form: {
-        columns: any[];
-    };
+  message?: string
+  resourceLabel?: string
+  breadcrumbs?: BackendBreadcrumb[]
+  form?: any
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    maxWidth: '7xl',
-});
+const props = defineProps<Props>()
+
+const layoutProps = {
+  message: props.message,
+  resourceLabel: props.resourceLabel,
+  breadcrumbs: props.breadcrumbs,
+}
 </script>
 
 <template>
-    <AppShell
-        variant="sidebar"
-        :title="`Criar ${resourceLabel}`"
-        :breadcrumbs="breadcrumbs"
-        :max-width="maxWidth"
-    >
-        <Card>
-            <CardHeader>
-                <CardTitle>Criar {{ resourceLabel }}</CardTitle>
-                <CardDescription>
-                    Preencha os campos abaixo para criar um novo {{ resourceLabel.toLowerCase() }}.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <!-- Form will be rendered here -->
-                <p class="text-sm text-muted-foreground">Formulário em desenvolvimento...</p>
-            </CardContent>
-        </Card>
-    </AppShell>
+  <ResourceLayout v-bind="layoutProps" title="Criar">
+    <template #content>
+      <div class="space-y-4">
+        <div v-if="resourceLabel || message">
+          <h1 v-if="resourceLabel" class="text-2xl font-bold">Criar {{ resourceLabel }}</h1>
+          <p v-if="message" class="text-muted-foreground mt-1">{{ message }}</p>
+        </div>
+
+        <!-- Form will be rendered here -->
+        <div class="text-sm text-muted-foreground">
+          Formulário em desenvolvimento...
+        </div>
+      </div>
+    </template>
+  </ResourceLayout>
 </template>

@@ -1,41 +1,36 @@
 <script setup lang="ts">
-import AppShell from '@/components/layout/AppShell.vue';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ResourceLayout from './../../../layouts/ResourceLayout.vue'
+import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 
 interface Props {
-    resourceName: string;
-    resourcePluralName: string;
-    resourceLabel: string;
-    resourcePluralLabel: string;
-    maxWidth?: string;
-    breadcrumbs: Array<{ label: string; href?: string }>;
-    model: any;
-    infolist: any[];
+  message?: string
+  resourceLabel?: string
+  breadcrumbs?: BackendBreadcrumb[]
+  model?: any
+  infolist?: any[]
 }
 
-const props = withDefaults(defineProps<Props>(), {
-    maxWidth: '7xl',
-});
+const props = defineProps<Props>()
+
+const layoutProps = {
+  message: props.message,
+  resourceLabel: props.resourceLabel,
+  breadcrumbs: props.breadcrumbs,
+}
 </script>
 
 <template>
-    <AppShell
-        variant="sidebar"
-        :title="`Visualizar ${resourceLabel}`"
-        :breadcrumbs="breadcrumbs"
-        :max-width="maxWidth"
-    >
-        <Card>
-            <CardHeader>
-                <CardTitle>{{ resourceLabel }}</CardTitle>
-                <CardDescription>
-                    Detalhes do {{ resourceLabel.toLowerCase() }}.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <!-- Infolist will be rendered here -->
-                <pre class="p-4 bg-muted rounded-md text-xs">{{ model }}</pre>
-            </CardContent>
-        </Card>
-    </AppShell>
+  <ResourceLayout v-bind="layoutProps" title="Visualizar">
+    <template #content>
+      <div class="space-y-4">
+        <div v-if="resourceLabel || message">
+          <h1 v-if="resourceLabel" class="text-2xl font-bold">{{ resourceLabel }}</h1>
+          <p v-if="message" class="text-muted-foreground mt-1">{{ message }}</p>
+        </div>
+
+        <!-- Infolist will be rendered here -->
+        <pre v-if="model" class="p-4 bg-muted rounded-md text-xs">{{ model }}</pre>
+      </div>
+    </template>
+  </ResourceLayout>
 </template>

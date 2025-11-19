@@ -18,12 +18,12 @@ class CreateAction extends Action
 
     public function __construct(?string $name = null)
     {
-        parent::__construct($name ?? 'create');
-        $this->component('action-link');
+        parent::__construct($name ?? 'create'); 
         $this->name($name)
             ->label('Criar Novo')
             ->icon('PlusCircle')
             ->color('green')
+            ->component('action-button-link')
             ->tooltip('Criar novo registro');
         $this->setUp();
     }
@@ -32,6 +32,7 @@ class CreateAction extends Action
     {
         return  [
             'actionType' => $this->actionType,
+            'component' => $this->getComponent(),
             'name' => $this->getName(),
             'label' => $this->getLabel(),
             'icon' => $this->getIcon(),

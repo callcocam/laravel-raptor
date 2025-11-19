@@ -90,6 +90,7 @@ import ActionRegistry from './utils/ActionRegistry'
 ActionRegistry.registerBulk({
     'action-button': defineAsyncComponent(() => import('~/components/actions/types/ActionButton.vue')),
     'action-link': defineAsyncComponent(() => import('~/components/actions/types/ActionLink.vue')),
+    'action-button-link': defineAsyncComponent(() => import('~/components/actions/types/ActionButtonLink.vue')),
     'action-link-confirm': defineAsyncComponent(() => import('~/components/actions/types/ActionLinkConfirm.vue')),
     'action-a-link': defineAsyncComponent(() => import('~/components/actions/types/ActionALink.vue')),
     'action-dropdown': defineAsyncComponent(() => import('~/components/actions/types/ActionDropdown.vue')),

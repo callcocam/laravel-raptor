@@ -1,12 +1,22 @@
 <template>
   <div class="space-y-4">
-    <TableFilters
-      v-if="table.filters.value.length"
-      :filters="table.filters.value"
-      @apply="table.filter"
-      @clear="table.reset"
-    />
-{{ getHeaderActions() }}
+    <!-- Filtros e Header Actions -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+      <TableFilters
+        v-if="table.filters.value.length"
+        :filters="table.filters.value"
+        @apply="table.filter"
+        @clear="table.reset"
+        class="flex-1"
+      />
+      
+      <!-- Header Actions -->
+      <HeaderActions
+        v-if="table.headerActions.value.length"
+        :actions="table.headerActions.value"
+      />
+    </div>
+
     <div class="rounded-lg border bg-card">
       <div v-if="table.records.value.length" class="divide-y">
         <div
@@ -42,7 +52,7 @@
 
     <TablePagination
       v-if="table.meta.value.total > 0"
-      :meta="table.meta.value as TableMeta"
+      :meta="table.meta.value"
       @page-change="table.page"
       @per-page-change="table.perPage"
     />
@@ -50,40 +60,36 @@
 </template>
 
 <script setup lang="ts">
-import type { TableMeta } from './TablePagination.vue'
-import { useInertiaTable } from '~/composables/useInertiaTable'
-import TableFilters from '../filters/TableFilters.vue'
-import TablePagination from './TablePagination.vue'
-import ActionRenderer from '../actions/ActionRenderer.vue'
-import TableColumnRenderer from './TableColumnRenderer.vue'
+import { useInertiaTable } from "~/composables/useInertiaTable";
+import TableFilters from "../filters/TableFilters.vue";
+import TablePagination from "./TablePagination.vue";
+import ActionRenderer from "../actions/ActionRenderer.vue";
+import TableColumnRenderer from "./TableColumnRenderer.vue";
+import HeaderActions from "./HeaderActions.vue";
 
-const props = withDefaults(defineProps<{
-  tableKey?: string
-}>(), {
-  tableKey: 'table'
-})
+const props = withDefaults(
+  defineProps<{
+    tableKey?: string;
+  }>(),
+  {
+    tableKey: "table",
+  }
+);
 
-const table = useInertiaTable(props.tableKey)
+const table = useInertiaTable(props.tableKey);
 
 /**
  * Converte actions de objeto para array e filtra visíveis
  */
 const getActions = (record: any) => {
-  if (!record.actions) return []
-  
+  if (!record.actions) return [];
+
   // Se já é array, filtra diretamente
   if (Array.isArray(record.actions)) {
-    return record.actions.filter((a: any) => a.visible !== false)
+    return record.actions.filter((a: any) => a.visible !== false);
   }
-  
-  // Se é objeto, converte para array
-  return Object.values(record.actions).filter((a: any) => a.visible !== false)
-}
 
-const getHeaderActions = () => {
-   if(!table.headerActions.value) {
-     return []
-   }
-   return table.headerActions.value.filter((a: any) => a.visible !== false)
-}
+  // Se é objeto, converte para array
+  return Object.values(record.actions).filter((a: any) => a.visible !== false);
+};
 </script>

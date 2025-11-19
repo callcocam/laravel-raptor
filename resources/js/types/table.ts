@@ -18,7 +18,7 @@ export interface TableAction {
   method: string
   target: string
   url: string
-  to: string|object
+  to: string | object
   color: string | null
   confirm: TableActionConfirm | null
   position: string | null
@@ -105,7 +105,7 @@ export interface TableRecord {
   [key: string]: any
   actions?: Record<string, TableAction>
 }
-
+ 
 /**
  * Metadados de paginação
  */
@@ -117,7 +117,13 @@ export interface TableMeta {
   from: number
   to: number
   path: string
-  has_more_pages: boolean
+  has_more_pages: boolean,
+  links: Array<{
+    url: string | null
+    label: string
+    page: number | null
+    active: boolean
+  }>
 }
 
 /**
@@ -196,52 +202,52 @@ export interface TableProps {
    * Nome do resource (ex: 'users')
    */
   resource: string
-  
+
   /**
    * Endpoint customizado (opcional)
    */
   endpoint?: string
-  
+
   /**
    * Parâmetros iniciais de query
    */
   initialParams?: TableQueryParams
-  
+
   /**
    * Colunas visíveis (override)
    */
   visibleColumns?: string[]
-  
+
   /**
    * Mostrar paginação
    */
   showPagination?: boolean
-  
+
   /**
    * Mostrar busca
    */
   showSearch?: boolean
-  
+
   /**
    * Mostrar filtros
    */
   showFilters?: boolean
-  
+
   /**
    * Mostrar ações em massa
    */
   showBulkActions?: boolean
-  
+
   /**
    * Mostrar ações de header
    */
   showHeaderActions?: boolean
-  
+
   /**
    * Altura da tabela (scroll)
    */
   height?: string
-  
+
   /**
    * Permite seleção múltipla
    */
@@ -261,4 +267,3 @@ export interface TableEmits {
   (e: 'page-change', page: number): void
   (e: 'search', query: string): void
 }
-
