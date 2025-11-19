@@ -6,7 +6,7 @@
       @apply="table.filter"
       @clear="table.reset"
     />
-
+{{ getHeaderActions() }}
     <div class="rounded-lg border bg-card">
       <div v-if="table.records.value.length" class="divide-y">
         <div
@@ -78,5 +78,12 @@ const getActions = (record: any) => {
   
   // Se é objeto, converte para array
   return Object.values(record.actions).filter((a: any) => a.visible !== false)
+}
+
+const getHeaderActions = () => {
+   if(!table.headerActions.value) {
+     return []
+   }
+   return table.headerActions.value.filter((a: any) => a.visible !== false)
 }
 </script>

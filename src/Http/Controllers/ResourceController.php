@@ -126,12 +126,7 @@ abstract class ResourceController extends Controller
 
         return is_null($value) ? null : (string) $value;
     }
-
-    protected function breadcrumbs(): array
-    {
-        return [];
-    }
-
+ 
     /**
      * Retorna o slug do recurso
      */

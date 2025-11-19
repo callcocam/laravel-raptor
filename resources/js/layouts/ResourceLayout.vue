@@ -39,6 +39,7 @@ const pageTitle = computed(() => props.title || props.resourcePluralLabel || 'Da
   <Head :title="pageTitle" />
 
   <AppLayout :breadcrumbs="breadcrumbs">
+    <slot name="header"> </slot>
     <div :class="containerClasses">
       <slot>
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
