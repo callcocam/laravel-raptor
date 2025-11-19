@@ -18,6 +18,7 @@ abstract class Page
     public string $action = '';
     public string $icon = 'Circle';
     public string $group = 'Geral';
+    public bool $groupCollapsible = false;
     public int $order = 50;
     public ?string $badge = null;
     public bool $visible = true;
@@ -71,6 +72,12 @@ abstract class Page
     public function group(string $group): static
     {
         $this->group = $group;
+        return $this;
+    }
+
+    public function groupCollapsible(bool $collapsible = true): static
+    {
+        $this->groupCollapsible = $collapsible;
         return $this;
     }
 
@@ -130,6 +137,11 @@ abstract class Page
     public function getGroup(): string
     {
         return $this->group;
+    }
+
+    public function isGroupCollapsible(): bool
+    {
+        return $this->groupCollapsible;
     }
 
     public function getOrder(): int

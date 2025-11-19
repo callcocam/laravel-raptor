@@ -66,10 +66,33 @@ const groupedNavigation = computed(() => {
         items.sort((a, b) => (a.order || 50) - (b.order || 50));
     });
 
-    return Array.from(groups.entries()).map(([name, items]) => ({
-        name,
-        items,
-    }));
+    return Array.from(groups.entries()).map(([name, items]) => {
+        // Verifica se algum item do grupo quer que seja collapsible
+        const isCollapsible = items.some(item => item.groupCollapsible);
+
+        if (isCollapsible) {
+            // Renderiza como menu collapsible: cria item principal com TODOS como children
+            const firstItem = items[0];
+            return {
+                name,
+                items: [{
+                    title: name,
+                    label: name,
+                    href: firstItem.href, // usa href do primeiro como fallback
+                    icon: firstItem.icon,
+                    children: items, // TODOS os items viram children
+                }],
+                collapsible: true,
+            };
+        }
+
+        // Renderiza como divisor visual (comportamento atual)
+        return {
+            name,
+            items,
+            collapsible: false,
+        };
+    });
 });
 
 const footerNavItems = computed(() => {
@@ -108,7 +131,7 @@ const footerNavItems = computed(() => {
             <NavMain
                 v-for="group in groupedNavigation"
                 :key="group.name"
-                :group-label="group.name"
+                :group-label="group.collapsible ? undefined : group.name"
                 :items="group.items"
             />
         </SidebarContent>

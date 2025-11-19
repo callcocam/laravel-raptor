@@ -120,20 +120,10 @@ class NavigationService
             // Filtra apenas as páginas Index para o menu principal
             $indexPages = $this->filterIndexPages($pages);
 
-            // Separa outras páginas para criar submenus
-            $otherPages = array_filter($pages, fn($page) => !($page instanceof Index));
-
             $items = [];
             foreach ($indexPages as $page) {
                 if ($page->isVisible()) {
                     $item = $this->generateNavigationItem($page, $modelClass);
-
-                    // Adiciona submenus (outras páginas relacionadas)
-                    $children = $this->generateSubMenuItems($otherPages);
-                    if (!empty($children)) {
-                        $item['children'] = $children;
-                    }
-
                     $items[] = $item;
                 }
             }
@@ -171,36 +161,13 @@ class NavigationService
             'routeName' => $page->getName(),
             'icon' => $page->getIcon(),
             'group' => $page->getGroup(),
+            'groupCollapsible' => $page->isGroupCollapsible(),
             'order' => $page->getOrder(),
             'badge' => $page->getBadge(),
             'isActive' => false,
         ];
     }
 
-    protected function generateSubMenuItems(array $pages): array
-    {
-        $children = [];
-
-        foreach ($pages as $page) {
-            if ($page->isVisible()) {
-                $children[] = [
-                    'title' => $page->getLabel() ?: $this->generateLabelFromPath($page->getPath()),
-                    'label' => $page->getLabel() ?: $this->generateLabelFromPath($page->getPath()),
-                    'href' => $page->getPath(),
-                    'routeName' => $page->getName(),
-                    'icon' => $page->getIcon(),
-                    'order' => $page->getOrder(),
-                    'badge' => $page->getBadge(),
-                    'isActive' => false,
-                ];
-            }
-        }
-
-        // Ordena os filhos por order
-        usort($children, fn($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
-
-        return $children;
-    }
 
     protected function getModelFromController($controller): ?string
     {
