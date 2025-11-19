@@ -20,9 +20,7 @@ class Tenant extends AbstractModel
      */
     protected $fillable = [
         'name',
-        'slug',
-        'subdomain',
-        'custom_domain',
+        'slug',  
         'database',
         'prefix',
         'email',
@@ -30,8 +28,7 @@ class Tenant extends AbstractModel
         'document',
         'logo',
         'settings',
-        'status',
-        'is_primary',
+        'status', 
         'description',
     ];
 
@@ -45,21 +42,7 @@ class Tenant extends AbstractModel
         'settings' => 'array',
     ];
 
-    /**
-     * Define de onde vem o slug
-     */
-    protected function slugFrom(): string
-    {
-        return 'name';
-    }
-
-    /**
-     * Define para onde vai o slug
-     */
-    protected function slugTo(): string
-    {
-        return 'subdomain';
-    }
+  
 
     /**
      * Relacionamento: Tenant tem muitos usuários
@@ -76,31 +59,16 @@ class Tenant extends AbstractModel
      */
     public function scopeActive($query)
     {
-        return $query->where('status', TenantStatus::ACTIVE);
+        return $query->where('status', TenantStatus::Published);
     }
-
-    /**
-     * Scope: Busca por subdomínio
-     */
-    public function scopeBySubdomain($query, string $subdomain)
-    {
-        return $query->where('subdomain', $subdomain);
-    }
-
-    /**
-     * Scope: Busca por domínio customizado
-     */
-    public function scopeByCustomDomain($query, string $domain)
-    {
-        return $query->where('custom_domain', $domain);
-    }
+ 
 
     /**
      * Verifica se o tenant está ativo
      */
     public function isActive(): bool
     {
-        return $this->status === TenantStatus::ACTIVE;
+        return $this->status === TenantStatus::Published;
     }
 
     /**

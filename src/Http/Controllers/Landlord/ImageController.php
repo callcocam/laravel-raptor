@@ -18,7 +18,7 @@ class ImageController extends LandlordController
     /**
      * Define o model que será usado pelo controller
      */
-    protected function model(): string
+    public function model(): ?string
     {
         return config('raptor.models.image', \Callcocam\LaravelRaptor\Models\Landlord\Image::class);
     }

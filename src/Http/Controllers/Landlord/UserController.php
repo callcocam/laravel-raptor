@@ -18,9 +18,9 @@ class UserController extends LandlordController
     /**
      * Define o model que será usado pelo controller
      */
-    protected function model(): string
+    public function model(): ?string
     {
-        return config('raptor.models.user', \Callcocam\LaravelRaptor\Models\Auth\User::class);
+        return config('raptor.landlord.models.user', \Callcocam\LaravelRaptor\Models\Auth\User::class);
     }
 
     /**

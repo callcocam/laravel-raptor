@@ -15,9 +15,9 @@ class TenantController extends LandlordController
     /**
      * Define o model que será usado pelo controller
      */
-    protected function model(): string
+    public function model(): ?string
     {
-        return config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
+        return config('raptor.landlord.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
     }
 
     /**

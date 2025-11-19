@@ -7,15 +7,15 @@
  */
 
 namespace Callcocam\LaravelRaptor\Http\Controllers;
-
-use Callcocam\LaravelRaptor\Support\Concerns\HasBreadcrumbs;
+ 
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
 {
-    use HasBreadcrumbs;
+
+ 
 
     public function index(Request $request)
     {
@@ -25,6 +25,7 @@ abstract class AbstractController extends ResourceController
             'resourcePluralName' => $this->getResourcePluralName(),
             'resourceLabel' => $this->getResourceLabel(),
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
+            'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
         ]);
     }

@@ -18,9 +18,9 @@ class RoleController extends LandlordController
     /**
      * Define o model que será usado pelo controller
      */
-    protected function model(): string
+    public function model(): ?string
     {
-        return config('raptor.models.role', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Role::class);
+        return config('raptor.shinobi.models.role', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Role::class);
     }
 
     /**

@@ -22,13 +22,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Custom Domains
+    |--------------------------------------------------------------------------
+    |
+    | Habilita suporte para domínios customizados dos tenants
+    | Se true, tenants podem ter seus próprios domínios (ex: cliente.com.br)
+    |
+    */
+    'enable_custom_domains' => env('RAPTOR_ENABLE_CUSTOM_DOMAINS', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Landlord Configuration
     |--------------------------------------------------------------------------
     |
     | Configurações para o subdomínio de gerenciamento da aplicação
+    | (Administrador principal que gerencia todos os tenants)
     |
     */
     'landlord' => [
+        // Colunas padrão para identificar tenant
+        'default_tenant_columns' => ['tenant_id'],
+
         // Subdomínio usado para acessar o painel de gerenciamento
         // Exemplo: 'landlord' resulta em landlord.example.com
         'subdomain' => env('RAPTOR_LANDLORD_SUBDOMAIN', 'landlord'),
@@ -37,14 +52,16 @@ return [
         'middleware' => ['web', 'auth', 'landlord'],
 
         // Habilita prefixo nas rotas (true/false)
-        // Se false, as rotas não terão prefixo (ex: /users, /roles)
-        // Se true, as rotas terão o prefixo definido abaixo
         'enable_prefix' => env('RAPTOR_LANDLORD_ENABLE_PREFIX', false),
 
         // Prefixo das rotas (ex: 'admin' resulta em /admin/users)
-        // Será aplicado apenas se enable_prefix for true
-        // Se null ou vazio, mesmo com enable_prefix true, não haverá prefixo
         'prefix' => env('RAPTOR_LANDLORD_PREFIX', null),
+
+        // Models do Landlord
+        'models' => [
+            'tenant' => \Callcocam\LaravelRaptor\Models\Tenant::class,
+            'user' => \App\Models\User::class,
+        ],
     ],
 
     /*
@@ -60,13 +77,9 @@ return [
         'middleware' => ['web', 'tenant'],
 
         // Habilita prefixo nas rotas administrativas (true/false)
-        // Se false, as rotas não terão prefixo (ex: /users, /roles)
-        // Se true, as rotas terão o prefixo definido abaixo
         'enable_prefix' => env('RAPTOR_TENANT_ENABLE_PREFIX', false),
 
         // Prefixo das rotas administrativas do tenant (ex: 'admin' resulta em /admin/users)
-        // Será aplicado apenas se enable_prefix for true
-        // Se null ou vazio, mesmo com enable_prefix true, não haverá prefixo
         'prefix' => env('RAPTOR_TENANT_PREFIX', null),
 
         // Coluna na tabela de tenants que armazena o identificador do subdomínio
@@ -75,17 +88,6 @@ return [
         // Coluna na tabela de tenants que armazena domínios customizados
         'custom_domain_column' => 'custom_domain',
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Custom Domains
-    |--------------------------------------------------------------------------
-    |
-    | Habilita suporte para domínios customizados dos tenants
-    | Se true, tenants podem ter seus próprios domínios (ex: cliente.com.br)
-    |
-    */
-    'enable_custom_domains' => env('RAPTOR_ENABLE_CUSTOM_DOMAINS', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -98,6 +100,58 @@ return [
     'site' => [
         // Middleware aplicado às rotas do site
         'middleware' => ['web'],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Shinobi - Roles & Permissions
+    |--------------------------------------------------------------------------
+    |
+    | Sistema de permissões e roles do Laravel Raptor
+    |
+    */
+    'shinobi' => [
+        // Models do sistema de permissões
+        'models' => [
+            'user' => \App\Models\User::class,
+            'role' => \Callcocam\LaravelRaptor\Models\Role::class,
+            'permission' => \Callcocam\LaravelRaptor\Models\Permission::class,
+        ],
+
+        // Tabelas do sistema de permissões
+        'tables' => [
+            'roles' => 'roles',
+            'permissions' => 'permissions',
+            'role_user' => 'role_user',
+            'permission_user' => 'permission_user',
+            'permission_role' => 'permission_role',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Navigation Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configurações para o sistema de navegação automática
+    |
+    */
+    'navigation' => [
+        'contexts' => [
+            'tenant' => [
+                'controllers_path' => app_path('Http/Controllers/Tenant'),
+                'controllers_namespace' => 'App\\Http\\Controllers\\Tenant',
+                'default_group' => 'Aplicação',
+            ],
+            'landlord' => [
+                'controllers_path' => base_path('packages/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
+                'controllers_namespace' => 'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord',
+                'default_group' => 'Administração',
+            ],
+        ],
+        'default_permission' => true,
+        'cache_ttl' => 3600,
+        'cache_key_prefix' => 'navigation',
     ],
 
     /*
@@ -168,34 +222,6 @@ return [
 
         // Previne acesso cross-tenant (tenant A acessar dados do tenant B)
         'prevent_cross_tenant_access' => true,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Models Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Mapeamento de models do pacote
-    |
-    */
-    'models' => [
-        'tenant' => \Callcocam\LaravelRaptor\Models\Tenant::class,
-        'user' => \Callcocam\LaravelRaptor\Models\Auth\User::class,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Tables Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Nomes das tabelas do pacote
-    |
-    */
-    'tables' => [
-        'tenants' => 'tenants',
-        'users' => 'users',
-        'roles' => 'roles',
-        'permissions' => 'permissions',
     ],
 
 ];

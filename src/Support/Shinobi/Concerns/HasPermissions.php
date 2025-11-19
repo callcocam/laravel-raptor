@@ -24,7 +24,7 @@ trait HasPermissions
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(config('shinobi.models.permission', ModelsPermission::class))->withTimestamps();
+        return $this->belongsToMany(config('raptor.shinobi.models.permission', ModelsPermission::class))->withTimestamps();
     }
 
     /**
@@ -158,16 +158,16 @@ trait HasPermissions
      */
     protected function getPermissionModel()
     {
-        if (config('shinobi.cache.enabled')) {
-            return cache()->tags(config('shinobi.cache.tag'))->remember(
+        if (config('raptor.shinobi.cache.enabled')) {
+            return cache()->tags(config('raptor.shinobi.cache.tag'))->remember(
                 'permissions',
-                config('shinobi.cache.length'),
+                config('raptor.shinobi.cache.length'),
                 function () {
-                    return app()->make(config('shinobi.models.permission'))->get();
+                    return app()->make(config('raptor.shinobi.models.permission'))->get();
                 }
             );
         }
 
-        return app()->make(config('shinobi.models.permission'));
+        return app()->make(config('raptor.shinobi.models.permission'));
     }
 }

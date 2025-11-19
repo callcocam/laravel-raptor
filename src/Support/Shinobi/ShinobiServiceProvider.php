@@ -23,7 +23,7 @@ class ShinobiServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        $this->mergeConfigFrom(__DIR__.'/../../../config/shinobi.php', 'shinobi');
+        // $this->mergeConfigFrom(__DIR__.'/../../../config/shinobi.php', 'shinobi');
 
         $this->registerGates();
         $this->registerBladeDirectives();

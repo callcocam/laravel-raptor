@@ -18,8 +18,16 @@ class ImageController extends TenantController
     /**
      * Define o model que será usado pelo controller
      */
-    protected function model(): string
+    public function model(): ?string
     {
         return config('raptor.models.image', \Callcocam\LaravelRaptor\Models\Image::class);
+    }
+
+    /**
+     * Define o resource path para as views
+     */
+    protected function resourcePath(): string
+    {
+        return 'tenant';
     }
 }

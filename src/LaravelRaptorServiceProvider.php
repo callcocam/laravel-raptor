@@ -13,7 +13,11 @@ use Callcocam\LaravelRaptor\Commands\SyncCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
+use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
+use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
+use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -75,6 +79,12 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             });
     }
 
+    public function packageRegistered()
+    {
+       $this->app->register(LandlordServiceProvider::class);
+       $this->app->register(ShinobiServiceProvider::class);
+    }
+
     /**
      * Bootstrap any package services.
      */
@@ -82,6 +92,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         // Registra os middlewares
         $this->registerMiddleware();
+
+        // Registra as rotas dinamicas dos tenants
+        $this->registerTenantRoutes();
     }
 
     /**
@@ -95,5 +108,21 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         $router->aliasMiddleware('landlord', LandlordMiddleware::class);
         $router->aliasMiddleware('tenant', TenantMiddleware::class);
         $router->aliasMiddleware('tenant.custom.domain', TenantCustomDomainMiddleware::class);
+    }
+
+    /**
+     * Registra as rotas dinamicas dos tenants
+     */
+    protected function registerTenantRoutes(): void
+    {
+        $domain = parse_url(config('app.url'), PHP_URL_HOST);
+
+        Route::domain(sprintf('{tenant}.%s', $domain))
+            ->middleware(['web'])
+            ->name('tenant.')
+            ->group(function () {
+                $injector = new TenantRouteInjector();
+                $injector->registerRoutes();
+            });
     }
 }

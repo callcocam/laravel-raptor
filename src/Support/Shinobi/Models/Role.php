@@ -27,7 +27,7 @@ class Role extends AbstractModel implements RoleContract
     {
         parent::__construct($attributes);
 
-        $this->setTable(config('shinobi.tables.roles'));
+        $this->setTable(config('raptor.shinobi.tables.roles'));
     }
 
     /**

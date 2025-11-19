@@ -18,9 +18,9 @@ class PermissionController extends LandlordController
     /**
      * Define o model que será usado pelo controller
      */
-    protected function model(): string
+    public function model(): ?string
     {
-        return config('raptor.models.permission', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class);
+        return config('raptor.shinobi.models.permission', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class);
     }
 
     /**

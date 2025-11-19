@@ -27,7 +27,7 @@ class Permission extends AbstractModel implements PermissionContract
     {
         parent::__construct($attributes);
 
-        $this->setTable(config('shinobi.tables.permissions'));
+        $this->setTable(config('raptor.shinobi.tables.permissions'));
     }
 
     /**
@@ -37,6 +37,6 @@ class Permission extends AbstractModel implements PermissionContract
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(config('shinobi.models.role'))->withTimestamps();
+        return $this->belongsToMany(config('raptor.shinobi.models.role'))->withTimestamps();
     }
 }

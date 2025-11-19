@@ -21,7 +21,7 @@ class Shinobi
      */
     public function role()
     {
-        return app()->make(config('shinobi.models.role'));
+        return app()->make(config('raptor.shinobi.models.role'));
     }
 
     /**
@@ -31,7 +31,7 @@ class Shinobi
      */
     public function permission()
     {
-        return app()->make(config('shinobi.models.permission'));
+        return app()->make(config('raptor.shinobi.models.permission'));
     }
 
     /**
