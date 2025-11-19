@@ -30,7 +30,7 @@ abstract class AbstractController extends ResourceController
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
-            'data' => $this->table(TableBuilder::make($request))->toArray(),
+            'data' => $this->table(TableBuilder::make($this->model(), 'model', $request))->toArray(),
         ]);
     }
 

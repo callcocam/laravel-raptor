@@ -23,4 +23,34 @@ abstract class AbstractColumn
     use Shared\BelongsToTooltip;
     use Shared\BelongsToType;
     use Shared\BelongsToVisible;
+
+
+
+    protected ?string $component = null;
+
+    /**
+     * Método para ser sobrescrito por classes filhas para configuração inicial
+     */
+    protected function setUp(): void
+    {
+        //
+    }
+
+    /**
+     * Define o componente a ser usado
+     */
+    public function component(string $component): self
+    {
+        $this->component = $component;
+
+        return $this;
+    }
+
+    /**
+     * Retorna o componente configurado
+     */
+    public function getComponent(): string
+    {
+        return $this->component;
+    }
 }
