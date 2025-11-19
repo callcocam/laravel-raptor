@@ -37,6 +37,13 @@ abstract class AbstractSource
 
     protected $model = null;
 
+    // Coleções injetadas diretamente (Dependency Injection)
+    protected array $columns = [];
+
+    protected array $filters = [];
+
+    protected array $actions = [];
+
     // Parâmetros de busca e filtro
     protected int $perPage = 15;
 
@@ -115,20 +122,86 @@ abstract class AbstractSource
     abstract public function getData();
 
     /**
-     * Helpers para acessar informações do contexto
+     * ========================================
+     * DEPENDENCY INJECTION - Setters
+     * ========================================
+     */
+
+    /**
+     * Injeta colunas diretamente (evita buscar do contexto)
+     */
+    public function setColumns(array $columns): self
+    {
+        $this->columns = $columns;
+
+        return $this;
+    }
+
+    /**
+     * Injeta filtros diretamente (evita buscar do contexto)
+     */
+    public function setFilters(array $filters): self
+    {
+        $this->filters = $filters;
+
+        return $this;
+    }
+
+    /**
+     * Injeta actions diretamente (evita buscar do contexto)
+     */
+    public function setActions(array $actions): self
+    {
+        $this->actions = $actions;
+
+        return $this;
+    }
+
+    /**
+     * ========================================
+     * GETTERS - Retornam dados injetados
+     * ========================================
+     */
+
+    /**
+     * Retorna colunas (injetadas ou via contexto como fallback)
      */
     protected function getColumns(): array
     {
+        // Prioriza dados injetados diretamente
+        if (! empty($this->columns)) {
+            return $this->columns;
+        }
+
+        // Fallback: busca do contexto (backward compatibility)
         return $this->getContext()?->getColumns() ?? [];
     }
 
+    /**
+     * Retorna filtros (injetados ou via contexto como fallback)
+     */
     protected function getFilters(): array
     {
+        // Prioriza dados injetados diretamente
+        if (! empty($this->filters)) {
+            return $this->filters;
+        }
+
+        // Fallback: busca do contexto (backward compatibility)
         return $this->getContext()?->getFilters() ?? [];
     }
 
+    /**
+     * Retorna actions (injetadas ou via contexto como fallback)
+     */
     protected function getActions(): array
     {
+        // Prioriza dados injetados diretamente
+        if (! empty($this->actions)) {
+            return $this->actions;
+        }
+
+        // Fallback: busca do contexto (backward compatibility)
         return $this->getContext()?->getActions() ?? [];
     }
 
@@ -138,8 +211,11 @@ abstract class AbstractSource
     }
 
     /**
-     * Getters/Setters
+     * ========================================
+     * OUTROS GETTERS/SETTERS
+     * ========================================
      */
+
     public function getModel()
     {
         return $this->model;
@@ -176,6 +252,13 @@ abstract class AbstractSource
     public function setOrderBy(array $orderBy): self
     {
         $this->orderBy = $orderBy;
+
+        return $this;
+    }
+
+    public function setScopes(array $scopes): self
+    {
+        $this->scopes = $scopes;
 
         return $this;
     }

@@ -9,10 +9,15 @@
 namespace Callcocam\LaravelRaptor\Support\Table\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearchable;
+use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSortable;
 
 abstract class Column extends AbstractColumn
 {
 
+    use HasSearchable;
+    use HasSortable;
+    
     protected ?string $component = "text-column";
 
     public function __construct(string $name, ?string $label = null)

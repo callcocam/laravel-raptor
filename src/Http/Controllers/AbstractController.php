@@ -22,6 +22,8 @@ abstract class AbstractController extends ResourceController
 
     public function index(Request $request)
     {
+        dd($this->table(TableBuilder::make($this->model(), 'model'))
+            ->request($request)->toArray());
         return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',
             'resourceName' => $this->getResourceName(),
@@ -30,7 +32,9 @@ abstract class AbstractController extends ResourceController
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
-            'data' => $this->table(TableBuilder::make($this->model(), 'model', $request))->toArray(),
+            'data' => $this->table(TableBuilder::make($this->model(), 'model'))
+            ->request($request)
+            ->toArray(),
         ]);
     }
 

@@ -11,6 +11,13 @@ namespace Callcocam\LaravelRaptor\Support\Table;
 use Callcocam\LaravelRaptor\Support\Concerns;
 use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\FilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\LikeFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\ExactFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\InFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\RangeFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\DateFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\BooleanFilterStrategy;
 use Closure;
 
 class FilterBuilder
@@ -28,6 +35,8 @@ class FilterBuilder
     protected ?Closure $applyCallback = null;
 
     protected $value = null;
+
+    protected ?FilterStrategy $filterStrategy = null;
 
     public function __construct(string $name, ?string $label = null)
     {
@@ -88,6 +97,66 @@ class FilterBuilder
         return $this->applyCallback;
     }
 
+    /**
+     * Define estratégia de filtro customizada
+     */
+    public function strategy(FilterStrategy $strategy): static
+    {
+        $this->filterStrategy = $strategy;
+
+        return $this;
+    }
+
+    /**
+     * Obtém estratégia de filtro (default: Like)
+     */
+    public function getStrategy(): FilterStrategy
+    {
+        return $this->filterStrategy ?? new LikeFilterStrategy();
+    }
+
+    /**
+     * Métodos fluentes para estratégias comuns
+     */
+    public function exact(): static
+    {
+        return $this->strategy(new ExactFilterStrategy());
+    }
+
+    public function like(): static
+    {
+        return $this->strategy(new LikeFilterStrategy());
+    }
+
+    public function in(): static
+    {
+        return $this->strategy(new InFilterStrategy());
+    }
+
+    public function range(mixed $min = null, mixed $max = null): static
+    {
+        $strategy = new RangeFilterStrategy();
+
+        if ($min !== null || $max !== null) {
+            $this->value = array_filter([
+                'min' => $min,
+                'max' => $max,
+            ], fn ($v) => $v !== null);
+        }
+
+        return $this->strategy($strategy);
+    }
+
+    public function date(): static
+    {
+        return $this->strategy(new DateFilterStrategy());
+    }
+
+    public function boolean(): static
+    {
+        return $this->strategy(new BooleanFilterStrategy());
+    }
+
     protected function setUp(): void
     {
         //
@@ -102,6 +171,7 @@ class FilterBuilder
             'icon' => $this->getIcon(),
             'component' => $this->component,
             'context' => $this->getContext(),
+            'strategy' => $this->filterStrategy?->getName(),
         ];
     }
 }
