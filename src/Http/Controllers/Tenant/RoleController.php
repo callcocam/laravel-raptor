@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Tenant;
 
 use Callcocam\LaravelRaptor\Http\Controllers\TenantController;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
+use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 
 class RoleController extends TenantController
 {
@@ -23,6 +24,12 @@ class RoleController extends TenantController
         return config('raptor.shinobi.models.role', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Role::class);
     }
 
+    
+    protected function table(TableBuilder $table): TableBuilder
+    {
+        return $table;
+    }
+    
     /**
      * Define o resource path para as views
      */

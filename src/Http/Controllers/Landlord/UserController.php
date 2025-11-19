@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
+use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 
 class UserController extends LandlordController
 {
@@ -21,6 +22,11 @@ class UserController extends LandlordController
     public function model(): ?string
     {
         return config('raptor.landlord.models.user', \Callcocam\LaravelRaptor\Models\Auth\User::class);
+    }
+    
+    protected function table(TableBuilder $table): TableBuilder
+    {
+        return $table;
     }
 
     /**

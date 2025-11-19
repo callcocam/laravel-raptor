@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 
 class TenantController extends LandlordController
 {
@@ -20,6 +21,11 @@ class TenantController extends LandlordController
         return config('raptor.landlord.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
     }
 
+    protected function table(TableBuilder $table): TableBuilder
+    {
+        return $table;
+    }
+    
     /**
      * Define o resource path para as views
      */

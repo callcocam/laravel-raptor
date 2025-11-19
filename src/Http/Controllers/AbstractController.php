@@ -7,7 +7,8 @@
  */
 
 namespace Callcocam\LaravelRaptor\Http\Controllers;
- 
+
+use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +16,8 @@ use Inertia\Inertia;
 abstract class AbstractController extends ResourceController
 {
 
+
+    abstract protected function table(TableBuilder $table): TableBuilder;
  
 
     public function index(Request $request)
@@ -27,6 +30,7 @@ abstract class AbstractController extends ResourceController
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
+            'data' => $this->table(TableBuilder::make($request))->toArray(),
         ]);
     }
 

@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
+use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 
 class PermissionController extends LandlordController
 {
@@ -21,6 +22,11 @@ class PermissionController extends LandlordController
     public function model(): ?string
     {
         return config('raptor.shinobi.models.permission', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class);
+    }
+    
+    protected function table(TableBuilder $table): TableBuilder
+    {
+        return $table;
     }
 
     /**
