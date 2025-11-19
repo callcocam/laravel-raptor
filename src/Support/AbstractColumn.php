@@ -49,7 +49,7 @@ abstract class AbstractColumn
     /**
      * Retorna o componente configurado
      */
-    public function getComponent(): string
+    public function getComponent(): ?string
     {
         return $this->component;
     }

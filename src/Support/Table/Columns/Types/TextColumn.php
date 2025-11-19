@@ -10,7 +10,7 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Column;
 
 class TextColumn extends Column
 {
-    public function render(mixed $value, array $row): mixed
+    public function render(mixed $value, $row = null): mixed
     {
         return $value;
     }

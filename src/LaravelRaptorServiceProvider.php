@@ -13,9 +13,11 @@ use Callcocam\LaravelRaptor\Commands\SyncCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
+use Callcocam\LaravelRaptor\Services\DomainDetectionService;
 use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
 use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
 use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
+use Callcocam\LaravelRaptor\Traits\RequestMacrosTrait;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -24,6 +26,8 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class LaravelRaptorServiceProvider extends PackageServiceProvider
 {
+    use RequestMacrosTrait;
+    
     public function configurePackage(Package $package): void
     {
         /*
@@ -81,8 +85,11 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-       $this->app->register(LandlordServiceProvider::class);
-       $this->app->register(ShinobiServiceProvider::class);
+        $this->app->register(LandlordServiceProvider::class);
+        $this->app->register(ShinobiServiceProvider::class);
+        // Registra o serviço de detecção de domínio como singleton para performance
+        $this->app->singleton(DomainDetectionService::class);
+        $this->registerRequestMacros();
     }
 
     /**

@@ -135,8 +135,8 @@ trait WithTable
     {
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
-            if ($value = data_get($item, $columnName)) {
-                $formattedColumn = $column->render($value);
+            if ($value = data_get($item, $columnName)) { 
+                $formattedColumn = $column->render($value, $item);
                 $item[$columnName . '_formatted'] = data_get($formattedColumn, 'text', $value);
             }
         }
@@ -155,7 +155,7 @@ trait WithTable
 
         foreach ($this->getActions() as $action) {
             // A action é responsável por sua própria renderização completa
-            $rendered = $action->renderForModel($model, $this->getRequest());
+            $rendered = $action->render($model, $this->getRequest());
             // Se a action retornou algo (autorizada e válida), adiciona ao array
             if ($rendered !== null) {
                 $actions[$action->getName()] = $rendered;

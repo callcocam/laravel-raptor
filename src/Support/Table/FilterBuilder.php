@@ -8,9 +8,13 @@
 
 namespace Callcocam\LaravelRaptor\Support\Table;
 
-use Callcocam\LaravelRaptor\Support\Concerns;
 use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToContext;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToIcon;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToId;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToLabel;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToName;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\FilterStrategy;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\LikeFilterStrategy;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\ExactFilterStrategy;
@@ -22,11 +26,11 @@ use Closure;
 
 class FilterBuilder
 {
-    use Concerns\Share\BelongsToContext;
-    use Concerns\Share\BelongsToIcon;
-    use Concerns\Share\BelongsToId;
-    use Concerns\Share\BelongsToLabel;
-    use Concerns\Share\BelongsToName;
+    use  BelongsToContext;
+    use  BelongsToIcon;
+    use  BelongsToId;
+    use  BelongsToLabel;
+    use  BelongsToName;
     use EvaluatesClosures;
     use FactoryPattern;
 
@@ -141,7 +145,7 @@ class FilterBuilder
             $this->value = array_filter([
                 'min' => $min,
                 'max' => $max,
-            ], fn ($v) => $v !== null);
+            ], fn($v) => $v !== null);
         }
 
         return $this->strategy($strategy);

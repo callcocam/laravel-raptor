@@ -8,4 +8,17 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
-abstract class LandlordController extends AbstractController {}
+use Callcocam\LaravelRaptor\Support\Form\Form;
+
+abstract class LandlordController extends AbstractController {
+
+    
+    protected function form(Form $form): Form
+    {
+        $form->columns([
+            //
+        ]);
+
+        return $form;
+    }
+}
