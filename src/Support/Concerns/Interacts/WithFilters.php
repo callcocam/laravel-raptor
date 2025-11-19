@@ -11,7 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\Table\Filter;
 
-trait InteractWithFilters
+trait WithFilters
 {
     protected array $filters = [];
 

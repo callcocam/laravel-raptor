@@ -10,7 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 
-trait InteractWithBulkActions
+trait WithBulkActions
 {
     protected array $bulkActions = [];
 

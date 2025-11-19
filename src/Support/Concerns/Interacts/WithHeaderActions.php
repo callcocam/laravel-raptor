@@ -10,7 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 
-trait InteractWithHeaderActions
+trait WithHeaderActions
 {
     protected array $headerActions = [];
 
