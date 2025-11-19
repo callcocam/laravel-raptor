@@ -7,28 +7,23 @@
  */
 
 
-namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts; 
+namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
+use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
 use Callcocam\LaravelRaptor\Support\Table\Filter;
 
 trait WithFilters
 {
-    protected array $filters = [];
+    use ManagesCollection;
 
     public function filters(array $filters): static
     {
-        foreach ($filters as $filter) {
-            $this->filter($filter);
-        }
-
-        return $this;
+        return $this->addManyToCollection($filters, 'filters');
     }
 
     public function filter(Filter $filter): static
     {
-        $this->filters[] = $filter;
-
-        return $this;
+        return $this->addToCollection($filter, 'filters');
     }
 
     /**
@@ -36,11 +31,11 @@ trait WithFilters
      */
     public function getArrayFilters(): array
     {
-        return array_map(fn (Filter $filter) => $filter->toArray(), $this->filters);
+        return $this->getCollectionAsArray('filters');
     }
 
     public function getFilters(): array
     {
-        return $this->filters;
+        return $this->getCollection('filters');
     }
 }

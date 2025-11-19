@@ -9,25 +9,20 @@
 namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
 
 trait WithActions
 {
-    protected array $actions = [];
+    use ManagesCollection;
 
     public function actions(array $actions): static
     {
-        foreach ($actions as $action) {
-            $this->action($action);
-        }
-
-        return $this;
+        return $this->addManyToCollection($actions, 'actions');
     }
 
     public function action(AbstractColumn $action): static
     {
-        $this->actions[] = $action;
-
-        return $this;
+        return $this->addToCollection($action, 'actions');
     }
 
     /**
@@ -35,11 +30,11 @@ trait WithActions
      */
     public function getArrayActions(): array
     {
-        return array_map(fn (AbstractColumn $action) => $action->toArray(), $this->actions);
+        return $this->getCollectionAsArray('actions');
     }
 
     public function getActions(): array
     {
-        return $this->actions;
+        return $this->getCollection('actions');
     }
 }

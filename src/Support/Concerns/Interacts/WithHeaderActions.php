@@ -9,25 +9,20 @@
 namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
 
 trait WithHeaderActions
 {
-    protected array $headerActions = [];
+    use ManagesCollection;
 
     public function headerActions(array $headerActions): static
     {
-        foreach ($headerActions as $action) {
-            $this->headerAction($action);
-        }
-
-        return $this;
+        return $this->addManyToCollection($headerActions, 'headerActions');
     }
 
     public function headerAction(AbstractColumn $action): static
     {
-        $this->headerActions[] = $action;
-
-        return $this;
+        return $this->addToCollection($action, 'headerActions');
     }
 
     /**
@@ -35,13 +30,11 @@ trait WithHeaderActions
      */
     public function getArrayHeaderActions(): array
     {
-        return array_map(function (AbstractColumn $action) {
-            return $action->toArray();
-        }, $this->headerActions);
+        return $this->getCollectionAsArray('headerActions');
     }
 
     public function getHeaderActions(): array
     {
-        return $this->headerActions;
+        return $this->getCollection('headerActions');
     }
 }

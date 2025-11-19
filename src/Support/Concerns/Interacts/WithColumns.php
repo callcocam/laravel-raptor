@@ -9,30 +9,25 @@
 namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
 
 trait WithColumns
 {
-    protected array $columns = [];
+    use ManagesCollection;
 
     public function columns(array $columns): static
     {
-        foreach ($columns as $column) {
-            $this->column($column);
-        }
-
-        return $this;
+        return $this->addManyToCollection($columns, 'columns');
     }
 
     public function column(AbstractColumn $column): static
     {
-        $this->columns[] = $column;
-
-        return $this;
+        return $this->addToCollection($column, 'columns');
     }
 
     public function getColumns(): array
     {
-        return $this->columns;
+        return $this->getCollection('columns');
     }
 
     /**
@@ -40,7 +35,8 @@ trait WithColumns
      */
     public function getArrayColumns(): array
     {
-        return array_map(function (AbstractColumn $column) {
+        // Usa transformer customizado para lidar com lógica de searchable
+        return $this->getCollectionAsArray('columns', function (AbstractColumn $column) {
             if (method_exists($column, 'isSearchable')) {
                 if ($column->isSearchable()) {
                     if (method_exists($this, 'setSearches')) {
@@ -50,6 +46,6 @@ trait WithColumns
             }
 
             return $column->toArray();
-        }, $this->getColumns());
+        });
     }
 }

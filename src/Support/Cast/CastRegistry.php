@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Cast\Formatters\CastFormatter;
 use Callcocam\LaravelRaptor\Support\Cast\Formatters\DateFormatter;
 use Callcocam\LaravelRaptor\Support\Cast\Formatters\MoneyFormatter;
 use Callcocam\LaravelRaptor\Support\Cast\Formatters\NumberFormatter;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * CastRegistry - Gerencia registro de casts customizados e prioridades
@@ -36,17 +37,12 @@ class CastRegistry
     protected static array $priorities = [];
 
     /**
-     * Cache de detecções para performance
-     */
-    protected static array $cache = [];
-
-    /**
      * Configuração padrão do registry
      */
     protected static array $config = [
         'cache_enabled' => true,
-        'max_cache_size' => 1000,
-        'auto_clear_cache' => true,
+        'cache_ttl' => 3600, // 1 hora em segundos
+        'cache_prefix' => 'cast_registry',
     ];
 
     /**
@@ -162,25 +158,17 @@ class CastRegistry
      */
     public static function resolve(mixed $value, ?string $fieldName = null, array $context = []): ?object
     {
-        // Verifica cache primeiro
+        if (! static::$config['cache_enabled']) {
+            return static::doResolve($value, $fieldName, $context);
+        }
+
         $cacheKey = static::getCacheKey($value, $fieldName, $context);
-        if (static::$config['cache_enabled'] && isset(static::$cache[$cacheKey])) {
-            $cached = static::$cache[$cacheKey];
-            if (is_callable($cached)) {
-                return $cached($value);
-            }
 
-            return $cached;
-        }
-
-        $resolved = static::doResolve($value, $fieldName, $context);
-
-        // Armazena no cache
-        if (static::$config['cache_enabled'] && $resolved) {
-            static::addToCache($cacheKey, $resolved);
-        }
-
-        return $resolved;
+        return Cache::remember(
+            $cacheKey,
+            static::$config['cache_ttl'],
+            fn () => static::doResolve($value, $fieldName, $context)
+        );
     }
 
     /**
@@ -405,33 +393,23 @@ class CastRegistry
      */
     protected static function getCacheKey(mixed $value, ?string $fieldName, array $context): string
     {
-        return md5(serialize([
-            'value' => is_object($value) ? get_class($value) : $value,
+        $prefix = static::$config['cache_prefix'];
+        $hash = md5(serialize([
+            'value' => is_object($value) ? get_class($value) : gettype($value),
             'field' => $fieldName,
             'context' => $context,
         ]));
+
+        return "{$prefix}:{$hash}";
     }
 
     /**
-     * Adiciona ao cache com limite de tamanho
-     */
-    protected static function addToCache(string $key, mixed $value): void
-    {
-        if (count(static::$cache) >= static::$config['max_cache_size']) {
-            // Remove os primeiros 20% quando atinge o limite
-            $toRemove = (int) (static::$config['max_cache_size'] * 0.2);
-            static::$cache = array_slice(static::$cache, $toRemove, null, true);
-        }
-
-        static::$cache[$key] = $value;
-    }
-
-    /**
-     * Limpa o cache
+     * Limpa o cache (usa Laravel Cache)
      */
     public static function clearCache(): void
     {
-        static::$cache = [];
+        $prefix = static::$config['cache_prefix'];
+        Cache::flush(); // Ou Cache::tags([$prefix])->flush() se usar tags
     }
 
     /**

@@ -9,25 +9,20 @@
 namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
 
 trait WithBulkActions
 {
-    protected array $bulkActions = [];
+    use ManagesCollection;
 
     public function bulkActions(array $actions): static
     {
-        foreach ($actions as $action) {
-            $this->bulkAction($action);
-        }
-
-        return $this;
+        return $this->addManyToCollection($actions, 'bulkActions');
     }
 
     public function bulkAction(AbstractColumn $action): static
     {
-        $this->bulkActions[] = $action;
-
-        return $this;
+        return $this->addToCollection($action, 'bulkActions');
     }
 
     /**
@@ -35,18 +30,16 @@ trait WithBulkActions
      */
     public function getArrayBulkActions(): array
     {
-        return array_map(function (AbstractColumn $action) {
-            return $action->toArray();
-        }, $this->bulkActions);
+        return $this->getCollectionAsArray('bulkActions');
     }
 
     public function getBulkActions(): array
     {
-        return $this->bulkActions;
+        return $this->getCollection('bulkActions');
     }
 
     public function hasBulkActions(): bool
     {
-        return ! empty($this->bulkActions);
+        return $this->hasCollectionItems('bulkActions');
     }
 }
