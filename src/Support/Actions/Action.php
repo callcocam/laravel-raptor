@@ -88,6 +88,22 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'target' => $target,
         ]);
     }
+
+    public function toArray(): array
+    {
+        return  [
+            'component' => $this->getComponent(),
+            'name' => $this->getName(),
+            'label' => $this->getLabel(),
+            'icon' => $this->getIcon(),
+            'color' => $this->getColor(),
+            'tooltip' => $this->getTooltip(),
+            'target' => $this->target,
+            'method' => $this->method,
+            'url' => $this->getUrl(null)
+        ];
+    }
+
     /**
      * Renderiza a action com suporte a Inertia.js
      */

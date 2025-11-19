@@ -7,7 +7,7 @@
 <template>
   <Link
     :href="action.url"
-    :class="buttonClasses"
+    :class="cn(buttonVariants({ variant, size }), 'gap-1 h-7 px-2.5')"
     :preserve-state="action.inertia?.preserveState ?? true"
     :preserve-scroll="action.inertia?.preserveScroll ?? true"
     :only="action.inertia?.only ?? []"
@@ -22,6 +22,7 @@
 import { h, computed } from "vue";
 import { Link } from "@inertiajs/vue3";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-vue-next";
 import type { TableAction } from "~/types/table";
 
@@ -50,15 +51,6 @@ const variant = computed(() => {
   };
 
   return colorMap[props.action.color || "default"] || "default";
-});
-
-// Classes do botão usando buttonVariants
-const buttonClasses = computed(() => {
-  return buttonVariants({
-    variant: variant.value,
-    size: props.size,
-    class: "gap-1 h-7 px-2.5",
-  });
 });
 
 // Componente do ícone dinâmico

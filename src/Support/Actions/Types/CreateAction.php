@@ -28,19 +28,4 @@ class CreateAction extends Action
         $this->setUp();
     }
 
-    public function toArray(): array
-    {
-        return  [
-            'actionType' => $this->actionType,
-            'component' => $this->getComponent(),
-            'name' => $this->getName(),
-            'label' => $this->getLabel(),
-            'icon' => $this->getIcon(),
-            'color' => $this->getColor(),
-            'tooltip' => $this->getTooltip(),
-            'target' => $this->target,
-            'method' => $this->method,
-            'url' => $this->getUrl(null)
-        ];
-    }
 }
