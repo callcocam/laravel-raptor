@@ -4,17 +4,17 @@
  * Modern replacement for FormColumnSelect with improved accessibility
  -->
 <template>
-  <Field orientation="responsive" :data-invalid="hasError" class="gap-y-1">
+  <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select v-model="internalValue" :required="column.required" class="py-1">
-      <SelectTrigger :class="hasError ? 'border-destructive w-full' : ' w-full'" :aria-invalid="hasError"  class="w-full">
+    <Select v-model="internalValue" :required="column.required">
+      <SelectTrigger :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
         <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
       </SelectTrigger>
-      <SelectContent class="w-full">
+      <SelectContent>
         <SelectItem
           v-for="option in options"
           :key="getOptionValue(option)"
@@ -86,8 +86,7 @@ const errorArray = computed(() => {
   return [{ message: props.error }]
 })
 
-const options = computed(() => {
-  console.log(props.column)
+const options = computed(() => { 
   if (!props.column.options) return []
 
   if (!Array.isArray(props.column.options)) {
