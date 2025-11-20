@@ -9,10 +9,10 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use Callcocam\LaravelRaptor\Support\Form\Form;
+use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request; 
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
@@ -22,6 +22,11 @@ abstract class AbstractController extends ResourceController
     abstract protected function table(TableBuilder $table): TableBuilder;
 
     abstract protected function form(Form $form): Form;
+
+    protected function infolist(InfoList $infoList): InfoList
+    {
+        return $infoList;
+    }
 
 
     public function index(Request $request)
@@ -85,7 +90,7 @@ abstract class AbstractController extends ResourceController
     public function show(Request $request, string $record)
     {
         $model = $this->model()::findOrFail($record);
-
+ 
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
@@ -94,7 +99,7 @@ abstract class AbstractController extends ResourceController
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'model' => $model,
-            'infolist' => [],
+            'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
         ]);
     }
 

@@ -2,33 +2,31 @@
 
 /**
  * Created by Claudio Campos.
- * User: callcocam@gmail.com, contato@sigasmart.com.br
+ * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
 
-namespace Callcocam\LaravelRaptor\Support\Table\Columns;
+namespace Callcocam\LaravelRaptor\Support\Info;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
-use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearchable;
-use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSortable; 
 
 abstract class Column extends AbstractColumn
 {
     use BelongsToHelpers;
-    use HasSearchable;
-    use HasSortable;
-    
-    protected ?string $component = "table-column-text";
 
-    public function __construct(string $name, ?string $label = null)
+    protected string $type = 'text';
+
+    protected ?string $component = 'info-column-text';
+
+    public function __construct($name, $label = null)
     {
         $this->name($name);
-        $this->label($label ?? ucwords(str_replace('_', ' ', $name)));
-        $this->setUp();
+        $this->id($name);
+        $this->label($label ?? ucfirst($name));
     }
-
-    abstract public function render(mixed $value,  $row = null): mixed;
+    
+    abstract public function render(mixed $value, $row = null): mixed;
 
     public function toArray(): array
     {
@@ -37,14 +35,15 @@ abstract class Column extends AbstractColumn
             'label' => $this->getLabel(),
             'type' => $this->getType(),
             'component' => $this->getComponent(),
-            'searchable' => $this->isSearchable(),
-            'sortable' => $this->isSortable(),
             'visible' => $this->isVisible(),
             'tooltip' => $this->getTooltip(),
             'color' => $this->getColor(),
             'icon' => $this->getIcon(),
             'prefix' => $this->getPrefix(),
             'suffix' => $this->getSuffix(),
+            'default' => $this->getDefault(),
+            'helpText' => $this->getHelpText(),
+            'hint' => $this->getHint(),
         ];
     }
 }
