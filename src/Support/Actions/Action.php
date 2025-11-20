@@ -34,7 +34,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
     protected bool $preserveScroll = true;
 
-    protected bool $preserveState = true;
+    protected bool $preserveState = false;
 
     protected array $onlyProps = [];
 

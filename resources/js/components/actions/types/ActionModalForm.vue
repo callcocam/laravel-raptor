@@ -195,7 +195,7 @@ const handleSubmit = async () => {
       await actionComposable.execute({
         url: props.action.url,
         method: props.action.method as any,
-        successMessage: props.action.confirm?.successMessage || 'Operação realizada com sucesso!',
+        successMessage: '',
         onSuccess: (data) => {
           emit('submit', data)
           emit('success', data)

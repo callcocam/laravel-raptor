@@ -221,9 +221,7 @@ abstract class AbstractController extends ResourceController
             
             if ($callback) {
                 $callback->execute($request);
-                return redirect()
-                    ->back()
-                    ->with('success', 'Ação executada com sucesso.');
+                return $callback->execute($request);
             }
 
             return redirect()

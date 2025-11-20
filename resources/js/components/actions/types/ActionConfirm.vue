@@ -233,8 +233,7 @@ const confirmAction = async () => {
       {
         url: props.action.url,
         method: props.action.method as any,
-        successMessage:
-          confirmConfig.value.successMessage || "Operação realizada com sucesso!",
+        successMessage: '',
         onSuccess: (data) => {
           emit("success", data); 
           isOpen.value = false;
