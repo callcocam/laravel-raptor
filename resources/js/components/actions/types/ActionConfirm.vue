@@ -221,12 +221,12 @@ const questionIcon = computed(() => {
 
 // Confirma a ação
 const confirmAction = async () => {
-  isSubmitting.value = true;
-  console.log(props.action);
+  isSubmitting.value = true; 
 
   try {
     // Extrai o nome da action da URL ou do próprio name
     const actionName = props.action.name;
+    const actionType = props.action.actionType;
 
     // Executa a action enviando apenas o name
     await actionComposable.execute(
@@ -243,7 +243,7 @@ const confirmAction = async () => {
           emit("error", error);
         },
       },
-      { name: actionName }
+      { actionType, actionName }
     );
 
     // Emite evento de click para compatibilidade

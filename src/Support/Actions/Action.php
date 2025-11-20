@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions;
 
+use Callcocam\LaravelRaptor\Support\Actions\Concerns\HasActionCallback;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongToRequest;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
 use Closure;
@@ -17,6 +18,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 {
     use InteractWithForm;
     use BelongToRequest;
+    use HasActionCallback;
 
     protected string $method = 'POST';
 
@@ -29,8 +31,6 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     protected string|Closure|null $authorization = null;
 
     protected string $actionType = 'api';
-
-    protected string|Closure|null $callback = null;
 
     protected bool $preserveScroll = true;
 
@@ -92,6 +92,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     public function toArray(): array
     {
         return  [
+            'actionType' => $this->getActionType(),
             'component' => $this->getComponent(),
             'name' => $this->getName(),
             'label' => $this->getLabel(),
@@ -144,11 +145,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         ];
 
         if ($this->callback) {
-            $result['callback'] = $this->evaluate($this->callback, [
-                'model' => $model,
-                'record' => $model,
-                'item' => $model,
-            ]);
+            $result['callback'] = $this->getEvaluatedCallback($model);
         }
 
         if ($this->modalSize) {
@@ -168,13 +165,6 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     public function getActionType(): string
     {
         return $this->actionType;
-    }
-
-    public function callback(string|Closure $callback): self
-    {
-        $this->callback = $callback;
-
-        return $this;
     }
 
     public function preserveScroll(bool $preserve = true): self

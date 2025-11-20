@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 use Callcocam\LaravelRaptor\Support\Actions\Action;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
+use Illuminate\Support\Facades\Route;
 
 class ImportAction extends Action
 {
@@ -26,11 +27,23 @@ class ImportAction extends Action
             ->label('Importar')
             ->icon('Upload')
             ->color('blue')
+            ->actionType('header')
             ->tooltip('Importar registros')
             ->component('action-modal-form')
+            ->url(function () {
+                $name = str($this->getName())->replace('import', 'execute');
+                $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
+                if (Route::has($route)) {
+                    return route($route);
+                }
+                return null;
+            })
+            ->callback(function ($request) {
+                return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
+            })
             ->columns([
                 UploadField::make($fileName, 'Arquivo')->acceptedFileTypes(['.csv', '.xlsx'])->required()
-            ]) 
+            ])
             ->confirm([
                 'title' => 'Importar Registros',
                 'text' => 'Tem certeza que deseja importar os registros?',

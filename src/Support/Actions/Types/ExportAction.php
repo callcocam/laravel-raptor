@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
 use Callcocam\LaravelRaptor\Support\Actions\Action;
+use Illuminate\Support\Facades\Route;
 
 class ExportAction extends Action
 {
@@ -21,7 +22,19 @@ class ExportAction extends Action
             ->label('Exportar')
             ->icon('Download')
             ->color('green')
+            ->actionType('header')
+            ->url(function () {
+                $name = str($this->getName())->replace('export', 'execute');
+                $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
+                if (Route::has($route)) {
+                    return route($route);
+                }
+                return null;
+            })
             ->tooltip('Exportar registros')
+            ->callback(function ($request) {
+                return redirect()->back()->with('success', 'Exportação realizada com sucesso!');
+            })
             ->component('action-confirm')
             ->confirm([
                 'title' => 'Exportar Registros',
