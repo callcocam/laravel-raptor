@@ -28,11 +28,11 @@ trait WithRequests
                     return redirect()->route(sprintf('%s.%s.index', $request->getContext(), $resource));
                 })
                 ->size('sm')
-                ->label('Cancel'),
+                ->label(sprintf("Voltar %s", $this->getResourcePluralLabel())),
             \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
                 ->variant('default')
                 ->size('sm')
-                ->label('Submit')
+                ->label(sprintf("Salvar %s", $this->getResourceLabel()))
         ];
     }
 

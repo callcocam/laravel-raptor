@@ -108,7 +108,7 @@ abstract class ResourceController extends Controller
     protected function getResourceLabel(): ?string
     {
         if (empty($this->resourceLabel)) {
-            $this->resourceLabel = str($this->getResourceName())->title()->toString();
+            $this->resourceLabel = str($this->getResourceName())->title()->singular()->toString();
         }
         $value = $this->evaluate($this->resourceLabel);
 
@@ -121,7 +121,7 @@ abstract class ResourceController extends Controller
     protected function getResourcePluralLabel(): ?string
     {
         if (empty($this->resourcePluralLabel)) {
-            $this->resourcePluralLabel = str($this->getResourcePluralName())->title()->toString();
+            $this->resourcePluralLabel = str($this->getResourcePluralName())->title()->plural()->toString();
         }
         $value = $this->evaluate($this->resourcePluralLabel);
 
