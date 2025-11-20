@@ -23,6 +23,7 @@ class DeleteAction extends Action
             ->icon('Trash2')
             ->color('red')
             ->tooltip('Excluir registro')
+            ->policy("delete")
             ->confirm([
                 'title' => 'Confirmar exclusão',
                 'message' => 'Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',

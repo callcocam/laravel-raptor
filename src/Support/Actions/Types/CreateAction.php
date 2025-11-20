@@ -18,8 +18,9 @@ class CreateAction extends Action
 
     public function __construct(?string $name = null)
     {
-        parent::__construct($name ?? 'create'); 
+        parent::__construct($name ?? 'create');
         $this->name($name)
+            ->policy("create")
             ->label('Criar Novo')
             ->icon('PlusCircle')
             ->color('green')
@@ -27,5 +28,4 @@ class CreateAction extends Action
             ->tooltip('Criar novo registro');
         $this->setUp();
     }
-
 }

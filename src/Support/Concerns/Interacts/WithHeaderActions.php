@@ -33,6 +33,18 @@ trait WithHeaderActions
         return $this->getCollectionAsArray('headerActions');
     }
 
+    /**
+     * Retorna header actions renderizadas e filtradas por visibilidade
+     * 
+     * @param mixed $model Modelo para verificação de visibilidade
+     * @param mixed $request Request para contexto
+     * @return array Header actions visíveis renderizadas
+     */
+    public function getRenderedHeaderActions($model = null, $request = null): array
+    {
+        return $this->getCollectionRendered('headerActions', $model, $request);
+    }
+
     public function getHeaderActions(): array
     {
         return $this->getCollection('headerActions');

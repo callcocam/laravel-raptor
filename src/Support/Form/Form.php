@@ -17,6 +17,7 @@ class Form
 {
     use Concerns\FactoryPattern;
     use Concerns\Interacts\WithActions;
+    use Concerns\Shared\BelongToRequest;
     use InteractWithForm;
     use HasGridLayout;
 
@@ -56,6 +57,11 @@ class Form
      */
     public function render($model = null): array
     {
+        // Se recebeu modelo via parâmetro, usa ele
+        if ($model) {
+            $this->model($model);
+        }
+        
         return $this->toArray();
     }
 
@@ -66,7 +72,8 @@ class Form
     {
         $data = array_merge($this->getGridLayoutConfig(), [
             'columns' => $this->getArrayColumns(),
-            'formActions' => $this->getArrayActions(),
+            // Usa getRenderedActions para filtrar por visibilidade
+            'formActions' => $this->getRenderedActions($this->model, $this->getRequest()),
         ]);
 
         // Se houver um modelo, inclui os valores

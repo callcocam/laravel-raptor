@@ -24,6 +24,7 @@ class RestoreAction extends Action
             ->icon('RotateCcw')
             ->color('blue')
             ->tooltip('Restaurar registro excluído')
+            ->policy("restore")
             ->confirm([
                 'title' => 'Confirmar restauração',
                 'message' => 'Tem certeza que deseja restaurar este registro?',

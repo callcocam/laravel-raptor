@@ -52,7 +52,7 @@ trait WithTable
             'columns' => $this->getArrayColumns(),
             'bulkActions' => $this->getArrayBulkActions(), // Adiciona bulk actions
             'filters' => $this->getArrayFilters(),
-            'headerActions' => $this->getArrayHeaderActions(),
+            'headerActions' => $this->getRenderedHeaderActions(null, $this->getRequest()),
             // 'search' => $this->getSearch(),
             'isSearcheable' => $this->isSearcheable(), 
             'hasBulkActions' => $this->hasBulkActions(), // Indica se tem bulk actions

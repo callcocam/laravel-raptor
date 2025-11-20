@@ -89,6 +89,46 @@ trait ManagesCollection
     }
 
     /**
+     * Retorna coleção renderizada e filtrada por visibilidade
+     * 
+     * @param string $key Chave da coleção
+     * @param mixed $model Modelo para passar ao render()
+     * @param mixed $request Request para passar ao render()
+     * @return array Array de itens renderizados e visíveis
+     */
+    protected function getCollectionRendered(string $key, $model = null, $request = null): array
+    {
+        $items = $this->getCollection($key);
+        $rendered = [];
+        
+        // Se request não foi passado, tenta obter do contexto
+        if ($request === null && method_exists($this, 'getRequest')) {
+            $request = $this->getRequest();
+        }
+
+        foreach ($items as $item) {
+            // Se o item tem método render(), usa ele (Actions, etc)
+            if (method_exists($item, 'render')) {
+                $result = $item->render($model, $request);
+                
+                // Filtra apenas itens visíveis
+                if ($result !== null && ($result['visible'] ?? true)) {
+                    $rendered[] = $result;
+                }
+            }
+            // Senão, usa toArray() ou retorna o item direto
+            elseif (method_exists($item, 'toArray')) {
+                $rendered[] = $item->toArray();
+            }
+            else {
+                $rendered[] = $item;
+            }
+        }
+
+        return $rendered;
+    }
+
+    /**
      * Verifica se a coleção tem itens
      */
     protected function hasCollectionItems(string $key): bool

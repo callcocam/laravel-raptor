@@ -59,6 +59,7 @@ trait HasActionCallback
             'model' => $model,
             'record' => $model,
             'item' => $model,
+            'request' => $this->getRequest(),
         ]);
     }
 }

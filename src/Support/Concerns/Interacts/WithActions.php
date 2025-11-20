@@ -33,6 +33,18 @@ trait WithActions
         return $this->getCollectionAsArray('actions');
     }
 
+    /**
+     * Retorna actions renderizadas e filtradas por visibilidade
+     * 
+     * @param mixed $model Modelo para verificação de visibilidade
+     * @param mixed $request Request para contexto
+     * @return array Actions visíveis renderizadas
+     */
+    public function getRenderedActions($model = null, $request = null): array
+    {
+        return $this->getCollectionRendered('actions', $model, $request);
+    }
+
     public function getActions(): array
     {
         return $this->getCollection('actions');
