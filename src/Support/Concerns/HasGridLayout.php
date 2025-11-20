@@ -71,6 +71,17 @@ trait HasGridLayout
     }
 
     /**
+     * Define como full
+     * 
+     */
+    public function columnSpanFull(): self
+    {
+        $this->columnSpan = 'full';
+
+        return $this;
+    }
+
+    /**
      * Define quantas colunas este item ocupa no grid pai
      *
      * @param  string  $span  '1', '2', '3', '4', 'full', etc

@@ -9,11 +9,13 @@
 namespace Callcocam\LaravelRaptor\Support\Form\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 
 abstract class Column extends AbstractColumn
 {
     use BelongsToHelpers;
+    use HasGridLayout;
 
     protected string $type = 'text';
 
@@ -28,7 +30,7 @@ abstract class Column extends AbstractColumn
 
     public function toArray(): array
     {
-        return [
+        return array_merge([
             'name' => $this->getName(),
             'type' => $this->getType(),
             'label' => $this->getLabel(),
@@ -50,6 +52,6 @@ abstract class Column extends AbstractColumn
                 'placeholder' => $this->getPlaceholder(),
                 'required' => $this->isRequired(),
             ]),
-        ];
+        ], $this->getGridLayoutConfig());
     }
 }

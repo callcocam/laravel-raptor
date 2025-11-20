@@ -14,7 +14,7 @@
       :aria-invalid="hasError"
     />
 
-    <div class="space-y-1.5">
+    <div class="space-y-1">
       <FieldLabel :for="column.name">
         {{ column.label }}
         <span v-if="column.required" class="text-destructive">*</span>

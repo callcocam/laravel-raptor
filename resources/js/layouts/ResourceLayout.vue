@@ -37,7 +37,7 @@ const breadcrumbs = useBreadcrumbs(
 const { containerClasses } = useLayout(props.maxWidth);
 
 // Título da página (usa title prop ou resourcePluralLabel como fallback)
-const pageTitle = computed(() => props.title || props.resourcePluralLabel || 'Dashboard'); 
+const pageTitle = computed(() => props.title || props.resourcePluralLabel || 'Dashboard');
 // Watch para mensagens flash e exibir toasts
 watch(
     () => page.props.flash,
