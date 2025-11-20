@@ -11,7 +11,7 @@
     </Label>
 
     <Select v-model="internalValue" :required="column.required">
-      <SelectTrigger :class="hasError ? 'border-destructive' : ''">
+      <SelectTrigger :class="hasError ? 'border-destructive w-full' : ' w-full'"  class="w-full">
         <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
       </SelectTrigger>
       <SelectContent>

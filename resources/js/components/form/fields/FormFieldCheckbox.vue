@@ -4,7 +4,7 @@
  * Modern replacement for FormColumnCheckbox with improved accessibility
  -->
 <template>
-  <Field orientation="horizontal" :data-invalid="hasError">
+  <Field orientation="horizontal" :data-invalid="hasError" class="gap-y-1">
     <Checkbox
       :id="column.name"
       :name="column.name"

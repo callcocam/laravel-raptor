@@ -4,7 +4,7 @@
  * Modern replacement for FormColumnTextarea with improved accessibility
  -->
 <template>
-  <Field orientation="vertical" :data-invalid="hasError">
+  <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>

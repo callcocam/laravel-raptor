@@ -53,7 +53,7 @@ const handleSubmit = () => {
   <ResourceLayout v-bind="layoutProps" title="Editar">
     <template #content>
       <div class="space-y-6">
-        <Card>
+        <Card class="rounded">
           <CardHeader>
             <div class="flex items-center justify-between">
               <div>
