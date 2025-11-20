@@ -26,7 +26,7 @@ class NumberField extends Column
     {
         parent::__construct($name, $label);
         $this->type('number');
-        $this->component('form-column-number');
+        $this->component('form-field-number');
         $this->setUp();
     }
  

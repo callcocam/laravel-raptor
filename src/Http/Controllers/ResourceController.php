@@ -11,13 +11,14 @@ namespace Callcocam\LaravelRaptor\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
 use Callcocam\LaravelRaptor\Support\Concerns\HasBreadcrumbs;
+use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 use Closure;
 
 abstract class ResourceController extends Controller
 {
     use EvaluatesClosures;
     use HasBreadcrumbs;
-
+    use WithRequests;
     /**
      * Define as variáveis basicas que podem ser substituídas pelos controllers filhos
      */
@@ -90,7 +91,7 @@ abstract class ResourceController extends Controller
 
             if ($modelClass) {
                 $modelInstance = new $modelClass;
-                $this->resourcePluralName = str($modelInstance->getTable())->singular()->toString();
+                $this->resourcePluralName = str($modelInstance->getTable())->toString();
             } else {
                 $this->resourcePluralName = str($this->getResourceName())->plural()->toString();
             }
@@ -126,7 +127,7 @@ abstract class ResourceController extends Controller
 
         return is_null($value) ? null : (string) $value;
     }
- 
+
     /**
      * Retorna o slug do recurso
      */

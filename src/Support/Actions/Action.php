@@ -40,6 +40,10 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
     protected string|null $modalSize = null;
 
+    protected string|null $variant = null;
+
+    protected string|null $size = null;
+
     public function __construct(?string $name)
     {
         $this->name($name);
@@ -70,16 +74,19 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
         return $this;
     }
+
     public function getMethod(): string
     {
         return $this->method;
     }
+
     public function url(Closure|string|bool|null $url): self
     {
         $this->url = $url;
 
         return $this;
     }
+
     public function getUrl($target): mixed
     {
 
@@ -87,6 +94,30 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'request' => $this->getRequest(),
             'target' => $target,
         ]);
+    }
+
+    public function variant(string|null $variant): self
+    {
+        $this->variant = $variant;
+
+        return $this;
+    }
+
+    public function getVariant(): string|null
+    {
+        return $this->variant;
+    }
+
+    public function size(string|null $size): self
+    {
+        $this->size = $size;
+
+        return $this;
+    }
+
+    public function getSize(): string|null
+    {
+        return $this->size;
     }
 
     public function toArray($model = null, $request = null): array
@@ -101,6 +132,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'tooltip' => $this->getTooltip(),
             'target' => $this->target,
             'method' => $this->method,
+            'variant' => $this->getVariant(),
+            'size' => $this->getSize(),
             'url' => $this->getUrl(null)
         ];
     }

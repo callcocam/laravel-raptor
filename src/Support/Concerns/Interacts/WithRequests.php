@@ -17,6 +17,25 @@ trait WithRequests
         ];
     }
 
+    public function getFormActions(): array
+    {
+        $resource = $this->getResourcePluralName();
+        return [
+            // Ações para o formulário
+            \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make('cancel')
+                ->variant('destructive')
+                ->url(function ($request) use ($resource) {
+                    return redirect()->route(sprintf('%s.%s.index', $request->getContext(), $resource));
+                })
+                ->size('sm')
+                ->label('Cancel'),
+            \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
+                ->variant('default')
+                ->size('sm')
+                ->label('Submit')
+        ];
+    }
+
     protected function getImportActions(): array
     {
         return [

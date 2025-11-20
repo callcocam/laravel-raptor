@@ -106,7 +106,7 @@ interface FormColumn {
 
 interface Props {
   column: FormColumn
-  modelValue?: number | null
+  modelValue?: number | string | null
   error?: string | string[]
 }
 

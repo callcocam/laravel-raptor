@@ -23,7 +23,7 @@ class TextareaField extends Column
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
-        $this->component('form-column-textarea');
+        $this->component('form-field-textarea');
         $this->setUp();
     }
 

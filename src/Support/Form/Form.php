@@ -9,20 +9,54 @@
 namespace Callcocam\LaravelRaptor\Support\Form;
 
 use Callcocam\LaravelRaptor\Support\Concerns;
+use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
+use Illuminate\Database\Eloquent\Model;
 
 class Form
 {
     use Concerns\FactoryPattern;
     use Concerns\Interacts\WithActions;
     use InteractWithForm;
+    use HasGridLayout;
+
+    protected ?Model $model = null;
+
+    /**
+     * Define o modelo para popular os valores do formulário
+     */
+    public function model(?Model $model): self
+    {
+        $this->model = $model;
+
+        return $this;
+    }
+
+    /**
+     * Retorna o modelo atual
+     */
+    public function getModel(): ?Model
+    {
+        return $this->model;
+    }
+
+    /**
+     * Configura ações padrão do formulário (Submit e Cancel)
+     */
+    public function defaultActions($actions = []): self
+    {
+        foreach ($actions as $action) {
+            $this->action($action);
+        }
+        return $this;
+    }
 
     /**
      * Renderiza o formulário e retorna a resposta JSON
      */
-    public function render(): \Illuminate\Http\JsonResponse
+    public function render($model = null): array
     {
-        return response()->json($this->toArray());
+        return $this->toArray();
     }
 
     /**
@@ -30,9 +64,16 @@ class Form
      */
     public function toArray(): array
     {
-        return array_merge($this->getGridLayoutConfig(), [
+        $data = array_merge($this->getGridLayoutConfig(), [
             'columns' => $this->getArrayColumns(),
             'formActions' => $this->getArrayActions(),
         ]);
+
+        // Se houver um modelo, inclui os valores
+        if ($this->model) {
+            $data['model'] = $this->model->toArray();
+        }
+
+        return $data;
     }
 }

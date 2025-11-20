@@ -57,7 +57,7 @@ abstract class AbstractController extends ResourceController
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
-            'form' => $this->form(Form::make($this->model(), 'model')),
+            'form' => $this->form(Form::make($this->model(), 'model')->defaultActions($this->getFormActions()))->render(),
         ]);
     }
 
@@ -91,17 +91,17 @@ abstract class AbstractController extends ResourceController
     public function show(Request $request, string $record)
     {
         $model = $this->model()::findOrFail($record);
- 
-        Storage::disk('local')->put('raptor-show.json', json_encode([
-            'resourceName' => $this->getResourceName(),
-            'resourcePluralName' => $this->getResourcePluralName(),
-            'resourceLabel' => $this->getResourceLabel(),
-            'resourcePluralLabel' => $this->getResourcePluralLabel(),
-            'maxWidth' => $this->getMaxWidth(),
-            'breadcrumbs' => $this->breadcrumbs(),
-            'model' => $model,
-            'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
-        ]));
+
+        // Storage::disk('local')->put('raptor-show.json', json_encode([
+        //     'resourceName' => $this->getResourceName(),
+        //     'resourcePluralName' => $this->getResourcePluralName(),
+        //     'resourceLabel' => $this->getResourceLabel(),
+        //     'resourcePluralLabel' => $this->getResourcePluralLabel(),
+        //     'maxWidth' => $this->getMaxWidth(),
+        //     'breadcrumbs' => $this->breadcrumbs(),
+        //     'model' => $model,
+        //     'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
+        // ]));
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
@@ -126,7 +126,7 @@ abstract class AbstractController extends ResourceController
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'model' => $model,
-            'form' => $this->form(Form::make($this->model(), 'model')),
+            'form' => $this->form(Form::make($this->model(), 'model')->model($model)->defaultActions($this->getFormActions()))->render($model),
         ]);
     }
 

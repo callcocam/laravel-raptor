@@ -21,7 +21,7 @@ trait WithActions
     }
 
     public function action(AbstractColumn $action): static
-    {
+    {        
         return $this->addToCollection($action, 'actions');
     }
 
