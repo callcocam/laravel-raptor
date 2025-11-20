@@ -29,9 +29,7 @@ class ImportAction extends ExecuteAction
             ->callback(function ($request) {
                 return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
             })
-            ->columns([
-                HiddenField::make('actionName', $name)->default($name), // Exemplo de campo oculto
-                HiddenField::make('actionType', 'header')->default('header'), // Exemplo de campo oculto
+            ->columns([ 
                 UploadField::make($fileName, 'Arquivo')
                     ->acceptedFileTypes(['.csv', '.xlsx'])
                     ->required()

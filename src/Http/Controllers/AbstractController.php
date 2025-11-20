@@ -58,13 +58,25 @@ abstract class AbstractController extends ResourceController
     public function store(Request $request): BaseRedirectResponse
     {
         try {
-            $validated = $request->validate($this->rules());
+            // Extrai as regras de validação dos campos do formulário
+            $form = $this->form(Form::make($this->model(), 'model'));
+            $validationRules = array_merge(
+                $form->getValidationRules(),
+                $this->rules()
+            );
+            $validationMessages = $form->getValidationMessages();
+
+            // Valida os dados
+            $validated = $request->validate($validationRules, $validationMessages);
 
             $model = $this->model()::create($validated);
 
             return redirect()
                 ->route(sprintf('%s.index', $this->getResourceName()))
                 ->with('success', 'Item criado com sucesso.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-lança exceção de validação para o Laravel tratar
+            throw $e;
         } catch (\Exception $e) {
             return $this->handleStoreError($e);
         }
@@ -107,13 +119,24 @@ abstract class AbstractController extends ResourceController
         try {
             $model = $this->model()::findOrFail($record);
 
-            $validated = $request->validate($this->rules($record));
+            // Extrai as regras de validação dos campos do formulário
+            $form = $this->form(Form::make($this->model(), 'model'));
+            $validationRules = array_merge(
+                $form->getValidationRules(),
+                $this->rules($record)
+            );
+            $validationMessages = $form->getValidationMessages();
+
+            // Valida os dados
+            $validated = $request->validate($validationRules, $validationMessages);
 
             $model->update($validated);
 
-            return redirect()
-                ->route(sprintf('%s.index', $this->getResourceName()))
+            return redirect()->back()
                 ->with('success', 'Item atualizado com sucesso.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-lança exceção de validação para o Laravel tratar
+            throw $e;
         } catch (\Exception $e) {
             return $this->handleUpdateError($e, $record);
         }
@@ -195,6 +218,9 @@ abstract class AbstractController extends ResourceController
             return redirect()
                 ->back()
                 ->with('error', 'Ação em massa não implementada.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-lança exceção de validação para o Laravel tratar
+            throw $e;
         } catch (\Exception $e) {
             return $this->handleBulkActionError($e);
         }
@@ -219,6 +245,7 @@ abstract class AbstractController extends ResourceController
             $actions = match ($type) {
                 'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
+                'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions()),
                 default => collect([])
             };
 

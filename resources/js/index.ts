@@ -113,6 +113,7 @@ ActionRegistry.registerBulk({
     'action-confirm': defineAsyncComponent(() => import('~/components/actions/types/ActionConfirm.vue')),
     'action-modal': defineAsyncComponent(() => import('~/components/actions/types/ActionModalForm.vue')),
     'action-modal-form': defineAsyncComponent(() => import('~/components/actions/types/ActionModalForm.vue')),
+    'action-modal-slideover': defineAsyncComponent(() => import('~/components/actions/types/ActionModalSlideover.vue')),
     'action-callback': defineAsyncComponent(() => import('~/components/actions/types/ActionCallback.vue')),
     'LinkButton': defineAsyncComponent(() => import('~/components/actions/types/ActionButton.vue')),
 })

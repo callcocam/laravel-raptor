@@ -109,12 +109,12 @@ interface Props {
     columns?: FormColumn[]
   }
   size?: 'default' | 'sm' | 'lg' | 'icon'
+  record?: Record<string, any>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   size: 'sm'
-})
-
+}) 
 const emit = defineEmits<{
   (e: 'click', formData?: Record<string, any>): void
   (e: 'open'): void
@@ -132,7 +132,7 @@ const isSubmitting = ref(false)
 const formRef = ref<InstanceType<typeof FormRenderer> | null>(null)
 
 // Dados do formulário (usando ref para permitir v-model)
-const formData = ref<Record<string, any>>({})
+const formData = ref<Record<string, any>>(props.record || {})
 
 // Erros de validação
 const formErrors = ref<Record<string, string | string[]>>({})
@@ -201,8 +201,7 @@ const handleSubmit = async () => {
           emit('success', data)
           closeModal()
         },
-        onError: (error) => { 
-          console.error('Error submitting form:', error)
+        onError: (error) => {  
           // Captura erros de validação do Inertia (objeto com campo: mensagem)
           if (error && typeof error === 'object') {
             // Converte para o formato esperado pelo FormRenderer

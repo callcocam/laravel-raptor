@@ -40,6 +40,7 @@
               v-for="action in getActions(record)"
               :key="action.name"
               :action="action"
+              :record="record"
             />
           </div>
         </div>

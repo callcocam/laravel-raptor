@@ -54,7 +54,7 @@ const emit = defineEmits<{
 const formData = reactive<Record<string, any>>({ ...props.modelValue })
 
 // Erros de validação (computed para reagir às mudanças da prop)
-const formErrors = computed(() => props.errors || {})
+const formErrors = computed(() => props.errors || {}) 
 
 // Validação básica
 const isValid = computed(() => {

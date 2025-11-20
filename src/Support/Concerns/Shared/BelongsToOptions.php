@@ -31,10 +31,111 @@ trait BelongsToOptions
 
     /**
      * Get the options for the filter.
+     * Converte automaticamente para o formato [label, value]
      */
     public function getOptions(): array
     {
-        return $this->evaluate($this->options);
+        $options = $this->evaluate($this->options);
+
+        return $this->normalizeOptions($options);
+    }
+
+    /**
+     * Normaliza as opções para o formato esperado [label => value]
+     * 
+     * Aceita diversos formatos de entrada:
+     * - ['key' => 'value'] => [['label' => 'value', 'value' => 'key']]
+     * - [['label' => 'Teste', 'value' => '01']] => mantém o formato
+     * - ['value1', 'value2'] => [['label' => 'value1', 'value' => 'value1']]
+     */
+    protected function normalizeOptions(array $options): array
+    {
+        if (empty($options)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($options as $key => $value) {
+            // Já está no formato correto [label, value]
+            if (is_array($value) && isset($value['label']) && isset($value['value'])) {
+                $normalized[] = $value;
+                continue;
+            }
+
+            // Formato associativo: ['key' => 'label']
+            if (!is_numeric($key) && !is_array($value)) {
+                $normalized[] = [
+                    'label' => (string) $value,
+                    'value' => (string) $key,
+                ];
+                continue;
+            }
+
+            // Formato numérico simples: ['option1', 'option2']
+            if (is_numeric($key) && !is_array($value)) {
+                $normalized[] = [
+                    'label' => (string) $value,
+                    'value' => (string) $value,
+                ];
+                continue;
+            }
+
+            // Formato array sem label/value definidos: [['id' => 1, 'name' => 'Test']]
+            if (is_array($value)) {
+                // Tenta encontrar campos comuns para label
+                $labelField = $this->findLabelField($value);
+                $valueField = $this->findValueField($value);
+
+                if ($labelField && $valueField) {
+                    $normalized[] = [
+                        'label' => (string) $value[$labelField],
+                        'value' => (string) $value[$valueField],
+                    ];
+                    continue;
+                }
+            }
+
+            // Fallback: usa o valor como label e value
+            $normalized[] = [
+                'label' => is_array($value) ? json_encode($value) : (string) $value,
+                'value' => is_array($value) ? json_encode($value) : (string) $value,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Encontra o campo mais provável para ser usado como label
+     */
+    protected function findLabelField(array $item): ?string
+    {
+        $labelCandidates = ['label', 'name', 'title', 'text', 'description'];
+
+        foreach ($labelCandidates as $candidate) {
+            if (isset($item[$candidate])) {
+                return $candidate;
+            }
+        }
+
+        return array_key_first($item);
+    }
+
+    /**
+     * Encontra o campo mais provável para ser usado como value
+     */
+    protected function findValueField(array $item): ?string
+    {
+        $valueCandidates = ['value', 'id', 'key', 'code'];
+
+        foreach ($valueCandidates as $candidate) {
+            if (isset($item[$candidate])) {
+                return $candidate;
+            }
+        }
+
+        return array_key_first($item);
     }
 
     public function multiple(bool|Closure $multiple = true): static

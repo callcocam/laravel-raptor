@@ -89,7 +89,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         ]);
     }
 
-    public function toArray(): array
+    public function toArray($model = null, $request = null): array
     {
         return  [
             'actionType' => $this->getActionType(),

@@ -18,7 +18,7 @@ class HiddenField extends Column
     {
         parent::__construct($name, '');
         $this->type('hidden');
-        $this->component('form-column-hidden');
+        $this->component('form-field-hidden');
         $this->defaultValue = $value;
         $this->setUp();
     }

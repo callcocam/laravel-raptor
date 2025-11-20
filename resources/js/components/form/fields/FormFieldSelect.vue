@@ -87,6 +87,7 @@ const errorArray = computed(() => {
 })
 
 const options = computed(() => {
+  console.log(props.column)
   if (!props.column.options) return []
 
   if (!Array.isArray(props.column.options)) {

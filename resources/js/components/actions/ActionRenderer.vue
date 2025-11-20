@@ -5,7 +5,7 @@
  * Similar ao InfoRenderer.vue
  -->
 <template>
-  <component :is="component" :action="action" @click="handleClick" />
+  <component :is="component" :action="action" :record="record" @click="handleClick" />
 </template>
 
 <script lang="ts" setup>
@@ -15,6 +15,7 @@ import type { TableAction } from '~/types/table'
 
 const props = defineProps<{
   action: TableAction
+  record?: Record<string, any>
 }>()
 
 const emit = defineEmits<{

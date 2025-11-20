@@ -17,7 +17,7 @@ abstract class Column extends AbstractColumn
 
     protected string $type = 'text';
 
-    protected ?string $component = 'form-column-text';
+    protected ?string $component = 'form-field-text';
 
     public function __construct($name, $label = null)
     {

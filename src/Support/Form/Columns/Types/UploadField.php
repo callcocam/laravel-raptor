@@ -23,7 +23,7 @@ class UploadField extends Column
         parent::__construct($name, $label);
         $this->name($name)
             ->label($label ?? 'Upload')
-            ->component('form-column-file-upload');
+            ->component('form-field-file-upload');
         $this->setUp();
     }
 
