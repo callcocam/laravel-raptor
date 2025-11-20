@@ -148,6 +148,11 @@ trait WithTable
     /**
      * Avalia quais actions o usuário pode executar neste registro
      * Delega para a própria action a responsabilidade de renderização e validação
+     * 
+     * A visibilidade é controlada por cada action via BelongsToVisible trait:
+     * - ->policy('update') - Usa Laravel Policy
+     * - ->visible(fn($item) => ...) - Callback customizado
+     * - ->visibleWhen(fn($item, $user) => ...) - Validação complexa
      */
     protected function evaluateActionsAuthorization(Model $model): array
     {
@@ -155,9 +160,9 @@ trait WithTable
 
         foreach ($this->getActions() as $action) {
             // A action é responsável por sua própria renderização completa
-            $rendered = $action->render($model, $this->getRequest());
-            // Se a action retornou algo (autorizada e válida), adiciona ao array
-            if ($rendered !== null) {
+            $rendered = $action->render($model, $this->getRequest()); 
+            // Filtra apenas actions visíveis e válidas
+            if ($rendered !== null && ($rendered['visible'] ?? true)) {
                 $actions[$action->getName()] = $rendered;
             }
         }

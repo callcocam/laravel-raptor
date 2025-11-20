@@ -41,7 +41,7 @@ trait BelongsToVisible
     /**
      * Visibilidade geral
      */
-    protected bool|Closure|null $visible = true;
+    protected bool|Closure|null $visible = false;
 
     /**
      * Visibilidade por contexto (armazenamento centralizado)
@@ -223,8 +223,7 @@ trait BelongsToVisible
         // Camada 2: Laravel Policy (lazy evaluation)
         if ($this->policyAbility && ! $this->checkPolicy($item, $user)) {
             return false;
-        }
-
+        } 
         // Camada 3: Visibilidade geral
         if (! $this->evaluate($this->visible, [
             'item' => $item,

@@ -12,7 +12,7 @@ use Callcocam\LaravelRaptor\Support\Actions\Action;
 
 class DeleteAction extends Action
 {
-     
+
     protected string $method = 'DELETE';
 
     public function __construct(?string $name)
@@ -21,8 +21,8 @@ class DeleteAction extends Action
         $this->name($name) // ✅ Sempre define o name
             ->label('Excluir')
             ->icon('Trash2')
-            ->color('red') 
-            ->tooltip('Excluir registro') 
+            ->color('red')
+            ->tooltip('Excluir registro')
             ->confirm([
                 'title' => 'Confirmar exclusão',
                 'message' => 'Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',
@@ -31,8 +31,7 @@ class DeleteAction extends Action
                 'requiresTypedConfirmation' => false, // Desabilitado por padrão
                 'typedConfirmationWord' => 'EXCLUIR', // Palavra padrão
             ])
-            ->requiresTypedConfirmation()
-            ->hidden(fn($record) => !empty($record->deleted_at));
+            ->requiresTypedConfirmation() ;
         $this->setUp();
     }
 
