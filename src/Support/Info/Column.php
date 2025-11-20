@@ -9,11 +9,15 @@
 namespace Callcocam\LaravelRaptor\Support\Info;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\HasCastCallbackFormatter;
+use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 
 abstract class Column extends AbstractColumn
 {
     use BelongsToHelpers;
+    use HasGridLayout;
+    use HasCastCallbackFormatter;
 
     protected string $type = 'text';
 

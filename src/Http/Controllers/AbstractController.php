@@ -12,7 +12,8 @@ use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
@@ -91,6 +92,16 @@ abstract class AbstractController extends ResourceController
     {
         $model = $this->model()::findOrFail($record);
  
+        Storage::disk('local')->put('raptor-show.json', json_encode([
+            'resourceName' => $this->getResourceName(),
+            'resourcePluralName' => $this->getResourcePluralName(),
+            'resourceLabel' => $this->getResourceLabel(),
+            'resourcePluralLabel' => $this->getResourcePluralLabel(),
+            'maxWidth' => $this->getMaxWidth(),
+            'breadcrumbs' => $this->breadcrumbs(),
+            'model' => $model,
+            'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
+        ]));
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),

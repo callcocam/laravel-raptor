@@ -1,17 +1,3 @@
-<template>
-  <div class="inline-flex items-center gap-2" :title="column.tooltip">
-    <span
-      :class="[
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
-        statusClasses
-      ]"
-    >
-      <Icon v-if="column.icon" :is="column.icon" class="h-3 w-3" />
-      {{ column.text }}
-    </span>
-  </div>
-</template>
-
 <script lang="ts" setup>
 import { computed } from 'vue'
 import Icon from '~/components/icon.vue'
@@ -38,3 +24,17 @@ const statusClasses = computed(() => {
   return colorMap[props.column.color || 'muted'] || colorMap.muted
 })
 </script>
+
+<template>
+  <div class="inline-flex items-center gap-2" :title="column.tooltip">
+    <span
+      :class="[
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+        statusClasses
+      ]"
+    >
+      <Icon v-if="column.icon" :is="column.icon" class="h-3 w-3" />
+      {{ column.text }}
+    </span>
+  </div>
+</template>
