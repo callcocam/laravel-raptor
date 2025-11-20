@@ -53,6 +53,7 @@ class ModalAction extends ExecuteAction
             ->actionType('actions')
             ->component('action-modal-form')
             ->method('POST')
+            ->policy('modal')
             ->callback(function ($request = null) {
                 return redirect()->back()->with('warning', 'Action executed successfully.');
             })

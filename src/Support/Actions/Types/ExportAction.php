@@ -21,6 +21,7 @@ class ExportAction extends ExecuteAction
             ->icon('Download')
             ->color('green')
             ->tooltip('Exportar registros')
+            ->policy('export')
             ->callback(function ($request) {
                 return redirect()->back()->with('success', 'Exportação realizada com sucesso!');
             })
