@@ -22,6 +22,8 @@ class TableBuilder
     
     protected $dataSource;
 
+    protected $model;
+
     protected bool $dependenciesInjected = false;
 
     protected array $config = [
@@ -30,6 +32,7 @@ class TableBuilder
 
     public function __construct($model = null, $type = 'model')
     {
+        $this->model = $model;
         // === INICIALIZAÇÃO DO SISTEMA AUTOMÁTICO COMPLETO ===
         CastRegistry::initialize(); // Carrega formatadores padrão
 
@@ -95,6 +98,13 @@ class TableBuilder
         return $this;
     }
 
+    /**
+     * Retorna a classe do modelo
+     */
+    public function getModelClass(): ?string
+    {
+        return is_object($this->model) ? get_class($this->model) : $this->model;
+    }
 
     /**
      * Obtem os scope de relacionamento

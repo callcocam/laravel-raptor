@@ -39,9 +39,10 @@ trait BelongsToVisible
     protected ?Closure $visibilityCallback = null;
 
     /**
-     * Visibilidade geral
+     * Visibilidade geral (padrão: true)
+     * Se policy estiver configurada, ela terá prioridade
      */
-    protected bool|Closure|null $visible = false;
+    protected bool|Closure|null $visible = true;
 
     /**
      * Visibilidade por contexto (armazenamento centralizado)
@@ -221,9 +222,10 @@ trait BelongsToVisible
         }
 
         // Camada 2: Laravel Policy (lazy evaluation)
-        if ($this->policyAbility && ! $this->checkPolicy($item, $user)) {
+        if ($this->policyAbility && !$this->checkPolicy($item, $user)) {
             return false;
-        } 
+        }
+
         // Camada 3: Visibilidade geral
         if (! $this->evaluate($this->visible, [
             'item' => $item,
@@ -302,8 +304,7 @@ trait BelongsToVisible
         // Se não tem usuário autenticado, falha
         if (! $user) {
             return false;
-        }
-
+        }  
         // Verifica policy usando Gate
         try {
             return Gate::forUser($user)->allows($this->policyAbility, $item);
