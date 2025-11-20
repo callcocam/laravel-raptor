@@ -35,6 +35,7 @@ abstract class AbstractController extends ResourceController
         $data = $this->table(TableBuilder::make($this->model(), 'model'))
             ->request($request)
             ->toArray();
+            
         // Storage::disk('local')->put('raptor.json', json_encode($data));
         return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',

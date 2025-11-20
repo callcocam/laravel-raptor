@@ -21,6 +21,11 @@ trait HasRolesAndPermissions
     protected function hasPermissionThroughRole($permission): bool
     {
         if ($this->hasRoles()) {
+            // Garante que as roles estão carregadas
+            if (!$this->relationLoaded('roles')) {
+                $this->load('roles');
+            }
+
             foreach ($permission->roles as $role) {
                 if ($this->roles->contains($role)) {
                     return true;
@@ -34,6 +39,11 @@ trait HasRolesAndPermissions
     protected function hasPermissionThroughRoleFlag(): bool
     {
         if ($this->hasRoles()) {
+            // Garante que as roles estão carregadas
+            if (!$this->relationLoaded('roles')) {
+                $this->load('roles');
+            }
+
             return $this->roles
                 ->filter(function ($role) {
                     return $role->blocked;

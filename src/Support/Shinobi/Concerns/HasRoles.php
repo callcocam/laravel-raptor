@@ -21,7 +21,7 @@ trait HasRoles
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(config('raptor.models.role', ModelsRole::class))->withTimestamps();
+        return $this->belongsToMany(config('raptor.shinobi.models.role', ModelsRole::class))->withTimestamps();
     }
 
     /**
@@ -144,7 +144,12 @@ trait HasRoles
 
     public function hasPermissionRoleFlags()
     { 
-        if ($this->hasRoles()) { 
+        if ($this->hasRoles()) {
+            // Garante que as roles estão carregadas
+            if (!$this->relationLoaded('roles')) {
+                $this->load('roles');
+            }
+
             return $this->roles
                 ->filter(function ($role) {
                     return $role->special;
@@ -159,6 +164,6 @@ trait HasRoles
      */
     protected function getRoleModel(): Role
     {
-        return app()->make(config('raptor.models.role', ModelsRole::class));
+        return app()->make(config('raptor.shinobi.models.role', ModelsRole::class));
     }
 }
