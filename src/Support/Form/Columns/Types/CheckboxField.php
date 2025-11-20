@@ -24,13 +24,7 @@ class CheckboxField extends Column
         $this->component('form-column-checkbox');
         $this->setUp();
     }
-
-    public function required(bool $required = true): self
-    {
-        $this->isRequired = $required;
-
-        return $this;
-    }
+ 
 
     public function description(string $description): self
     {

@@ -21,12 +21,37 @@ class NavigationService
     protected array $contexts;
     protected int $cacheTtl;
     protected string $cacheKeyPrefix;
+    protected array $controllerDirectories;
 
     public function __construct()
     {
         $this->contexts = config('raptor.navigation.contexts', []);
         $this->cacheTtl = config('raptor.navigation.cache_ttl', 3600);
         $this->cacheKeyPrefix = config('raptor.navigation.cache_key_prefix', 'navigation');
+        $this->loadControllerDirectories();
+    }
+
+    /**
+     * Carrega diretórios de controllers a partir da config
+     */
+    protected function loadControllerDirectories(): void
+    {
+        $this->controllerDirectories = config('raptor.route_injector.directories', [
+            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
+            'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Admin' => __DIR__.'/../Http/Controllers/Admin',
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__.'/../Http/Controllers/Tenant',
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__.'/../Http/Controllers/Landlord',
+        ]);
+    }
+
+    /**
+     * Adiciona um diretório customizado para scan
+     */
+    public function addDirectory(string $namespace, string $path): self
+    {
+        $this->controllerDirectories[$namespace] = $path;
+        return $this;
     }
 
     public function buildNavigation(User $user, string $context = 'tenant'): array
@@ -43,38 +68,56 @@ class NavigationService
         $controllers = $this->scanControllers($context);
         $navigationItems = [];
 
-      
         foreach ($controllers as $controllerClass) {
             $items = $this->processController($controllerClass, $user);
             $navigationItems = array_merge($navigationItems, $items);
-        } 
+        }
+        
         usort($navigationItems, fn($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
 
         return $navigationItems;
     }
 
+    /**
+     * Escaneia controllers em todos os diretórios configurados
+     * Filtra por contexto (tenant, landlord, admin) baseado no namespace
+     */
     public function scanControllers(string $context): array
     {
-        if (!isset($this->contexts[$context])) {
-            return [];
-        }
-
-        $config = $this->contexts[$context];
-        $controllersPath = $config['controllers_path'];
-        $controllersNamespace = $config['controllers_namespace'];
-
-        if (!File::isDirectory($controllersPath)) {
-            return [];
-        }
-
         $controllers = [];
-        $files = File::allFiles($controllersPath);
+        
+        // Mapeia contexto para partes do namespace que deve conter
+        $contextNamespaceMap = [
+            'tenant' => 'Tenant',
+            'landlord' => 'Landlord',
+            'admin' => 'Admin',
+        ];
+        
+        $requiredNamespace = $contextNamespaceMap[$context] ?? null;
+        
+        if (!$requiredNamespace) {
+            return [];
+        }
 
-        foreach ($files as $file) {
-            $className = $this->getClassNameFromFile($file, $controllersPath, $controllersNamespace);
+        // Escaneia todos os diretórios configurados
+        foreach ($this->controllerDirectories as $namespace => $path) {
+            // Filtra apenas namespaces que correspondem ao contexto
+            if (!str_contains($namespace, $requiredNamespace)) {
+                continue;
+            }
 
-            if ($className && $this->hasGetPagesMethod($className)) {
-                $controllers[] = $className;
+            if (!File::isDirectory($path)) {
+                continue;
+            }
+
+            $files = File::allFiles($path);
+
+            foreach ($files as $file) {
+                $className = $this->getClassNameFromFile($file, $path, $namespace);
+
+                if ($className && $this->hasGetPagesMethod($className)) {
+                    $controllers[] = $className;
+                }
             }
         }
 

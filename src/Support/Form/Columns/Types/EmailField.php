@@ -23,20 +23,7 @@ class EmailField extends Column
         $this->component('form-column-email');
         $this->setUp();
     }
-
-    public function required(bool $required = true): self
-    {
-        $this->isRequired = $required;
-
-        return $this;
-    }
-
-    public function placeholder(string $placeholder): self
-    {
-        $this->placeholder = $placeholder;
-
-        return $this;
-    }
+ 
 
     public function toArray(): array
     {

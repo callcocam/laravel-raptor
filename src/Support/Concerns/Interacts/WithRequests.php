@@ -21,7 +21,7 @@ trait WithRequests
      */
     protected function getPageHeaderActions(?Model $model = null, string $page = 'index'): array
     {
-        return match($page) {
+        return match ($page) {
             'show' => $this->getShowPageActions($model),
             'edit' => $this->getEditPageActions($model),
             'create' => $this->getCreatePageActions(),
@@ -58,22 +58,19 @@ trait WithRequests
             \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make("{$resourceName}.destroy")
                 ->size('sm')
                 ->variant('destructive')
-                ->policy('delete')
-                ->visible(fn($item) => !$item?->trashed()),
+                ->policy('delete'),
 
             // Restore Action - usa policy('restore') + verifica se está deletado
             \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make("{$resourceName}.restore")
                 ->size('sm')
                 ->variant('default')
-                ->policy('restore')
-                ->visible(fn($item) => $item?->trashed()),
+                ->policy('restore'),
 
             // Force Delete Action - usa policy('forceDelete') + verifica se está deletado
             \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make("{$resourceName}.forceDelete")
                 ->size('sm')
                 ->variant('destructive')
-                ->policy('forceDelete')
-                ->visible(fn($item) => $item?->trashed()),
+                ->policy('forceDelete'),
         ];
 
         return $actions;
@@ -103,8 +100,7 @@ trait WithRequests
             \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make("{$resourceName}.destroy")
                 ->size('sm')
                 ->variant('destructive')
-                ->policy('delete')
-                ->visible(fn($item) => !$item?->trashed()),
+                ->policy('delete'),
         ];
 
         return $actions;
