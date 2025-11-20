@@ -16,34 +16,76 @@ use ReflectionClass;
 
 class TenantRouteInjector
 {
-    protected string $controllersPath;
-    protected string $controllersNamespace = 'App\\Http\\Controllers\\Tenant';
+    /**
+     * Configuração de diretórios de controllers para scan
+     * Formato: ['namespace' => 'path']
+     */
+    protected array $controllerDirectories = [];
 
     public function __construct()
     {
-        $this->controllersPath = app_path('Http/Controllers/Tenant');
+        $this->loadDefaultDirectories();
+    }
+
+    /**
+     * Carrega diretórios padrão a partir do config
+     */
+    protected function loadDefaultDirectories(): void
+    {
+        // Carrega configuração do arquivo config/raptor.php
+        $configuredDirs = config('raptor.route_injector.directories', []);
+
+        // Diretórios padrão se não houver configuração
+        $defaultDirectories = [
+            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
+            'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'), 
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant',
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../Http/Controllers/Landlord',
+        ];
+
+        $this->controllerDirectories = !empty($configuredDirs) ? $configuredDirs : $defaultDirectories;
+    }
+
+    /**
+     * Adiciona um diretório customizado para scan
+     */
+    public function addDirectory(string $namespace, string $path): self
+    {
+        $this->controllerDirectories[$namespace] = $path;
+        return $this;
+    }
+
+    /**
+     * Define diretórios (substitui todos)
+     */
+    public function setDirectories(array $directories): self
+    {
+        $this->controllerDirectories = $directories;
+        return $this;
     }
 
     public function registerRoutes(): void
     {
-        if (!File::isDirectory($this->controllersPath)) {
-            return;
-        }
+        foreach ($this->controllerDirectories as $namespace => $path) {
+            if (!File::isDirectory($path)) {
+                continue;
+            }
 
-        $controllers = $this->scanControllers();
+            $controllers = $this->scanControllers($namespace, $path);
 
-        foreach ($controllers as $controllerClass) {
-            $this->registerControllerRoutes($controllerClass);
+            foreach ($controllers as $controllerClass) {
+                $this->registerControllerRoutes($controllerClass);
+            }
         }
     }
 
-    protected function scanControllers(): array
+    protected function scanControllers(string $namespace, string $path): array
     {
         $controllers = [];
-        $files = File::allFiles($this->controllersPath);
+        $files = File::allFiles($path);
 
         foreach ($files as $file) {
-            $className = $this->getClassNameFromFile($file);
+            $className = $this->getClassNameFromFile($file, $namespace, $path);
 
             if ($className && $this->hasGetPagesMethod($className)) {
                 $controllers[] = $className;
@@ -53,11 +95,11 @@ class TenantRouteInjector
         return $controllers;
     }
 
-    protected function getClassNameFromFile($file): ?string
+    protected function getClassNameFromFile($file, string $namespace, string $basePath): ?string
     {
-        $relativePath = str_replace($this->controllersPath . '/', '', $file->getPathname());
+        $relativePath = str_replace($basePath . '/', '', $file->getPathname());
         $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
-        $fullClassName = $this->controllersNamespace . '\\' . $className;
+        $fullClassName = $namespace . '\\' . $className;
 
         if (class_exists($fullClassName)) {
             return $fullClassName;

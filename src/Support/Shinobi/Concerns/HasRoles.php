@@ -143,8 +143,8 @@ trait HasRoles
     }
 
     public function hasPermissionRoleFlags()
-    {
-        if ($this->hasRoles()) {
+    { 
+        if ($this->hasRoles()) { 
             return $this->roles
                 ->filter(function ($role) {
                     return $role->special;

@@ -10,6 +10,8 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Tenant;
 
 use Callcocam\LaravelRaptor\Http\Controllers\TenantController;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 
 class ImageController extends TenantController
