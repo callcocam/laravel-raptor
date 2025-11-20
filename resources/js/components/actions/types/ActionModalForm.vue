@@ -187,8 +187,7 @@ const handleSubmit = async () => {
     formErrors.value = {} // Limpa erros anteriores
 
     // Pega o formData do FormRenderer (se existir ref)
-    const dataToSubmit = formRef.value?.formData || formData.value
-    console.log('Submitting form data:', dataToSubmit)
+    const dataToSubmit = formRef.value?.formData || formData.value 
  
 
     try {
@@ -203,7 +202,7 @@ const handleSubmit = async () => {
           closeModal()
         },
         onError: (error) => { 
-
+          console.error('Error submitting form:', error)
           // Captura erros de validação (422)
           if (error.errors) {
             formErrors.value = error.errors

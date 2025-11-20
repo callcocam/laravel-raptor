@@ -82,7 +82,7 @@ export function useAction() {
         })
         payload = formDataPayload
       }
-      console.log(options);
+      console.log(payload, formData);
       // Executa usando router moderno do Inertia.js
       switch (action.method) {
         case 'GET':

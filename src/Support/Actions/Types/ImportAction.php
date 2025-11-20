@@ -8,8 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\HiddenField;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\HiddenField; 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField; 
 
 class ImportAction extends ExecuteAction
@@ -31,8 +30,18 @@ class ImportAction extends ExecuteAction
                 return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
             })
             ->columns([
-                TextField::make('actionName')->default($name), // Exemplo de campo oculto
-                UploadField::make($fileName, 'Arquivo')->acceptedFileTypes(['.csv', '.xlsx'])->required()
+                HiddenField::make('actionName', $name)->default($name), // Exemplo de campo oculto
+                HiddenField::make('actionType', 'header')->default('header'), // Exemplo de campo oculto
+                UploadField::make($fileName, 'Arquivo')
+                    ->acceptedFileTypes(['.csv', '.xlsx'])
+                    ->required()
+                    ->rules(['required', 'file', 'mimes:csv,xlsx', 'max:10240'])
+                    ->messages([
+                        'required' => 'O arquivo é obrigatório.',
+                        'file' => 'Deve ser um arquivo válido.',
+                        'mimes' => 'O arquivo deve ser CSV ou XLSX.',
+                        'max' => 'O arquivo não pode ser maior que 10MB.',
+                    ])
             ])
             ->confirm([
                 'title' => 'Importar Registros',

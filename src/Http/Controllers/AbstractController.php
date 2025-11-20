@@ -141,7 +141,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
-            
+
             $model->restore();
 
             return redirect()
@@ -159,7 +159,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
-            
+
             $model->forceDelete();
 
             return redirect()
@@ -187,7 +187,7 @@ abstract class AbstractController extends ResourceController
 
             // Chama método dinâmico baseado na action
             $methodName = 'bulk' . ucfirst($action);
-            
+
             if (method_exists($this, $methodName)) {
                 return $this->$methodName($ids);
             }
@@ -207,27 +207,45 @@ abstract class AbstractController extends ResourceController
     public function execute(Request $request): BaseRedirectResponse
     {
         try {
-            $type = $request->input('actionType');
-            $actionName = $request->input('actionName');
- 
-            $actions = match($type) {
-                'header' =>  collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
-                'bulk' =>  collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
+            // Valida os campos básicos da action
+            $validated = $request->validate([
+                'actionType' => 'required|string',
+                'actionName' => 'required|string',
+            ]);
+
+            $type = data_get($validated, 'actionType');
+            $actionName = data_get($validated, 'actionName');
+
+            $actions = match ($type) {
+                'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
+                'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
                 default => collect([])
             };
 
-            $callback = $actions->filter(fn($action) => $action->getName() === $actionName)->first(); 
-            
-            if ($callback) {
-                $callback->execute($request);
-                return $callback->execute($request);
+            $callback = $actions->filter(fn($action) => $action->getName() === $actionName)->first();
+
+            if (!$callback) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Ação não encontrada.');
             }
 
-            return redirect()
-                ->back()
-                ->with('error', 'Ação não implementada.');
+            // Extrai as regras de validação dos campos da action
+            $validationRules = $callback->getValidationRules();
+            $validationMessages = $callback->getValidationMessages();
+
+            // Valida os dados do formulário da action se houver regras
+            if (!empty($validationRules)) {
+                $request->validate($validationRules, $validationMessages);
+            }
+
+            // Executa o callback da action
+            return $callback->execute($request);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Re-lança exceção de validação para o Laravel tratar
+            throw $e;
         } catch (\Exception $e) {
-            return $this->handleExecuteError($e, $request->input('action', 'desconhecida'));
+            return $this->handleExecuteError($e, $request->input('actionName', 'desconhecida'));
         }
     }
     /**

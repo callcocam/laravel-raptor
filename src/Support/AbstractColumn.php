@@ -22,6 +22,7 @@ abstract class AbstractColumn
     use Shared\BelongsToOptions;
     use Shared\BelongsToTooltip;
     use Shared\BelongsToType;
+    use Shared\BelongsToValidation;
     use Shared\BelongsToVisible;
 
 

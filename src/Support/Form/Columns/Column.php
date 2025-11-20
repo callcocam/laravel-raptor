@@ -40,11 +40,15 @@ abstract class Column extends AbstractColumn
             'prefix' => $this->getPrefix(),
             'suffix' => $this->getSuffix(),
             'component' => $this->getComponent(),
+            'required' => $this->isRequired(),
+            'rules' => $this->getRules(),
+            'messages' => $this->getMessages(),
             'attributes' => array_filter([
                 'id' => $this->getId(),
                 'type' => $this->getType(),
                 'name' => $this->getName(),
                 'placeholder' => $this->getPlaceholder(),
+                'required' => $this->isRequired(),
             ]),
         ];
     }

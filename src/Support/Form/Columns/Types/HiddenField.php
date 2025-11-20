@@ -27,7 +27,7 @@ class HiddenField extends Column
     public function toArray(): array
     {
         return array_merge(parent::toArray(), [
-            'default' => $this->defaultValue,
+            'default' => $this->defaultValue ?? $this->default,
         ]);
     }
 }

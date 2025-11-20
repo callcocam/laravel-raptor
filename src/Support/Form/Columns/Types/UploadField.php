@@ -33,13 +33,7 @@ class UploadField extends Column
 
         return $this;
     }
-
-    public function required(bool $required = true): self
-    {
-        $this->isRequired = $required;
-
-        return $this;
-    }
+ 
 
     public function maxSize(int $sizeInMB): self
     {
@@ -51,8 +45,7 @@ class UploadField extends Column
     public function toArray(): array
     {
         return array_merge(parent::toArray(), [
-            'acceptedFileTypes' => $this->acceptedFileTypes,
-            'required' => $this->isRequired,
+            'acceptedFileTypes' => $this->acceptedFileTypes, 
             'maxSize' => $this->maxSize,
             'multiple' => $this->isMultiple(),
         ]);
