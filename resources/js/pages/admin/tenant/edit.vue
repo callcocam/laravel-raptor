@@ -3,6 +3,7 @@ import { useForm } from '@inertiajs/vue3'
 import ResourceLayout from './../../../layouts/ResourceLayout.vue'
 import FormRenderer from './../../../components/form/FormRenderer.vue'
 import FormActions from './../../../components/form/FormActions.vue'
+import PageHeaderActions from './../../../components/PageHeaderActions.vue'
 import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -24,6 +25,7 @@ interface Props {
     model?: Record<string, any>
     formActions?: any[]
   }
+  pageHeaderActions?: any[]
 }
 
 const props = defineProps<Props>()
@@ -53,8 +55,13 @@ const handleSubmit = () => {
       <div class="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Editar {{ resourceLabel }}</CardTitle>
-            <CardDescription v-if="message">{{ message }}</CardDescription>
+            <div class="flex items-center justify-between">
+              <div>
+                <CardTitle>Editar {{ resourceLabel }}</CardTitle>
+                <CardDescription v-if="message">{{ message }}</CardDescription>
+              </div>
+              <PageHeaderActions :actions="pageHeaderActions" :model-id="model?.id" />
+            </div>
           </CardHeader>
           <CardContent>
             <form @submit.prevent="handleSubmit" class="space-y-6">

@@ -58,6 +58,11 @@ abstract class AbstractController extends ResourceController
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'form' => $this->form(Form::make($this->model(), 'model')->defaultActions($this->getFormActions()))->render(),
+            'pageHeaderActions' => collect($this->getPageHeaderActions(null, 'create'))
+                ->map(fn($action) => $action->render(null, $request))
+                ->filter(fn($action) => $action['visible'] ?? true)
+                ->values()
+                ->toArray(),
         ]);
     }
 
@@ -92,16 +97,6 @@ abstract class AbstractController extends ResourceController
     {
         $model = $this->model()::findOrFail($record);
 
-        // Storage::disk('local')->put('raptor-show.json', json_encode([
-        //     'resourceName' => $this->getResourceName(),
-        //     'resourcePluralName' => $this->getResourcePluralName(),
-        //     'resourceLabel' => $this->getResourceLabel(),
-        //     'resourcePluralLabel' => $this->getResourcePluralLabel(),
-        //     'maxWidth' => $this->getMaxWidth(),
-        //     'breadcrumbs' => $this->breadcrumbs(),
-        //     'model' => $model,
-        //     'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
-        // ]));
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
@@ -111,6 +106,11 @@ abstract class AbstractController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
             'model' => $model,
             'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
+            'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'show'))
+                ->map(fn($action) => $action->render($model, $request))
+                ->filter(fn($action) => $action['visible'] ?? true)
+                ->values()
+                ->toArray(),
         ]);
     }
 
@@ -127,6 +127,11 @@ abstract class AbstractController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
             'model' => $model,
             'form' => $this->form(Form::make($this->model(), 'model')->model($model)->defaultActions($this->getFormActions()))->render($model),
+            'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'edit'))
+                ->map(fn($action) => $action->render($model, $request))
+                ->filter(fn($action) => $action['visible'] ?? true)
+                ->values()
+                ->toArray(),
         ]);
     }
 

@@ -13,10 +13,7 @@
             </CardTitle>
             <Icon
               is="ChevronDown"
-              :class="[
-                'h-4 w-4 transition-transform',
-                isOpen ? 'rotate-180' : ''
-              ]"
+              :class="`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`"
             />
           </div>
         </CollapsibleTrigger>
@@ -99,6 +96,15 @@ const props = defineProps<{
     title?: string
     description?: string
     gridCols?: string
+    gap?: string
+    responsive?: {
+      grid?: {
+        sm?: string
+        md?: string
+        lg?: string
+        xl?: string
+      }
+    }
     collapsible?: boolean
     defaultExpanded?: boolean
   }
@@ -107,7 +113,7 @@ const props = defineProps<{
 const isOpen = ref(props.column.defaultExpanded ?? true)
 
 const gridClass = computed(() => {
-  const cols = props.column.gridColumns || '1'
+  const cols = props.column.gridCols || '1'
   const gap = props.column.gap || '4'
   const responsive = props.column.responsive?.grid || {}
 

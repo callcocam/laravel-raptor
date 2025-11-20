@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ResourceLayout from './../../../layouts/ResourceLayout.vue'
 import InfoRenderer from './../../../components/infolist/InfoReander.vue'
+import PageHeaderActions from './../../../components/PageHeaderActions.vue'
 import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -10,6 +11,7 @@ interface Props {
   breadcrumbs?: BackendBreadcrumb[]
   model?: any
   infolist?: Record<string, any>
+  pageHeaderActions?: any[]
 }
 
 const props = defineProps<Props>()
@@ -32,8 +34,13 @@ const columns = Object.entries(props.infolist || {}).filter(
       <div class="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>{{ resourceLabel }}</CardTitle>
-            <CardDescription v-if="message">{{ message }}</CardDescription>
+            <div class="flex items-center justify-between">
+              <div>
+                <CardTitle>{{ resourceLabel }}</CardTitle>
+                <CardDescription v-if="message">{{ message }}</CardDescription>
+              </div>
+              <PageHeaderActions :actions="pageHeaderActions" :model-id="model?.id" />
+            </div>
           </CardHeader>
           <CardContent>
             <div class="grid gap-6">
