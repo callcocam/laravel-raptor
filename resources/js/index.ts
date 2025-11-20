@@ -38,6 +38,22 @@ ComponentRegistry.registerBulk({
  *
  * Estes componentes são usados em formulários e modais de ações
  */
+
+// New Field-based components (recommended)
+ComponentRegistry.registerBulk({
+    'form-field-text': defineAsyncComponent(() => import('~/components/form/fields/FormFieldText.vue')),
+    'form-field-textarea': defineAsyncComponent(() => import('~/components/form/fields/FormFieldTextarea.vue')),
+    'form-field-select': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSelect.vue')),
+    'form-field-checkbox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCheckbox.vue')),
+    'form-field-date': defineAsyncComponent(() => import('~/components/form/fields/FormFieldDate.vue')),
+    'form-field-number': defineAsyncComponent(() => import('~/components/form/fields/FormFieldNumber.vue')),
+    'form-field-email': defineAsyncComponent(() => import('~/components/form/fields/FormFieldEmail.vue')),
+    'form-field-password': defineAsyncComponent(() => import('~/components/form/fields/FormFieldPassword.vue')),
+    'form-field-hidden': defineAsyncComponent(() => import('~/components/form/fields/FormFieldHidden.vue')),
+    'form-field-file-upload': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUpload.vue')),
+})
+
+// Legacy components (backwards compatibility)
 ComponentRegistry.registerBulk({
     'form-column-text': defineAsyncComponent(() => import('~/components/form/columns/FormColumnText.vue')),
     'form-column-textarea': defineAsyncComponent(() => import('~/components/form/columns/FormColumnTextarea.vue')),

@@ -30,11 +30,24 @@ const emit = defineEmits<{
 /**
  * Obtém o componente a ser renderizado do ComponentRegistry
  *
- * Usa o campo 'component' da coluna (ex: 'form-column-file-upload')
- * Fallback para 'form-column-text' se não encontrado
+ * Usa o campo 'component' da coluna (ex: 'form-field-text')
+ * Auto-migra componentes antigos (form-column-*) para novos (form-field-*)
+ * Fallback para 'form-field-text' se não encontrado
  */
 const component = computed(() => {
-  const componentName = props.column.component || 'form-column-text'
+  let componentName = props.column.component || 'form-field-text'
+
+  // Auto-migração de componentes antigos para novos
+  if (componentName.startsWith('form-column-')) {
+    const newName = componentName.replace('form-column-', 'form-field-')
+    if (import.meta.env.DEV) {
+      console.warn(
+        `[FieldRenderer] Component '${componentName}' is deprecated. ` +
+        `Use '${newName}' instead. The component will be auto-migrated for now.`
+      )
+    }
+    componentName = newName
+  }
 
   // Tenta obter do registry
   const registeredComponent = ComponentRegistry.get(componentName)
@@ -44,7 +57,7 @@ const component = computed(() => {
   }
 
   // Fallback para componente padrão
-  const fallback = ComponentRegistry.get('form-column-text')
+  const fallback = ComponentRegistry.get('form-field-text')
 
   if (!fallback) {
     console.warn(`Component '${componentName}' not found in registry and no fallback available`)

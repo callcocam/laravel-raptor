@@ -203,9 +203,16 @@ const handleSubmit = async () => {
         },
         onError: (error) => { 
           console.error('Error submitting form:', error)
-          // Captura erros de validação (422)
-          if (error.errors) {
-            formErrors.value = error.errors
+          // Captura erros de validação do Inertia (objeto com campo: mensagem)
+          if (error && typeof error === 'object') {
+            // Converte para o formato esperado pelo FormRenderer
+            const validationErrors: Record<string, string | string[]> = {}
+            Object.keys(error).forEach(key => {
+              const errorValue = error[key]
+              // Se for array, pega o primeiro erro
+              validationErrors[key] = Array.isArray(errorValue) ? errorValue[0] : errorValue
+            })
+            formErrors.value = validationErrors
           }
 
           emit('error', error)

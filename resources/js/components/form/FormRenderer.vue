@@ -10,12 +10,12 @@
       v-for="(column, index) in columns"
       :key="column.name || index"
       :column="column"
-      :error="errors[column.name]"
+      :error="formErrors[column.name]"
       v-model="formData[column.name]"
     />
 
     <!-- Slot para botões customizados -->
-    <slot name="actions" :formData="formData" :isValid="isValid" :errors="errors">
+    <slot name="actions" :formData="formData" :isValid="isValid" :errors="formErrors">
       <!-- Botões padrão (opcional) -->
     </slot>
   </form>
@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: () => ({}),
   errors: () => ({}),
 })
-console.log('FormRenderer props:', props)
+
 const emit = defineEmits<{
   (e: 'update:modelValue', value: Record<string, any>): void
   (e: 'submit', value: Record<string, any>): void
@@ -53,13 +53,8 @@ const emit = defineEmits<{
 // Dados do formulário
 const formData = reactive<Record<string, any>>({ ...props.modelValue })
 
-// Erros de validação
-const errors = ref<Record<string, string | string[]>>({})
-
-// Atualiza erros quando a prop mudar
-watch(() => props.errors, (newErrors) => {
-  errors.value = newErrors || {}
-}, { immediate: true, deep: true })
+// Erros de validação (computed para reagir às mudanças da prop)
+const formErrors = computed(() => props.errors || {})
 
 // Validação básica
 const isValid = computed(() => {
@@ -86,32 +81,11 @@ watch(formData, (newFormData) => {
   emit('update:modelValue', newFormData)
 }, { deep: true })
 
-// Limpa erros de um campo específico quando o valor mudar
-watch(formData, (newFormData, oldFormData) => {
-  Object.keys(newFormData).forEach(key => {
-    if (newFormData[key] !== oldFormData?.[key] && errors.value[key]) {
-      delete errors.value[key]
-    }
-  })
-}, { deep: true })
-
-// Método para definir erros externamente
-const setErrors = (newErrors: Record<string, string | string[]>) => {
-  errors.value = newErrors
-}
-
-// Método para limpar todos os erros
-const clearErrors = () => {
-  errors.value = {}
-}
-
 // Expõe métodos para controle externo
 defineExpose({
   formData,
   isValid,
-  errors,
+  errors: formErrors,
   submit: handleSubmit,
-  setErrors,
-  clearErrors,
 })
 </script>
