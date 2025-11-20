@@ -26,6 +26,8 @@ trait BelongsToHelpers
 
     protected ?string $suffix = null;
 
+    protected ?string $placeholder = null;
+
     /**
      * Define o valor padrão do campo
      */
@@ -99,11 +101,21 @@ trait BelongsToHelpers
     }
 
     /**
+     * Define o placeholder do campo
+     */
+    public function placeholder(string $placeholder): static
+    {
+        $this->placeholder = $placeholder;
+
+        return $this;
+    }
+
+    /**
      * Retorna o valor padrão
      */
     public function getDefault(): mixed
     {
-        return $this->default;
+        return $this->evaluate($this->default);
     }
 
     /**
@@ -143,7 +155,7 @@ trait BelongsToHelpers
      */
     public function getPrefix(): ?string
     {
-        return $this->prefix;
+        return $this->evaluate($this->prefix);
     }
 
     /**
@@ -151,6 +163,16 @@ trait BelongsToHelpers
      */
     public function getSuffix(): ?string
     {
-        return $this->suffix;
+        return $this->evaluate($this->suffix);
+    }
+
+    /**
+     * Retorna o placeholder
+     * 
+     * @return string|null
+     */
+    public function getPlaceholder(): ?string
+    {
+        return $this->evaluate($this->placeholder);
     }
 }

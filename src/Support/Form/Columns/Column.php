@@ -29,6 +29,9 @@ abstract class Column extends AbstractColumn
     public function toArray(): array
     {
         return [
+            'name' => $this->getName(),
+            'type' => $this->getType(),
+            'label' => $this->getLabel(),
             'default' => $this->getDefault(),
             'helpText' => $this->getHelpText(),
             'hint' => $this->getHint(),
@@ -37,6 +40,12 @@ abstract class Column extends AbstractColumn
             'prefix' => $this->getPrefix(),
             'suffix' => $this->getSuffix(),
             'component' => $this->getComponent(),
+            'attributes' => array_filter([
+                'id' => $this->getId(),
+                'type' => $this->getType(),
+                'name' => $this->getName(),
+                'placeholder' => $this->getPlaceholder(),
+            ]),
         ];
     }
 }

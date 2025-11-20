@@ -21,15 +21,15 @@ abstract class ExecuteAction extends Action
     public function __construct(?string $name)
     {
         parent::__construct($name ?? 'execute');
-        $this->url(function () {
-            $name = str($this->getName())->replace( 'import', 'execute')->replace('export', 'execute')->toString();
-            $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
-            if (Route::has($route)) {
-                return route($route);
-            }
-            return null;
-        })
-            ->actionType('header');
+        $this->actionType('header')
+            ->url(function () {
+                $name = str($this->getName())->replace('import', 'execute')->replace('export', 'execute')->toString();
+                $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
+                if (Route::has($route)) {
+                    return route($route);
+                }
+                return null;
+            });
         $this->setUp();
     }
 

@@ -209,8 +209,7 @@ abstract class AbstractController extends ResourceController
         try {
             $type = $request->input('actionType');
             $actionName = $request->input('actionName');
-
-           
+ 
             $actions = match($type) {
                 'header' =>  collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' =>  collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),

@@ -44,7 +44,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: () => ({}),
   errors: () => ({}),
 })
-
+console.log('FormRenderer props:', props)
 const emit = defineEmits<{
   (e: 'update:modelValue', value: Record<string, any>): void
   (e: 'submit', value: Record<string, any>): void

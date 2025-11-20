@@ -22,13 +22,7 @@ class HiddenField extends Column
         $this->defaultValue = $value;
         $this->setUp();
     }
-
-    public function default(mixed $value): self
-    {
-        $this->defaultValue = $value;
-
-        return $this;
-    }
+ 
 
     public function toArray(): array
     {

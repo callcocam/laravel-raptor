@@ -188,6 +188,7 @@ const handleSubmit = async () => {
 
     // Pega o formData do FormRenderer (se existir ref)
     const dataToSubmit = formRef.value?.formData || formData.value
+    console.log('Submitting form data:', dataToSubmit)
  
 
     try {
