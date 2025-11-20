@@ -5,15 +5,19 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Table\Filters;
 
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToOptions;
 use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
 
 class TrashedFilter extends FilterBuilder
 {
+    use BelongsToOptions;
+
     protected string $component = 'filter-trashed';
 
-    protected array $options = [];
+
 
     public function __construct(string $name = 'trashed', ?string $label = null)
     {
@@ -26,17 +30,6 @@ class TrashedFilter extends FilterBuilder
         ];
     }
 
-    public function options(array $options): static
-    {
-        $this->options = $options;
-
-        return $this;
-    }
-
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
 
     protected function setUp(): void
     {

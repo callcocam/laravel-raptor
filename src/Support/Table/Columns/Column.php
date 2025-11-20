@@ -9,13 +9,14 @@
 namespace Callcocam\LaravelRaptor\Support\Table\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearchable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSortable;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class Column extends AbstractColumn
 {
-
+    use BelongsToHelpers;
     use HasSearchable;
     use HasSortable;
     
@@ -43,6 +44,8 @@ abstract class Column extends AbstractColumn
             'tooltip' => $this->getTooltip(),
             'color' => $this->getColor(),
             'icon' => $this->getIcon(),
+            'prefix' => $this->getPrefix(),
+            'suffix' => $this->getSuffix(),
         ];
     }
 }

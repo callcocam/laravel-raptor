@@ -5,29 +5,20 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Table\Filters;
 
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToOptions;
 use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
 
 class MultiSelectFilter extends FilterBuilder
 {
+    use BelongsToOptions;
+
     protected string $component = 'filter-multi-select';
 
-    protected array $options = [];
 
     protected bool $searchable = true;
-
-    public function options(array $options): static
-    {
-        $this->options = $options;
-
-        return $this;
-    }
-
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
 
     public function searchable(bool $searchable = true): static
     {
