@@ -8,14 +8,10 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
-use Callcocam\LaravelRaptor\Support\Actions\Action;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField;
-use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
-use Illuminate\Support\Facades\Route;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField; 
 
-class ImportAction extends Action
+class ImportAction extends ExecuteAction
 {
-    use InteractWithForm;
 
     protected string $method = 'POST';
 
@@ -26,18 +22,9 @@ class ImportAction extends Action
         $this->name($name) // ✅ Sempre define o name
             ->label('Importar')
             ->icon('Upload')
-            ->color('blue')
-            ->actionType('header')
+            ->color('blue') 
             ->tooltip('Importar registros')
             ->component('action-modal-form')
-            ->url(function () {
-                $name = str($this->getName())->replace('import', 'execute');
-                $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
-                if (Route::has($route)) {
-                    return route($route);
-                }
-                return null;
-            })
             ->callback(function ($request) {
                 return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
             })
@@ -53,11 +40,5 @@ class ImportAction extends Action
             ]);
         $this->setUp();
     }
-
-    public function toArray(): array
-    {
-        $array = array_merge(parent::toArray(), $this->getForm());
-
-        return $array;
-    }
+ 
 }

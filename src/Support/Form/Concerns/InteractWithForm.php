@@ -20,7 +20,7 @@ trait InteractWithForm
     public function getForm(): ?array
     {
         if (empty($this->getColumns())) {
-            return null;
+            return [];
         }
 
         return [
