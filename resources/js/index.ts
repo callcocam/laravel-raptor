@@ -51,6 +51,7 @@ ComponentRegistry.registerBulk({
     'form-field-password': defineAsyncComponent(() => import('~/components/form/fields/FormFieldPassword.vue')),
     'form-field-hidden': defineAsyncComponent(() => import('~/components/form/fields/FormFieldHidden.vue')),
     'form-field-file-upload': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUpload.vue')),
+    'form-field-combobox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCombobox.vue')),
 })
 
 // Legacy components (backwards compatibility)
@@ -65,6 +66,7 @@ ComponentRegistry.registerBulk({
     'form-column-password': defineAsyncComponent(() => import('~/components/form/columns/FormColumnPassword.vue')),
     'form-column-hidden': defineAsyncComponent(() => import('~/components/form/columns/FormColumnHidden.vue')),
     'form-column-file-upload': defineAsyncComponent(() => import('~/components/form/columns/FormColumnFileUpload.vue')),
+    'form-column-combobox': defineAsyncComponent(() => import('~/components/form/columns/types/FormColumnCombobox.vue')),
 })
 
 ComponentRegistry.markAsInitialized()
