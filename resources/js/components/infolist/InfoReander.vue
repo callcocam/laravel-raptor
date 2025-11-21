@@ -12,6 +12,8 @@ const props = defineProps({
   },
 });
 
+console.log(props.column);
+
 /**
  * Obtém o componente a ser renderizado do ComponentRegistry
  *

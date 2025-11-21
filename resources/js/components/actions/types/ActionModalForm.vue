@@ -1,9 +1,12 @@
 <!--
- * ActionModalForm - Componente de ação com modal e formulário
+ * ActionModalForm - Componente de ação com modal (form/table/infolist)
  *
- * Exibe um botão que, ao clicar, abre um modal com formulário
- * Útil para importação, exportação, formulários complexos, etc.
+ * Exibe um botão que, ao clicar, abre um modal com:
+ * - FormRenderer (form): Para edição/criação com formulário
+ * - TableOnlyRenderer (table): Para visualização de listas relacionadas
+ * - InfoListRenderer (infolist): Para visualização de detalhes
  *
+ * O tipo é detectado automaticamente pelo backend (ModalAction::detectColumnType())
  * Usa Dialog da shadcn-vue para seguir o padrão do projeto
  * Registrado como 'action-modal' e 'action-modal-form' no ActionRegistry
  -->
@@ -31,10 +34,10 @@
         </DialogDescription>
       </DialogHeader>
 
-      <!-- Slot para conteúdo customizado ou formulário -->
+      <!-- Slot para conteúdo customizado ou renderiza baseado no columnType -->
       <slot name="content">
-        <!-- Se houver colunas de formulário, renderiza o FormRenderer -->
-        <div v-if="hasFormColumns">
+        <!-- Form: Renderiza FormRenderer com v-model e submit -->
+        <div v-if="columnType === 'form' && hasFormColumns">
           <FormRenderer
             :columns="formColumns"
             :errors="formErrors"
@@ -44,7 +47,17 @@
           />
         </div>
 
-        <!-- Conteúdo padrão se não houver formulário -->
+        <!-- Table: Renderiza TableOnlyRenderer (visualização apenas) -->
+        <div v-else-if="columnType === 'table'">
+          <TableOnlyRenderer :columns="formColumns" :data="tableData" />
+        </div>
+
+        <!-- InfoList: Renderiza InfoListRenderer (detalhes) -->
+        <div v-else-if="columnType === 'infolist'">
+          <InfoListRenderer :columns="formColumns" />
+        </div>
+
+        <!-- Conteúdo padrão se não houver colunas -->
         <div v-else class="text-center py-12">
           <component
             v-if="iconComponent"
@@ -60,11 +73,11 @@
         </div>
       </slot>
 
-      <!-- Footer -->
-      <DialogFooter v-if="$slots.footer || hasFormColumns">
+      <!-- Footer: Apenas para formulários -->
+      <DialogFooter v-if="$slots.footer || (columnType === 'form' && hasFormColumns)">
         <slot name="footer">
           <!-- Botões padrão para formulário -->
-          <template v-if="hasFormColumns">
+          <template v-if="columnType === 'form' && hasFormColumns">
             <Button variant="outline" @click="closeModal">
               Cancelar
             </Button>
@@ -92,6 +105,8 @@ import {
 } from '@/components/ui/dialog'
 import * as LucideIcons from 'lucide-vue-next'
 import FormRenderer from './../../../components/form/FormRenderer.vue'
+import TableOnlyRenderer from './../../../components/table/TableOnlyRenderer.vue'
+import InfoListRenderer from './../../../components/infolist/InfoListRenderer.vue'
 import { useAction } from '~/composables/useAction'
 import type { TableAction } from '~/types/table'
 
@@ -109,6 +124,8 @@ interface FormColumn {
 interface Props {
   action: TableAction & {
     columns?: FormColumn[]
+    columnType?: 'form' | 'table' | 'infolist'
+    tableData?: any[] // Dados para renderização de tabela
   }
   size?: 'default' | 'sm' | 'lg' | 'icon'
   record?: Record<string, any>
@@ -139,12 +156,22 @@ const formData = ref<Record<string, any>>(props.record || {})
 // Erros de validação
 const formErrors = ref<Record<string, string | string[]>>({})
 
-// Colunas do formulário
+// Tipo de coluna (form, table, ou infolist)
+const columnType = computed(() => {
+  return props.action.columnType || 'form'
+})
+
+// Colunas (pode ser form, table ou infolist)
 const formColumns = computed(() => {
   return props.action.columns || []
 })
 
-// Verifica se há colunas de formulário
+// Dados para tabela (se columnType === 'table')
+const tableData = computed(() => {
+  return props.action.tableData || []
+})
+
+// Verifica se há colunas
 const hasFormColumns = computed(() => {
   return formColumns.value.length > 0
 })
@@ -184,7 +211,7 @@ const handleTriggerClick = () => {
 
 // Handler para submit do formulário
 const handleSubmit = async () => {
-  if (hasFormColumns.value) {
+  if (columnType.value === 'form' && hasFormColumns.value) {
     isSubmitting.value = true
     formErrors.value = {} // Limpa erros anteriores
 

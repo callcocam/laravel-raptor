@@ -7,8 +7,8 @@
  */
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
- 
-use Closure; 
+
+use Closure;
 
 /**
  * ModalAction - Abre um modal com formulário e envia via Inertia.js
@@ -176,6 +176,7 @@ class ModalAction extends ExecuteAction
 
         if (! empty($this->getColumns())) {
             $result['columns'] = $this->getArrayColumns();
+            $result['columnType'] = $this->detectColumnType();
         }
 
         $result['inertia'] = [
@@ -183,12 +184,22 @@ class ModalAction extends ExecuteAction
             'preserveState' => $this->preserveState,
             'only' => $this->onlyProps,
         ];
- 
+
 
         if ($this->modalSize) {
             $result['modalSize'] = $this->modalSize;
         }
 
         return $result;
+    }
+
+    /**
+     * Detecta o tipo de colunas (form, table, ou infolist)
+     */
+    protected function detectColumnType(): string
+    {
+
+        // Default to form if unable to detect
+        return 'form';
     }
 }
