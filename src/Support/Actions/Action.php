@@ -160,11 +160,12 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         ];
 
         if (! empty($this->confirm)) {
-            $result['confirm'] = $this->evaluate($this->confirm, [
-                'model' => $model,
-                'record' => $model,
-                'item' => $model,
-            ]);
+            // Se confirm for Closure, não avaliar - apenas indicar que existe
+            if ($this->confirm instanceof Closure) {
+                $result['confirm'] = ['hasConfirm' => true];
+            } else {
+                $result['confirm'] = $this->confirm;
+            }
         }
 
         if (! empty($this->getColumns())) {
