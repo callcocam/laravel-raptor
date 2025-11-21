@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
+use Closure;
 
 class SelectField extends Column
 {
@@ -18,13 +19,15 @@ class SelectField extends Column
 
     protected bool $searchable = false;
 
+    protected Closure|string|null $dependsOn = null;
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->component('form-field-select');
         $this->setUp();
     }
- 
+
 
     public function searchable(bool $searchable = true): self
     {
@@ -33,12 +36,25 @@ class SelectField extends Column
         return $this;
     }
 
+    public function dependsOn(Closure|string|null $dependsOn): self
+    {
+        $this->dependsOn = $dependsOn;
+
+        return $this;
+    }
+
+    public function getDependsOn(): Closure|string|null
+    {
+        return $this->evaluate($this->dependsOn);
+    }
+
     public function toArray(): array
     {
-        return array_merge(parent::toArray(), [ 
+        return array_merge(parent::toArray(), [
             'searchable' => $this->searchable,
             'multiple' => $this->isMultiple(),
-            'options' => $this->getOptions(),   
+            'options' => $this->getOptions(),
+            'dependsOn' => $this->getDependsOn(),
         ]);
     }
 }

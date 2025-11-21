@@ -50,8 +50,9 @@ ComponentRegistry.registerBulk({
     'form-field-email': defineAsyncComponent(() => import('~/components/form/fields/FormFieldEmail.vue')),
     'form-field-password': defineAsyncComponent(() => import('~/components/form/fields/FormFieldPassword.vue')),
     'form-field-hidden': defineAsyncComponent(() => import('~/components/form/fields/FormFieldHidden.vue')),
-    'form-field-file-upload': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUpload.vue')),
-    'form-field-combobox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCombobox.vue')),
+    'form-field-file-upload': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUpload.vue')), 
+    'form-field-combobox': defineAsyncComponent(() => import('./components/form/fields/FormFieldCombobox.vue')),
+    'form-field-cascading': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCascading.vue')),
 })
 
 // Legacy components (backwards compatibility)

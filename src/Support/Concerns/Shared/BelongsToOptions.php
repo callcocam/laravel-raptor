@@ -15,9 +15,13 @@ trait BelongsToOptions
     /**
      * The options for the filter.
      */
-    protected array $options = [];
+    protected array|string|Closure|null $options = [];
 
     protected Closure|bool|null $multiple = null;
+
+    protected Closure|string|null $optionKey = "id";
+
+    protected Closure|string|null $optionLabel = 'name';
 
     /**
      * Set the options for the filter.
@@ -106,11 +110,37 @@ trait BelongsToOptions
         return $normalized;
     }
 
+    public function optionKey(Closure|string|null $optionKey): static
+    {
+        $this->optionKey = $optionKey;
+
+        return $this;
+    }
+
+    public function optionLabel(Closure|string|null $optionLabel): static
+    {
+        $this->optionLabel = $optionLabel;
+
+        return $this;
+    }
+
+    public function getOptionLabel(): Closure|string|null
+    {
+        return $this->evaluate($this->optionLabel);
+    }
+
+    public function getOptionKey(): Closure|string|null
+    {
+        return $this->evaluate($this->optionKey);
+    }
     /**
      * Encontra o campo mais provável para ser usado como label
      */
     protected function findLabelField(array $item): ?string
     {
+        if ($optionLabel = $this->getOptionLabel()) {
+            return $optionLabel;
+        }
         $labelCandidates = ['label', 'name', 'title', 'text', 'description'];
 
         foreach ($labelCandidates as $candidate) {
@@ -127,6 +157,10 @@ trait BelongsToOptions
      */
     protected function findValueField(array $item): ?string
     {
+        if ($optionKey = $this->getOptionKey()) {
+            return $optionKey;
+        }
+
         $valueCandidates = ['value', 'id', 'key', 'code'];
 
         foreach ($valueCandidates as $candidate) {
