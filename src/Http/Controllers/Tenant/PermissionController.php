@@ -15,7 +15,7 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
-use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist; 
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
@@ -55,7 +55,7 @@ class PermissionController extends TenantController
             'edit' => Edit::route('/permissions/{record}/edit')
                 ->label('Editar Permissão')
                 ->name('permissions.edit')
-                ->middlewares(['auth', 'verified']), 
+                ->middlewares(['auth', 'verified']),
             'execute' => Execute::route('/permissions/execute/actions')
                 ->label('Executar Permissão')
                 ->name('permissions.execute')
@@ -123,15 +123,24 @@ class PermissionController extends TenantController
                 ->relative()
                 ->sortable(),
         ])
-        ->actions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('permissions.show'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('permissions.edit'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('permissions.restore'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('permissions.forceDelete'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('permissions.destroy'),
-        ])->headerActions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('permissions.create'), 
-        ]);
+            ->filters([
+                \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'draft' => 'Rascunho',
+                        'published' => 'Publicado',
+                    ]),
+                \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
+            ])
+            ->actions([
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('permissions.show'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('permissions.edit'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('permissions.restore'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('permissions.forceDelete'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('permissions.destroy'),
+            ])->headerActions([
+                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('permissions.create'),
+            ]);
     }
 
     protected function infolist(InfoList $infolist): InfoList

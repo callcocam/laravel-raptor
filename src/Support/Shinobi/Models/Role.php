@@ -13,10 +13,11 @@ use Callcocam\LaravelRaptor\Support\Shinobi\Concerns\HasPermissions;
 use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Role as RoleContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Role extends AbstractModel implements RoleContract
 {
-    use HasPermissions;
+    use HasPermissions, SoftDeletes;
 
     /**
      * Create a new Role instance.

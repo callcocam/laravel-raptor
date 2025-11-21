@@ -118,6 +118,15 @@ class RoleController extends TenantController
                 ->relative()
                 ->sortable(),
         ])
+            ->filters([
+                \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'draft' => 'Rascunho',
+                        'published' => 'Publicado',
+                    ]),
+                \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
+            ])
         ->actions([
             \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('roles.show'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('roles.edit'),

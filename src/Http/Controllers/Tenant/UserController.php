@@ -58,7 +58,7 @@ class UserController extends TenantController
             'edit' => Edit::route('/users/{record}/edit')
                 ->label('Editar Usuário')
                 ->name('users.edit')
-                ->middlewares(['auth', 'verified']), 
+                ->middlewares(['auth', 'verified']),
             'execute' => Execute::route('/users/execute/actions')
                 ->label('Executar Usuário')
                 ->name('users.execute')
@@ -124,17 +124,24 @@ class UserController extends TenantController
                 ->relative()
                 ->sortable(),
         ])
-        ->actions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('users.show'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('users.edit'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('users.restore'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('users.forceDelete'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('users.destroy'),
-        ])->headerActions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('users.create'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ExportAction::make('users.export'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ImportAction::make('users.import'),
-        ]);
+            ->filters([
+                \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'draft' => 'Rascunho',
+                        'published' => 'Publicado',
+                    ]),
+                \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
+            ])
+            ->actions([
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('users.show'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('users.edit'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('users.restore'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('users.forceDelete'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('users.destroy'),
+            ])->headerActions([
+                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('users.create'),
+            ]);
     }
 
     protected function infolist(InfoListBuilder $infolist): InfoListBuilder

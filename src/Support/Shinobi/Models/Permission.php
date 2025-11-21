@@ -13,10 +13,11 @@ use Callcocam\LaravelRaptor\Support\Shinobi\Concerns\RefreshesPermissionCache;
 use Callcocam\LaravelRaptor\Support\Shinobi\Contracts\Permission as PermissionContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Permission extends AbstractModel implements PermissionContract
 {
-    use RefreshesPermissionCache;
+    use RefreshesPermissionCache, SoftDeletes;
 
     /**
      * Create a new Permission instance.
