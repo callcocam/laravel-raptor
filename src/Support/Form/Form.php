@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
 class Form
 {
     use Concerns\FactoryPattern;
+    use Concerns\EvaluatesClosures;
     use Concerns\Interacts\WithActions;
     use Concerns\Shared\BelongToRequest;
     use InteractWithForm;

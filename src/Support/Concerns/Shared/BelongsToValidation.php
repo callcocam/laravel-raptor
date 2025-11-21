@@ -80,9 +80,11 @@ trait BelongsToValidation
     /**
      * Retorna as regras de validação
      */
-    public function getRules(): array|string
+    public function getRules($record = null): array|string
     {
-        return $this->evaluate($this->rules);
+        return $this->evaluate($this->rules, [
+            'record' => $record
+        ]);
     }
 
     /**

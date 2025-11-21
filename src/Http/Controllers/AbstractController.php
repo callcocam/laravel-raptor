@@ -13,7 +13,6 @@ use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
@@ -35,7 +34,7 @@ abstract class AbstractController extends ResourceController
         $data = $this->table(TableBuilder::make($this->model(), 'model'))
             ->request($request)
             ->toArray();
-            
+
         // Storage::disk('local')->put('raptor.json', json_encode($data));
         return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',
@@ -83,8 +82,11 @@ abstract class AbstractController extends ResourceController
 
             $model = $this->model()::create($validated);
 
-            return redirect()
-                ->route(sprintf('%s.index', $this->getResourceName()))
+            $route = str($request->route()->getAction('as'))->replace('.store', '.edit')->toString();
+
+            return redirect()->route($route, [
+                'record' => $model->getKey(),
+            ])
                 ->with('success', 'Item criado com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
@@ -142,10 +144,10 @@ abstract class AbstractController extends ResourceController
             $model = $this->model()::findOrFail($record);
 
             // Extrai as regras de validação dos campos do formulário
-            $form = $this->form(Form::make($this->model(), 'model'));
+            $form = $this->form(Form::make($model, 'model'));
             $validationRules = array_merge(
-                $form->getValidationRules(),
-                $this->rules($record)
+                $form->getValidationRules($model),
+                $this->rules($model)
             );
             $validationMessages = $form->getValidationMessages();
 
@@ -154,7 +156,11 @@ abstract class AbstractController extends ResourceController
 
             $model->update($validated);
 
-            return redirect()->back()
+            $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();
+
+            return redirect()->route($route, [
+                'record' => $model->getKey(),
+            ])
                 ->with('success', 'Item atualizado com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar

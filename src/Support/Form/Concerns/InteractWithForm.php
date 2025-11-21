@@ -11,10 +11,10 @@ namespace Callcocam\LaravelRaptor\Support\Form\Concerns;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
 
 trait InteractWithForm
-{ 
+{
 
     use WithColumns;
-    
+
     /**
      * Retorna o formulário como estrutura de dados
      */
@@ -32,15 +32,15 @@ trait InteractWithForm
     /**
      * Extrai as regras de validação de todos os campos
      */
-    public function getValidationRules(): array
+    public function getValidationRules($record = null): array
     {
         $rules = [];
-        
+
         foreach ($this->getColumns() as $column) {
-            $columnRules = $column->getRules();
-            
+            $columnRules = $column->getRules($record);
+
             if (!empty($columnRules)) {
-                $rules[$column->getName()] = $columnRules;
+                $rules[$column->getName()] =  $columnRules ;
             }
         }
 
@@ -53,10 +53,10 @@ trait InteractWithForm
     public function getValidationMessages(): array
     {
         $messages = [];
-        
+
         foreach ($this->getColumns() as $column) {
             $columnMessages = $column->getMessages();
-            
+
             if (!empty($columnMessages)) {
                 foreach ($columnMessages as $rule => $message) {
                     $messages["{$column->getName()}.{$rule}"] = $message;

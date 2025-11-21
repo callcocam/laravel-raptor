@@ -91,7 +91,7 @@ trait WithRequests
 
         $actions = [
             // View Action - usa policy('view')
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make("{$resourceName}.view")
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make("{$resourceName}.show")
                 ->size('sm')
                 ->variant('outline')
                 ->policy('view'),

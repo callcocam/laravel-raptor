@@ -54,4 +54,10 @@ abstract class AbstractColumn
     {
         return $this->component;
     }
+
+    public function getRecord()
+    {
+        
+        return null;
+    }
 }

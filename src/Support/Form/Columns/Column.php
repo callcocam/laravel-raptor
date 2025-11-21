@@ -42,8 +42,7 @@ abstract class Column extends AbstractColumn
             'prefix' => $this->getPrefix(),
             'suffix' => $this->getSuffix(),
             'component' => $this->getComponent(),
-            'required' => $this->isRequired(),
-            'rules' => $this->getRules(),
+            'required' => $this->isRequired(), 
             'messages' => $this->getMessages(),
             'attributes' => array_filter([
                 'id' => $this->getId(),
