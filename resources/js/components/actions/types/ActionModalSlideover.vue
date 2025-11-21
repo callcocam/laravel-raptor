@@ -167,6 +167,10 @@ const iconComponent = computed(() => {
 
 // Abre o slideover
 const openSlideover = () => {
+  // Para infolist e table, sempre inicializar com os dados do record
+  if (columnType.value === 'infolist' || columnType.value === 'table') {
+    formData.value = { ...props.record };
+  }
   isOpen.value = true;
 };
 

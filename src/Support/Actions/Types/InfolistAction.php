@@ -49,9 +49,10 @@ class InfolistAction extends ModalAction
         parent::__construct($name ?? 'modal');
         $this
             ->actionType('actions')
-            ->component('action-modal-form')
-            ->method('POST')
-            ->policy('modal') 
+            ->component('action-modal-slideover')
+            ->method('GET')
+            ->policy('modal')
+            ->slideover()
             ->modalSize('md');
     }
 

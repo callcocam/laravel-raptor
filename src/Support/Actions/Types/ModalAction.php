@@ -174,10 +174,13 @@ class ModalAction extends ExecuteAction
             }
         }
 
+        // Sempre incluir columnType se houver colunas
         if (! empty($this->getColumns())) {
             $result['columns'] = $this->getArrayColumns();
-            $result['columnType'] = $this->detectColumnType();
         }
+        
+        // Incluir columnType (detectado ou padrão)
+        $result['columnType'] = $this->detectColumnType();
 
         $result['inertia'] = [
             'preserveScroll' => $this->preserveScroll,

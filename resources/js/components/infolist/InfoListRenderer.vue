@@ -51,11 +51,31 @@ const getColumns = computed(() => {
 });
 
 const getValue = (column: InfoColumn) => {
-  const columnValue = props.value ? props.value[props.name]  : undefined; 
+  // Função helper para acessar valores aninhados usando notação de ponto
+  const getNestedValue = (obj: any, path: string) => {
+    if (!obj || !path) return undefined;
+    
+    const keys = path.split('.');
+    let value = obj;
+    
+    for (const key of keys) {
+      if (value && typeof value === 'object' && key in value) {
+        value = value[key];
+      } else {
+        return undefined;
+      }
+    }
+    
+    return value;
+  };
+  
+  // Buscar valor usando notação de ponto
+  const columnValue = getNestedValue(props.value, column.name);
+  
   return {
     ...column,
-    value: columnValue ? columnValue[column.name] : undefined,
-    default: columnValue ? columnValue[column.name] : undefined,
+    value: columnValue,
+    default: columnValue,
   };
 };
 </script>
