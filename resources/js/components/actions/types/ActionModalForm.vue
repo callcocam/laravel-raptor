@@ -34,13 +34,15 @@
       <!-- Slot para conteúdo customizado ou formulário -->
       <slot name="content">
         <!-- Se houver colunas de formulário, renderiza o FormRenderer -->
-        <FormRenderer
-          v-if="hasFormColumns"
-          :columns="formColumns"
-          :errors="formErrors"
-          v-model="formData"
-          ref="formRef"
-        />
+        <div v-if="hasFormColumns">
+          <FormRenderer
+            :columns="formColumns"
+            :errors="formErrors"
+            v-model="formData"
+            ref="formRef"
+            @submit="handleSubmit"
+          />
+        </div>
 
         <!-- Conteúdo padrão se não houver formulário -->
         <div v-else class="text-center py-12">

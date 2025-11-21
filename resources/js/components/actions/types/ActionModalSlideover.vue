@@ -26,11 +26,7 @@
       enter-from-class="opacity-0"
       leave-to-class="opacity-0"
     >
-      <div
-        v-if="isOpen"
-        class="fixed inset-0 bg-black/50 z-40"
-        @click="closeSlideover"
-      />
+      <div v-if="isOpen" class="fixed inset-0 bg-black/50 z-40" @click="closeSlideover" />
     </Transition>
 
     <!-- Painel Slideover -->
@@ -46,7 +42,7 @@
           'fixed top-0 bottom-0 z-50 bg-background shadow-2xl',
           'w-full sm:max-w-md lg:max-w-lg',
           'flex flex-col',
-          slideoverPositionClass
+          slideoverPositionClass,
         ]"
       >
         <!-- Header -->
@@ -59,12 +55,7 @@
               {{ action.modalDescription }}
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            @click="closeSlideover"
-            class="ml-4"
-          >
+          <Button variant="ghost" size="icon" @click="closeSlideover" class="ml-4">
             <component :is="closeIcon" class="h-4 w-4" />
           </Button>
         </div>
@@ -73,27 +64,14 @@
         <div class="flex-1 overflow-y-auto px-6 py-6">
           <slot name="content">
             <!-- Se houver colunas de formulário, renderiza o FormRenderer -->
-            <FormRenderer
-              v-if="hasFormColumns"
-              :columns="formColumns"
-              :errors="formErrors"
-              v-model="formData"
-              ref="formRef"
-            />
-
-            <!-- Conteúdo HTML -->
-            <div v-else-if="action.modalContent" v-html="action.modalContent" class="prose dark:prose-invert max-w-none" />
-
-            <!-- Conteúdo padrão se não houver formulário nem conteúdo -->
-            <div v-else class="text-center py-12">
-              <component
-                v-if="iconComponent"
-                :is="iconComponent"
-                class="h-12 w-12 mx-auto text-muted-foreground mb-4"
+            <div v-if="hasFormColumns">
+              <FormRenderer
+                :columns="formColumns"
+                :errors="formErrors"
+                v-model="formData"
+                ref="formRef"
+                @submit="handleSubmit"
               />
-              <p class="text-muted-foreground">
-                {{ action.label }}
-              </p>
             </div>
           </slot>
         </div>
@@ -103,11 +81,13 @@
           <slot name="footer">
             <!-- Botões padrão para formulário -->
             <div v-if="hasFormColumns" class="flex justify-end gap-3">
-              <Button variant="outline" @click="closeSlideover">
-                Cancelar
-              </Button>
+              <Button variant="outline" @click="closeSlideover"> Cancelar </Button>
               <Button @click="handleSubmit" :disabled="isSubmitting">
-                {{ isSubmitting ? 'Processando...' : (action.confirm?.confirmButtonText || 'Confirmar') }}
+                {{
+                  isSubmitting
+                    ? "Processando..."
+                    : action.confirm?.confirmButtonText || "Confirmar"
+                }}
               </Button>
             </div>
           </slot>
@@ -118,186 +98,188 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from 'vue'
-import { Button } from '@/components/ui/button'
-import { X } from 'lucide-vue-next'
-import * as LucideIcons from 'lucide-vue-next'
-import FormRenderer from '../../form/FormRenderer.vue'
-import { useAction } from '~/composables/useAction'
-import type { TableAction } from '~/types/table'
+import { ref, computed, h, watch } from "vue";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-vue-next";
+import * as LucideIcons from "lucide-vue-next";
+import FormRenderer from "../../form/FormRenderer.vue";
+import { useAction } from "~/composables/useAction";
+import type { TableAction } from "~/types/table";
 
 // Composable para executar actions
-const actionComposable = useAction()
+const actionComposable = useAction();
 
 interface FormColumn {
-  name: string
-  label?: string
-  component?: string
-  required?: boolean
-  [key: string]: any
+  name: string;
+  label?: string;
+  component?: string;
+  required?: boolean;
+  [key: string]: any;
 }
 
 interface Props {
   action: TableAction & {
-    modalTitle?: string
-    modalDescription?: string
-    modalContent?: string
-    slideoverPosition?: 'right' | 'left'
-    columns?: FormColumn[]
-  }
-  size?: 'default' | 'sm' | 'lg' | 'icon'
-  record?: Record<string, any>
+    modalTitle?: string;
+    modalDescription?: string;
+    modalContent?: string;
+    slideoverPosition?: "right" | "left";
+    columns?: FormColumn[];
+  };
+  size?: "default" | "sm" | "lg" | "icon";
+  record?: Record<string, any>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'sm'
-})
+  size: "sm",
+});
 
 const emit = defineEmits<{
-  (e: 'click', formData?: Record<string, any>): void
-  (e: 'open'): void
-  (e: 'close'): void
-  (e: 'submit', formData: Record<string, any>): void
-  (e: 'success', data: any): void
-  (e: 'error', error: any): void
-}>()
+  (e: "click", formData?: Record<string, any>): void;
+  (e: "open"): void;
+  (e: "close"): void;
+  (e: "submit", formData: Record<string, any>): void;
+  (e: "success", data: any): void;
+  (e: "error", error: any): void;
+}>();
 
 // Estado do slideover
-const isOpen = ref(false)
-const isSubmitting = ref(false)
+const isOpen = ref(false);
+const isSubmitting = ref(false);
 
 // Referência ao FormRenderer
-const formRef = ref<InstanceType<typeof FormRenderer> | null>(null)
+const formRef = ref<InstanceType<typeof FormRenderer> | null>(null);
 
 // Dados do formulário (usando ref para permitir v-model)
-const formData = ref<Record<string, any>>(props.record || {})
+const formData = ref<Record<string, any>>(props.record || {});
 
 // Erros de validação
-const formErrors = ref<Record<string, string | string[]>>({})
+const formErrors = ref<Record<string, string | string[]>>({});
 
 // Colunas do formulário
 const formColumns = computed(() => {
-  return props.action.columns || []
-})
+  return props.action.columns || [];
+});
 
 // Verifica se há colunas de formulário
 const hasFormColumns = computed(() => {
-  return formColumns.value.length > 0
-})
+  return formColumns.value.length > 0;
+});
 
 // Ícone de fechar
-const closeIcon = h(X)
+const closeIcon = h(X);
 
 // Posição do slideover
 const slideoverPositionClass = computed(() => {
-  return props.action.slideoverPosition === 'left' ? 'left-0' : 'right-0'
-})
+  return props.action.slideoverPosition === "left" ? "left-0" : "right-0";
+});
 
 const slideoverEnterClass = computed(() => {
-  return props.action.slideoverPosition === 'left' ? '-translate-x-full' : 'translate-x-full'
-})
+  return props.action.slideoverPosition === "left"
+    ? "-translate-x-full"
+    : "translate-x-full";
+});
 
 const slideoverLeaveClass = computed(() => {
-  return props.action.slideoverPosition === 'left' ? '-translate-x-full' : 'translate-x-full'
-})
+  return props.action.slideoverPosition === "left"
+    ? "-translate-x-full"
+    : "translate-x-full";
+});
 
 // Mapeia cor para variant do shadcn
 const variant = computed(() => {
   const colorMap: Record<string, any> = {
-    'green': 'default',
-    'blue': 'default',
-    'red': 'destructive',
-    'yellow': 'warning',
-    'gray': 'secondary',
-    'default': 'default'
-  }
+    green: "default",
+    blue: "default",
+    red: "destructive",
+    yellow: "warning",
+    gray: "secondary",
+    default: "default",
+  };
 
-  return colorMap[props.action.color || 'default'] || 'default'
-})
+  return colorMap[props.action.color || "default"] || "default";
+});
 
 // Componente do ícone dinâmico
 const iconComponent = computed(() => {
-  if (!props.action.icon) return null
+  if (!props.action.icon) return null;
 
-  const IconComponent = (LucideIcons as any)[props.action.icon]
+  const IconComponent = (LucideIcons as any)[props.action.icon];
 
   if (!IconComponent) {
-    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`)
-    return null
+    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`);
+    return null;
   }
 
-  return h(IconComponent)
-})
+  return h(IconComponent);
+});
 
 // Abre o slideover
 const openSlideover = () => {
-  isOpen.value = true
-  emit('click')
-}
+  isOpen.value = true;
+};
 
 // Fecha o slideover
 const closeSlideover = () => {
-  isOpen.value = false
-}
+  isOpen.value = false;
+};
 
 // Watch para emitir eventos quando o slideover abre/fecha e limpar erros
 watch(isOpen, (newValue) => {
   if (newValue) {
-    emit('open')
+    emit("open");
   } else {
-    emit('close')
+    emit("close");
     // Limpa erros ao fechar
-    formErrors.value = {}
+    formErrors.value = {};
   }
-})
+});
 
 // Handler para submit do formulário
 const handleSubmit = async () => {
   if (hasFormColumns.value) {
-    isSubmitting.value = true
-    formErrors.value = {} // Limpa erros anteriores
+    isSubmitting.value = true;
+    formErrors.value = {}; // Limpa erros anteriores
 
     // Pega o formData do FormRenderer (se existir ref)
-    const dataToSubmit = formRef.value?.formData || formData.value
+    const dataToSubmit = formRef.value?.formData || formData.value;
 
     try {
       // Executa a action com os dados do formulário
-      await actionComposable.execute({
-        url: props.action.url,
-        method: props.action.method as any,
-        successMessage: '',
-        onSuccess: (data) => {
-          emit('submit', data)
-          emit('success', data)
-          closeSlideover()
+      await actionComposable.execute(
+        {
+          url: props.action.url,
+          method: props.action.method as any,
+          successMessage: "",
+          onSuccess: (data) => {
+            emit("submit", data);
+            emit("success", data);
+            closeSlideover();
+          },
+          onError: (error) => {
+            // Captura erros de validação do Inertia (objeto com campo: mensagem)
+            if (error && typeof error === "object") {
+              // Converte para o formato esperado pelo FormRenderer
+              const validationErrors: Record<string, string | string[]> = {};
+              Object.keys(error).forEach((key) => {
+                const errorValue = error[key];
+                // Se for array, pega o primeiro erro
+                validationErrors[key] = Array.isArray(errorValue)
+                  ? errorValue[0]
+                  : errorValue;
+              });
+              formErrors.value = validationErrors;
+            }
+
+            emit("error", error);
+          },
         },
-        onError: (error) => {
-          // Captura erros de validação do Inertia (objeto com campo: mensagem)
-          if (error && typeof error === 'object') {
-            // Converte para o formato esperado pelo FormRenderer
-            const validationErrors: Record<string, string | string[]> = {}
-            Object.keys(error).forEach(key => {
-              const errorValue = error[key]
-              // Se for array, pega o primeiro erro
-              validationErrors[key] = Array.isArray(errorValue) ? errorValue[0] : errorValue
-            })
-            formErrors.value = validationErrors
-          }
-
-          emit('error', error)
-        }
-      }, dataToSubmit)
-
-      // Emite evento de click para compatibilidade
-      emit('click', formData.value)
-
+        dataToSubmit
+      );
     } finally {
-      isSubmitting.value = false
+      isSubmitting.value = false;
     }
-  } else {
-    emit('click')
   }
-}
+};
 
 // Expõe métodos para controle externo
 defineExpose({
@@ -305,5 +287,5 @@ defineExpose({
   close: closeSlideover,
   isOpen,
   formData,
-})
+});
 </script>

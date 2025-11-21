@@ -7,10 +7,8 @@
  */
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
-
-use Callcocam\LaravelRaptor\Support\Actions\Action;
-use Closure;
-use Illuminate\Database\Eloquent\Model;
+ 
+use Closure; 
 
 /**
  * ModalAction - Abre um modal com formulário e envia via Inertia.js
@@ -183,10 +181,7 @@ class ModalAction extends ExecuteAction
             'preserveState' => $this->preserveState,
             'only' => $this->onlyProps,
         ];
-
-        if ($this->callback) {
-            $result['callback'] = $this->getEvaluatedCallback($model);
-        }
+ 
 
         if ($this->modalSize) {
             $result['modalSize'] = $this->modalSize;

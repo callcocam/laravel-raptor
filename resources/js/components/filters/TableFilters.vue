@@ -6,7 +6,10 @@
  * Pode ser usado independentemente ou com tabelas
  -->
 <template>
-  <div v-if="filters && filters.length > 0" class="flex items-center gap-2 mb-4 flex-wrap">
+  <div
+    v-if="filters && filters.length > 0"
+    class="flex items-center gap-2 mb-4 flex-wrap"
+  >
     <FilterRenderer
       v-for="filter in filters"
       :key="filter.name"
@@ -14,170 +17,166 @@
       :modelValue="filterValues[filter.name]"
       @update:modelValue="(value) => updateFilter(filter.name, value)"
     />
-    
-    <Button 
+
+    <Button
+      type="button"
       v-if="!autoApply"
-      size="sm" 
-      @click="applyFilters" 
+      size="sm"
+      @click="applyFilters"
       :disabled="isLoading"
     >
       <Search class="mr-2 h-4 w-4" />
       Aplicar
     </Button>
-    
-    <Button
-      v-if="hasActiveFilters"
-      variant="ghost"
-      size="sm"
-      @click="clearFilters"
-    >
+
+    <Button v-if="hasActiveFilters" variant="ghost" size="sm" @click="clearFilters" type="button">
       Limpar
     </Button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3' 
-import { Button } from '@/components/ui/button'
-import { Search } from 'lucide-vue-next'
-import FilterRenderer from './FilterRenderer.vue'
+import { ref, computed, watch } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-vue-next";
+import FilterRenderer from "./FilterRenderer.vue";
 
 interface Filter {
-  name: string
-  label: string
-  type: string
-  component?: string
-  options?: Array<{ value: string | number, label: string }>
-  placeholder?: string
-  [key: string]: any
+  name: string;
+  label: string;
+  type: string;
+  component?: string;
+  options?: Array<{ value: string | number; label: string }>;
+  placeholder?: string;
+  [key: string]: any;
 }
 
 interface Props {
-  filters?: Filter[]
-  autoApply?: boolean // Se true, aplica filtros automaticamente ao mudar
-  isLoading?: boolean
+  filters?: Filter[];
+  autoApply?: boolean; // Se true, aplica filtros automaticamente ao mudar
+  isLoading?: boolean;
 }
 
 interface Emits {
-  (e: 'apply', filters: Record<string, any>): void
-  (e: 'clear'): void
+  (e: "apply", filters: Record<string, any>): void;
+  (e: "clear"): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   filters: () => [],
   autoApply: false,
-  isLoading: false
-})
+  isLoading: false,
+});
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<Emits>();
 
-const page = usePage()
-const route = computed(() => new URL(page.url, window.location.origin))
+const page = usePage();
+const route = computed(() => new URL(page.url, window.location.origin));
 
 // Estado interno dos filtros
-const filterValues = ref<Record<string, any>>({})
+const filterValues = ref<Record<string, any>>({});
 
 // Inicializa valores dos filtros da URL
 const initializeFromQuery = () => {
-  const params = Object.fromEntries(new URLSearchParams(route.value.search))
-  props.filters?.forEach(filter => {
-    const queryValue = params[filter.name]
-    if (queryValue !== undefined && queryValue !== null && queryValue !== '') {
+  const params = Object.fromEntries(new URLSearchParams(route.value.search));
+  props.filters?.forEach((filter) => {
+    const queryValue = params[filter.name];
+    if (queryValue !== undefined && queryValue !== null && queryValue !== "") {
       // Para date range, tenta fazer parse do JSON
-      if (filter.type === 'date-range' && typeof queryValue === 'string') {
+      if (filter.type === "date-range" && typeof queryValue === "string") {
         try {
-          filterValues.value[filter.name] = JSON.parse(queryValue)
+          filterValues.value[filter.name] = JSON.parse(queryValue);
         } catch {
-          filterValues.value[filter.name] = queryValue
+          filterValues.value[filter.name] = queryValue;
         }
       } else {
-        filterValues.value[filter.name] = queryValue
+        filterValues.value[filter.name] = queryValue;
       }
     }
-  })
-}
+  });
+};
 
 // Inicializa na montagem
-initializeFromQuery()
+initializeFromQuery();
 
 // Verifica se tem filtros ativos
 const hasActiveFilters = computed(() => {
-  return Object.values(filterValues.value).some(value => {
-    if (value === null || value === undefined || value === '') return false
-    if (typeof value === 'object') {
+  return Object.values(filterValues.value).some((value) => {
+    if (value === null || value === undefined || value === "") return false;
+    if (typeof value === "object") {
       // Para date range
-      return Object.values(value).some(v => v !== null && v !== undefined && v !== '')
+      return Object.values(value).some((v) => v !== null && v !== undefined && v !== "");
     }
-    return true
-  })
-})
+    return true;
+  });
+});
 
 /**
  * Atualiza um filtro específico
  */
 const updateFilter = (name: string, value: any) => {
-  if (value === null || value === undefined || value === '') {
-    delete filterValues.value[name]
+  if (value === null || value === undefined || value === "") {
+    delete filterValues.value[name];
   } else {
-    filterValues.value[name] = value
+    filterValues.value[name] = value;
   }
 
   // Se autoApply está ativado, aplica imediatamente
   if (props.autoApply) {
-    applyFilters()
+    applyFilters();
   }
-}
+};
 
 /**
  * Aplica os filtros (atualiza URL e emite evento)
  */
 const applyFilters = () => {
-  const params = Object.fromEntries(new URLSearchParams(route.value.search))
+  const params = Object.fromEntries(new URLSearchParams(route.value.search));
   // Remove page ao aplicar filtros (volta para página 1)
-  delete params.page
+  delete params.page;
   // Adiciona os filtros ativos
   Object.entries(filterValues.value).forEach(([key, value]) => {
-    if (value !== null && value !== undefined && value !== '') {
+    if (value !== null && value !== undefined && value !== "") {
       // Para date range e objetos, serializa como JSON
-      if (typeof value === 'object') {
-        params[key] = JSON.stringify(value)
+      if (typeof value === "object") {
+        params[key] = JSON.stringify(value);
       } else {
-        params[key] = value
+        params[key] = value;
       }
     } else {
-      delete params[key]
+      delete params[key];
     }
-  })
+  });
   // Atualiza URL e faz request Inertia
-  router.get(window.location.pathname, params, { preserveState: true, replace: true })
+  router.get(window.location.pathname, params, { preserveState: true, replace: true });
   // Emite evento
-  emit('apply', filterValues.value)
-}
+  emit("apply", filterValues.value);
+};
 
 /**
  * Limpa todos os filtros
  */
 const clearFilters = () => {
-  filterValues.value = {}
-  const params = Object.fromEntries(new URLSearchParams(route.value.search))
+  filterValues.value = {};
+  const params = Object.fromEntries(new URLSearchParams(route.value.search));
   // Remove todos os filtros da URL
-  props.filters?.forEach(filter => {
-    delete params[filter.name]
-  })
+  props.filters?.forEach((filter) => {
+    delete params[filter.name];
+  });
   // Remove page também
-  delete params.page
+  delete params.page;
   // Atualiza URL e faz request Inertia
-  router.get(window.location.pathname, params, { preserveState: true, replace: true })
+  router.get(window.location.pathname, params, { preserveState: true, replace: true });
   // Emite evento
-  emit('clear')
-}
+  emit("clear");
+};
 
 // Watch na rota para reagir a mudanças externas (ex: botão voltar do navegador)
 watch(
   () => route.value.search,
   () => {
-    initializeFromQuery()
+    initializeFromQuery();
   }
-)
+);
 </script>

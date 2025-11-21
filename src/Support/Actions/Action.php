@@ -176,10 +176,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'preserveState' => $this->preserveState,
             'only' => $this->onlyProps,
         ];
-
-        if ($this->callback) {
-            $result['callback'] = $this->getEvaluatedCallback($model);
-        }
+ 
 
         if ($this->modalSize) {
             $result['modalSize'] = $this->modalSize;

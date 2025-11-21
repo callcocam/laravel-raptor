@@ -295,7 +295,7 @@ abstract class AbstractController extends ResourceController
             }
 
             // Executa o callback da action
-            return $callback->execute($request);
+            return $callback->executeCallback($request);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
             throw $e;

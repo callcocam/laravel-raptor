@@ -28,7 +28,7 @@ trait HasActionCallback
     /**
      * Executa o callback da action
      */
-    public function execute(Request $request): mixed
+    public function executeCallback(Request $request): mixed
     {
         if (!$this->callback) {
             return null;
@@ -47,7 +47,8 @@ trait HasActionCallback
     }
 
     /**
-     * Retorna o callback avaliado (para serialização)
+     * Retorna informações sobre o callback (para serialização)
+     * NÃO executa o callback - apenas retorna metadata
      */
     protected function getEvaluatedCallback($model = null): mixed
     {
@@ -55,11 +56,13 @@ trait HasActionCallback
             return null;
         }
 
-        return $this->evaluate($this->callback, [
-            'model' => $model,
-            'record' => $model,
-            'item' => $model,
-            'request' => $this->getRequest(),
-        ]);
+        // Se for Closure, retorna apenas um indicador de que existe
+        // NÃO execute a closure aqui - isso causaria execução indevida
+        if ($this->callback instanceof Closure) {
+            return 'callback'; // Apenas indica que há um callback
+        }
+
+        // Se for string (nome de método), retorna o nome
+        return $this->callback;
     }
 }

@@ -132,14 +132,11 @@ trait WithRequests
 
     public function getFormActions(): array
     {
-        $resource = $this->getResourcePluralName();
+        $resourceName = $this->getResourcePluralName();
         return [
             // Ações para o formulário
-            \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make('cancel')
-                ->variant('destructive')
-                ->url(function ($request) use ($resource) {
-                    return redirect()->route(sprintf('%s.%s.index', $request->getContext(), $resource));
-                })
+            \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make("{$resourceName}.index")
+                ->variant('destructive') 
                 ->size('sm')
                 ->label(sprintf("Voltar %s", $this->getResourcePluralLabel())),
             \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
