@@ -177,8 +177,9 @@ abstract class AbstractController extends ResourceController
 
             $model->delete();
 
-            return redirect()
-                ->route(sprintf('%s.index', $this->getResourceName()))
+            $route = str(request()->route()->getAction('as'))->replace('destroy', 'index')->toString();
+
+            return redirect()->route($route)
                 ->with('success', 'Item deletado com sucesso.');
         } catch (\Exception $e) {
             return $this->handleDestroyError($e, $record);
@@ -195,8 +196,9 @@ abstract class AbstractController extends ResourceController
 
             $model->restore();
 
-            return redirect()
-                ->route(sprintf('%s.index', $this->getResourceName()))
+            $route = str(request()->route()->getAction('as'))->replace('restore', 'index')->toString();
+
+            return redirect()->route($route)
                 ->with('success', 'Item restaurado com sucesso.');
         } catch (\Exception $e) {
             return $this->handleRestoreError($e, $record);
@@ -213,8 +215,8 @@ abstract class AbstractController extends ResourceController
 
             $model->forceDelete();
 
-            return redirect()
-                ->route(sprintf('%s.index', $this->getResourceName()))
+            $route = str(request()->route()->getAction('as'))->replace('forceDelete', 'index')->toString();
+            return redirect()->route($route)
                 ->with('success', 'Item excluído permanentemente.');
         } catch (\Exception $e) {
             return $this->handleForceDeleteError($e, $record);
