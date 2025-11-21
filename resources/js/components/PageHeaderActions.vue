@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import ActionRenderer from '~/components/actions/ActionRenderer.vue'
-import type { TableAction } from '~/types/table'
+import ActionRenderer from "~/components/actions/ActionRenderer.vue";
+import type { TableAction } from "~/types/table";
 
 interface Props {
-  actions?: TableAction[]
-  modelId?: string
+  actions?: TableAction[];
+  modelId?: string;
 }
-
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   actions: () => [],
-})
+});
 </script>
 
 <template>
