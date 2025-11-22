@@ -33,8 +33,7 @@ class TenantRouteInjector
     protected function loadDefaultDirectories($defaultDirectories = []): void
     {
         // Carrega configuração do arquivo config/raptor.php
-        $configuredDirs = config('raptor.route_injector.directories', []);
-
+        $configuredDirs =[];// config('raptor.route_injector.directories', []); 
         // Diretórios padrão se não houver configuração
         // $defaultDirectories = [
         //     'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),

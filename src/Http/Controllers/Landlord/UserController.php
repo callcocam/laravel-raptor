@@ -56,8 +56,7 @@ class UserController extends LandlordController
     }
 
     protected function table(TableBuilder $table): TableBuilder
-    {
-        dd($table);
+    { 
         return $table;
     }
 

@@ -17,11 +17,11 @@ if (!function_exists('getDirectoriesPath')) {
 
         $defaultDirectories = [
             'landlord' => [
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../Http/Controllers/Landlord',
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../src/Http/Controllers/Landlord',
             ],
             'tenant' => [
                 'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant',
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../src/Http/Controllers/Tenant',
             ],
         ];
         return data_get($defaultDirectories, $context, []);
