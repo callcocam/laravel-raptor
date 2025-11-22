@@ -30,7 +30,7 @@ class DashboardController extends ResourceController
 
     public function index(Request $request)
     {
-        return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
+        return Inertia::render(sprintf('admin/%s/dashboard', $this->resourcePath()), [
             'message' => 'Welcome to Laravel Raptor!',
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),

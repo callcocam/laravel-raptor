@@ -137,11 +137,11 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
      */
     protected function registerTenantRoutes(): void
     {
-        Route::middleware(['web','auth', 'tenant'])
-            ->name('tenant.')
-            ->group(function () {
-                $injector = new TenantRouteInjector();
-                $injector->registerRoutes();
-            });
+        // Route::middleware(['web','auth', 'tenant'])
+        //     ->name('tenant.')
+        //     ->group(function () {
+        //         $injector = new TenantRouteInjector();
+        //         $injector->registerRoutes();
+        //     });
     }
 }

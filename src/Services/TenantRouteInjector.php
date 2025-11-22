@@ -22,26 +22,25 @@ class TenantRouteInjector
      */
     protected array $controllerDirectories = [];
 
-    public function __construct()
+    public function __construct(array $defaultDirectories = [])
     {
-        $this->loadDefaultDirectories();
+        $this->loadDefaultDirectories($defaultDirectories);
     }
 
     /**
      * Carrega diretórios padrão a partir do config
      */
-    protected function loadDefaultDirectories(): void
+    protected function loadDefaultDirectories($defaultDirectories = []): void
     {
         // Carrega configuração do arquivo config/raptor.php
         $configuredDirs = config('raptor.route_injector.directories', []);
 
         // Diretórios padrão se não houver configuração
-        $defaultDirectories = [
-            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'), 
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant', 
-        ];
-
-        $this->controllerDirectories = !empty($configuredDirs) ? $configuredDirs : $defaultDirectories;
+        // $defaultDirectories = [
+        //     'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
+        //     // 'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant', 
+        // ];
+        $this->controllerDirectories = array_merge($configuredDirs, $defaultDirectories);
     }
 
     /**

@@ -9,6 +9,10 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Support\Pages\Create;
+use Callcocam\LaravelRaptor\Support\Pages\Edit;
+use Callcocam\LaravelRaptor\Support\Pages\Execute;
+use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 
 class TenantController extends LandlordController
@@ -21,11 +25,38 @@ class TenantController extends LandlordController
         return config('raptor.landlord.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
     }
 
+
+    public function getPages(): array
+    {
+        return [
+            'index' => Index::route('/tenants')
+                ->label('Inquilinos')
+                ->name('tenants.index')
+                ->icon('Shield')
+                ->group('Segurança')
+                ->groupCollapsible(true)
+                ->order(15)
+                ->middlewares(['auth', 'verified']),
+            'create' => Create::route('/tenants/create')
+                ->label('Criar Inquilino')
+                ->name('tenants.create')
+                ->middlewares(['auth', 'verified']),
+            'edit' => Edit::route('/tenants/{record}/edit')
+                ->label('Editar Inquilinos')
+                ->name('tenants.edit')
+                ->middlewares(['auth', 'verified']),
+            'execute' => Execute::route('/tenants/execute/actions')
+                ->label('Executar Inquilinos')
+                ->name('tenants.execute')
+                ->middlewares(['auth', 'verified']),
+        ];
+    }
+
     protected function table(TableBuilder $table): TableBuilder
     {
         return $table;
     }
-    
+
     /**
      * Define o resource path para as views
      */
