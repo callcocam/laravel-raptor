@@ -40,7 +40,7 @@ class ImportAction extends ExecuteAction
                         'file' => 'Deve ser um arquivo válido.',
                         'mimes' => 'O arquivo deve ser CSV ou XLSX.',
                         'max' => 'O arquivo não pode ser maior que 10MB.',
-                    ])
+                    ])->columnSpan('full'),
             ])
             ->confirm(Confirm::make(
                 title: 'Importar Registros',
