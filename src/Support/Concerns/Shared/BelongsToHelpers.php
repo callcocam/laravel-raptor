@@ -12,7 +12,7 @@ use Closure;
 
 trait BelongsToHelpers
 {
-    protected mixed $default = null;
+    protected mixed $default = '';
 
     protected string|Closure|null $helpText = null;
 

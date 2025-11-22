@@ -2,9 +2,9 @@
  * ActionModalForm - Componente de ação com modal (form/table/infolist)
  *
  * Exibe um botão que, ao clicar, abre um modal com:
- * - FormRenderer (form): Para edição/criação com formulário
- * - TableOnlyRenderer (table): Para visualização de listas relacionadas
- * - InfoListRenderer (infolist): Para visualização de detalhes
+ * - ModalForm: Para edição/criação com formulário
+ * - ModalTable: Para visualização de listas relacionadas
+ * - ModalInfo: Para visualização de detalhes
  *
  * O tipo é detectado automaticamente pelo backend (ModalAction::detectColumnType())
  * Usa Dialog da shadcn-vue para seguir o padrão do projeto
@@ -36,28 +36,38 @@
 
       <!-- Slot para conteúdo customizado ou renderiza baseado no columnType -->
       <slot name="content">
-        <!-- Form: Renderiza FormRenderer com v-model e submit -->
-        <div v-if="columnType === 'form' && hasFormColumns">
-          <FormRenderer
-            :columns="formColumns"
-            :errors="formErrors"
-            :gridColumns="gridColumns"
-            :gap="gap"
-            v-model="formData"
-            ref="formRef"
-            @submit="handleSubmit"
-          />
-        </div>
+        <!-- Form Mode -->
+        <ModalForm
+          v-if="columnType === 'form' && hasFormColumns"
+          v-model="formData"
+          :columns="formColumns"
+          :action="{
+            ...action,
+            confirm: action.confirm ?? undefined
+          }"
+          :confirm-text="action.confirm?.confirmButtonText || 'Confirmar'"
+          :grid-columns="gridColumns"
+          :gap="gap"
+          ref="modalFormRef"
+          @success="handleSuccess"
+          @error="handleError"
+          @cancel="closeModal"
+        />
 
-        <!-- Table: Renderiza TableOnlyRenderer (visualização apenas) -->
-        <div v-else-if="columnType === 'table'">
-          <TableOnlyRenderer :columns="formColumns" :data="tableData" />
-        </div>
+        <!-- Table Mode -->
+        <ModalTable
+          v-else-if="columnType === 'table'"
+          :columns="formColumns"
+          :data="tableData"
+        />
 
-        <!-- InfoList: Renderiza InfoListRenderer (detalhes) -->
-        <div v-else-if="columnType === 'infolist'">
-          <InfoListRenderer :columns="formColumns" />
-        </div>
+        <!-- InfoList Mode -->
+        <ModalInfo
+          v-else-if="columnType === 'infolist'"
+          :columns="formColumns"
+          :value="formData"
+          :name="props.action.name"
+        />
 
         <!-- Conteúdo padrão se não houver colunas -->
         <div v-else class="text-center py-12">
@@ -74,21 +84,6 @@
           </p>
         </div>
       </slot>
-
-      <!-- Footer: Apenas para formulários -->
-      <DialogFooter v-if="$slots.footer || (columnType === 'form' && hasFormColumns)">
-        <slot name="footer">
-          <!-- Botões padrão para formulário -->
-          <template v-if="columnType === 'form' && hasFormColumns">
-            <Button variant="outline" @click="closeModal">
-              Cancelar {{  isSubmitting }}
-            </Button>
-            <Button @click="handleSubmit" :disabled="isSubmitting">
-              {{ isSubmitting ? 'Processando...' : (action.confirm?.confirmButtonText || 'Confirmar') }}
-            </Button>
-          </template>
-        </slot>
-      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
@@ -100,20 +95,16 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
 import * as LucideIcons from 'lucide-vue-next'
-import FormRenderer from './../../../components/form/FormRenderer.vue'
-import TableOnlyRenderer from './../../../components/table/TableOnlyRenderer.vue'
-import InfoListRenderer from './../../../components/infolist/InfoListRenderer.vue'
-import { useAction } from '~/composables/useAction'
+import ModalForm from '../modal/ModalForm.vue'
+import ModalTable from '../modal/ModalTable.vue'
+import ModalInfo from '../modal/ModalInfo.vue'
+import { useActionConfig } from '~/composables/useActionConfig'
 import type { TableAction } from '~/types/table'
-
-// Composable para executar actions
-const actionComposable = useAction()
 
 interface FormColumn {
   name: string
@@ -151,16 +142,12 @@ const emit = defineEmits<{
 
 // Estado do modal
 const isOpen = ref(false)
-const isSubmitting = ref(false)
 
-// Referência ao FormRenderer
-const formRef = ref<InstanceType<typeof FormRenderer> | null>(null)
-
-// Dados do formulário (usando ref para permitir v-model)
+// Dados iniciais do formulário
 const formData = ref<Record<string, any>>(props.record || {})
 
-// Erros de validação
-const formErrors = ref<Record<string, string | string[]>>({})
+// Referência ao ModalForm (para limpar erros, etc)
+const modalFormRef = ref<InstanceType<typeof ModalForm> | null>(null)
 
 // Tipo de coluna (form, table, ou infolist)
 const columnType = computed(() => {
@@ -177,57 +164,16 @@ const tableData = computed(() => {
   return props.action.tableData || []
 })
 
-// Configurações de grid do formulário
-const gridColumns = computed(() => {
-  return props.action.gridColumns || '12'
-})
-
-const gap = computed(() => {
-  return props.action.gap || '4'
-})
-
-// Classes do DialogContent (largura e altura)
-const dialogClasses = computed(() => {
-  const maxWidthMap: Record<string, string> = {
-    'sm': 'sm:max-w-sm',
-    'md': 'sm:max-w-md',
-    'lg': 'sm:max-w-lg',
-    'xl': 'sm:max-w-xl',
-    '2xl': 'sm:max-w-2xl',
-    '3xl': 'sm:max-w-3xl',
-    '4xl': 'sm:max-w-4xl',
-    '5xl': 'sm:max-w-5xl',
-    '6xl': 'sm:max-w-6xl',
-    '7xl': 'sm:max-w-7xl',
-    'full': 'sm:max-w-full',
-  }
-
-  const maxWidth = props.action.maxWidth || '4xl'
-  
-  return [
-    maxWidthMap[maxWidth] || 'max-w-4xl',
-    'max-h-[90vh]',
-    'overflow-y-auto',
-  ].join(' ')
-})
-
-// Verifica se há colunas
-const hasFormColumns = computed(() => {
-  return formColumns.value.length > 0
-})
-
-// Mapeia cor para variant do shadcn
-const variant = computed(() => {
-  const colorMap: Record<string, any> = {
-    'green': 'default',
-    'blue': 'default',
-    'red': 'destructive',
-    'yellow': 'warning',
-    'gray': 'secondary',
-    'default': 'default'
-  }
-
-  return colorMap[props.action.color || 'default'] || 'default'
+// Usa o composable para configurações comuns
+const {
+  gridColumns,
+  gap,
+  dialogClasses,
+  hasFormColumns,
+  variant,
+} = useActionConfig({
+  action: props.action,
+  columns: formColumns
 })
 
 // Componente do ícone dinâmico
@@ -249,72 +195,44 @@ const handleTriggerClick = () => {
   emit('click')
 }
 
-// Handler para submit do formulário
-const handleSubmit = async () => {
-  if (columnType.value === 'form' && hasFormColumns.value) {
-    isSubmitting.value = true
-    formErrors.value = {} // Limpa erros anteriores
+// Handler para sucesso do formulário (vem do ModalForm)
+const handleSuccess = (page: any) => {
+  emit('submit', formData.value)
+  emit('success', page)
 
-    // Pega o formData do FormRenderer (se existir ref)
-    const dataToSubmit = formRef.value?.formData || formData.value 
- 
-
-    try {
-      // Executa a action com os dados do formulário
-      await actionComposable.execute({
-        url: props.action.url,
-        method: props.action.method as any,
-        successMessage: '',
-        onSuccess: (data) => {
-          emit('submit', data)
-          emit('success', data)
-
-          // Fecha o modal apenas se closeModalOnSuccess for true (padrão)
-          if (props.action.confirm?.closeModalOnSuccess ?? true) {
-            closeModal()
-          }
-        },
-        onError: (error) => {  
-          // Captura erros de validação do Inertia (objeto com campo: mensagem)
-          if (error && typeof error === 'object') {
-            // Converte para o formato esperado pelo FormRenderer
-            const validationErrors: Record<string, string | string[]> = {}
-            Object.keys(error).forEach(key => {
-              const errorValue = error[key]
-              // Se for array, pega o primeiro erro
-              validationErrors[key] = Array.isArray(errorValue) ? errorValue[0] : errorValue
-            })
-            formErrors.value = validationErrors
-          }
-
-          emit('error', error)
-        }
-      }, dataToSubmit)
-
-      // Emite evento de click para compatibilidade
-      emit('click', formData.value)
-
-    } finally {
-      isSubmitting.value = false
-    }
-  } else {
-    emit('click')
+  // Fecha o modal apenas se closeModalOnSuccess for true (padrão)
+  if (props.action.confirm?.closeModalOnSuccess ?? true) {
+    closeModal()
   }
+
+  // Emite evento de click para compatibilidade
+  emit('click', formData.value)
+}
+
+// Handler para erro do formulário (vem do ModalForm)
+const handleError = (errors: any) => {
+  emit('error', errors)
 }
 
 // Fecha o modal
 const closeModal = () => {
   isOpen.value = false
+  // Limpa erros do ModalForm se existir
+  if (modalFormRef.value) {
+    modalFormRef.value.clearErrors()
+  }
 }
 
-// Watch para emitir eventos quando o modal abre/fecha e limpar erros
+// Watch para emitir eventos quando o modal abre/fecha
 watch(isOpen, (newValue) => {
   if (newValue) {
     emit('open')
   } else {
     emit('close')
     // Limpa erros ao fechar
-    formErrors.value = {}
+    if (modalFormRef.value) {
+      modalFormRef.value.clearErrors()
+    }
   }
 })
 
@@ -323,6 +241,7 @@ defineExpose({
   open: () => { isOpen.value = true },
   close: closeModal,
   isOpen,
-  formData,
+  formData, // Dados iniciais do formulário
+  modalFormRef, // Referência ao ModalForm (para acesso ao form do Inertia se necessário)
 })
 </script>

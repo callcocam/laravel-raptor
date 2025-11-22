@@ -76,6 +76,7 @@
 
 <script setup lang="ts">
 import { ref, computed, h } from "vue";
+import { useForm } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -89,11 +90,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import * as LucideIcons from "lucide-vue-next";
-import { useAction } from "~/composables/useAction";
 import type { TableAction } from "~/types/table";
-
-// Composable para executar actions
-const actionComposable = useAction();
 
 interface Props {
   action: TableAction;
@@ -112,11 +109,19 @@ const emit = defineEmits<{
 
 // Estado do dialog
 const isOpen = ref(false);
-const isSubmitting = ref(false);
 
 // Estado para confirmação por digitação
 const typedWord = ref('');
 const showTypedError = ref(false);
+
+// Form do Inertia - gerencia automaticamente processing, errors, success
+const form = useForm({
+  actionType: '',
+  actionName: ''
+});
+
+// Alias para manter compatibilidade no template
+const isSubmitting = computed(() => form.processing);
 
 // Configuração de confirmação
 const confirmConfig = computed(() => {
@@ -220,35 +225,38 @@ const questionIcon = computed(() => {
 });
 
 // Confirma a ação
-const confirmAction = async () => {
-  isSubmitting.value = true; 
-
-  try {
-    // Extrai o nome da action da URL ou do próprio name
-    const actionName = props.action.name;
-    const actionType = props.action.actionType;
-
-    // Executa a action enviando apenas o name
-    await actionComposable.execute(
-      {
-        url: props.action.url,
-        method: props.action.method as any,
-        successMessage: '',
-        onSuccess: (data) => {
-          emit("success", data); 
-          isOpen.value = false;
-        },
-        onError: (error) => {
-          emit("error", error);
-        },
-      },
-      { actionType, actionName }
-    );
-
-    // Emite evento de click para compatibilidade
-    emit("click");
-  } finally {
-    isSubmitting.value = false;
+const confirmAction = () => {
+  // Verifica confirmação por digitação se necessário
+  if (requiresTypedConfirmation.value && !isTypedWordCorrect.value) {
+    showTypedError.value = true;
+    return;
   }
+
+  // Atualiza o form com os dados da action
+  form.actionType = props.action.actionType || '';
+  form.actionName = props.action.name || '';
+
+  // Submit usando useForm do Inertia - processing e errors são gerenciados automaticamente
+  form.submit(
+    props.action.method.toLowerCase() as "post" | "put" | "patch" | "delete",
+    props.action.url,
+    {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: (page) => {
+        emit("success", page);
+        isOpen.value = false;
+        // Reseta palavra digitada
+        typedWord.value = '';
+        showTypedError.value = false;
+
+        // Emite evento de click para compatibilidade
+        emit("click");
+      },
+      onError: (errors) => {
+        emit("error", errors);
+      }
+    }
+  );
 };
 </script>

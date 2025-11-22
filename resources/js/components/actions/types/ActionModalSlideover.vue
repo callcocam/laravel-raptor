@@ -32,10 +32,14 @@
         v-if="columnType === 'form' && hasFormColumns"
         v-model="formData"
         :columns="formColumns"
-        :errors="formErrors"
-        :is-submitting="isSubmitting"
+        :action="{
+          ...action,
+          confirm: action.confirm ?? undefined
+        }"
         :confirm-text="action.confirm?.confirmButtonText || 'Confirmar'"
-        @submit="handleSubmit"
+        ref="slideoverFormRef"
+        @success="handleSuccess"
+        @error="handleError"
         @cancel="closeSlideover"
       />
 
@@ -65,11 +69,8 @@ import SlideoverBase from "../slideover/SlideoverBase.vue";
 import SlideoverForm from "../slideover/SlideoverForm.vue";
 import SlideoverTable from "../slideover/SlideoverTable.vue";
 import SlideoverInfo from "../slideover/SlideoverInfo.vue";
-import { useAction } from "~/composables/useAction";
+import { useActionConfig } from "~/composables/useActionConfig";
 import type { TableAction } from "~/types/table";
-
-// Composable para executar actions
-const actionComposable = useAction();
 
 interface FormColumn {
   name: string;
@@ -109,13 +110,12 @@ const emit = defineEmits<{
 
 // Estado do slideover
 const isOpen = ref(false);
-const isSubmitting = ref(false);
 
-// Dados do formulário
+// Dados iniciais do formulário
 const formData = ref<Record<string, any>>(props.record || {});
 
-// Erros de validação
-const formErrors = ref<Record<string, string | string[]>>({});
+// Referência ao SlideoverForm (para limpar erros, etc)
+const slideoverFormRef = ref<InstanceType<typeof SlideoverForm> | null>(null);
 
 // Tipo de coluna (form, table, ou infolist)
 const columnType = computed(() => {
@@ -132,23 +132,13 @@ const tableData = computed(() => {
   return props.action.tableData || [];
 });
 
-// Verifica se há colunas
-const hasFormColumns = computed(() => {
-  return formColumns.value.length > 0;
-});
-
-// Mapeia cor para variant do shadcn
-const variant = computed(() => {
-  const colorMap: Record<string, any> = {
-    green: "default",
-    blue: "default",
-    red: "destructive",
-    yellow: "warning",
-    gray: "secondary",
-    default: "default",
-  };
-
-  return colorMap[props.action.color || "default"] || "default";
+// Usa o composable para configurações comuns
+const {
+  hasFormColumns,
+  variant,
+} = useActionConfig({
+  action: props.action,
+  columns: formColumns
 });
 
 // Componente do ícone dinâmico
@@ -174,77 +164,53 @@ const openSlideover = () => {
   isOpen.value = true;
 };
 
+// Handler para sucesso do formulário (vem do SlideoverForm)
+const handleSuccess = (page: any) => {
+  emit("submit", formData.value);
+  emit("success", page);
+
+  // Fecha o slideover apenas se closeModalOnSuccess for true (padrão)
+  if (props.action.confirm?.closeModalOnSuccess ?? true) {
+    closeSlideover();
+  }
+
+  // Emite evento de click para compatibilidade
+  emit("click", formData.value);
+};
+
+// Handler para erro do formulário (vem do SlideoverForm)
+const handleError = (errors: any) => {
+  emit("error", errors);
+};
+
 // Fecha o slideover
 const closeSlideover = () => {
   isOpen.value = false;
+  // Limpa erros do SlideoverForm se existir
+  if (slideoverFormRef.value) {
+    slideoverFormRef.value.clearErrors();
+  }
 };
 
-// Watch para emitir eventos quando o slideover abre/fecha e limpar erros
+// Watch para emitir eventos quando o slideover abre/fecha
 watch(isOpen, (newValue) => {
   if (newValue) {
     emit("open");
   } else {
     emit("close");
     // Limpa erros ao fechar
-    formErrors.value = {};
+    if (slideoverFormRef.value) {
+      slideoverFormRef.value.clearErrors();
+    }
   }
 });
-
-// Handler para submit do formulário
-const handleSubmit = async () => {
-  if (columnType.value === "form" && hasFormColumns.value) {
-    isSubmitting.value = true;
-    formErrors.value = {}; // Limpa erros anteriores
-
-    try {
-      // Executa a action com os dados do formulário
-      await actionComposable.execute(
-        {
-          url: props.action.url,
-          method: props.action.method as any,
-          successMessage: "",
-          onSuccess: (data) => {
-            emit("submit", data);
-            emit("success", data);
-
-            // Fecha o slideover apenas se closeModalOnSuccess for true (padrão)
-            if (props.action.confirm?.closeModalOnSuccess ?? true) {
-              closeSlideover();
-            }
-          },
-          onError: (error) => {
-            // Captura erros de validação do Inertia
-            if (error && typeof error === "object") {
-              const validationErrors: Record<string, string | string[]> = {};
-              Object.keys(error).forEach((key) => {
-                const errorValue = error[key];
-                validationErrors[key] = Array.isArray(errorValue)
-                  ? errorValue[0]
-                  : errorValue;
-              });
-              formErrors.value = validationErrors;
-            }
-
-            emit("error", error);
-          },
-        },
-        formData.value
-      );
-
-      emit("click", formData.value);
-    } finally {
-      isSubmitting.value = false;
-    }
-  } else {
-    emit("click");
-  }
-};
 
 // Expõe métodos para controle externo
 defineExpose({
   open: openSlideover,
   close: closeSlideover,
   isOpen,
-  formData,
+  formData, // Dados iniciais do formulário
+  slideoverFormRef, // Referência ao SlideoverForm (para acesso ao form do Inertia se necessário)
 });
 </script>
