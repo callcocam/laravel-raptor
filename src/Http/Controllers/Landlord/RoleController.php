@@ -11,11 +11,11 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
@@ -28,7 +28,6 @@ use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 class RoleController extends LandlordController
 {
     use WithRequests;
-
 
     public function getPages(): array
     {
@@ -55,6 +54,7 @@ class RoleController extends LandlordController
                 ->middlewares(['auth', 'verified']),
         ];
     }
+
     /**
      * Define o model que será usado pelo controller
      */
@@ -62,7 +62,6 @@ class RoleController extends LandlordController
     {
         return config('raptor.shinobi.models.role', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Role::class);
     }
-
 
     protected function form(Form $form): Form
     {
@@ -134,7 +133,7 @@ class RoleController extends LandlordController
                 \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('roles.forceDelete'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('roles.destroy'),
             ])->headerActions([
-                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('products.create')
+                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('roles.create'),
             ]);
     }
 
@@ -145,11 +144,11 @@ class RoleController extends LandlordController
             TextInfolist::make('slug', 'Slug'),
             TextInfolist::make('description', 'Descrição'),
             TextInfolist::make('special', 'Permissões Especiais')
-                ->value(fn($value) => $value ? 'Sim' : 'Não'),
+                ->value(fn ($value) => $value ? 'Sim' : 'Não'),
             TextInfolist::make('created_at', 'Criado em')
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', 'Atualizado em')
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

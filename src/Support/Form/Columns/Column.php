@@ -29,6 +29,7 @@ abstract class Column extends AbstractColumn
         $this->name($name);
         $this->id($name);
         $this->label($label ?? ucfirst($name));
+        $this->columnSpanFull();
 
         $this->valueUsing(function ($request, $model) {
             return null;
