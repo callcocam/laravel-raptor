@@ -1,16 +1,39 @@
 <!--
- * FormFieldFileUpload - File upload field using shadcn-vue Field primitives
+ * FormFieldFileUpload - File upload field with local preview
  *
- * Modern replacement for FormColumnFileUpload with improved accessibility
+ * Simple upload with instant preview before form submission
  -->
 <template>
-  <Field orientation="vertical" :data-invalid="hasError"  class="gap-y-1">
+  <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
+    <!-- Preview de imagem -->
+    <div v-if="previewUrl && isImageFile" class="mb-4">
+      <div class="relative w-full max-w-md mx-auto rounded-lg overflow-hidden border-2 border-border">
+        <img :src="previewUrl" :alt="selectedFiles[0]?.name || 'Preview'" class="w-full h-auto" />
+        <div class="absolute top-2 right-2">
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            class="h-8 w-8"
+            @click="removeFile(0)"
+          >
+            <X class="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      <p v-if="selectedFiles[0]" class="text-center text-sm text-muted-foreground mt-2">
+        {{ selectedFiles[0].name }} ({{ formatFileSize(selectedFiles[0].size || 0) }})
+      </p>
+    </div>
+
+    <!-- Upload area (oculto se já tem arquivo) -->
     <div
+      v-show="selectedFiles.length === 0"
       class="relative border-2 border-dashed rounded-lg p-6 transition-colors"
       :class="{
         'border-primary bg-primary/5': isDragging,
@@ -52,7 +75,8 @@
       </div>
     </div>
 
-    <div v-if="selectedFiles.length > 0" class="space-y-2">
+    <!-- Lista de arquivos não-imagem -->
+    <div v-if="selectedFiles.length > 0 && !isImageFile" class="space-y-2">
       <div
         v-for="(file, index) in selectedFiles"
         :key="index"
@@ -86,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { Upload, FileIcon, X } from 'lucide-vue-next'
@@ -105,7 +129,7 @@ interface FormColumn {
 
 interface Props {
   column: FormColumn
-  modelValue?: File | File[] | null
+  modelValue?: File | File[] | string | null
   error?: string | string[]
 }
 
@@ -113,6 +137,8 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   error: undefined,
 })
+
+console.log('Props:', props.modelValue)
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: File | File[] | null): void
@@ -122,8 +148,36 @@ const fileInputRef = ref<HTMLInputElement | null>(null)
 const selectedFiles = ref<File[]>([])
 const isDragging = ref(false)
 const localErrorMessage = ref('')
+const previewUrl = ref<string | null>(null)
+
+// Inicializa preview com URL existente
+onMounted(() => {
+  if (props.modelValue && typeof props.modelValue === 'string') {
+    previewUrl.value = props.modelValue
+  }
+})
+
+// Observa mudanças no modelValue para atualizar preview
+watch(() => props.modelValue, (newValue) => {
+  if (newValue && typeof newValue === 'string') {
+    previewUrl.value = newValue
+  } else if (!newValue) {
+    previewUrl.value = null
+  }
+})
 
 const hasError = computed(() => !!props.error || !!localErrorMessage.value)
+
+const isImageFile = computed(() => {
+  // Se há uma URL de preview (string), é uma imagem
+  if (previewUrl.value && typeof props.modelValue === 'string') {
+    return true
+  }
+  
+  // Se há arquivos selecionados, verifica o tipo
+  if (selectedFiles.value.length === 0) return false
+  return selectedFiles.value[0].type.startsWith('image/')
+})
 
 const errorArray = computed(() => {
   const errors = []
@@ -162,9 +216,25 @@ const validateFile = (file: File): boolean => {
 
   if (props.column.acceptedFileTypes && props.column.acceptedFileTypes.length > 0) {
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
-    const isValidType = props.column.acceptedFileTypes.some(
-      type => type.toLowerCase() === fileExtension
-    )
+    const fileMimeType = file.type
+
+    const isValidType = props.column.acceptedFileTypes.some(type => {
+      const acceptedType = type.toLowerCase()
+
+      // Verifica se é um wildcard (ex: image/*, video/*)
+      if (acceptedType.includes('/*')) {
+        const [category] = acceptedType.split('/')
+        return fileMimeType.startsWith(category + '/')
+      }
+
+      // Verifica se é uma extensão (ex: .jpg, .png)
+      if (acceptedType.startsWith('.')) {
+        return acceptedType === fileExtension
+      }
+
+      // Verifica se é um MIME type completo (ex: image/jpeg)
+      return acceptedType === fileMimeType
+    })
 
     if (!isValidType) {
       localErrorMessage.value = `Tipo de arquivo não permitido. Aceitos: ${acceptedTypesText.value}`
@@ -203,11 +273,21 @@ const addFiles = (files: FileList | File[]) => {
 
   if (!props.column.multiple) {
     selectedFiles.value = []
+    // Limpa preview anterior
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value)
+      previewUrl.value = null
+    }
   }
 
   for (const file of filesArray) {
     if (validateFile(file)) {
       selectedFiles.value.push(file)
+
+      // Gera preview se for imagem
+      if (file.type.startsWith('image/')) {
+        generatePreview(file)
+      }
     } else {
       break
     }
@@ -216,9 +296,37 @@ const addFiles = (files: FileList | File[]) => {
   emitValue()
 }
 
+const generatePreview = (file: File) => {
+  // Limpa preview anterior
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+
+  // Gera novo preview usando FileReader
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    previewUrl.value = e.target?.result as string
+  }
+  reader.readAsDataURL(file)
+}
+
 const removeFile = (index: number) => {
-  selectedFiles.value.splice(index, 1)
+  // Se há arquivos selecionados, remove do array
+  if (selectedFiles.value.length > 0) {
+    selectedFiles.value.splice(index, 1)
+  }
+  
   localErrorMessage.value = ''
+
+  // Limpa preview
+  if (previewUrl.value) {
+    // Só revoga se foi criado com createObjectURL (não é uma URL http)
+    if (!previewUrl.value.startsWith('http')) {
+      URL.revokeObjectURL(previewUrl.value)
+    }
+    previewUrl.value = null
+  }
+
   emitValue()
 
   if (fileInputRef.value) {
@@ -227,6 +335,7 @@ const removeFile = (index: number) => {
 }
 
 const emitValue = () => {
+  console.log('Emitting value:', selectedFiles.value)
   if (selectedFiles.value.length === 0) {
     emit('update:modelValue', null)
   } else if (props.column.multiple) {

@@ -156,7 +156,7 @@ abstract class AbstractController extends ResourceController
 
             // Valida os dados
             $validated = $request->validate($validationRules, $validationMessages); 
-  
+       
             $model->update($form->getFormData($validated, $model));
 
             $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();

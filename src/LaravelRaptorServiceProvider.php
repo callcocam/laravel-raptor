@@ -40,7 +40,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             // Rotas devem ser carregadas manualmente na aplicação
-            ->hasRoutes(['web', 'api'])
+            ->hasRoute('web')
             ->hasMigrations([
                 // Tabelas principais (ordem de dependência)
                 'create_tenants_table',
@@ -100,8 +100,23 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         // Registra os middlewares
         $this->registerMiddleware();
 
+        // Registra as rotas de API
+        $this->registerApiRoutes();
+
         // Registra as rotas dinamicas dos tenants
         $this->registerTenantRoutes();
+    }
+
+    /**
+     * Registra as rotas da API com prefixo correto
+     */
+    protected function registerApiRoutes(): void
+    {
+        Route::prefix('api')
+            ->middleware(['web', 'auth'])
+            ->group(function () {
+                $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
+            });
     }
 
     /**
@@ -122,8 +137,6 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
      */
     protected function registerTenantRoutes(): void
     {
-        $domain = parse_url(config('app.url'), PHP_URL_HOST);
-
         Route::middleware(['web','auth'])
             ->name('tenant.')
             ->group(function () {

@@ -28,7 +28,7 @@ class UploadField extends Column
 
     protected string $directory = 'uploads';
 
-    protected ?string $disk = null; 
+    protected ?string $disk = null;
 
     protected bool $deleteOldFiles = false;
 
@@ -40,18 +40,45 @@ class UploadField extends Column
 
     protected ?Closure $filenameGenerator = null;
 
+    // Async upload properties
+    protected bool $async = false;
+
+    protected ?int $chunkSize = null; // em bytes (padrão: 5MB)
+
+    protected ?string $modelType = null;
+
+    protected ?string $modelId = null;
+
+    protected ?string $realName = null;
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->name($name)
             ->label($label ?? 'Upload')
-            ->component('form-field-file-upload');
+            ->component('form-field-file-upload'); // Componente padrão (simples)
         $this->setUp();
 
         // Configuração padrão segura
         $this->valueUsing(function ($data, $model) {
-            return $this->handleUpload($data, $model);
+            $url = $this->handleUpload($data, $model);
+            return [
+                $this->getName() => $url,
+                $this->getRealName() ?? $this->getName() => $url,
+            ];
         });
+    }
+
+    /**
+     * Atualiza o componente baseado no modo (sync/async)
+     */
+    protected function updateComponent(): void
+    {
+        if ($this->async) {
+            $this->component('form-field-file-upload-async');
+        } else {
+            $this->component('form-field-file-upload');
+        }
     }
 
     /**
@@ -60,12 +87,75 @@ class UploadField extends Column
     protected function handleUpload($data, $model)
     {
         $uploadedFiles = data_get($data, $this->getName());
-
         // Se não há arquivos, retorna os valores existentes
         if (!$uploadedFiles) {
             return data_get($data, $this->getName());
         }
 
+        // Se é modo async, o valor é o ID do FileUpload, não um arquivo
+        if ($this->async) {
+            return $this->handleAsyncUpload($uploadedFiles, $model);
+        }
+
+        // Modo síncrono - processa arquivos normalmente
+        return $this->handleSyncUpload($uploadedFiles, $model);
+    }
+
+    /**
+     * Processa upload assíncrono (recebe FileUpload IDs)
+     */
+    protected function handleAsyncUpload($fileUploadIds, $model)
+    {
+        // Normaliza para array
+        $ids = is_array($fileUploadIds) ? $fileUploadIds : [$fileUploadIds];
+        $processedIds = [];
+
+        foreach ($ids as $id) {
+            if (!$id) {
+                continue;
+            }
+
+            // Verifica se o FileUpload existe e está completo
+            $fileUpload = \Callcocam\LaravelRaptor\Models\FileUpload::find($id);
+
+            if (!$fileUpload || !$fileUpload->isCompleted()) {
+                continue;
+            }
+
+            // Se deve associar ao modelo
+            if ($model && $this->modelType && $this->modelId) {
+                $fileUpload->update([
+                    'model_type' => $this->modelType,
+                    'model_id' => $this->modelId,
+                ]);
+            }
+
+            // Callback after upload
+            if ($this->afterUpload) {
+                call_user_func($this->afterUpload, $fileUpload, $model, $fileUpload->final_path);
+            }
+
+            $processedIds[] = $fileUpload->final_path;
+        }
+
+        // Deleta arquivos antigos se configurado
+        if ($this->deleteOldFiles && $model) {
+            $this->deleteOldFilesFromModel($model);
+        }
+
+        // Retorna string se for upload único, array se múltiplo
+        if (!$this->multiple && count($processedIds) === 1) {
+            return $processedIds[0];
+        }
+
+        return $processedIds;
+    }
+
+    /**
+     * Processa upload síncrono (recebe UploadedFile)
+     */
+    protected function handleSyncUpload($uploadedFiles, $model)
+    {
         // Normaliza para array se for upload único
         $files = is_array($uploadedFiles) ? $uploadedFiles : [$uploadedFiles];
         $processedFiles = [];
@@ -370,13 +460,93 @@ class UploadField extends Column
             ->maxSize(10); // 10MB
     }
 
+    /**
+     * Habilita modo assíncrono (upload com Jobs e WebSocket)
+     * Ideal para arquivos grandes (>50MB)
+     */
+    public function async(bool $async = true): self
+    {
+        $this->async = $async;
+        $this->updateComponent();
+        return $this;
+    }
+
+    /**
+     * Define o tamanho do chunk para upload (em MB)
+     * Padrão: 5MB
+     */
+    public function chunkSize(int $sizeInMB): self
+    {
+        $this->chunkSize = $sizeInMB * 1024 * 1024; // Converte para bytes
+        return $this;
+    }
+
+    /**
+     * Define o tipo de modelo associado (para uso com async)
+     */
+    public function forModel(string $modelType, ?string $modelId = null): self
+    {
+        $this->modelType = $modelType;
+        $this->modelId = $modelId;
+        return $this;
+    }
+
+    /**
+     * Atalho para configurar upload assíncrono de imagens grandes
+     * Usa chunks e processa em background
+     */
+    public function largeImage(): self
+    {
+        return $this
+            ->image()
+            ->async()
+            ->maxSize(100) // 100MB
+            ->chunkSize(5); // 5MB chunks
+    }
+
+    /**
+     * Atalho para configurar upload assíncrono de vídeos
+     */
+    public function video(): self
+    {
+        return $this
+            ->acceptedMimeTypes(['video/mp4', 'video/mpeg', 'video/quicktime', 'video/webm'])
+            ->acceptedExtensions(['mp4', 'mpeg', 'mov', 'webm'])
+            ->acceptedFileTypes(['video/*'])
+            ->async()
+            ->maxSize(500) // 500MB
+            ->chunkSize(10); // 10MB chunks
+    }
+
     public function toArray($model = null): array
     {
-        return array_merge(parent::toArray($model), [
+        $data = array_merge(parent::toArray($model), [
             'acceptedFileTypes' => $this->acceptedFileTypes,
             'maxSize' => $this->maxSize,
             'multiple' => $this->multiple,
             'directory' => $this->directory,
+            'async' => $this->async,
         ]);
+
+        // Adiciona propriedades async se habilitado
+        if ($this->async) {
+            $data['chunkSize'] = $this->chunkSize ?? (5 * 1024 * 1024); // 5MB default
+            $data['modelType'] = $this->modelType;
+            $data['modelId'] = $this->modelId;
+            $data['userId'] = auth()->id();
+        }
+
+        return $data;
+    }
+
+    public function getRealName(): ?string
+    {
+        return $this->realName;
+    }
+
+    public function realName(?string $realName): self
+    {
+        $this->realName = $realName;
+        return $this;
     }
 }

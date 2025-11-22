@@ -78,10 +78,7 @@ const cascadingValues = ref<Record<string, any>>({});
 const initializeFromQuery = () => {
   const url = new URL(page.url, window.location.origin);
   const params = Object.fromEntries(new URLSearchParams(url.search));
-
-  console.log('🔄 initializeFromQuery - URL params:', params);
-  console.log('🔄 initializeFromQuery - props.modelValue TYPE:', typeof props.modelValue);
-  console.log('🔄 initializeFromQuery - props.modelValue FULL:', JSON.stringify(props.modelValue, null, 2));
+ 
 
   // Clear all cascading values first
   const newValues: Record<string, any> = {};
@@ -91,39 +88,29 @@ const initializeFromQuery = () => {
   fields.value.forEach((field) => {
     const queryValue = params[field.name];
     const propValue = props.modelValue?.[field.name];
+ 
 
-    console.log(`🔍 Field: ${field.name} | queryValue: ${queryValue} | propValue: ${propValue}`);
-
-    if (queryValue !== undefined && queryValue !== null && queryValue !== "") {
-      console.log(`  ✅ Using queryValue for ${field.name}: ${queryValue}`);
+    if (queryValue !== undefined && queryValue !== null && queryValue !== "") { 
       newValues[field.name] = queryValue;
-    } else if (propValue !== undefined && propValue !== null && propValue !== "") {
-      console.log(`  ✅ Using propValue for ${field.name}: ${propValue}`);
+    } else if (propValue !== undefined && propValue !== null && propValue !== "") { 
       newValues[field.name] = propValue;
     } else {
-      console.log(`  ⏭️ Skipping ${field.name} (no value)`);
+      // console.log(`  ⏭️ Skipping ${field.name} (no value)`);
     }
-  });
-
-  console.log('🔍 newValues BEFORE stringify:', newValues);
-  console.log('🔍 typeof newValues:', typeof newValues);
-  console.log('🔍 Object.keys(newValues):', Object.keys(newValues));
-
-  console.log('🔄 initializeFromQuery - final newValues:', newValues);
+  }); 
 
   // Verifica se os valores realmente mudaram antes de atualizar
   const currentValuesStr = JSON.stringify(cascadingValues.value);
   const newValuesStr = JSON.stringify(newValues);
 
-  if (currentValuesStr !== newValuesStr) {
-    console.log('🔄 Values changed, updating...');
+  if (currentValuesStr !== newValuesStr) { 
     // Replace the entire cascadingValues object
     cascadingValues.value = newValues;
 
     // Emit the updated values to ensure all child components are synced
     emit("update:modelValue", { ...newValues });
   } else {
-    console.log('🔄 Values unchanged, skipping emit');
+    // console.log('🔄 Values unchanged, skipping emit');
   }
 };
 
@@ -136,8 +123,7 @@ initializeFromQuery();
  */
 watch(
   () => page.url,
-  () => {
-    console.log('👀 URL changed, re-initializing');
+  () => { 
     initializeFromQuery();
   }
 );
@@ -169,13 +155,7 @@ const updateCascadingValue = (fieldName: string, value: any) => {
  */
 const getFieldValue = (fieldName: string) => {
   const fullObject = cascadingValues.value;
-  const fieldValue = cascadingValues.value[fieldName];
-
-  console.log(`🔍 getFieldValue(${fieldName})`);
-  console.log(`  - cascadingValues.value type: ${typeof fullObject}`);
-  console.log(`  - cascadingValues.value keys: ${Object.keys(fullObject).join(', ')}`);
-  console.log(`  - cascadingValues.value[${fieldName}]: ${fieldValue}`);
-  console.log(`  - returning: ${fieldValue || null}`);
+  const fieldValue = cascadingValues.value[fieldName]; 
 
   return fieldValue || null;
 };

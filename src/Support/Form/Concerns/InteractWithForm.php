@@ -41,6 +41,8 @@ trait InteractWithForm
 
             if (!empty($columnRules)) {
                 $rules[$column->getName()] =  $columnRules;
+            }else{
+                $rules[$column->getName()] =  ['nullable'];
             }
         }
 
