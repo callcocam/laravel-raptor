@@ -57,7 +57,7 @@ class TenantManager
     protected function applyContextScope(Model $model, string $tenant, $id = null): void
     {
         $model->addGlobalScope($tenant, function (Builder $builder) use ($tenant, $id, $model) {
-            if ($this->isLandlordContext()) {  
+            if ($this->isLandlordContext()) {
                 $builder->whereNull($model->getQualifiedTenant($tenant));
             } else {
                 if ($this->getTenants()->first() && $this->getTenants()->first() != $id) {
