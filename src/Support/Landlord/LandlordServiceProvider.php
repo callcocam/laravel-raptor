@@ -31,6 +31,9 @@ class LandlordServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Registra o TenantManager como singleton (CRÍTICO!)
+        $this->app->singleton(TenantManager::class);
+
         // Registra o singleton para gerenciamento de tenant ativo
         $this->app->singleton('tenant', function () {
             return null; // Será preenchido pelo middleware quando necessário

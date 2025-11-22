@@ -117,6 +117,8 @@ class TenantManager
         }
 
         $this->tenants->put($this->getTenantKey($tenant), $id);
+
+        $this->applyTenantScopesToDeferredModels();
     }
 
     /**
@@ -179,7 +181,6 @@ class TenantManager
             return;
         }
 
-        // No contexto landlord, aplica scope para todos os tenant columns
         if ($this->isLandlordContext()) {
             collect($model->getTenantColumns())->each(function ($tenant) use ($model) {
                 $this->applyContextScope($model, $tenant);
@@ -188,7 +189,6 @@ class TenantManager
             return;
         }
 
-        // No contexto tenant, verifica se há tenants configurados
         if ($this->tenants->isEmpty()) {
             $this->deferredModels->push($model);
 

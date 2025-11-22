@@ -26,7 +26,6 @@ class TenantMiddleware
         $host = $request->getHost();
         $domain = str($host)->replace('www.', '')->toString();
 
-        // Busca o tenant pelo domínio
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
         $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
 
@@ -36,19 +35,16 @@ class TenantMiddleware
             abort(404, 'Tenant não encontrado.');
         }
 
-        // Verifica se o tenant está ativo
         if ($tenant->status !== TenantStatus::Published) {
             abort(403, 'Este tenant está inativo.');
         }
 
-        // Define o tenant atual usando o Landlord
-        Landlord::addTenant($tenant);
-
-        // Define o contexto como tenant
         app()->instance('tenant.context', true);
         app()->instance('current.tenant', $tenant);
         config(['app.context' => 'tenant']);
         config(['app.current_tenant_id' => $tenant->id]);
+
+        Landlord::addTenant($tenant);
 
         return $next($request);
     }
