@@ -44,6 +44,41 @@ class TenantManager
     }
 
     /**
+     * Verifica se está no contexto landlord
+     */
+    protected function isLandlordContext(): bool
+    {
+        return config('app.context') === 'landlord';
+    }
+
+    /**
+     * Aplica o scope apropriado baseado no contexto (landlord ou tenant)
+     */
+    protected function applyContextScope(Model $model, string $tenant, $id = null): void
+    {
+        $model->addGlobalScope($tenant, function (Builder $builder) use ($tenant, $id, $model) {
+            if ($this->isLandlordContext()) {
+                $builder->whereNull($model->getQualifiedTenant($tenant));
+            } else {
+                if ($this->getTenants()->first() && $this->getTenants()->first() != $id) {
+                    $id = $this->getTenants()->first();
+                }
+                $builder->where($model->getQualifiedTenant($tenant), '=', $id);
+            }
+        });
+    }
+
+    /**
+     * Define o valor apropriado do tenant_id baseado no contexto
+     */
+    protected function setTenantAttribute(Model $model, string $tenantColumn, $tenantId = null): void
+    {
+        if (! isset($model->{$tenantColumn})) {
+            $model->setAttribute($tenantColumn, $this->isLandlordContext() ? null : $tenantId);
+        }
+    }
+
+    /**
      * Enable scoping by tenantColumns.
      *
      * @return void
@@ -136,32 +171,32 @@ class TenantManager
      */
     public function applyTenantScopes(Model $model)
     {
-
         if (! $this->enabled) {
             return;
         }
 
-        if (method_exists($model, 'isDefault')) {
-            if ($model->isDefault()) {
-                return;
-            }
+        if (method_exists($model, 'isDefault') && $model->isDefault()) {
+            return;
         }
 
+        // No contexto landlord, aplica scope para todos os tenant columns
+        if ($this->isLandlordContext()) {
+            collect($model->getTenantColumns())->each(function ($tenant) use ($model) {
+                $this->applyContextScope($model, $tenant);
+            });
+
+            return;
+        }
+
+        // No contexto tenant, verifica se há tenants configurados
         if ($this->tenants->isEmpty()) {
-            // No tenants yet, defer scoping to a later stage
             $this->deferredModels->push($model);
 
             return;
         }
 
         $this->modelTenants($model)->each(function ($id, $tenant) use ($model) {
-            $model->addGlobalScope($tenant, function (Builder $builder) use ($tenant, $id, $model) {
-                if ($this->getTenants()->first() && $this->getTenants()->first() != $id) {
-                    $id = $this->getTenants()->first();
-                }
-
-                $builder->where($model->getQualifiedTenant($tenant), '=', $id);
-            });
+            $this->applyContextScope($model, $tenant, $id);
         });
     }
 
@@ -172,19 +207,16 @@ class TenantManager
     {
         $this->deferredModels->each(function ($model) {
             /* @var Model|BelongsToTenants $model */
-            $this->modelTenants($model)->each(function ($id, $tenant) use ($model) {
-                if (! isset($model->{$tenant})) {
-                    $model->setAttribute($tenant, $id);
-                }
-
-                $model->addGlobalScope($tenant, function (Builder $builder) use ($tenant, $id, $model) {
-                    if ($this->getTenants()->first() && $this->getTenants()->first() != $id) {
-                        $id = $this->getTenants()->first();
-                    }
-
-                    $builder->where($model->getQualifiedTenant($tenant), '=', $id);
+            if ($this->isLandlordContext()) {
+                collect($model->getTenantColumns())->each(function ($tenant) use ($model) {
+                    $this->applyContextScope($model, $tenant);
                 });
-            });
+            } else {
+                $this->modelTenants($model)->each(function ($id, $tenant) use ($model) {
+                    $this->setTenantAttribute($model, $tenant, $id);
+                    $this->applyContextScope($model, $tenant, $id);
+                });
+            }
         });
 
         $this->deferredModels = collect();
@@ -199,17 +231,24 @@ class TenantManager
             return;
         }
 
+        // No contexto landlord, define tenant_id como NULL
+        if ($this->isLandlordContext()) {
+            collect($model->getTenantColumns())->each(function ($tenantColumn) use ($model) {
+                $this->setTenantAttribute($model, $tenantColumn);
+            });
+
+            return;
+        }
+
+        // No contexto tenant, define o tenant_id apropriado
         if ($this->tenants->isEmpty()) {
-            // No tenants yet, defer scoping to a later stage
             $this->deferredModels->push($model);
 
             return;
         }
 
         $this->modelTenants($model)->each(function ($tenantId, $tenantColumn) use ($model) {
-            if (! isset($model->{$tenantColumn})) {
-                $model->setAttribute($tenantColumn, $tenantId);
-            }
+            $this->setTenantAttribute($model, $tenantColumn, $tenantId);
         });
     }
 

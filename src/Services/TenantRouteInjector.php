@@ -37,10 +37,8 @@ class TenantRouteInjector
 
         // Diretórios padrão se não houver configuração
         $defaultDirectories = [
-            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-            'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'), 
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant',
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../Http/Controllers/Landlord',
+            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'), 
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant', 
         ];
 
         $this->controllerDirectories = !empty($configuredDirs) ? $configuredDirs : $defaultDirectories;

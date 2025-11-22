@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Http\Middleware;
 
+use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Closure;
 use Illuminate\Http\Request;
@@ -22,31 +23,21 @@ class TenantMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Extrai o subdomínio da URL
         $host = $request->getHost();
-        $subdomain = $this->extractSubdomain($host);
+        $domain = str($host)->replace('www.', '')->toString();
 
-        if (! $subdomain) {
-            abort(404, 'Tenant não encontrado.');
-        }
-
-        // Bloqueia o subdomínio "landlord" (reservado para o administrador)
-        if ($subdomain === 'landlord') {
-            abort(404, 'Tenant não encontrado.');
-        }
-
-        // Busca o tenant pelo subdomínio
+        // Busca o tenant pelo domínio
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
-        $subdomainColumn = config('raptor.tenant.subdomain_column', 'subdomain');
+        $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
 
-        $tenant = $tenantModel::where($subdomainColumn, $subdomain)->first();
+        $tenant = $tenantModel::where($domainColumn, $domain)->first();
 
         if (! $tenant) {
             abort(404, 'Tenant não encontrado.');
         }
 
         // Verifica se o tenant está ativo
-        if (isset($tenant->status) && $tenant->status !== 'active') {
+        if ($tenant->status !== TenantStatus::Published) {
             abort(403, 'Este tenant está inativo.');
         }
 
@@ -60,23 +51,5 @@ class TenantMiddleware
         config(['app.current_tenant_id' => $tenant->id]);
 
         return $next($request);
-    }
-
-    /**
-     * Extrai o subdomínio do host
-     */
-    protected function extractSubdomain(string $host): ?string
-    {
-        $mainDomain = config('raptor.main_domain', 'localhost');
-
-        // Remove o domínio principal para obter o subdomínio
-        $subdomain = str_replace('.'.$mainDomain, '', $host);
-
-        // Se for igual ao host original, não há subdomínio
-        if ($subdomain === $host || $subdomain === 'www') {
-            return null;
-        }
-
-        return $subdomain;
     }
 }
