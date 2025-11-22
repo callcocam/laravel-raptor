@@ -26,38 +26,28 @@ trait BelongsToTenants
      * Boot the trait. Will apply any scopes currently set, and
      * register a listener for when new models are created.
      */
-    public static function bootBelongsToTenants()
+    public static function bootBelongsToTenants(): void
     {
-        // Grab our singleton from the container
         static::$landlord = app(TenantManager::class);
 
-        // Add a global scope for each tenant this model should be scoped by.
         static::$landlord->applyTenantScopes(new static);
 
-        // Add tenantColumns automatically when creating models
-        static::creating(function (Model $model) {
-            static::$landlord->newModel($model);
-        });
+        static::creating(fn (Model $model) => static::$landlord->newModel($model));
     }
 
     /**
      * Get the tenantColumns for this model.
-     *
-     * @return array
      */
-    public function getTenantColumns()
+    public function getTenantColumns(): array
     {
-        return isset($this->tenantColumns) ? $this->tenantColumns : config('raptor.landlord.default_tenant_columns', ['tenant_id']);
+        return $this->tenantColumns ?? config('raptor.landlord.default_tenant_columns', ['tenant_id']);
     }
 
     /**
-     * Returns the qualified tenant (table.tenant). Override this if you need to
-     * provide unqualified tenants, for example if you're using a noSQL Database.
-     *
-     * @param  mixed  $tenant
-     * @return mixed
+     * Returns the qualified tenant column (table.tenant).
+     * Override this if you need unqualified tenants (e.g., noSQL databases).
      */
-    public function getQualifiedTenant($tenant)
+    public function getQualifiedTenant(string $tenant): string
     {
         return $this->getTable().'.'.$tenant;
     }
@@ -65,11 +55,9 @@ trait BelongsToTenants
     /**
      * Returns a new query builder without any of the tenant scopes applied.
      *
-     *     $allUsers = User::allTenants()->get();
-     *
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @example User::allTenants()->get();
      */
-    public static function allTenants()
+    public static function allTenants(): \Illuminate\Database\Eloquent\Builder
     {
         return static::$landlord->newQueryWithoutTenants(new static);
     }
@@ -79,20 +67,15 @@ trait BelongsToTenants
      * a more useful exception. Otherwise it can be very confusing
      * why queries don't work because of tenant scoping issues.
      *
-     * @param  mixed  $id
-     * @param  array  $columns
-     * @return \Illuminate\Database\Eloquent\Collection|Model
-     *
      * @throws ModelNotFoundForTenantException
      */
-    public static function findOrFail($id, $columns = ['*'])
+    public static function findOrFail(mixed $id, array $columns = ['*']): \Illuminate\Database\Eloquent\Collection|Model
     {
         try {
             return static::query()->findOrFail($id, $columns);
         } catch (ModelNotFoundException $e) {
-            // If it DOES exist, just not for this tenant, throw a nicer exception
-            if (! is_null(static::allTenants()->find($id, $columns))) {
-                throw (new ModelNotFoundForTenantException)->setModel(get_called_class());
+            if (static::allTenants()->find($id, $columns) !== null) {
+                throw (new ModelNotFoundForTenantException)->setModel(static::class);
             }
 
             throw $e;
@@ -100,11 +83,9 @@ trait BelongsToTenants
     }
 
     /**
-     * Get the current tenant.
-     *
-     * @return mixed
+     * Get the tenant manager instance.
      */
-    public static function getLandlord()
+    public static function getTenantManager(): TenantManager
     {
         return static::$landlord;
     }
