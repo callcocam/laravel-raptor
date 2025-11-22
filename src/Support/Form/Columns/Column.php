@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns;
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
+use Closure;
 
 abstract class Column extends AbstractColumn
 {
@@ -21,14 +22,37 @@ abstract class Column extends AbstractColumn
 
     protected ?string $component = 'form-field-text';
 
+    protected Closure|null $valueUsing = null;
+
     public function __construct($name, $label = null)
     {
         $this->name($name);
         $this->id($name);
         $this->label($label ?? ucfirst($name));
+
+        $this->valueUsing(function ($request, $model) {
+            return null;
+        });
     }
 
-    public function toArray(): array
+
+    public function valueUsing(Closure $callback): static
+    {
+        $this->valueUsing = $callback;
+
+        return $this;
+    }
+
+    public function getValueUsing($request = null, $model = null)
+    {
+        return $this->evaluate($this->valueUsing, [
+            'request' => $request,
+            'data' => $request,
+            'model' => $model,
+        ]);
+    }
+
+    public function toArray($model = null): array
     {
         return array_merge([
             'name' => $this->getName(),
@@ -42,7 +66,7 @@ abstract class Column extends AbstractColumn
             'prefix' => $this->getPrefix(),
             'suffix' => $this->getSuffix(),
             'component' => $this->getComponent(),
-            'required' => $this->isRequired(), 
+            'required' => $this->isRequired(),
             'messages' => $this->getMessages(),
             'attributes' => array_filter([
                 'id' => $this->getId(),

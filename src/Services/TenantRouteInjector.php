@@ -166,7 +166,9 @@ class TenantRouteInjector
             if (!isset($pages['update'])) {
                 $updatePath = $editPage->getPath();
                 $complementary['update'] = clone $editPage;
-                $complementary['update']->path = $updatePath;
+                $complementary['update']->path = str($updatePath)
+                    ->replace('/edit', '')
+                    ->toString();
                 $complementary['update']->method = 'PUT';
                 $complementary['update']->action = 'update';
                 $complementary['update']->label = $editPage->getLabel() ? str_replace('Editar', 'Atualizar', $editPage->getLabel()) : '';

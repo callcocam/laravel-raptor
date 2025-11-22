@@ -10,9 +10,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-});
-
-console.log(props.column);
+}); 
 
 /**
  * Obtém o componente a ser renderizado do ComponentRegistry

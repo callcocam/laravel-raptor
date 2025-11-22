@@ -72,7 +72,7 @@ class Form
     public function toArray(): array
     {
         $data = array_merge($this->getGridLayoutConfig(), [
-            'columns' => $this->getArrayColumns(),
+            'columns' => $this->getArrayColumns( $this->model),
             // Usa getRenderedActions para filtrar por visibilidade
             'formActions' => $this->getRenderedActions($this->model, $this->getRequest()),
         ]);

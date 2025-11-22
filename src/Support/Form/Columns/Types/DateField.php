@@ -68,9 +68,9 @@ class DateField extends Column
         return $this;
     }
 
-    public function toArray(): array
+    public function toArray($model = null): array
     {
-        return array_merge(parent::toArray(), [
+        return array_merge(parent::toArray($model), [
             'required' => $this->isRequired,
             'minDate' => $this->minDate,
             'maxDate' => $this->maxDate,

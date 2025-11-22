@@ -22,10 +22,10 @@ Route::domain(sprintf('landlord.%s', $domain))
         Route::get('/', function () {
             return 'Landlord Dashboard';
         })->name('dashboard');
-        Route::resource('tenants', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\TenantController::class);
-        Route::resource('users', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\UserController::class);
-        Route::resource('roles', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\RoleController::class);
-        Route::resource('permissions', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\PermissionController::class);
+        // Route::resource('tenants', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\TenantController::class);
+        // Route::resource('users', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\UserController::class);
+        // Route::resource('roles', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\RoleController::class);
+        // Route::resource('permissions', \Callcocam\LaravelRaptor\Http\Controllers\Landlord\PermissionController::class);
 
         // API de Navegação
         Route::get('/api/navigation', [NavigationController::class, 'index'])->name('api.navigation.index');

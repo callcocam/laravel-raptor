@@ -25,9 +25,9 @@ class EmailField extends Column
     }
  
 
-    public function toArray(): array
+    public function toArray($model = null): array
     {
-        return array_merge(parent::toArray(), [
+        return array_merge(parent::toArray($model), [
             'required' => $this->isRequired,
             'placeholder' => $this->placeholder ?? $this->getLabel(),
         ]);

@@ -5,7 +5,7 @@ import { useBreadcrumbs, type BackendBreadcrumb } from '@/composables/useBreadcr
 import { useLayout } from '@/composables/useLayout';
 import { dashboard } from '@/routes';
 import { Head, usePage } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, watch, nextTick } from 'vue';
 import { toast } from 'vue-sonner'
 import type { AppPageProps } from '@/types';
 
@@ -53,6 +53,15 @@ watch(
         }
         if (flash.info) {
             toast.info(flash.info);
+        }
+
+        // Limpa as flash messages após mostrá-las
+        // Isso evita que elas apareçam novamente em navegações subsequentes
+        if (flash && Object.keys(flash).length > 0) {
+            // Usa nextTick para garantir que o toast foi mostrado antes de limpar
+            nextTick(() => {
+                page.props.flash = {};
+            });
         }
     },
     { deep: true, immediate: true }

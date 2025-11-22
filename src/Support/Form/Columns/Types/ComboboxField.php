@@ -67,9 +67,9 @@ class ComboboxField extends Column
         return $this;
     }
 
-    public function toArray(): array
+    public function toArray($model = null): array
     {
-        return array_merge(parent::toArray(), [
+        return array_merge(parent::toArray($model), [
             'options' => $this->getOptions(),
             'searchPlaceholder' => $this->searchPlaceholder,
             'emptyText' => $this->emptyText,

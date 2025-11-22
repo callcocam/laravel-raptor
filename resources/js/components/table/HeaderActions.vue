@@ -23,8 +23,7 @@ import type { TableAction } from "../../types/table";
 interface Props {
   actions: TableAction[];
 }
-const props = defineProps<Props>();
-console.log('Não estou chegando aqui', props.actions);
+const props = defineProps<Props>(); 
 
 const emit = defineEmits<{
   (e: "action-click", action: TableAction): void;

@@ -5,18 +5,22 @@
  * This allows dependent fields to be populated based on the selected value
  -->
 <template>
-  <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
+  <Field
+    orientation="vertical"
+    :data-invalid="hasError"
+    class="gap-y-1"
+    :class="fieldClasses"
+  >
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select
-      v-model="internalValue"
-      :required="column.required"
-      :disabled="isDisabled"
-    >
-      <SelectTrigger :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
+    <Select v-model="internalValue" :required="column.required" :disabled="isDisabled">
+      <SelectTrigger
+        :class="hasError ? 'border-destructive' : ''"
+        :aria-invalid="hasError"
+      >
         <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
       </SelectTrigger>
       <SelectContent>
@@ -66,6 +70,10 @@ interface FormColumn {
   tooltip?: string
   helpText?: string
   hint?: string
+  columnSpan?: string
+  responsive?: {
+    span?: { sm?: string; md?: string; lg?: string; xl?: string }
+  }
 }
 
 interface Props {
@@ -86,7 +94,39 @@ const emit = defineEmits<{
 // Inject function to get values of all cascading fields
 const getCascadingValues = inject<() => Record<string, any>>('getCascadingValues', () => ({}))
 
+// Inject cascading fields list
+const allFieldsRef = inject<ComputedRef<FormColumn[]>>('cascadingFields')
+
 const hasError = computed(() => !!props.error)
+
+// Generate grid classes based on columnSpan
+const fieldClasses = computed(() => {
+  const classes: string[] = []
+
+  // Mobile: always full width (col-span-1)
+  classes.push('col-span-1')
+
+  // Column span default (desktop - md:)
+  if (props.column.columnSpan) {
+    // If 'full', use col-span-full without breakpoint
+    if (props.column.columnSpan === 'full') {
+      classes.push('md:col-span-full')
+    } else {
+      classes.push(`md:col-span-${props.column.columnSpan}`)
+    }
+  }
+
+  // Responsive column span
+  if (props.column.responsive?.span) {
+    const { sm, md, lg, xl } = props.column.responsive.span
+    if (sm) classes.push(`sm:col-span-${sm}`)
+    if (md) classes.push(`md:col-span-${md}`)
+    if (lg) classes.push(`lg:col-span-${lg}`)
+    if (xl) classes.push(`xl:col-span-${xl}`)
+  }
+
+  return classes.join(' ')
+})
 
 const errorArray = computed(() => {
   if (!props.error) return []
@@ -111,8 +151,7 @@ const options = computed(() => {
 
 // Disable field if it depends on another field and that field has no value
 const isDisabled = computed(() => {
-  if (!props.column.dependsOn) return false
-
+  if (!props.column.dependsOn) return false 
   const cascadingValues = getCascadingValues()
   const dependencyValue = cascadingValues[props.column.dependsOn]
 
@@ -162,12 +201,13 @@ const reloadWithCascadingValues = (newValue: string | number | null | undefined)
   // This ensures child fields are cleared when parent changes
   clearDependentFieldValues(params)
 
-  // Reload page with Inertia, preserving state and scroll position
+  // Reload page with Inertia, preserving state but excluding flash messages
   router.get(window.location.pathname, params, {
     preserveState: true,
     preserveScroll: true,
     replace: true,
-    only: ['form'] // Only reload form data, not everything
+    only: ['form'], // Only reload form data
+    except: ['success', 'error', 'flash'] // Exclude flash messages
   })
 }
 
@@ -176,9 +216,6 @@ const reloadWithCascadingValues = (newValue: string | number | null | undefined)
  * This is called when the current field value changes
  */
 const clearDependentFieldValues = (params: Record<string, any>) => {
-  // Get all cascading fields from inject (it's a ComputedRef)
-  const allFieldsRef = inject<ComputedRef<FormColumn[]>>('cascadingFields')
-
   // If not provided, return early
   if (!allFieldsRef) {
     return

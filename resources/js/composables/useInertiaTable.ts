@@ -13,8 +13,7 @@ export function useInertiaTable(key = 'table') {
     headerActions?: any[]
     [key: string]: any
   }
-  const data = computed<TableData>(() => page.props[key] as TableData || {})
-  console.log(data.value, key)
+  const data = computed<TableData>(() => page.props[key] as TableData || {}) 
 
   const navigate = (params: Record<string, any>) => {
     router.get(window.location.pathname, params, {

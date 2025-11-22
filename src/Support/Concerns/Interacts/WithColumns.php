@@ -33,10 +33,10 @@ trait WithColumns
     /**
      * @return array<AbstractColumn>
      */
-    public function getArrayColumns(): array
+    public function getArrayColumns($model = null): array
     {
         // Usa transformer customizado para lidar com lógica de searchable
-        return $this->getCollectionAsArray('columns', function (AbstractColumn $column) {
+        return $this->getCollectionAsArray('columns', function (AbstractColumn $column) use ($model) {
             if (method_exists($column, 'isSearchable')) {
                 if ($column->isSearchable()) {
                     if (method_exists($this, 'setSearches')) {
@@ -44,8 +44,7 @@ trait WithColumns
                     }
                 }
             }
-
-            return $column->toArray();
+            return $column->toArray($model);
         });
     }
 }

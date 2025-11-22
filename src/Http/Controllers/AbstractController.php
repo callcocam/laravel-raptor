@@ -23,6 +23,7 @@ abstract class AbstractController extends ResourceController
 
     abstract protected function form(Form $form): Form;
 
+
     protected function infolist(InfoList $infoList): InfoList
     {
         return $infoList;
@@ -63,6 +64,7 @@ abstract class AbstractController extends ResourceController
                 ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
+            'action' => $this->getFormDefaultStoreAction($request->route()->getAction('as'), null),
         ]);
     }
 
@@ -80,7 +82,7 @@ abstract class AbstractController extends ResourceController
             // Valida os dados
             $validated = $request->validate($validationRules, $validationMessages);
 
-            $model = $this->model()::create($validated);
+            $model = $this->model()::create($form->getFormData($validated, null));
 
             $route = str($request->route()->getAction('as'))->replace('.store', '.edit')->toString();
 
@@ -120,7 +122,7 @@ abstract class AbstractController extends ResourceController
     public function edit(Request $request, string $record)
     {
         $model = $this->model()::findOrFail($record);
-
+        // dd($model->toArray());
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
@@ -135,6 +137,7 @@ abstract class AbstractController extends ResourceController
                 ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
+            'action' => $this->getFormDefaultUpdateAction($request->route()->getAction('as'), $record),
         ]);
     }
 
@@ -152,16 +155,17 @@ abstract class AbstractController extends ResourceController
             $validationMessages = $form->getValidationMessages();
 
             // Valida os dados
-            $validated = $request->validate($validationRules, $validationMessages);
-
-            $model->update($validated);
+            $validated = $request->validate($validationRules, $validationMessages); 
+  
+            $model->update($form->getFormData($validated, $model));
 
             $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();
+            
 
             return redirect()->route($route, [
                 'record' => $model->getKey(),
-            ])
-                ->with('success', 'Item atualizado com sucesso.');
+            ],
+            )->with('success', 'Item atualizado com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
             throw $e;
@@ -311,6 +315,43 @@ abstract class AbstractController extends ResourceController
     protected function rules(?string $id = null): array
     {
         return [];
+    }
+
+    /**
+     * Retorna as rotas padrão do formulário (store/update)
+     */
+    protected function getFormUrlAction(string $routeName, ?string $id = null): string
+    {
+
+        if ($id) {
+            return route($routeName, ['record' => $id]);
+        }
+
+        return route($routeName);
+    }
+
+    /**
+     * Retorna a ação padrão do formulário store
+     */
+    protected function getFormDefaultStoreAction(string $action, ?string $id = null): string
+    {
+        $routeName = str($action)
+            ->replace('create', 'store')
+            ->toString();
+
+        return $this->getFormUrlAction($routeName, $id);
+    }
+
+    /**
+     * Retorna a ação padrão do formulário update
+     */
+    protected function getFormDefaultUpdateAction(string $action, ?string $id = null): string
+    {
+        $routeName = str($action)
+            ->replace('edit', 'update')
+            ->toString();
+
+        return $this->getFormUrlAction($routeName, $id);
     }
 
     /**

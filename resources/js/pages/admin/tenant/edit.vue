@@ -32,6 +32,7 @@ interface Props {
     formActions?: any[];
   };
   pageHeaderActions?: any[];
+  action?: string;
 }
 
 const props = defineProps<Props>();
@@ -43,11 +44,12 @@ const layoutProps = {
 };
 
 // Inicializa o formulário Inertia com os valores do modelo
-const formData = useForm(props.form?.model || props.model || {});
+const formData = useForm(props.form?.model || props.model || {}); 
 
-const handleSubmit = () => {
-  formData.put(window.location.pathname, {
+const handleSubmit = () => { 
+  formData.put(props.action, {
     preserveScroll: true,
+    preserveState: true,
     onSuccess: () => {
       // Formulário submetido com sucesso
     },

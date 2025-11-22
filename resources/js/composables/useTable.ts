@@ -40,7 +40,8 @@ export function useTable(options: UseTableOptions) {
       from: 0,
       to: 0,
       path: '',
-      has_more_pages: false
+      has_more_pages: false,
+      links: []
     },
     columns: [],
     bulkActions: [],
@@ -89,9 +90,7 @@ export function useTable(options: UseTableOptions) {
         }, {} as Record<string, string>)
       ).toString()
 
-      const url = `${getEndpoint.value}${queryString ? `?${queryString}` : ''}`
-      
-      console.log('Loading table data from:', url)
+      const url = `${getEndpoint.value}${queryString ? `?${queryString}` : ''}` 
       
       const response = await fetch(url, {
         headers: {
@@ -242,8 +241,7 @@ export function useTable(options: UseTableOptions) {
   /**
    * Executa uma ação
    */
-  const executeAction = async (action: TableAction, record?: TableRecord) => {
-    console.log('Executing action:', action.name, record)
+  const executeAction = async (action: TableAction, record?: TableRecord) => { 
     
     // Se tem confirmação, deveria mostrar modal antes
     if (action.confirm) {
@@ -283,9 +281,7 @@ export function useTable(options: UseTableOptions) {
   const executeBulkAction = async (action: TableAction) => {
     if (state.value.selectedRows.length === 0) {
       throw new Error('Nenhuma linha selecionada')
-    }
-
-    console.log('Executing bulk action:', action.name, state.value.selectedRows)
+    } 
 
     try {
       const response = await fetch(action.url, {
