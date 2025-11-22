@@ -1,45 +1,50 @@
 <script setup lang="ts">
-import ResourceLayout from '~/layouts/ResourceLayout.vue';
-import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
-import { type BackendBreadcrumb } from '@/composables/useBreadcrumbs';
+import ResourceLayout from "./../../../layouts/ResourceLayout.vue";
+import DefaultTable from "~/components/table/DefaultTable.vue";
+import type { BackendBreadcrumb } from "@/composables/useBreadcrumbs"; 
+import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
 
 interface Props {
-    message?: string;
-    resourceName?: string;
-    resourcePluralName?: string;
-    resourceLabel?: string;
-    resourcePluralLabel?: string;
-    maxWidth?: string;
-    breadcrumbs?: BackendBreadcrumb[];
+  message?: string;
+  resourceLabel?: string;
+  breadcrumbs?: BackendBreadcrumb[];
+  headerActions?: any;
+  table?: any;
 }
 
 const props = defineProps<Props>();
+
+const layoutProps = {
+  message: props.message,
+  resourceLabel: props.resourceLabel,
+  breadcrumbs: props.breadcrumbs,
+};
 </script>
 
 <template>
-  <ResourceLayout v-bind="props" title="Dashboard">
-    <template #content>
-      <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div
-          class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-        >
-          <PlaceholderPattern />
-        </div>
-        <div
-          class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-        >
-          <PlaceholderPattern />
-        </div>
-        <div
-          class="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
-        >
-          <PlaceholderPattern />
+  <ResourceLayout v-bind="layoutProps" title="Dashboard">
+    <template #header>
+      <!-- Breadcrumbs com Header Actions -->
+      <div
+        v-if="breadcrumbs && breadcrumbs.length > 0"
+        class="border-b bg-background"
+      >
+        <div class="w-full flex items-center pb-4">
+          <BreadcrumbRenderer :items="breadcrumbs" :config="{}">
+            <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
+            
+          </BreadcrumbRenderer>
         </div>
       </div>
-      <div
-        class="relative min-h-[100vh] flex-1 rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border"
-      >
-        <PlaceholderPattern />
+    </template>
+    <template #content>
+      <div class="space-y-4">
+        <div v-if="resourceLabel || message">
+          <h1 v-if="resourceLabel" class="text-2xl font-bold">{{ resourceLabel }}</h1>
+          <p v-if="message" class="text-muted-foreground mt-1">{{ message }}</p>
+        </div>
+
+        <DefaultTable />
       </div>
     </template>
   </ResourceLayout>
