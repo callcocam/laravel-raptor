@@ -20,8 +20,7 @@ use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolis
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
-use Callcocam\LaravelRaptor\Support\Pages\Index;
-use Callcocam\LaravelRaptor\Support\Pages\View;
+use Callcocam\LaravelRaptor\Support\Pages\Index; 
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\EmailColumn;

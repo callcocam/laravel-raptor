@@ -36,13 +36,19 @@ class NavigationService
      */
     protected function loadControllerDirectories(): void
     {
-        $this->controllerDirectories = config('raptor.route_injector.directories', [
-            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-            'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Admin' => __DIR__.'/../Http/Controllers/Admin',
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__.'/../Http/Controllers/Tenant',
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__.'/../Http/Controllers/Landlord',
-        ]);
+        $context = request()->getContext();
+
+        $controllerDirectories = [
+            'landlord' => [
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../Http/Controllers/Landlord',
+            ],
+            'tenant' => [
+                'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant',
+            ],
+        ];
+
+        $this->controllerDirectories = config(sprintf('raptor.route_injector.directories.%s', $context), data_get($controllerDirectories, $context, [])); 
     }
 
     /**
@@ -59,7 +65,7 @@ class NavigationService
         $cacheKey = $this->getCacheKey($user, $context);
 
         // return Cache::remember($cacheKey, $this->cacheTtl, function () use ($user, $context) {
-            return $this->generateNavigation($user, $context);
+        return $this->generateNavigation($user, $context);
         // });
     }
 
@@ -72,7 +78,7 @@ class NavigationService
             $items = $this->processController($controllerClass, $user);
             $navigationItems = array_merge($navigationItems, $items);
         }
-        
+
         usort($navigationItems, fn($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
 
         return $navigationItems;
@@ -85,16 +91,16 @@ class NavigationService
     public function scanControllers(string $context): array
     {
         $controllers = [];
-        
+
         // Mapeia contexto para partes do namespace que deve conter
         $contextNamespaceMap = [
             'tenant' => 'Tenant',
             'landlord' => 'Landlord',
             'admin' => 'Admin',
         ];
-        
+
         $requiredNamespace = $contextNamespaceMap[$context] ?? null;
-        
+
         if (!$requiredNamespace) {
             return [];
         }
@@ -138,7 +144,7 @@ class NavigationService
         try {
             $reflection = new ReflectionClass($className);
             return $reflection->hasMethod('getPages') &&
-                   $reflection->getMethod('getPages')->isPublic();
+                $reflection->getMethod('getPages')->isPublic();
         } catch (\Exception) {
             return false;
         }
@@ -172,7 +178,6 @@ class NavigationService
             }
 
             return $items;
-
         } catch (\Exception $e) {
             if (app()->hasDebugModeEnabled()) {
                 logger()->warning("Erro ao processar controller {$controllerClass}: " . $e->getMessage());
