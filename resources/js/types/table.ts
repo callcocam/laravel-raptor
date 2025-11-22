@@ -33,6 +33,7 @@ export interface TableAction {
     only?: string[]
   }
   modalSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
+
 }
 
 /**
@@ -50,6 +51,7 @@ export interface TableActionConfirm {
   successMessage?: string
   requiresTypedConfirmation?: boolean
   typedConfirmationWord?: string
+  closeModalOnSuccess?: boolean
 }
 
 /**

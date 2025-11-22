@@ -32,7 +32,7 @@ use Closure;
  */
 class ModalAction extends ExecuteAction
 {
-    protected string $actionType = 'modal';
+    protected string $actionType = 'actions';
 
     protected string|Closure|null $modalTitle = null;
 
@@ -178,7 +178,7 @@ class ModalAction extends ExecuteAction
         if (! empty($this->getColumns())) {
             $result['columns'] = $this->getArrayColumns();
         }
-        
+
         // Incluir columnType (detectado ou padrão)
         $result['columnType'] = $this->detectColumnType();
 

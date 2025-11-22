@@ -37,6 +37,11 @@ trait HasGridLayout
     protected ?string $gap = null;
 
     /**
+     * Largura máxima do modal/dialog
+     */
+    protected ?string $maxWidth = null;
+
+    /**
      * Grid columns por breakpoint (responsivo)
      */
     protected ?string $smCols = null;
@@ -116,6 +121,18 @@ trait HasGridLayout
     }
 
     /**
+     * Define a largura máxima do modal/dialog
+     *
+     * @param  string  $width  'sm', 'md', 'lg', 'xl', '2xl', '3xl', '4xl', '5xl', '6xl', '7xl', 'full'
+     */
+    public function maxWidth(string $width): self
+    {
+        $this->maxWidth = $width;
+
+        return $this;
+    }
+
+    /**
      * Define grid columns responsivo
      */
     public function responsiveGridColumns(?string $sm = null, ?string $md = null, ?string $lg = null, ?string $xl = null): self
@@ -167,6 +184,7 @@ trait HasGridLayout
             'columnSpan' => $this->columnSpan,
             'order' => $this->order,
             'gap' => $this->gap,
+            'maxWidth' => $this->maxWidth,
             'responsive' => array_filter([
                 'grid' => array_filter([
                     'sm' => $this->smCols,
@@ -205,5 +223,10 @@ trait HasGridLayout
     public function getGap(): ?string
     {
         return $this->gap;
+    }
+
+    public function getMaxWidth(): ?string
+    {
+        return $this->maxWidth;
     }
 }

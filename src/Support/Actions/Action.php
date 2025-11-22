@@ -20,13 +20,13 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     use BelongToRequest;
     use HasActionCallback;
 
+    protected $model = null;
+
     protected string $method = 'POST';
 
     protected string $target = '_self';
 
     protected string|Closure|bool|null $url = null;
-
-    protected array|Closure $confirm = [];
 
     protected string|Closure|null $authorization = null;
 
@@ -57,15 +57,6 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             return null;
         });
         $this->setUp();
-    }
-
-
-
-    public function confirm(array|bool|Closure $confirm): self
-    {
-        $this->confirm = $confirm;
-
-        return $this;
     }
 
     public function method(string $method): self
@@ -161,11 +152,10 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
         if (! empty($this->confirm)) {
             // Se confirm for Closure, não avaliar - apenas indicar que existe
-            if ($this->confirm instanceof Closure) {
-                $result['confirm'] = ['hasConfirm' => true];
-            } else {
-                $result['confirm'] = $this->confirm;
-            }
+           $result['confirm'] = $this->getConfirm([
+                'model' => $model,
+                'request' => $this->getRequest(),
+           ]);
         }
 
         if (! empty($this->getColumns())) {
@@ -177,10 +167,14 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'preserveState' => $this->preserveState,
             'only' => $this->onlyProps,
         ];
- 
+
 
         if ($this->modalSize) {
             $result['modalSize'] = $this->modalSize;
+        }
+
+        if (method_exists($this, 'getGridLayoutConfig')) {
+            $result = array_merge($result, $this->getGridLayoutConfig());
         }
 
         return $result;

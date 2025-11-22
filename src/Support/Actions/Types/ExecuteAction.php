@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
 use Callcocam\LaravelRaptor\Support\Actions\Action;
+use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\HiddenField;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
 use Illuminate\Support\Facades\Route;
@@ -16,17 +17,21 @@ use Illuminate\Support\Facades\Route;
 abstract class ExecuteAction extends Action
 {
     use InteractWithForm;
+    use HasGridLayout;
 
     protected string $method = 'POST';
+
+    protected string $actionType = 'header';
 
     public function __construct(?string $name)
     {
         parent::__construct($name ?? 'execute');
         $this->actionType('header')
-            ->column(HiddenField::make('actionType', 'actions'))
+            ->column(HiddenField::make('actionType', $this->actionType))
             ->column(HiddenField::make('actionName',  $name))
             ->url(function () {
                 $name = str($this->getName())
+                    ->replace('importApi', 'execute')
                     ->replace('import', 'execute')
                     ->replace('update', 'execute')
                     ->replace('delete', 'execute')
@@ -43,7 +48,7 @@ abstract class ExecuteAction extends Action
 
     public function toArray($model = null, $request = null): array
     {
-        $array = array_merge(parent::toArray($model, $request), $this->getForm());
+        $array = array_merge(parent::toArray($model, $request), $this->getForm(), $this->getGridLayoutConfig());
 
         return $array;
     }

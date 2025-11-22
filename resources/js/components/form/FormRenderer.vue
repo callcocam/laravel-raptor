@@ -98,39 +98,79 @@ const handleSubmit = () => {
 
 // Classes do formulário (grid layout)
 const formClasses = computed(() => {
+  const gridColsMap: Record<string, string> = {
+    '1': 'md:grid-cols-1',
+    '2': 'md:grid-cols-2',
+    '3': 'md:grid-cols-3',
+    '4': 'md:grid-cols-4',
+    '5': 'md:grid-cols-5',
+    '6': 'md:grid-cols-6',
+    '7': 'md:grid-cols-7',
+    '8': 'md:grid-cols-8',
+    '9': 'md:grid-cols-9',
+    '10': 'md:grid-cols-10',
+    '11': 'md:grid-cols-11',
+    '12': 'md:grid-cols-12',
+  }
+
+  const gapMap: Record<string, string> = {
+    '0': 'gap-x-0',
+    '1': 'gap-x-1',
+    '2': 'gap-x-2',
+    '3': 'gap-x-3',
+    '4': 'gap-x-4',
+    '5': 'gap-x-5',
+    '6': 'gap-x-6',
+    '8': 'gap-x-8',
+  }
+
   return [
-    "grid",
-    `grid-cols-1`,
-    `md:grid-cols-${props.gridColumns}`,
-    `gap-x-${props.gap}`,
-    `gap-y-4`, // Espaçamento vertical entre campos
-  ].join(" ");
-});
+    'grid',
+    'grid-cols-1',
+    gridColsMap[props.gridColumns] || 'md:grid-cols-12',
+    gapMap[props.gap] || 'gap-x-4',
+    'gap-y-4', // Espaçamento vertical entre campos
+  ].join(' ')
+})
 
 // Gera classes do grid para cada coluna
 const getColumnClasses = (column: FormColumn) => {
   const classes: string[] = [];
+
+  const colSpanMap: Record<string, string> = {
+    '1': 'md:col-span-1',
+    '2': 'md:col-span-2',
+    '3': 'md:col-span-3',
+    '4': 'md:col-span-4',
+    '5': 'md:col-span-5',
+    '6': 'md:col-span-6',
+    '7': 'md:col-span-7',
+    '8': 'md:col-span-8',
+    '9': 'md:col-span-9',
+    '10': 'md:col-span-10',
+    '11': 'md:col-span-11',
+    '12': 'md:col-span-12',
+    'full': 'md:col-span-full',
+  }
 
   // Mobile: sempre full width (col-span-1 dentro de grid-cols-1)
   classes.push("col-span-1");
 
   // Column span padrão (desktop - md:)
   if (column.columnSpan) {
-    // Se for 'full', usa col-span-full sem breakpoint
-    if (column.columnSpan === "full") {
-      classes.push("md:col-span-full");
-    } else {
-      classes.push(`md:col-span-${column.columnSpan}`);
+    const spanClass = colSpanMap[column.columnSpan]
+    if (spanClass) {
+      classes.push(spanClass)
     }
   }
 
   // Column span responsivo
   if (column.responsive?.span) {
     const { sm, md, lg, xl } = column.responsive.span;
-    if (sm) classes.push(`sm:col-span-${sm}`);
-    if (md) classes.push(`md:col-span-${md}`);
-    if (lg) classes.push(`lg:col-span-${lg}`);
-    if (xl) classes.push(`xl:col-span-${xl}`);
+    if (sm && colSpanMap[sm]) classes.push(colSpanMap[sm].replace('md:', 'sm:'));
+    if (md && colSpanMap[md]) classes.push(colSpanMap[md]);
+    if (lg && colSpanMap[lg]) classes.push(colSpanMap[lg].replace('md:', 'lg:'));
+    if (xl && colSpanMap[xl]) classes.push(colSpanMap[xl].replace('md:', 'xl:'));
   }
 
   return classes.join(" ");

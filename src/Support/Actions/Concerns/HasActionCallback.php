@@ -8,12 +8,15 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Concerns;
 
+use Callcocam\LaravelRaptor\Support\Table\Confirm;
 use Closure;
 use Illuminate\Http\Request;
 
 trait HasActionCallback
 {
     protected string|Closure|null $callback = null;
+
+    protected array|Closure|Confirm $confirm = [];
 
     /**
      * Define o callback da action
@@ -64,5 +67,21 @@ trait HasActionCallback
 
         // Se for string (nome de método), retorna o nome
         return $this->callback;
+    }
+
+
+    public function confirm(array|Closure|Confirm $confirm): self
+    {
+        $this->confirm = $confirm;
+
+        return $this;
+    }
+
+    public function getConfirm($params): array|Closure|Confirm
+    {
+        if ($this->confirm instanceof Confirm) {
+            return $this->confirm->toArray();
+        }
+        return $this->evaluate($this->confirm, $params);
     }
 }

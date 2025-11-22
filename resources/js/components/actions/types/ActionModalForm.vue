@@ -24,7 +24,7 @@
       </Button>
     </DialogTrigger>
 
-    <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogContent :class="dialogClasses">
       <DialogHeader>
         <DialogTitle>
           {{ action.label }}
@@ -41,6 +41,8 @@
           <FormRenderer
             :columns="formColumns"
             :errors="formErrors"
+            :gridColumns="gridColumns"
+            :gap="gap"
             v-model="formData"
             ref="formRef"
             @submit="handleSubmit"
@@ -79,7 +81,7 @@
           <!-- Botões padrão para formulário -->
           <template v-if="columnType === 'form' && hasFormColumns">
             <Button variant="outline" @click="closeModal">
-              Cancelar
+              Cancelar {{  isSubmitting }}
             </Button>
             <Button @click="handleSubmit" :disabled="isSubmitting">
               {{ isSubmitting ? 'Processando...' : (action.confirm?.confirmButtonText || 'Confirmar') }}
@@ -126,6 +128,9 @@ interface Props {
     columns?: FormColumn[]
     columnType?: 'form' | 'table' | 'infolist'
     tableData?: any[] // Dados para renderização de tabela
+    gridColumns?: string // Número de colunas do grid (padrão: 12)
+    gap?: string // Espaçamento entre campos (padrão: 4)
+    maxWidth?: string // Largura máxima do modal (sm, md, lg, xl, 2xl, 3xl, 4xl, 5xl, 6xl, 7xl, full)
   }
   size?: 'default' | 'sm' | 'lg' | 'icon'
   record?: Record<string, any>
@@ -133,7 +138,8 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   size: 'sm'
-}) 
+})  
+
 const emit = defineEmits<{
   (e: 'click', formData?: Record<string, any>): void
   (e: 'open'): void
@@ -169,6 +175,40 @@ const formColumns = computed(() => {
 // Dados para tabela (se columnType === 'table')
 const tableData = computed(() => {
   return props.action.tableData || []
+})
+
+// Configurações de grid do formulário
+const gridColumns = computed(() => {
+  return props.action.gridColumns || '12'
+})
+
+const gap = computed(() => {
+  return props.action.gap || '4'
+})
+
+// Classes do DialogContent (largura e altura)
+const dialogClasses = computed(() => {
+  const maxWidthMap: Record<string, string> = {
+    'sm': 'sm:max-w-sm',
+    'md': 'sm:max-w-md',
+    'lg': 'sm:max-w-lg',
+    'xl': 'sm:max-w-xl',
+    '2xl': 'sm:max-w-2xl',
+    '3xl': 'sm:max-w-3xl',
+    '4xl': 'sm:max-w-4xl',
+    '5xl': 'sm:max-w-5xl',
+    '6xl': 'sm:max-w-6xl',
+    '7xl': 'sm:max-w-7xl',
+    'full': 'sm:max-w-full',
+  }
+
+  const maxWidth = props.action.maxWidth || '4xl'
+  
+  return [
+    maxWidthMap[maxWidth] || 'max-w-4xl',
+    'max-h-[90vh]',
+    'overflow-y-auto',
+  ].join(' ')
 })
 
 // Verifica se há colunas
@@ -228,7 +268,11 @@ const handleSubmit = async () => {
         onSuccess: (data) => {
           emit('submit', data)
           emit('success', data)
-          closeModal()
+
+          // Fecha o modal apenas se closeModalOnSuccess for true (padrão)
+          if (props.action.confirm?.closeModalOnSuccess ?? true) {
+            closeModal()
+          }
         },
         onError: (error) => {  
           // Captura erros de validação do Inertia (objeto com campo: mensagem)

@@ -206,7 +206,11 @@ const handleSubmit = async () => {
           onSuccess: (data) => {
             emit("submit", data);
             emit("success", data);
-            closeSlideover();
+
+            // Fecha o slideover apenas se closeModalOnSuccess for true (padrão)
+            if (props.action.confirm?.closeModalOnSuccess ?? true) {
+              closeSlideover();
+            }
           },
           onError: (error) => {
             // Captura erros de validação do Inertia

@@ -33,11 +33,7 @@ const layoutProps = {
         <div class="w-full flex items-center pb-4">
           <BreadcrumbRenderer :items="breadcrumbs" :config="{}">
             <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
-            <HeaderActions
-              v-if="headerActions && headerActions.length > 0"
-              :actions="headerActions"
-              @action-click="$emit('header-action-click', $event)"
-            />
+            
           </BreadcrumbRenderer>
         </div>
       </div>

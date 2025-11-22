@@ -32,7 +32,7 @@ use Closure;
  */
 class InfolistAction extends ModalAction
 {
-    protected string $actionType = 'modal';
+    protected string $actionType = 'actions';
 
     protected string|Closure|null $modalTitle = null;
 
