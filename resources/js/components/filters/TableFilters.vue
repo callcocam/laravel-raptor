@@ -10,28 +10,40 @@
     v-if="filters && filters.length > 0"
     class="flex items-center gap-2 mb-4 flex-wrap"
   >
-    <FilterRenderer
-      v-for="filter in filters"
-      :key="filter.name"
-      :filter="filter"
-      :modelValue="filterValues[filter.name]"
-      @update:modelValue="(value) => updateFilter(filter.name, value)"
-    />
+    <div class="flex flex-1 items-center gap-4 w-full sm:w-auto">
+      <div class="relative flex-1 sm:flex-none" v-if="searchable">
+        <Input placeholder="Buscar..." class="w-full sm:w-64 h-9" v-model="filterValues.search"/>
+        <Search class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      </div>
 
-    <Button
-      type="button"
-      v-if="!autoApply"
-      size="sm"
-      @click="applyFilters"
-      :disabled="isLoading"
-    >
-      <Search class="mr-2 h-4 w-4" />
-      Aplicar
-    </Button>
+      <FilterRenderer
+        v-for="filter in filters"
+        :key="filter.name"
+        :filter="filter"
+        :modelValue="filterValues[filter.name]"
+        @update:modelValue="(value) => updateFilter(filter.name, value)"
+      />
+      <Button
+        type="button"
+        v-if="!autoApply"
+        size="sm"
+        @click="applyFilters"
+        :disabled="isLoading"
+      >
+        <Search class="mr-2 h-4 w-4" />
+        Aplicar
+      </Button>
 
-    <Button v-if="hasActiveFilters" variant="ghost" size="sm" @click="clearFilters" type="button">
-      Limpar
-    </Button>
+      <Button
+        v-if="hasActiveFilters"
+        variant="ghost"
+        size="sm"
+        @click="clearFilters"
+        type="button"
+      >
+        Limpar
+      </Button>
+    </div>
   </div>
 </template>
 
@@ -41,6 +53,7 @@ import { router, usePage } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-vue-next";
 import FilterRenderer from "./FilterRenderer.vue";
+import { Input } from "@/components/ui/input";
 
 interface Filter {
   name: string;
@@ -56,6 +69,7 @@ interface Props {
   filters?: Filter[];
   autoApply?: boolean; // Se true, aplica filtros automaticamente ao mudar
   isLoading?: boolean;
+  searchable?: boolean;
 }
 
 interface Emits {

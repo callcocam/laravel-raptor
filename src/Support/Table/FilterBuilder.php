@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Table;
 use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToContext;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToIcon;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToId;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToLabel;
@@ -33,6 +34,7 @@ class FilterBuilder
     use  BelongsToName;
     use EvaluatesClosures;
     use FactoryPattern;
+    use BelongsToHelpers;
 
     protected string $component = 'filter-text';
 

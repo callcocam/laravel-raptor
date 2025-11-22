@@ -1,19 +1,19 @@
 <template>
   <div class="space-y-4">
     <!-- Filtros e Header Actions -->
-    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-      <TableFilters
-        v-if="table.filters.value.length"
-        :filters="table.filters.value"
-        @apply="table.filter"
-        @clear="table.reset"
-        class="flex-1"
-      />
-      
+    <div class="flex flex-col space-y-4">
       <!-- Header Actions -->
       <HeaderActions
         v-if="table.headerActions.value.length"
         :actions="table.headerActions.value"
+      />
+      <TableFilters
+        v-if="table.filters.value.length"
+        :filters="table.filters.value"
+        :searchable="table.searchable.value"
+        @apply="table.filter"
+        @clear="table.reset"
+        class="flex-1"
       />
     </div>
 
@@ -67,6 +67,8 @@ import TablePagination from "./TablePagination.vue";
 import ActionRenderer from "../actions/ActionRenderer.vue";
 import TableColumnRenderer from "./TableColumnRenderer.vue";
 import HeaderActions from "./HeaderActions.vue";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-vue-next";
 
 const props = withDefaults(
   defineProps<{

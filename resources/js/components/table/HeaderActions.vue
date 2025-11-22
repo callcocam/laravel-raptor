@@ -5,7 +5,7 @@
  * Usa ActionRenderer para renderizar componentes dinâmicos
  -->
 <template>
-  <div v-if="visibleActions.length > 0" class="flex items-center gap-2">
+  <div v-if="visibleActions.length > 0" class="flex items-center gap-2 justify-end">
     <ActionRenderer
       v-for="action in visibleActions"
       :key="action.name"

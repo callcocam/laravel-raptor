@@ -11,6 +11,7 @@ export function useInertiaTable(key = 'table') {
     filters?: any[]
     actions?: any[]
     headerActions?: any[]
+    isSearcheable?: boolean
     [key: string]: any
   }
   const data = computed<TableData>(() => page.props[key] as TableData || {}) 
@@ -36,6 +37,7 @@ export function useInertiaTable(key = 'table') {
     filters: computed(() => data.value.filters || []),
     actions: computed(() => data.value.actions || []),
     headerActions: computed(() => data.value.headerActions || []),
+    searchable: computed(() => data.value.isSearcheable || false),
 
     page: (num: number) => navigate({ ...query.value, page: num }),
     perPage: (num: number) => navigate({ ...query.value, per_page: num, page: 1 }),

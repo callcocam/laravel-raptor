@@ -17,10 +17,10 @@ trait WithTable
 {
 
     use Concerns\Interacts\WithColumns,
-        Concerns\Interacts\WithActions, 
+        Concerns\Interacts\WithActions,
         Concerns\Interacts\WithBulkActions,
         Concerns\Interacts\WithFilters,
-        Concerns\Interacts\WithHeaderActions; 
+        Concerns\Interacts\WithHeaderActions;
     use Concerns\Shared\BelongToRequest;
     use Concerns\EvaluatesClosures;
     use Concerns\FactoryPattern;
@@ -53,10 +53,10 @@ trait WithTable
             'bulkActions' => $this->getArrayBulkActions(), // Adiciona bulk actions
             'filters' => $this->getArrayFilters(),
             'headerActions' => $this->getRenderedHeaderActions($this->getModelClass(), $this->getRequest()),
-            // 'search' => $this->getSearch(),
-            'isSearcheable' => $this->isSearcheable(), 
+            'search' => $this->getSearch(),
+            'isSearcheable' => $this->isSearcheable(),
             'hasBulkActions' => $this->hasBulkActions(), // Indica se tem bulk actions
-            'queryParams' => $this->getQueryParams(), 
+            'queryParams' => $this->getQueryParams(),
         ]);
 
         return $result;
@@ -135,7 +135,7 @@ trait WithTable
     {
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
-            if ($value = data_get($item, $columnName)) { 
+            if ($value = data_get($item, $columnName)) {
                 $formattedColumn = $column->render($value, $item);
                 $item[$columnName . '_formatted'] = data_get($formattedColumn, 'text', $value);
             }
@@ -160,7 +160,7 @@ trait WithTable
 
         foreach ($this->getActions() as $action) {
             // A action é responsável por sua própria renderização completa
-            $rendered = $action->render($model, $this->getRequest()); 
+            $rendered = $action->render($model, $this->getRequest());
             // Filtra apenas actions visíveis e válidas
             if ($rendered !== null && ($rendered['visible'] ?? true)) {
                 $actions[$action->getName()] = $rendered;
