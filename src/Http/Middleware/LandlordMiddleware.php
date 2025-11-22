@@ -20,17 +20,7 @@ class LandlordMiddleware
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {
-        // Verifica se o usuário está autenticado
-        if (! $request->user()) {
-            return redirect()->route('login');
-        }
-
-        // Verifica se o usuário tem permissão de super-admin
-        if (! $request->user()->hasRole('super-admin')) {
-            abort(403, 'Acesso negado. Você não tem permissão para acessar esta área.');
-        }
-
+    { 
         // Define o contexto como landlord
         app()->instance('landlord.context', true);
         config(['app.context' => 'landlord']);

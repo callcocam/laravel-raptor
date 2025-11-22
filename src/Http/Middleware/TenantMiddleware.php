@@ -46,6 +46,12 @@ class TenantMiddleware
 
         Landlord::addTenant($tenant);
 
+        // Se houver usuário autenticado, verifica se ele pertence a este tenant
+        if ($request->user() && $request->user()->tenant_id !== $tenant->id) {
+            auth()->logout();
+            abort(403, 'Acesso negado. Você não tem permissão para acessar este tenant.');
+        }
+
         return $next($request);
     }
 }
