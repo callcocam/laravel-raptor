@@ -156,6 +156,7 @@ abstract class AbstractController extends ResourceController
 
             // Valida os dados
             $validated = $request->validate($validationRules, $validationMessages); 
+            dd($request->all(), $validationRules, $validated);
        
             $model->update($form->getFormData($validated, $model));
 

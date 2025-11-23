@@ -98,7 +98,7 @@
               :id="`${column.name}-${option.value}`"
               :name="`${column.name}[]`"
               :value="option.value"
-              :modelValue="isAllSelected ? true : (isChecked(option.value) ? 'indeterminate' : false)" 
+              :model-value="isChecked(option.value)"
               @update:model-value="(checked: boolean | 'indeterminate') => toggleOption(option.value, checked === true)"
               :aria-invalid="hasError"
             />
@@ -118,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from "vue";
+import { computed, ref, watch } from "vue";
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -165,12 +165,36 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string[]): void;
+  (e: "update:modelValue", value: (string | number)[]): void;
 }>();
 
 const searchQuery = ref("");
 const isOpen = ref(true);
 const isSelectingAll = ref(false);
+
+// Estado interno para gerenciar valores selecionados
+const selectedValues = ref<(string | number)[]>([]);
+
+// Sincronizar modelValue -> selectedValues (quando props.modelValue mudar)
+watch(() => props.modelValue, (newModelValue) => {
+  selectedValues.value = Array.isArray(newModelValue) ? [...newModelValue] : [];
+}, { immediate: true });
+
+// Sincronizar selectedValues -> modelValue (quando selectedValues mudar)
+watch(selectedValues, (newSelectedArray) => {
+  const currentModelArray = Array.isArray(props.modelValue) ? props.modelValue : [];
+
+  // Comparar se o conteúdo é diferente
+  const isSameContent =
+    newSelectedArray.length === currentModelArray.length &&
+    newSelectedArray.every(value =>
+      currentModelArray.some(v => String(v) === String(value))
+    );
+
+  if (!isSameContent) {
+    emit("update:modelValue", newSelectedArray.length > 0 ? [...newSelectedArray] : []);
+  }
+}, { deep: true });
 
 const hasError = computed(() => !!props.error);
 const hasSearch = computed(
@@ -186,22 +210,6 @@ const errorArray = computed(() => {
     return props.error.map((msg) => ({ message: msg }));
   }
   return [{ message: props.error }];
-});
-
-const selectedValues = computed(() => {
-  if (Array.isArray(props.modelValue)) {
-    return props.modelValue.map(String);
-  }
-
-  if (props.modelValue) {
-    return [String(props.modelValue)];
-  }
-
-  if (Array.isArray(props.column.default)) {
-    return props.column.default.map(String);
-  }
-
-  return [];
 });
 
 const filteredOptions = computed(() => {
@@ -233,27 +241,27 @@ const isSomeSelected = computed(() => {
 });
 
 const isChecked = (value: string | number) => {
-  return selectedValues.value.includes(String(value));
+  return selectedValues.value.some(v => String(v) === String(value));
 };
 
 const toggleOption = (value: string | number, checked: boolean) => {
   const stringValue = String(value);
-  let newValues = [...selectedValues.value];
+  const currentSet = new Set(selectedValues.value.map(String));
 
   if (checked) {
-    if (!newValues.includes(stringValue)) {
-      newValues.push(stringValue);
-    }
+    currentSet.add(stringValue);
   } else {
-    newValues = newValues.filter((v) => v !== stringValue);
+    currentSet.delete(stringValue);
   }
 
-  emit("update:modelValue", newValues);
+  // Atualizar selectedValues diretamente - o watch vai emitir
+  selectedValues.value = Array.from(currentSet);
 };
 
-const handleSelectAllChange = (checked: boolean | "indeterminate") => { 
+const handleSelectAllChange = (checked: boolean | "indeterminate") => {
+  console.log('handleSelectAllChange - início', { checked, selectedValues: selectedValues.value });
 
-  isSelectingAll.value = true; 
+  isSelectingAll.value = true;
 
   // Usa requestAnimationFrame para garantir que o navegador renderize o loading
   requestAnimationFrame(() => {
@@ -261,19 +269,19 @@ const handleSelectAllChange = (checked: boolean | "indeterminate") => {
       if (checked === true) {
         // Selecionar todos os filtrados
         const allValues = filteredOptions.value.map((option) => String(option.value));
-        const newValues = [...new Set([...selectedValues.value, ...allValues])]; 
-        emit("update:modelValue", newValues);
+        selectedValues.value = [...new Set([...selectedValues.value.map(String), ...allValues])];
+        console.log('Selecionando todos', { total: selectedValues.value.length });
       } else {
         // Desmarcar todos os filtrados
         const filteredValues = new Set(
           filteredOptions.value.map((option) => String(option.value))
         );
-        const newValues = selectedValues.value.filter((v) => !filteredValues.has(v)); 
-        emit("update:modelValue", newValues);
+        selectedValues.value = selectedValues.value.filter((v) => !filteredValues.has(String(v)));
+        console.log('Desmarcando todos', { total: selectedValues.value.length });
       }
 
       // Delay para garantir que o usuário veja o feedback
-      setTimeout(() => { 
+      setTimeout(() => {
         isSelectingAll.value = false;
       }, 500);
     });
