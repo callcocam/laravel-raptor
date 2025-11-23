@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Models\Permission;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
@@ -83,6 +84,14 @@ class RoleController extends LandlordController
 
             CheckboxField::make('special', 'Permissões Especiais')
                 ->helpText('Marque se esta role deve ter permissões especiais de administrador'),
+
+            CheckboxField::make('permissions', 'Permissões')
+                ->multiple()
+                ->options(Permission::all()->pluck('name', 'id')->toArray())
+                ->columns(2)
+                ->searchable()
+                ->showSelectAll(true)
+                ->helpText('Selecione as permissões associadas a esta role'),
         ]);
 
         return $form;
@@ -144,11 +153,11 @@ class RoleController extends LandlordController
             TextInfolist::make('slug', 'Slug'),
             TextInfolist::make('description', 'Descrição'),
             TextInfolist::make('special', 'Permissões Especiais')
-                ->value(fn ($value) => $value ? 'Sim' : 'Não'),
+                ->value(fn($value) => $value ? 'Sim' : 'Não'),
             TextInfolist::make('created_at', 'Criado em')
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', 'Atualizado em')
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

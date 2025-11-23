@@ -1,6 +1,6 @@
 
 import ComponentRegistry from './utils/ComponentRegistry'
-// import BreadcrumbRegistry from './utils/BreadcrumbRegistry'
+import BreadcrumbRegistry from './utils/BreadcrumbRegistry'
 
 /**
  * Auto-registro de componentes padrão do InfoList
@@ -45,6 +45,7 @@ ComponentRegistry.registerBulk({
     'form-field-textarea': defineAsyncComponent(() => import('~/components/form/fields/FormFieldTextarea.vue')),
     'form-field-select': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSelect.vue')),
     'form-field-checkbox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCheckbox.vue')),
+    'form-field-checkbox-group': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCheckboxGroup.vue')),
     'form-field-date': defineAsyncComponent(() => import('~/components/form/fields/FormFieldDate.vue')),
     'form-field-number': defineAsyncComponent(() => import('~/components/form/fields/FormFieldNumber.vue')),
     'form-field-email': defineAsyncComponent(() => import('~/components/form/fields/FormFieldEmail.vue')),
@@ -79,11 +80,11 @@ ComponentRegistry.markAsInitialized()
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
  */
-// BreadcrumbRegistry.registerBulk({
-//   'breadcrumb-default': defineAsyncComponent(() => import('./components/breadcrumbs/DefaultBreadcrumb.vue')),
-// })
+BreadcrumbRegistry.registerBulk({
+  'breadcrumb-default': defineAsyncComponent(() => import('./components/breadcrumbs/DefaultBreadcrumb.vue')),
+})
 
-// BreadcrumbRegistry.markAsInitialized()
+BreadcrumbRegistry.markAsInitialized()
 
 /**
  * Auto-registro de componentes padrão da Table
@@ -156,6 +157,7 @@ export interface RaptorPluginOptions {
         tables?: Record<string, Component>
         infolist?: Record<string, Component>
         forms?: Record<string, Component>
+        breadcrumbs?: Record<string, Component>
     }
 }
 
@@ -197,6 +199,12 @@ const install = (app: App, options: RaptorPluginOptions = {}): void => {
                 ComponentRegistry.register(name, component)
             })
         }
+
+        if (options.overrideComponents.breadcrumbs) {
+            Object.entries(options.overrideComponents.breadcrumbs).forEach(([name, component]) => {
+                BreadcrumbRegistry.register(name, component)
+            })
+        }
     }
 
     // Registra componentes customizados globalmente no app
@@ -218,6 +226,7 @@ const install = (app: App, options: RaptorPluginOptions = {}): void => {
     app.provide('filterRegistry', FilterRegistry)
     app.provide('tableRegistry', TableRegistry)
     app.provide('componentRegistry', ComponentRegistry)
+    app.provide('breadcrumbRegistry', BreadcrumbRegistry)
 }
 
 /**
@@ -235,6 +244,7 @@ export {
     FilterRegistry,
     TableRegistry,
     ComponentRegistry,
+    BreadcrumbRegistry,
 }
 
 /**

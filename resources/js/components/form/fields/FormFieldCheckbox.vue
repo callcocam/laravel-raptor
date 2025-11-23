@@ -47,7 +47,7 @@ interface FormColumn {
 
 interface Props {
   column: FormColumn
-  modelValue?: boolean | null
+  modelValue?: boolean | null | undefined | string | number
   error?: string | string[]
 }
 
