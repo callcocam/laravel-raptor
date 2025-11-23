@@ -53,15 +53,20 @@
         <div v-if="showSelectAll" class="flex items-center space-x-2 pb-2 border-b">
           <Checkbox
             :id="`${column.name}-select-all`"
-            :checked="isAllSelected"
+            :model-value="isAllSelected"
             :indeterminate="isSomeSelected"
+            :disabled="isSelectingAll"
             @update:model-value="handleSelectAllChange"
           />
           <FieldLabel
             :for="`${column.name}-select-all`"
-            class="font-medium cursor-pointer"
+            class="font-medium cursor-pointer flex items-center gap-2"
           >
-            {{ isAllSelected ? "Desmarcar todos" : "Selecionar todos" }}
+            <span>{{ isAllSelected ? "Desmarcar todos" : "Selecionar todos" }}</span>
+            <Loader2
+              v-show="isSelectingAll"
+              class="h-4 w-4 animate-spin text-muted-foreground"
+            />
           </FieldLabel>
         </div>
 
@@ -113,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, nextTick } from "vue";
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -123,7 +128,7 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
-import { Search, ChevronDown } from "lucide-vue-next";
+import { Search, ChevronDown, Loader2 } from "lucide-vue-next";
 
 interface CheckboxOption {
   label: string;
@@ -165,6 +170,7 @@ const emit = defineEmits<{
 
 const searchQuery = ref("");
 const isOpen = ref(true);
+const isSelectingAll = ref(false);
 
 const hasError = computed(() => !!props.error);
 const hasSearch = computed(
@@ -245,20 +251,33 @@ const toggleOption = (value: string | number, checked: boolean) => {
   emit("update:modelValue", newValues);
 };
 
-const handleSelectAllChange = (checked: boolean | "indeterminate") => {
-  if (checked === true) {
-    // Selecionar todos os filtrados
-    const allValues = filteredOptions.value.map((option) => String(option.value));
-    const newValues = [...new Set([...selectedValues.value, ...allValues])];
-    emit("update:modelValue", newValues);
-  } else {
-    // Desmarcar todos os filtrados
-    const filteredValues = new Set(
-      filteredOptions.value.map((option) => String(option.value))
-    );
-    const newValues = selectedValues.value.filter((v) => !filteredValues.has(v));
-    emit("update:modelValue", newValues);
-  }
+const handleSelectAllChange = (checked: boolean | "indeterminate") => { 
+
+  isSelectingAll.value = true; 
+
+  // Usa requestAnimationFrame para garantir que o navegador renderize o loading
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (checked === true) {
+        // Selecionar todos os filtrados
+        const allValues = filteredOptions.value.map((option) => String(option.value));
+        const newValues = [...new Set([...selectedValues.value, ...allValues])]; 
+        emit("update:modelValue", newValues);
+      } else {
+        // Desmarcar todos os filtrados
+        const filteredValues = new Set(
+          filteredOptions.value.map((option) => String(option.value))
+        );
+        const newValues = selectedValues.value.filter((v) => !filteredValues.has(v)); 
+        emit("update:modelValue", newValues);
+      }
+
+      // Delay para garantir que o usuário veja o feedback
+      setTimeout(() => { 
+        isSelectingAll.value = false;
+      }, 500);
+    });
+  });
 };
 
 const getGridClass = () => {
