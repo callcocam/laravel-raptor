@@ -1,6 +1,6 @@
 
-import ComponentRegistry from './utils/ComponentRegistry'
-import BreadcrumbRegistry from './utils/BreadcrumbRegistry'
+import ComponentRegistry from '../utils/ComponentRegistry'
+import BreadcrumbRegistry from '../utils/BreadcrumbRegistry'
 
 /**
  * Auto-registro de componentes padrão do InfoList
@@ -53,7 +53,7 @@ ComponentRegistry.registerBulk({
     'form-field-hidden': defineAsyncComponent(() => import('~/components/form/fields/FormFieldHidden.vue')),
     'form-field-file-upload': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUpload.vue')),
     'form-field-file-upload-async': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUploadAsync.vue')),
-    'form-field-combobox': defineAsyncComponent(() => import('./components/form/fields/FormFieldCombobox.vue')),
+    'form-field-combobox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCombobox.vue')),
     'form-field-cascading': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCascading.vue')),
     'form-field-repeater': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRepeater.vue')),
 })
@@ -82,8 +82,8 @@ ComponentRegistry.markAsInitialized()
  * sobrescritos pela aplicação se necessário.
  */
 BreadcrumbRegistry.registerBulk({
-  'breadcrumb-default': defineAsyncComponent(() => import('./components/breadcrumbs/DefaultBreadcrumb.vue')),
-    'breadcrumb-page-header': defineAsyncComponent(() => import('./components/breadcrumbs/PageHeaderBreadcrumb.vue')),
+  'breadcrumb-default': defineAsyncComponent(() => import('~/components/breadcrumbs/DefaultBreadcrumb.vue')),
+    'breadcrumb-page-header': defineAsyncComponent(() => import('~/components/breadcrumbs/PageHeaderBreadcrumb.vue')),
 })
 
 BreadcrumbRegistry.markAsInitialized()
@@ -94,7 +94,7 @@ BreadcrumbRegistry.markAsInitialized()
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
  */
-import TableRegistry from './utils/TableRegistry'
+import TableRegistry from '~/utils/TableRegistry'
 
 TableRegistry.registerBulk({
     'table-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')),
@@ -108,7 +108,7 @@ TableRegistry.markAsInitialized()
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
  */
-import ActionRegistry from './utils/ActionRegistry'
+import ActionRegistry from '~/utils/ActionRegistry'
 
 ActionRegistry.registerBulk({
     'action-button': defineAsyncComponent(() => import('~/components/actions/types/ActionButton.vue')),
@@ -133,16 +133,16 @@ ActionRegistry.markAsInitialized()
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
  */
-import FilterRegistry from './utils/FilterRegistry'
+import FilterRegistry from '~/utils/FilterRegistry'
 import { App, Component, defineAsyncComponent } from 'vue'
 
 FilterRegistry.registerBulk({
-    'filter-text': defineAsyncComponent(() => import('./components/filters/types/FilterText.vue')),
-    'filter-select': defineAsyncComponent(() => import('./components/filters/types/FilterSelect.vue')),
-    'filter-multi-select': defineAsyncComponent(() => import('./components/filters/types/FilterMultiSelect.vue')),
-    'filter-date': defineAsyncComponent(() => import('./components/filters/types/FilterDate.vue')),
-    'filter-date-range': defineAsyncComponent(() => import('./components/filters/types/FilterDateRange.vue')),
-    'filter-trashed': defineAsyncComponent(() => import('./components/filters/types/FilterTrashed.vue')),
+    'filter-text': defineAsyncComponent(() => import('~/components/filters/types/FilterText.vue')),
+    'filter-select': defineAsyncComponent(() => import('~/components/filters/types/FilterSelect.vue')),
+    'filter-multi-select': defineAsyncComponent(() => import('~/components/filters/types/FilterMultiSelect.vue')),
+    'filter-date': defineAsyncComponent(() => import('~/components/filters/types/FilterDate.vue')),
+    'filter-date-range': defineAsyncComponent(() => import('~/components/filters/types/FilterDateRange.vue')),
+    'filter-trashed': defineAsyncComponent(() => import('~/components/filters/types/FilterTrashed.vue')),
 })
 
 FilterRegistry.markAsInitialized()
@@ -252,8 +252,8 @@ export {
 /**
  * Export de composables
  */
-export { useAction } from './composables/useAction'
-export { useInertiaTable } from './composables/useInertiaTable'
+export { useAction } from '../composables/useAction'
+export { useInertiaTable } from '../composables/useInertiaTable'
 
 /**
  * Export default para compatibilidade
