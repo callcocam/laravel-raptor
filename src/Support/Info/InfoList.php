@@ -100,26 +100,27 @@ class InfoList
         // Detecta o tipo de cast baseado no tipo da coluna
         $type = $column->getType();
 
-        // Mapeamento de tipos de coluna para casts
-        $castMap = [
-            'date' => 'date',
-            'datetime' => 'datetime',
+        // Mapeamento de tipos de coluna para nomes de campo
+        // O CastRegistry já tem formatadores registrados por nome de campo
+        $fieldNameMap = [
+            'date' => 'created_at',      // Usa o formatter de data
+            'datetime' => 'updated_at',   // Usa o formatter de datetime
             'time' => 'time',
-            'boolean' => 'boolean',
+            'boolean' => 'active',        // Usa o formatter de boolean
             'status' => 'status',
             'email' => 'email',
             'phone' => 'phone',
-            'currency' => 'currency',
-            'number' => 'number',
+            'currency' => 'price',        // Usa o formatter de currency
+            'number' => 'count',
         ];
 
-        // Se existe um cast para o tipo, aplica
-        if (isset($castMap[$type])) {
-            $castType = $castMap[$type];
-            $formatter = CastRegistry::get($castType);
+        // Se existe um cast para o tipo, usa o CastRegistry.resolve()
+        if (isset($fieldNameMap[$type])) {
+            $fieldName = $fieldNameMap[$type];
+            $formatter = CastRegistry::resolve($value, $fieldName, ['data' => $data]);
 
-            if ($formatter && is_callable($formatter)) {
-                return $formatter($value, $data);
+            if ($formatter && method_exists($formatter, 'render')) {
+                return $formatter->render();
             }
         }
 
