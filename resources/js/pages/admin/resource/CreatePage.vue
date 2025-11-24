@@ -7,6 +7,7 @@ import FormActions from '~/components/form/FormActions.vue'
 import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue' 
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import { Card, CardContent } from '@/components/ui/card'
+import PageHeaderActions from '~/components/PageHeaderActions.vue'
 
 interface FormColumn {
   name: string

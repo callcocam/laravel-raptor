@@ -4,6 +4,7 @@ import InfoRenderer from '~/components/infolist/InfoRenderer.vue'
 import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue' 
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import { Card, CardContent } from '@/components/ui/card'
+import PageHeaderActions from '~/components/PageHeaderActions.vue'
 
 interface Props {
   message?: string
