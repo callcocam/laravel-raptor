@@ -30,6 +30,14 @@ trait HasCastCallbackFormatter
     }
 
     /**
+     * Alias para castFormat() - aplica o formatador ao valor
+     */
+    public function value($castCallback)
+    {
+        return $this->castFormat($castCallback);
+    }
+
+    /**
      * Obtém o callback de cast
      */
     public function getCastCallback($value = null, $data = null)
