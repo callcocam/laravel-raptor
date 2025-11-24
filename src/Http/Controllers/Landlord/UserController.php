@@ -96,6 +96,7 @@ class UserController extends LandlordController
             CheckboxField::make('roles', 'Papéis')
                 ->relationship('roles', 'name')
                 ->multiple()
+                ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
                 ->helpText('Atribua papéis ao usuário'),
         ]);
 

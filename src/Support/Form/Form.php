@@ -24,6 +24,8 @@ class Form
 
     protected ?Model $model = null;
 
+    protected array $values = [];
+
     public function __construct(?Model $model)
     {
         $this->model = $model;
@@ -84,9 +86,8 @@ class Form
 
         // Se houver um modelo, inclui os valores
         if ($this->model) {
-            $data['model'] = $this->model->toArray();
-        }
-
+            $data['model'] = array_merge($this->model->toArray(), $this->values);
+        } 
         return $data;
     }
 }

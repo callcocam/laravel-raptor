@@ -44,7 +44,20 @@ trait WithColumns
                     }
                 }
             }
+            if (method_exists($column, 'hasDefaultUsing')) {
+                if ($column->hasDefaultUsing()) { 
+                    $this->value($column->getName(), $column->getDefaultUsing($this->getRequest(), $model));
+                }
+            }
             return $column->toArray($model);
         });
+    }
+
+    protected function value($name, $value): static
+    {
+        if (property_exists($this, 'values')) {
+            $this->values[$name] = $value;
+        }
+        return $this;
     }
 }

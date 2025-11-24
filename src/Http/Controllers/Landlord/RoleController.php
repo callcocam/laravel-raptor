@@ -91,6 +91,7 @@ class RoleController extends LandlordController
                 ->columns(2)
                 ->searchable()
                 ->showSelectAll(true)
+                ->defaultUsing(fn($request, $model) => $model ? $model->permissions->pluck('id')->toArray() : [])
                 ->helpText('Selecione as permissões associadas a esta role'),
         ]);
 

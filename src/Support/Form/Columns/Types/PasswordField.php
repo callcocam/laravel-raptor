@@ -24,7 +24,7 @@ class PasswordField extends Column
     {
         parent::__construct($name, $label);
         $this->type('password');
-        $this->component('form-column-password');
+        $this->component('form-field-password');
         $this->setUp();
     }
  

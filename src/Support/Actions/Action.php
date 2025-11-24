@@ -141,7 +141,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
      */
     public function render($model, $request = null): array
     { 
-        if ($model) :
+ 
+        if ($model instanceof Model) :
             $this->record($model);
         endif;
         if ($request) :

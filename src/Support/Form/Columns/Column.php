@@ -24,6 +24,8 @@ abstract class Column extends AbstractColumn
 
     protected Closure|null $valueUsing = null;
 
+    protected ?Closure $defaultUsing = null;
+
     public function __construct($name, $label = null)
     {
         $this->name($name);
@@ -51,6 +53,27 @@ abstract class Column extends AbstractColumn
             'data' => $request,
             'model' => $model,
         ]);
+    }
+
+    public function defaultUsing(Closure $callback): static
+    {
+        $this->defaultUsing = $callback;
+
+        return $this;
+    }
+
+    public function getDefaultUsing($request = null, $model = null)
+    {
+        return $this->evaluate($this->defaultUsing, [
+            'request' => $request,
+            'data' => $request,
+            'model' => $model,
+        ]);
+    }
+
+    public function hasDefaultUsing(): bool
+    {
+        return !is_null($this->defaultUsing);
     }
 
     public function toArray($model = null): array

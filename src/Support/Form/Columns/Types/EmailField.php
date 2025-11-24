@@ -20,7 +20,7 @@ class EmailField extends Column
     {
         parent::__construct($name, $label);
         $this->type('email');
-        $this->component('form-column-email');
+        $this->component('form-field-email');
         $this->setUp();
     }
  
