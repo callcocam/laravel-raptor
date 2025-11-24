@@ -1,6 +1,5 @@
-<script setup lang="ts">
-import ResourceLayout from '@/../../packages/callcocam/laravel-raptor/resources/js/layouts/ResourceLayout.vue';
-import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
+<script setup lang="ts">  
+import ResourceLayout from '~/layouts/ResourceLayout.vue';
 import { type BackendBreadcrumb } from '@/composables/useBreadcrumbs';
 
 interface Props {
