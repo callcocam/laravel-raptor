@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import InfoRenderer from "./InfoReander.vue";
+import InfoRenderer from "./InfoRenderer.vue";
 
 interface InfoColumn {
   name: string;

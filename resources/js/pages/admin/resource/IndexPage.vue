@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ResourceLayout from "~/layouts/ResourceLayout.vue";
 import DefaultTable from "~/components/table/DefaultTable.vue";
-import type { BackendBreadcrumb } from "@/composables/useBreadcrumbs";
+import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
 import HeaderActions from "~/components/table/HeaderActions.vue";
 

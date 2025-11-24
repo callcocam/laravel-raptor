@@ -5,8 +5,8 @@ import ResourceLayout from '~/layouts/ResourceLayout.vue'
 import FormRenderer from '~/components/form/FormRenderer.vue'
 import FormActions from '~/components/form/FormActions.vue'
 import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue' 
-import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface FormColumn {
   name: string

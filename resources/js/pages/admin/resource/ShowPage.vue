@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import ResourceLayout from '~/layouts/ResourceLayout.vue'
-import InfoRenderer from '~/components/infolist/InfoReander.vue'
+import InfoRenderer from '~/components/infolist/InfoRenderer.vue'
 import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue' 
-import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface Props {
   message?: string

@@ -5,7 +5,7 @@ import FormRenderer from "~/components/form/FormRenderer.vue";
 import FormActions from "~/components/form/FormActions.vue";
 import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
 import HeaderActions from "~/components/table/HeaderActions.vue";
-import type { BackendBreadcrumb } from "@/composables/useBreadcrumbs";
+import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import {
   Card,
   CardContent,
