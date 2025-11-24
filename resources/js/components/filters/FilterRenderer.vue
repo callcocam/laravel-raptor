@@ -2,7 +2,7 @@
  * FilterRenderer - Componente dinâmico para renderizar filtros
  * 
  * Renderiza diferentes tipos de filtros baseado no campo 'component'
- * Similar ao InfoReander.vue, usa FilterRegistry para componentes customizados
+ * Similar ao InfoRenderer.vue, usa FilterRegistry para componentes customizados
  -->
 <template>
   <component 

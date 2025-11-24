@@ -2,7 +2,7 @@
  * TableRenderer - Renderiza tabela dinamicamente
  * 
  * Usa TableRegistry para obter o componente correto
- * Similar ao InfoReander.vue
+ * Similar ao InfoRenderer.vue
  * Repassa eventos da tabela para o componente pai
  -->
 <template>

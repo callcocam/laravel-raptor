@@ -12,8 +12,7 @@ use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request; 
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController

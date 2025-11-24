@@ -37,7 +37,7 @@
             >
               <span class="text-sm font-medium text-muted-foreground">{{ item.label }}</span>
               <div class="text-sm font-semibold">
-                <InfoReander :column="item" />
+                <InfoRenderer :column="item" />
               </div>
             </div>
           </div>
@@ -70,7 +70,7 @@
           >
             <span class="text-sm font-medium text-muted-foreground">{{ item.label }}</span>
             <div class="text-sm font-semibold">
-              <InfoReander :column="item" />
+              <InfoRenderer :column="item" />
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@ import { ref, computed } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import Icon from '~/components/icon.vue'
-import InfoReander from '../InfoReander.vue'
+import InfoRenderer from '../InfoRenderer.vue'
 
 const props = defineProps<{
   column: {

@@ -2,7 +2,7 @@
  * BreadcrumbRenderer - Renderiza breadcrumbs dinamicamente
  * 
  * Usa o BreadcrumbRegistry para obter o componente correto
- * Similar ao InfoReander.vue
+ * Similar ao InfoRenderer.vue
  * Suporta slot para passar header actions
  -->
 <template>
