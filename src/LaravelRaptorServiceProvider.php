@@ -13,12 +13,21 @@ use Callcocam\LaravelRaptor\Commands\SyncCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
+use Callcocam\LaravelRaptor\Models\Auth\User;
+use Callcocam\LaravelRaptor\Models\Permission;
+use Callcocam\LaravelRaptor\Models\Role;
+use Callcocam\LaravelRaptor\Models\Tenant;
+use Callcocam\LaravelRaptor\Policies\PermissionPolicy;
+use Callcocam\LaravelRaptor\Policies\RolePolicy;
+use Callcocam\LaravelRaptor\Policies\TenantPolicy;
+use Callcocam\LaravelRaptor\Policies\UserPolicy;
 use Callcocam\LaravelRaptor\Services\DomainDetectionService;
 use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
 use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
 use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
 use Callcocam\LaravelRaptor\Traits\RequestMacrosTrait;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -105,6 +114,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
         // Registra as rotas dinamicas dos tenants
         $this->registerTenantRoutes();
+
+        // Registra as policies
+        $this->registerPolicies();
     }
 
     /**
@@ -143,5 +155,16 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         //         $injector = new TenantRouteInjector();
         //         $injector->registerRoutes();
         //     });
+    }
+
+    /**
+     * Registra as policies do pacote
+     */
+    protected function registerPolicies(): void
+    {
+        Gate::policy(Permission::class, PermissionPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(Tenant::class, TenantPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
     }
 }
