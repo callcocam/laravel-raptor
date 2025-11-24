@@ -50,4 +50,5 @@ abstract class Column extends AbstractColumn
             'hint' => $this->getHint(),
         ];
     }
+    
 }

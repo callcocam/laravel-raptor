@@ -72,11 +72,13 @@ class UserController extends LandlordController
         $form->columns([
             TextField::make('name', 'Nome')
                 ->required()
+                ->columnSpan('7')
                 ->placeholder('Nome completo do usuário')
                 ->helpText('Nome completo do usuário'),
 
             EmailField::make('email', 'E-mail')
                 ->required()
+                ->columnSpan('5')
                 ->placeholder('email@exemplo.com')
                 ->helpText('E-mail único para login'),
 
@@ -84,12 +86,14 @@ class UserController extends LandlordController
                 ->required()
                 ->minLength(8)
                 ->showToggle()
+                ->columnSpan('6')
                 ->helpText('Senha com no mínimo 8 caracteres'),
 
             PasswordField::make('password_confirmation', 'Confirmar Senha')
                 ->required()
                 ->minLength(8)
                 ->showToggle()
+                ->columnSpan('6')
                 ->helpText('Digite a senha novamente'),
 
             CheckboxField::make('email_verified_at', 'E-mail Verificado')
@@ -101,6 +105,7 @@ class UserController extends LandlordController
                 ->helpText('Atribua papéis ao usuário'),
             RepeaterField::make('addresses', 'Endereços')
                 ->orderable()
+                ->relationship('addresses')
                 ->helpText('Adicione múltiplos endereços para o usuário')
                 ->fields([
                     TextField::make('street', 'Rua')
@@ -112,7 +117,7 @@ class UserController extends LandlordController
                     TextField::make('state', 'Estado')
                         ->required()
                         ->columnSpan('2'),
-                    TextField::make('zip', 'CEP')
+                    TextField::make('zip_code', 'CEP')
                         ->required()
                         ->columnSpan('2'),
                 ])
@@ -173,11 +178,11 @@ class UserController extends LandlordController
             TextInfolist::make('name', 'Nome'),
             TextInfolist::make('email', 'E-mail'),
             TextInfolist::make('email_verified_at', 'E-mail Verificado')
-                ->value(fn($value) => $value ? 'Sim - ' . \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
+                ->castFormat(fn($value) => $value ? 'Sim - ' . \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
             TextInfolist::make('created_at', 'Criado em')
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->castFormat(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', 'Atualizado em')
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->castFormat(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

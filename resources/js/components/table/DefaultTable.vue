@@ -3,10 +3,10 @@
     <!-- Filtros e Header Actions -->
     <div class="flex flex-col space-y-4">
       <!-- Header Actions -->
-      <HeaderActions
+      <!-- <HeaderActions
         v-if="table.headerActions.value.length"
         :actions="table.headerActions.value"
-      />
+      /> -->
       <TableFilters
         v-if="table.filters.value.length"
         :filters="table.filters.value"

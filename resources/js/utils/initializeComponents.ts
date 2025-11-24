@@ -1,11 +1,12 @@
 /**
  * initializeComponents - Registra componentes padrão do Raptor
  *
- * Registra componentes de InfoList e Table no ComponentRegistry
+ * Registra componentes de InfoList, Table e Breadcrumb no ComponentRegistry
  * Deve ser chamado durante a inicialização da aplicação
  */
 
 import ComponentRegistry from './ComponentRegistry'
+import BreadcrumbRegistry from './BreadcrumbRegistry'
 
 // Componentes de InfoList
 import InfolistBoolean from '../components/infolist/columns/InfolistBoolean.vue'
@@ -23,6 +24,10 @@ import TableEmail from '../components/table/columns/TableEmail.vue'
 import TablePhone from '../components/table/columns/TablePhone.vue'
 import TableStatus from '../components/table/columns/TableStatus.vue'
 import TableText from '../components/table/columns/TableText.vue'
+
+// Componentes de Breadcrumb
+import DefaultBreadcrumb from '../components/breadcrumbs/DefaultBreadcrumb.vue'
+import PageHeaderBreadcrumb from '../components/breadcrumbs/PageHeaderBreadcrumb.vue'
 
 /**
  * Inicializa todos os componentes padrão
@@ -54,10 +59,18 @@ export function initializeComponents(): void {
     'table-column-text': TableText,
   })
 
+  // Registra componentes de Breadcrumb
+  BreadcrumbRegistry.registerBulk({
+    'breadcrumb-default': DefaultBreadcrumb,
+    'breadcrumb-page-header': PageHeaderBreadcrumb,
+  })
+
   ComponentRegistry.markAsInitialized()
+  BreadcrumbRegistry.markAsInitialized()
 
   if (import.meta.env.DEV) {
     console.log('ComponentRegistry initialized with components:', ComponentRegistry.getStats())
+    console.log('BreadcrumbRegistry initialized with components:', BreadcrumbRegistry.getStats())
   }
 }
 

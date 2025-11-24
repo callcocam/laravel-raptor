@@ -8,17 +8,23 @@
 
 namespace Callcocam\LaravelRaptor\Support\Info;
 
+use Callcocam\LaravelRaptor\Support\Cast\CastRegistry;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithActions;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
 use Illuminate\Database\Eloquent\Model;
 
 class InfoList
-{ 
-   use WithColumns;
-   use WithActions;
-   use FactoryPattern;
-    
+{
+    use WithColumns;
+    use WithActions;
+    use FactoryPattern;
+
+    public function __construct()
+    {
+        CastRegistry::initialize(); // Carrega formatadores padrão
+    }
+
 
     public function render(Model $data): array
     {
@@ -26,11 +32,15 @@ class InfoList
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
             $value = data_get($data, $columnName);
+
+            // Aplica cast automático se não tiver castCallback customizado
+            $value = $this->applyCastIfAvailable($column, $value, $data);
+
             $rendered = $column->render($value, $data);
 
             // Merge com informações da coluna para o Vue
             $columnData = is_array($rendered) ? $rendered : ['value' => $rendered];
-            
+
             $renderedData[$columnName] = array_merge(
                 $column->toArray(),
                 $columnData,
@@ -50,6 +60,10 @@ class InfoList
                     if ($childValue === null || $childValue === '') {
                         continue;
                     }
+
+                    // Aplica cast automático para sub-colunas
+
+                    $childValue = $this->applyCastIfAvailable($childColumn, $childValue, $data);
 
                     $childRendered = $childColumn->render($childValue, $data);
                     $childData = is_array($childRendered) ? $childRendered : ['value' => $childRendered];
@@ -71,5 +85,44 @@ class InfoList
         return array_merge($renderedData, [
             'viewActions' => $this->getArrayActions(),
         ]);
+    }
+
+    /**
+     * Aplica cast automático baseado no tipo da coluna
+     */
+    protected function applyCastIfAvailable($column, $value, $data)
+    {
+        // Se tem castCallback customizado, usa ele
+        if ($column->hasCastCallback()) {
+            return  $column->getCastCallback($value, $data);
+        }
+
+        // Detecta o tipo de cast baseado no tipo da coluna
+        $type = $column->getType();
+
+        // Mapeamento de tipos de coluna para casts
+        $castMap = [
+            'date' => 'date',
+            'datetime' => 'datetime',
+            'time' => 'time',
+            'boolean' => 'boolean',
+            'status' => 'status',
+            'email' => 'email',
+            'phone' => 'phone',
+            'currency' => 'currency',
+            'number' => 'number',
+        ];
+
+        // Se existe um cast para o tipo, aplica
+        if (isset($castMap[$type])) {
+            $castType = $castMap[$type];
+            $formatter = CastRegistry::get($castType);
+
+            if ($formatter && is_callable($formatter)) {
+                return $formatter($value, $data);
+            }
+        }
+
+        return $value;
     }
 }

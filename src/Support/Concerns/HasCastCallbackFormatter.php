@@ -28,4 +28,20 @@ trait HasCastCallbackFormatter
 
         return $this;
     }
+
+    /**
+     * Obtém o callback de cast
+     */
+    public function getCastCallback($value = null, $data = null)
+    {
+        return $this->evaluate($this->castCallback, ['value' => $value, 'row' => $data]);
+    }
+
+    /**
+     * Verifica se há um callback de cast definido
+     */
+    public function hasCastCallback(): bool
+    {
+        return $this->castCallback !== null;
+    }
 }

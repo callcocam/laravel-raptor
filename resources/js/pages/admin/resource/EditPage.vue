@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useForm } from "@inertiajs/vue3";
-import ResourceLayout from "./../../../layouts/ResourceLayout.vue";
-import FormRenderer from "./../../../components/form/FormRenderer.vue";
-import FormActions from "./../../../components/form/FormActions.vue";
-import PageHeaderActions from "./../../../components/PageHeaderActions.vue";
+import ResourceLayout from "~/layouts/ResourceLayout.vue";
+import FormRenderer from "~/components/form/FormRenderer.vue";
+import FormActions from "~/components/form/FormActions.vue";
+import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
+import HeaderActions from "~/components/table/HeaderActions.vue";
 import type { BackendBreadcrumb } from "@/composables/useBreadcrumbs";
 import {
   Card,
@@ -61,18 +62,30 @@ const formData = useForm(initialData);
 
 <template>
   <ResourceLayout v-bind="layoutProps" title="Editar">
+    <template #header>
+      <!-- Breadcrumbs com Header Actions -->
+      <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">
+        <div class="w-full flex items-center pb-4">
+          <BreadcrumbRenderer
+            :items="breadcrumbs"
+            :config="{
+              component: 'breadcrumb-page-header',
+              resourceLabel: `Editar ${resourceLabel}`,
+              message: message,
+            }"
+          >
+            <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
+            <HeaderActions
+              v-if="pageHeaderActions && pageHeaderActions.length"
+              :actions="pageHeaderActions"
+            />
+          </BreadcrumbRenderer>
+        </div>
+      </div>
+    </template>
     <template #content>
-      <div class="space-y-6">
+      <div class="space-y-4">
         <Card class="rounded">
-          <CardHeader>
-            <div class="flex items-center justify-between">
-              <div>
-                <CardTitle>Editar {{ resourceLabel }}</CardTitle>
-                <CardDescription v-if="message">{{ message }}</CardDescription>
-              </div>
-              <PageHeaderActions :actions="pageHeaderActions" :model-id="model?.id" />
-            </div>
-          </CardHeader>
           <CardContent>
             <FormRenderer
               v-if="form?.columns"

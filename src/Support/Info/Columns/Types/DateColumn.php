@@ -34,6 +34,11 @@ class DateColumn extends Column
         if ($value === null) {
             return $this->getDefault() ?? '-';
         }
+        
+        // Se tem castCallback customizado, usa ele
+        if ($this->castCallback && is_callable($this->castCallback)) {
+            $value = call_user_func($this->castCallback, $value, $row);
+        }
 
         if ($value instanceof \DateTimeInterface) {
             return $value->format($this->format);

@@ -136,22 +136,164 @@ trait InteractWithForm
                $relationship = $column->getRelationship();
                if (method_exists($model, $relationship)) {
                    $relationInstance = $model->$relationship();
-                   // Verifica o tipo de relacionamento e atualiza conforme necessário
+                   $columnName = $column->getName();
+                   
+                   // BelongsToMany - Muitos para muitos
                    if ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany) {
-                       // Muitos para muitos
-                       if (isset($data[$column->getName()])) {
-                           $model->$relationship()->sync($data[$column->getName()]);
+                       if (isset($data[$columnName])) {
+                           $model->$relationship()->sync($data[$columnName]);
                        }
-                   } elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
-                       // Um para muitos
-                       // Implementar lógica de atualização conforme necessário
-                   }elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasOne) {
-                       // Um para um
-                       // Implementar lógica de atualização conforme necessário
                    } 
-                   // Adicionar outros tipos de relacionamento conforme necessário
+                   
+                   // HasMany - Um para muitos
+                   elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
+                       if (isset($data[$columnName]) && is_array($data[$columnName])) {
+                           $this->syncHasManyRelation($model, $relationship, $data[$columnName]);
+                       }
+                   }
+                   
+                   // HasOne - Um para um
+                   elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasOne) {
+                       if (isset($data[$columnName])) {
+                           $this->updateHasOneRelation($model, $relationship, $data[$columnName]);
+                       }
+                   }
+                   
+                   // MorphMany - Polimórfico um para muitos
+                   elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\MorphMany) {
+                       if (isset($data[$columnName]) && is_array($data[$columnName])) {
+                           $this->syncMorphManyRelation($model, $relationship, $data[$columnName]);
+                       }
+                   }
+                   
+                   // MorphOne - Polimórfico um para um
+                   elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\MorphOne) {
+                       if (isset($data[$columnName])) {
+                           $this->updateMorphOneRelation($model, $relationship, $data[$columnName]);
+                       }
+                   }
+                   
+                   // MorphToMany - Polimórfico muitos para muitos
+                   elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\MorphToMany) {
+                       if (isset($data[$columnName])) {
+                           $model->$relationship()->sync($data[$columnName]);
+                       }
+                   }
                }
            }
+        }
+    }
+
+    /**
+     * Sincroniza relacionamento HasMany
+     * Remove itens não presentes, atualiza existentes e cria novos
+     */
+    protected function syncHasManyRelation($model, string $relationship, array $items): void
+    {
+        $existingIds = [];
+        
+        foreach ($items as $itemData) {
+            // Remove timestamps se vieram do frontend (Laravel gerencia automaticamente)
+            unset($itemData['created_at'], $itemData['updated_at']);
+            
+            if (isset($itemData['id']) && $itemData['id']) {
+                // Atualiza existente
+                $model->$relationship()->where('id', $itemData['id'])->update($itemData);
+                $existingIds[] = $itemData['id'];
+            } else {
+                // Remove id se vier vazio
+                unset($itemData['id']);
+                // Cria novo
+                $created = $model->$relationship()->create($itemData);
+                $existingIds[] = $created->id;
+            }
+        }
+        
+        // Remove itens que não estão mais presentes
+        if (!empty($existingIds)) {
+            $model->$relationship()->whereNotIn('id', $existingIds)->delete();
+        } else {
+            $model->$relationship()->delete();
+        }
+    }
+
+    /**
+     * Atualiza relacionamento HasOne
+     */
+    protected function updateHasOneRelation($model, string $relationship, $itemData): void
+    {
+        if (is_array($itemData)) {
+            // Remove timestamps se vieram do frontend
+            unset($itemData['created_at'], $itemData['updated_at']);
+            
+            $related = $model->$relationship()->first();
+            
+            if ($related) {
+                // Atualiza existente
+                $related->update($itemData);
+            } else {
+                // Remove id se vier vazio
+                unset($itemData['id']);
+                // Cria novo
+                $model->$relationship()->create($itemData);
+            }
+        }
+    }
+
+    /**
+     * Sincroniza relacionamento MorphMany (polimórfico um para muitos)
+     * Ex: User morphMany Address
+     */
+    protected function syncMorphManyRelation($model, string $relationship, array $items): void
+    {
+        $existingIds = [];
+        
+        foreach ($items as $itemData) {
+            // Remove timestamps se vieram do frontend (Laravel gerencia automaticamente)
+            unset($itemData['created_at'], $itemData['updated_at']);
+            
+            if (isset($itemData['id']) && $itemData['id']) {
+                // Atualiza existente
+                $model->$relationship()->where('id', $itemData['id'])->update($itemData);
+                $existingIds[] = $itemData['id'];
+            } else {
+                // Remove id se vier vazio
+                unset($itemData['id']);
+                // Cria novo (morphMany adiciona automaticamente morphType e morphId)
+                $created = $model->$relationship()->create($itemData);
+                $existingIds[] = $created->id;
+            }
+        }
+        
+        // Remove itens que não estão mais presentes
+        if (!empty($existingIds)) {
+            $model->$relationship()->whereNotIn('id', $existingIds)->delete();
+        } else {
+            // Se não há IDs, remove todos
+            $model->$relationship()->delete();
+        }
+    }
+
+    /**
+     * Atualiza relacionamento MorphOne (polimórfico um para um)
+     */
+    protected function updateMorphOneRelation($model, string $relationship, $itemData): void
+    {
+        if (is_array($itemData)) {
+            // Remove timestamps se vieram do frontend
+            unset($itemData['created_at'], $itemData['updated_at']);
+            
+            $related = $model->$relationship()->first();
+            
+            if ($related) {
+                // Atualiza existente
+                $related->update($itemData);
+            } else {
+                // Remove id se vier vazio
+                unset($itemData['id']);
+                // Cria novo (morphOne adiciona automaticamente morphType e morphId)
+                $model->$relationship()->create($itemData);
+            }
         }
     }
 }

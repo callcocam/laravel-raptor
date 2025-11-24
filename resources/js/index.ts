@@ -83,6 +83,7 @@ ComponentRegistry.markAsInitialized()
  */
 BreadcrumbRegistry.registerBulk({
   'breadcrumb-default': defineAsyncComponent(() => import('./components/breadcrumbs/DefaultBreadcrumb.vue')),
+    'breadcrumb-page-header': defineAsyncComponent(() => import('./components/breadcrumbs/PageHeaderBreadcrumb.vue')),
 })
 
 BreadcrumbRegistry.markAsInitialized()

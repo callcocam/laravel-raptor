@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ResourceLayout from './../../../layouts/ResourceLayout.vue'
-import InfoRenderer from './../../../components/infolist/InfoReander.vue'
-import PageHeaderActions from './../../../components/PageHeaderActions.vue'
+import ResourceLayout from '~/layouts/ResourceLayout.vue'
+import InfoRenderer from '~/components/infolist/InfoReander.vue'
+import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue' 
 import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -30,18 +30,27 @@ const columns = Object.entries(props.infolist || {}).filter(
 
 <template>
   <ResourceLayout v-bind="layoutProps" title="Visualizar">
+    <template #header>
+      <!-- Breadcrumbs com Header Actions -->
+      <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">
+        <div class="w-full flex items-center pb-4">
+          <BreadcrumbRenderer
+            :items="breadcrumbs"
+            :config="{
+              component: 'breadcrumb-page-header',
+              resourceLabel: resourceLabel,
+              message: message,
+            }"
+          >
+            <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
+            <PageHeaderActions :actions="pageHeaderActions" :model-id="model?.id" />
+          </BreadcrumbRenderer>
+        </div>
+      </div>
+    </template>
     <template #content>
       <div class="space-y-6">
         <Card>
-          <CardHeader>
-            <div class="flex items-center justify-between">
-              <div>
-                <CardTitle>{{ resourceLabel }}</CardTitle>
-                <CardDescription v-if="message">{{ message }}</CardDescription>
-              </div>
-              <PageHeaderActions :actions="pageHeaderActions" :model-id="model?.id" />
-            </div>
-          </CardHeader>
           <CardContent>
             <div class="grid gap-6">
               <div

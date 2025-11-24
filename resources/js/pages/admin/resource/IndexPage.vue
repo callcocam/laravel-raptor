@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import ResourceLayout from "./../../../layouts/ResourceLayout.vue";
+import ResourceLayout from "~/layouts/ResourceLayout.vue";
 import DefaultTable from "~/components/table/DefaultTable.vue";
 import type { BackendBreadcrumb } from "@/composables/useBreadcrumbs";
 import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
+import HeaderActions from "~/components/table/HeaderActions.vue";
 
 interface Props {
   message?: string;
@@ -19,31 +20,35 @@ const layoutProps = {
   resourceLabel: props.resourceLabel,
   breadcrumbs: props.breadcrumbs,
 };
+
+console.log("IndexPage props:", props);
 </script>
 
 <template>
   <ResourceLayout v-bind="layoutProps" title="Dashboard">
     <template #header>
       <!-- Breadcrumbs com Header Actions -->
-      <div
-        v-if="breadcrumbs && breadcrumbs.length > 0"
-        class="border-b bg-background"
-      >
+      <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">
         <div class="w-full flex items-center pb-4">
-          <BreadcrumbRenderer :items="breadcrumbs" :config="{}">
+          <BreadcrumbRenderer
+            :items="breadcrumbs"
+            :config="{
+              component: 'breadcrumb-page-header',
+              resourceLabel: resourceLabel,
+              message: message,
+            }"
+          >
             <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
-
+            <HeaderActions
+              v-if="table.headerActions && table.headerActions.length"
+              :actions="table.headerActions"
+            />
           </BreadcrumbRenderer>
         </div>
       </div>
     </template>
     <template #content>
-      <div class="space-y-4">
-        <div v-if="resourceLabel || message">
-          <h1 v-if="resourceLabel" class="text-2xl font-bold">{{ resourceLabel }}</h1>
-          <p v-if="message" class="text-muted-foreground mt-1">{{ message }}</p>
-        </div>
-
+      <div class="space-y-4"> 
         <DefaultTable />
       </div>
     </template>
