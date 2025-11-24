@@ -164,6 +164,9 @@ abstract class AbstractController extends ResourceController
 
             $model->update($form->getFormData($validated, $model));
 
+            //Vamo fazer atualizações de relacionados se necessário
+            $form->updateRelatedData($validated, $model, $request);
+
             $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();
 
 

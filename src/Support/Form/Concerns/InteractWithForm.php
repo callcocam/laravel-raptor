@@ -125,4 +125,33 @@ trait InteractWithForm
     {
         return array_filter($this->getColumns(), fn($column) => $column->isRequired());
     }
+
+    /**
+     * Atualiza dados relacionados após salvar o modelo principal
+     */
+    public function updateRelatedData(array $data, $model, $request): void
+    { 
+        foreach ($this->getColumns() as $column) {
+           if ($column->hasRelationship()) {
+               $relationship = $column->getRelationship();
+               if (method_exists($model, $relationship)) {
+                   $relationInstance = $model->$relationship();
+                   // Verifica o tipo de relacionamento e atualiza conforme necessário
+                   if ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany) {
+                       // Muitos para muitos
+                       if (isset($data[$column->getName()])) {
+                           $model->$relationship()->sync($data[$column->getName()]);
+                       }
+                   } elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
+                       // Um para muitos
+                       // Implementar lógica de atualização conforme necessário
+                   }elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasOne) {
+                       // Um para um
+                       // Implementar lógica de atualização conforme necessário
+                   } 
+                   // Adicionar outros tipos de relacionamento conforme necessário
+               }
+           }
+        }
+    }
 }
