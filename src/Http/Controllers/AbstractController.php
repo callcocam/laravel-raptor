@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
@@ -75,6 +76,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model  = app($this->model());
+            dd($request->all());
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
             $validationRules = array_merge(
@@ -147,20 +149,18 @@ abstract class AbstractController extends ResourceController
 
     public function update(Request $request, string $record): BaseRedirectResponse
     {
+        
         try {
             $model = $this->model()::findOrFail($record);
 
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
             $validationRules = array_merge(
-                $form->getValidationRules($model),
+                $form->getValidationRules($model, $request),
                 $this->rules($model)
             );
-            $validationMessages = $form->getValidationMessages();
-
-            // Valida os dados
-            $validated = $request->validate($validationRules, $validationMessages);
-            dd($request->all(), $validationRules, $validated);
+            $validationMessages = $form->getValidationMessages();   
+            $validated = $request->validate($validationRules, $validationMessages); 
 
             $model->update($form->getFormData($validated, $model));
 

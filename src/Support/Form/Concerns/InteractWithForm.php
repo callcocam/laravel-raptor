@@ -32,7 +32,7 @@ trait InteractWithForm
     /**
      * Extrai as regras de validação de todos os campos
      */
-    public function getValidationRules($record = null): array
+    public function getValidationRules($record = null, $request = null): array
     {
         $rules = [];
 
@@ -40,9 +40,17 @@ trait InteractWithForm
             $columnRules = $column->getRules($record);
 
             if (!empty($columnRules)) {
-                $rules[$column->getName()] =  $columnRules;
-            }else{
-                $rules[$column->getName()] =  ['nullable'];
+                if (!in_array($column->getType(), ['password'])) {
+                    $rules[$column->getName()] =  $columnRules;
+                } else {
+                    if ($request && $request->filled($column->getName())) {
+                        // Se for um novo registro ou o campo de senha está vazio, aplica as regras
+                        $rules[$column->getName()] =  $columnRules;
+                    }
+                }
+            } else {
+                if (!in_array($column->getType(), ['password']))
+                    $rules[$column->getName()] =  ['nullable'];
             }
         }
 

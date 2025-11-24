@@ -27,11 +27,15 @@ class PasswordField extends Column
         $this->component('form-field-password');
         $this->setUp();
     }
- 
+
 
     public function minLength(int $length): self
     {
         $this->minLength = $length;
+
+        if ($length && !$this->hasRule('minLength')) {
+            $this->addRule("min:$length");
+        }
 
         return $this;
     }
