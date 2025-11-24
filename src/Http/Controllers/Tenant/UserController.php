@@ -71,23 +71,27 @@ class UserController extends TenantController
             TextField::make('name', 'Nome')
                 ->required()
                 ->placeholder('Nome completo do usuário')
+                ->columnSpan('7')
                 ->helpText('Nome completo do usuário'),
 
             EmailField::make('email', 'E-mail')
                 ->required()
                 ->placeholder('email@exemplo.com')
+                ->columnSpan('5')
                 ->helpText('E-mail único para login'),
 
             PasswordField::make('password', 'Senha')
                 ->required()
                 ->minLength(8)
                 ->showToggle()
+                ->columnSpan('6')
                 ->helpText('Senha com no mínimo 8 caracteres'),
 
             PasswordField::make('password_confirmation', 'Confirmar Senha')
                 ->required()
                 ->minLength(8)
                 ->showToggle()
+                ->columnSpan('6')
                 ->helpText('Digite a senha novamente'),
 
             CheckboxField::make('email_verified_at', 'E-mail Verificado')
