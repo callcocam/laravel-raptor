@@ -192,7 +192,8 @@ watch(selectedValues, (newSelectedArray) => {
     );
 
   if (!isSameContent) {
-    emit("update:modelValue", newSelectedArray.length > 0 ? [...newSelectedArray] : []);
+    const valueToEmit = newSelectedArray.length > 0 ? [...newSelectedArray] : [];
+    emit("update:modelValue", valueToEmit);
   }
 }, { deep: true });
 
@@ -259,8 +260,6 @@ const toggleOption = (value: string | number, checked: boolean) => {
 };
 
 const handleSelectAllChange = (checked: boolean | "indeterminate") => {
-  console.log('handleSelectAllChange - início', { checked, selectedValues: selectedValues.value });
-
   isSelectingAll.value = true;
 
   // Usa requestAnimationFrame para garantir que o navegador renderize o loading
@@ -270,14 +269,12 @@ const handleSelectAllChange = (checked: boolean | "indeterminate") => {
         // Selecionar todos os filtrados
         const allValues = filteredOptions.value.map((option) => String(option.value));
         selectedValues.value = [...new Set([...selectedValues.value.map(String), ...allValues])];
-        console.log('Selecionando todos', { total: selectedValues.value.length });
       } else {
         // Desmarcar todos os filtrados
         const filteredValues = new Set(
           filteredOptions.value.map((option) => String(option.value))
         );
         selectedValues.value = selectedValues.value.filter((v) => !filteredValues.has(String(v)));
-        console.log('Desmarcando todos', { total: selectedValues.value.length });
       }
 
       // Delay para garantir que o usuário veja o feedback

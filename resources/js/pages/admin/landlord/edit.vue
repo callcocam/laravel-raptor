@@ -44,7 +44,19 @@ const layoutProps = {
 };
 
 // Inicializa o formulário Inertia com os valores do modelo
-const formData = useForm(props.form?.model || props.model || {});
+const initialData = props.form?.model || props.model || {};
+
+// Garantir que todos os campos das colunas do formulário existam
+// Isso é necessário para o Inertia form rastrear corretamente
+if (props.form?.columns) {
+  props.form.columns.forEach((column: any) => {
+    if (!(column.name in initialData)) {
+      initialData[column.name] = null;
+    }
+  });
+}
+
+const formData = useForm(initialData);
 
 // Verifica se há arquivos no formData (recursivamente)
 const hasFiles = (obj: any = formData.data()): boolean => {
@@ -70,7 +82,6 @@ const hasFiles = (obj: any = formData.data()): boolean => {
 
 const handleSubmit = () => {
   const hasFileUploads = hasFiles();
-
   // Se há arquivos, usa POST com _method=PUT (method spoofing)
   // Porque PUT não suporta multipart/form-data nativamente
   if (hasFileUploads) {

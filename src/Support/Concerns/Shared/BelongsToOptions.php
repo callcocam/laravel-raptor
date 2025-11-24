@@ -39,6 +39,42 @@ trait BelongsToOptions
      */
     public function getOptions(): array
     {
+        if (method_exists($this, 'hasRelationship') && $this->hasRelationship()) {
+            $relationship = $this->getRelationship();
+
+            if ($relationship) {
+                // 1. Validar que o relacionamento existe no model
+                $record = $this->getRecord();
+
+                if (!method_exists($record, $relationship)) {
+                    throw new \InvalidArgumentException("Relationship '{$relationship}' does not exist.");
+                }
+
+                // 2. Verificar se é realmente um relacionamento válido
+                try {
+                    $relationInstance = $record->$relationship();
+
+                    if (!$relationInstance instanceof \Illuminate\Database\Eloquent\Relations\Relation) {
+                        throw new \InvalidArgumentException("'{$relationship}' is not a valid relationship.");
+                    }
+
+                    // 3. Pegar o model relacionado de forma segura
+                    $relatedModel = $relationInstance->getRelated();
+
+                    // 4. Validar nomes das colunas para evitar injeção
+                    $labelColumn = $this->getOptionLabel() ?? 'name';
+                    $keyColumn = $this->getOptionKey() ?? 'id'; 
+
+                    $this->options = $relatedModel
+                        ->select([$keyColumn, $labelColumn])
+                        ->pluck($labelColumn, $keyColumn)
+                        ->toArray();
+                } catch (\Throwable $e) {
+                    \Log::error('Error loading relationship options: ' . $e->getMessage());
+                    $this->options = [];
+                }
+            }
+        }
         $options = $this->evaluate($this->options);
 
         return $this->normalizeOptions($options);

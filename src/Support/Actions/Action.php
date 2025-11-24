@@ -113,6 +113,13 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
     public function toArray($model = null, $request = null): array
     {
+        if ($model) :
+            $this->record($model);
+        endif;
+        if ($request) :
+            $this->request($request);
+        endif;
+
         return  [
             'actionType' => $this->getActionType(),
             'component' => $this->getComponent(),
@@ -133,8 +140,13 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
      * Renderiza a action com suporte a Inertia.js
      */
     public function render($model, $request = null): array
-    {
-        $this->request($request);
+    { 
+        if ($model) :
+            $this->record($model);
+        endif;
+        if ($request) :
+            $this->request($request);
+        endif;
 
         $result = [
             'type' => 'action',
@@ -152,10 +164,10 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
         if (! empty($this->confirm)) {
             // Se confirm for Closure, não avaliar - apenas indicar que existe
-           $result['confirm'] = $this->getConfirm([
+            $result['confirm'] = $this->getConfirm([
                 'model' => $model,
                 'request' => $this->getRequest(),
-           ]);
+            ]);
         }
 
         if (! empty($this->getColumns())) {

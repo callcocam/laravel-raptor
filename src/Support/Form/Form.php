@@ -11,7 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Form;
 use Callcocam\LaravelRaptor\Support\Concerns;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model; 
 
 class Form
 {
@@ -23,6 +23,11 @@ class Form
     use HasGridLayout;
 
     protected ?Model $model = null;
+
+    public function __construct(?Model $model)
+    {
+        $this->model = $model;
+    }
 
     /**
      * Define o modelo para popular os valores do formulário

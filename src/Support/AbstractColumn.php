@@ -24,6 +24,8 @@ abstract class AbstractColumn
     use Shared\BelongsToType;
     use Shared\BelongsToValidation;
     use Shared\BelongsToVisible;
+    use Shared\BelongsToRelationship;
+    use Shared\BelongsToRecord;
 
 
 
@@ -53,11 +55,5 @@ abstract class AbstractColumn
     public function getComponent(): ?string
     {
         return $this->component;
-    }
-
-    public function getRecord()
-    {
-        
-        return null;
-    }
+    } 
 }

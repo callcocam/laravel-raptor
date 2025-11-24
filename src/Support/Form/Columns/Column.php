@@ -55,6 +55,9 @@ abstract class Column extends AbstractColumn
 
     public function toArray($model = null): array
     {
+        if ($model) {
+            $this->record($model);
+        }
         return array_merge([
             'name' => $this->getName(),
             'type' => $this->getType(),

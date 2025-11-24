@@ -15,7 +15,8 @@
       <FieldRenderer
         :column="column"
         :error="formErrors[column.name]"
-        v-model="formData[column.name]"
+        :modelValue="formData[column.name]"
+        @update:modelValue="(value) => handleFieldUpdate(column.name, value)"
       />
     </div>
 
@@ -72,6 +73,15 @@ const emit = defineEmits<{
 
 // Referência ao form data (pode ser Inertia form ou objeto reativo)
 const formData = computed(() => props.modelValue);
+
+// Handler para atualização de campos
+const handleFieldUpdate = (fieldName: string, value: any) => {
+  // Se for um Inertia form, usar a sintaxe correta
+  if (props.modelValue && typeof props.modelValue === 'object') {
+    // Atualizar diretamente no objeto
+    props.modelValue[fieldName] = value;
+  }
+};
 
 // Erros de validação
 const formErrors = computed(() => {

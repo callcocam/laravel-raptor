@@ -51,6 +51,9 @@ abstract class AbstractController extends ResourceController
 
     public function create(Request $request)
     {
+
+        $model  = app($this->model());
+
         return Inertia::render(sprintf('admin/%s/create', $this->resourcePath()), [
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
@@ -58,9 +61,9 @@ abstract class AbstractController extends ResourceController
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
-            'form' => $this->form(Form::make($this->model(), 'model')->defaultActions($this->getFormActions()))->render(),
-            'pageHeaderActions' => collect($this->getPageHeaderActions(null, 'create'))
-                ->map(fn($action) => $action->render(null, $request))
+            'form' => $this->form(Form::make($model, 'model')->defaultActions($this->getFormActions()))->render(),
+            'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'create'))
+                ->map(fn($action) => $action->render($model, $request))
                 ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
@@ -71,8 +74,9 @@ abstract class AbstractController extends ResourceController
     public function store(Request $request): BaseRedirectResponse
     {
         try {
+            $model  = app($this->model());
             // Extrai as regras de validação dos campos do formulário
-            $form = $this->form(Form::make($this->model(), 'model'));
+            $form = $this->form(Form::make($model, 'model'));
             $validationRules = array_merge(
                 $form->getValidationRules(),
                 $this->rules()
@@ -82,12 +86,12 @@ abstract class AbstractController extends ResourceController
             // Valida os dados
             $validated = $request->validate($validationRules, $validationMessages);
 
-            $model = $this->model()::create($form->getFormData($validated, null));
+            $record = $model->create($form->getFormData($validated, null));
 
             $route = str($request->route()->getAction('as'))->replace('.store', '.edit')->toString();
 
             return redirect()->route($route, [
-                'record' => $model->getKey(),
+                'record' => $record->getKey(),
             ])
                 ->with('success', 'Item criado com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -131,7 +135,7 @@ abstract class AbstractController extends ResourceController
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'model' => $model,
-            'form' => $this->form(Form::make($this->model(), 'model')->model($model)->defaultActions($this->getFormActions()))->render($model),
+            'form' => $this->form(Form::make($model, 'model')->model($model)->defaultActions($this->getFormActions()))->render($model),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'edit'))
                 ->map(fn($action) => $action->render($model, $request))
                 ->filter(fn($action) => $action['visible'] ?? true)
@@ -155,17 +159,19 @@ abstract class AbstractController extends ResourceController
             $validationMessages = $form->getValidationMessages();
 
             // Valida os dados
-            $validated = $request->validate($validationRules, $validationMessages); 
+            $validated = $request->validate($validationRules, $validationMessages);
             dd($request->all(), $validationRules, $validated);
-       
+
             $model->update($form->getFormData($validated, $model));
 
             $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();
-            
 
-            return redirect()->route($route, [
-                'record' => $model->getKey(),
-            ],
+
+            return redirect()->route(
+                $route,
+                [
+                    'record' => $model->getKey(),
+                ],
             )->with('success', 'Item atualizado com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar

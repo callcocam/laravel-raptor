@@ -116,25 +116,29 @@ class CheckboxField extends Column
 
     public function toArray($model = null): array
     {
-        $hasOptions = ! empty($this->getOptions());
-
+      
+        $attributes = parent::toArray($model);
+        $options = [];
         // Usa componente diferente se for checkbox group
-        if ($hasOptions) {
+        if ($this->isMultiple()) {
             $this->component('form-field-checkbox-group');
+
+            $options = $this->getOptions();
         }
 
-        return array_merge(parent::toArray($model), [
+        return array_merge($attributes, [
             'required' => $this->isRequired,
             'description' => $this->description,
             'default' => $this->defaultValue,
-            'options' => $this->getOptions(),
+            'options' => $options,
             'multiple' => $this->isMultiple(),
             'layout' => $this->layout,
             'inline' => $this->inline,
             'columns' => $this->columns,
-            'isGroup' => $hasOptions,
+            'isGroup' => $this->isMultiple(),
             'searchable' => $this->searchable,
             'showSelectAll' => $this->showSelectAll,
+            'component' => $this->getComponent(),
         ]);
     }
 }
