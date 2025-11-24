@@ -21,6 +21,7 @@
       @update:modelValue="updateValue"
       :aria-invalid="hasError"
       :class="hasError ? 'border-destructive' : ''"
+      autocomplete="email"
     />
 
     <FieldDescription v-if="column.helpText || column.hint || column.tooltip">

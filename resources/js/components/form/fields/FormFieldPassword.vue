@@ -23,6 +23,7 @@
         @update:modelValue="updateValue"
         :aria-invalid="hasError"
         :class="[hasError ? 'border-destructive' : '', column.showToggle ? 'pr-10' : '']"
+        autocomplete="new-password"
       />
 
       <button
