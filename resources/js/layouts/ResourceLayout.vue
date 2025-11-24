@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Toaster } from '@/components/ui/sonner'
-import { useBreadcrumbs, type BackendBreadcrumb } from '@/composables/useBreadcrumbs';
+import { useBreadcrumbs, type BackendBreadcrumb } from '~/composables/useBreadcrumbs';
 import { useLayout } from '@/composables/useLayout';
 import { dashboard } from '@/routes';
 import { Head, usePage } from '@inertiajs/vue3';

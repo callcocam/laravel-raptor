@@ -61,7 +61,7 @@ return [
         'models' => [
             'tenant' => \Callcocam\LaravelRaptor\Models\Tenant::class,
             'user' => \App\Models\User::class,
-        ],
+        ]
     ],
 
     /*
@@ -77,13 +77,17 @@ return [
         'middleware' => ['web', 'tenant'],
 
         // Habilita prefixo nas rotas administrativas (true/false)
+        // Se false, as rotas não terão prefixo (ex: /users, /roles)
+        // Se true, as rotas terão o prefixo definido abaixo
         'enable_prefix' => env('RAPTOR_TENANT_ENABLE_PREFIX', false),
 
         // Prefixo das rotas administrativas do tenant (ex: 'admin' resulta em /admin/users)
+        // Será aplicado apenas se enable_prefix for true
+        // Se null ou vazio, mesmo com enable_prefix true, não haverá prefixo
         'prefix' => env('RAPTOR_TENANT_PREFIX', null),
 
         // Coluna na tabela de tenants que armazena o identificador do subdomínio
-        'subdomain_column' => 'subdomain',
+        'subdomain_column' => 'domain',
 
         // Coluna na tabela de tenants que armazena domínios customizados
         'custom_domain_column' => 'custom_domain',
@@ -222,6 +226,34 @@ return [
 
         // Previne acesso cross-tenant (tenant A acessar dados do tenant B)
         'prevent_cross_tenant_access' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Route Injector Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configurações para o TenantRouteInjector
+    | Define quais diretórios de controllers serão escaneados para
+    | registrar rotas automaticamente
+    |
+    */
+    'route_injector' => [
+        // Diretórios de controllers para scan automático
+        // Formato: 'Namespace' => 'path/to/controllers'
+        'directories' => [
+            // Controllers da aplicação
+            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
+            'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
+            
+            // Controllers do package Raptor
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Admin' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Admin'),
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Tenant'),
+            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
+            
+            // Adicione mais diretórios conforme necessário:
+            // 'Seu\\Namespace\\Controllers' => base_path('caminho/para/controllers'),
+        ],
     ],
 
 ];
