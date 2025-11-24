@@ -55,6 +55,7 @@ ComponentRegistry.registerBulk({
     'form-field-file-upload-async': defineAsyncComponent(() => import('~/components/form/fields/FormFieldFileUploadAsync.vue')),
     'form-field-combobox': defineAsyncComponent(() => import('./components/form/fields/FormFieldCombobox.vue')),
     'form-field-cascading': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCascading.vue')),
+    'form-field-repeater': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRepeater.vue')),
 })
 
 // Legacy components (backwards compatibility)

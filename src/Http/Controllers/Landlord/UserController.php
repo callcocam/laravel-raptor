@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\EmailField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\PasswordField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
@@ -98,6 +99,23 @@ class UserController extends LandlordController
                 ->multiple()
                 ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
                 ->helpText('Atribua papéis ao usuário'),
+            RepeaterField::make('addresses', 'Endereços')
+                ->orderable()
+                ->helpText('Adicione múltiplos endereços para o usuário')
+                ->fields([
+                    TextField::make('street', 'Rua')
+                        ->required()
+                        ->columnSpan('4'),
+                    TextField::make('city', 'Cidade')
+                        ->required()
+                        ->columnSpan('4'),
+                    TextField::make('state', 'Estado')
+                        ->required()
+                        ->columnSpan('2'),
+                    TextField::make('zip', 'CEP')
+                        ->required()
+                        ->columnSpan('2'),
+                ])
         ]);
 
         return $form;
