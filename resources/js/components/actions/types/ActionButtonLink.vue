@@ -6,7 +6,7 @@
  -->
 <template>
   <Link
-    :href="action.url"
+    :href="getUrl()"
     :class="cn(buttonVariants({ variant, size }), 'gap-1 h-7 px-2.5')"
     :preserve-state="action.inertia?.preserveState ?? true"
     :preserve-scroll="action.inertia?.preserveScroll ?? true"
@@ -70,5 +70,9 @@ const iconComponent = computed(() => {
 // Handler de click
 const handleClick = () => {
   emit("click");
+};
+
+const getUrl = () => {
+  return props.action.url || '#'
 };
 </script>
