@@ -136,8 +136,8 @@ trait WithTable
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
             if ($value = data_get($item, $columnName)) {
-                $formattedColumn = $column->render($value, $item);
-                $item[$columnName . '_formatted'] = data_get($formattedColumn, 'text', $value);
+                $formattedColumn = $column->render($value, $item); 
+                $item[$columnName . '_formatted'] = $formattedColumn;
             }
         }
         $item->actions = $this->evaluateActionsAuthorization($item);
