@@ -122,22 +122,22 @@ class {{ class }} extends AbstractController
             \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('{{ routePrefix }}{{ tableName }}.edit'),
 
             // Edição Rápida
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('update')
-                ->label('Edição Rápida')
-                ->slideoverRight()
-                ->columns([
-                    \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('name')
-                        ->label('Nome')
-                        ->required()
-                        ->columnSpanFull(),
-                    \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('slug')
-                        ->label('Slug')
-                        ->required()
-                        ->columnSpanFull(),
-                    \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField::make('description')
-                        ->label('Descrição')
-                        ->columnSpanFull(),
-                ]),
+            // \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('update')
+            //     ->label('Edição Rápida')
+            //     ->slideoverRight()
+            //     ->columns([
+            //         \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('name')
+            //             ->label('Nome')
+            //             ->required()
+            //             ->columnSpanFull(),
+            //         \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('slug')
+            //             ->label('Slug')
+            //             ->required()
+            //             ->columnSpanFull(),
+            //         \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField::make('description')
+            //             ->label('Descrição')
+            //             ->columnSpanFull(),
+            //     ]),
 
             \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('{{ routePrefix }}{{ tableName }}.restore'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('{{ routePrefix }}{{ tableName }}.forceDelete'),
