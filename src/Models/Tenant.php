@@ -10,10 +10,11 @@ namespace Callcocam\LaravelRaptor\Models;
 
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Tenant extends AbstractModel
 {
-
+    use SoftDeletes;
 
     public function __construct(array $attributes = [])
     {
@@ -28,7 +29,7 @@ class Tenant extends AbstractModel
      */
     protected $fillable = [
         'name',
-        'slug',  
+        'slug',
         'database',
         'prefix',
         'email',
@@ -36,7 +37,7 @@ class Tenant extends AbstractModel
         'document',
         'logo',
         'settings',
-        'status', 
+        'status',
         'description',
     ];
 
@@ -50,7 +51,7 @@ class Tenant extends AbstractModel
         'settings' => 'array',
     ];
 
-  
+
 
     /**
      * Relacionamento: Tenant tem muitos usuários
@@ -69,7 +70,7 @@ class Tenant extends AbstractModel
     {
         return $query->where('status', TenantStatus::Published);
     }
- 
+
 
     /**
      * Verifica se o tenant está ativo
@@ -93,11 +94,11 @@ class Tenant extends AbstractModel
     public function getUrl(): string
     {
         if ($this->hasCustomDomain()) {
-            return 'https://'.$this->custom_domain;
+            return 'https://' . $this->custom_domain;
         }
 
         $mainDomain = config('raptor.main_domain', 'localhost');
 
-        return 'https://'.$this->subdomain.'.'.$mainDomain;
+        return 'https://' . $this->subdomain . '.' . $mainDomain;
     }
 }

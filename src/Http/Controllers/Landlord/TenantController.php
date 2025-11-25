@@ -18,7 +18,7 @@ use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolis
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
-use Callcocam\LaravelRaptor\Support\Pages\Index; 
+use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
@@ -63,7 +63,79 @@ class TenantController extends LandlordController
 
     protected function table(TableBuilder $table): TableBuilder
     {
+        $table->columns([
+            TextColumn::make('name')
+                ->label('Nome')
+                ->sortable()
+                ->searchable(),
+
+            TextColumn::make('domain')
+                ->label('Domínio')
+                ->sortable()
+                ->searchable(),
+
+            BooleanColumn::make('status')
+                ->label('Ativo')
+                ->sortable(),
+
+            DateColumn::make('created_at')
+                ->label('Criado em')
+                ->sortable(),
+        ]);
+
+        $table->filters([
+            \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('status')
+                ->label('Status')
+                ->options([
+                    'draft' => 'Rascunho',
+                    'published' => 'Publicado',
+                ]),
+            \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
+        ]);
+
+        $table->actions([
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('tenants.show'),
+            \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('tenants.edit'),
+            \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('tenants.restore'),
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('tenants.forceDelete'),
+            \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('tenants.destroy'),
+        ]);
+
+        $table->bulkActions([
+            //
+        ]);
+
+        $table->headerActions([
+            \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('tenants.create'),
+        ]);
+
         return $table;
+    }
+
+
+    protected function form(Form $form): Form
+    {
+        $form->columns([
+            TextField::make('name')
+                ->label('Nome')
+                ->required()
+                ->columnSpanFull(),
+
+            TextField::make('domain')
+                ->label('Domínio')
+                ->required()
+                ->columnSpanFull(),
+
+            TextareaField::make('description')
+                ->label('Descrição')
+                ->columnSpanFull(),
+
+            CheckboxField::make('status')
+                ->label('Ativo')
+                ->columnSpanFull(),
+        ]);
+
+        return $form;
     }
 
     /**
