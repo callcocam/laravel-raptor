@@ -13,13 +13,15 @@ class TenantThemeController extends Controller
     /**
      * Update the tenant's theme settings.
      */
-    public function update(UpdateTenantThemeRequest $request, Tenant $tenant)
+    public function update(UpdateTenantThemeRequest $request)
     {
-     
+
+        $tenant = Tenant::query()->where('id', tenant_id())->firstOrFail();
         $settings = $tenant->settings ?? [];
         $settings['theme'] = $request->validated();
 
         $tenant->update(['settings' => $settings]);
+
 
         return redirect()->back()->with('success', 'Tema atualizado com sucesso.');
     }

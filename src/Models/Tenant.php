@@ -13,6 +13,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Tenant extends AbstractModel
 {
+
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        static::$landlord->disable();
+    }
+
     /**
      * The attributes that are mass assignable.
      *

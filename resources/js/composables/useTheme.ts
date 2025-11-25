@@ -103,29 +103,11 @@ function saveThemeToStorage(theme: ThemeConfig) {
  */
 async function saveThemeToServer(theme: ThemeConfig) {
   try {
-    const page = usePage()
-    const tenant = page.props.auth?.user?.tenant
 
-    if (!tenant?.id) {
-      console.warn('No tenant ID available to save theme')
-      return
-    }
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-
-    const response = await fetch(`/landlord/tenants/${tenant.id}/theme`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken || '',
-      },
-      body: JSON.stringify(theme),
+    router.put('/tenant/update-theme', { ...theme }, {
+      preserveState: true,
+      preserveScroll: true, 
     })
-
-    if (!response.ok) {
-      throw new Error('Failed to save theme to server')
-    }
   } catch (error) {
     console.error('Error saving theme to server:', error)
   }
