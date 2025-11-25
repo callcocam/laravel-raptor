@@ -1,0 +1,15 @@
+<?php
+
+namespace {{ namespace }};
+
+
+use Callcocam\LaravelRaptor\Models\AbstractModel;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+{{ factoryImport }} 
+
+class {{ class }} extends AbstractModel
+{
+    {{ factory }}
+    use SoftDeletes;
+}
