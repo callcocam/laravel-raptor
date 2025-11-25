@@ -12,7 +12,7 @@ use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
-use Illuminate\Http\Request; 
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 abstract class AbstractController extends ResourceController
@@ -38,11 +38,11 @@ abstract class AbstractController extends ResourceController
 
         // Storage::disk('local')->put('raptor.json', json_encode($data));
         return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
-            'message' => 'Welcome to Laravel Raptor!',
+            'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
             'resourceLabel' => $this->getResourceLabel(),
-            'resourcePluralLabel' => $this->getResourcePluralLabel(),
+            'resourcePluralLabel' => $this->getTitle(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'table' => $data,
@@ -55,9 +55,10 @@ abstract class AbstractController extends ResourceController
         $model  = app($this->model());
 
         return Inertia::render(sprintf('admin/%s/create', $this->resourcePath()), [
+            'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
-            'resourceLabel' => $this->getResourceLabel(),
+            'resourceLabel' => $this->getTitle(),
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
@@ -74,7 +75,7 @@ abstract class AbstractController extends ResourceController
     public function store(Request $request): BaseRedirectResponse
     {
         try {
-            $model  = app($this->model()); 
+            $model  = app($this->model());
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
             $validationRules = array_merge(
@@ -109,9 +110,10 @@ abstract class AbstractController extends ResourceController
         $model = $this->model()::findOrFail($record);
 
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
+            'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
-            'resourceLabel' => $this->getResourceLabel(),
+            'resourceLabel' => $this->getTitle(),
             'resourcePluralLabel' => $this->getResourcePluralLabel(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
@@ -130,10 +132,11 @@ abstract class AbstractController extends ResourceController
         $model = $this->model()::findOrFail($record);
         // dd($model->toArray());
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
+            'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
-            'resourceLabel' => $this->getResourceLabel(),
-            'resourcePluralLabel' => $this->getResourcePluralLabel(),
+            'resourceLabel' => $this->getTitle(),
+            'resourcePluralLabel' => $this->getTitle(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'model' => $model,
@@ -149,7 +152,7 @@ abstract class AbstractController extends ResourceController
 
     public function update(Request $request, string $record): BaseRedirectResponse
     {
-        
+
         try {
             $model = $this->model()::findOrFail($record);
 
@@ -159,8 +162,8 @@ abstract class AbstractController extends ResourceController
                 $form->getValidationRules($model, $request),
                 $this->rules($model)
             );
-            $validationMessages = $form->getValidationMessages();   
-            $validated = $request->validate($validationRules, $validationMessages); 
+            $validationMessages = $form->getValidationMessages();
+            $validated = $request->validate($validationRules, $validationMessages);
 
             $model->update($form->getFormData($validated, $model));
 

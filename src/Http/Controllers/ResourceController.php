@@ -198,4 +198,14 @@ abstract class ResourceController extends Controller
 
         return null;
     }
+
+    public function getTitle(): string
+    {
+        return $this->getResourcePluralLabel();
+    }
+
+    public function getSubtitle(): ?string
+    {
+        return null;
+    }
 }
