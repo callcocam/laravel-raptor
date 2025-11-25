@@ -133,10 +133,15 @@ const handleClick = () => {
 
   if (props.action.actionType === 'cancel') {
     if (props.action.url && typeof props.action.url === 'string') {
-      // Se a URL começa com javascript:, executa o código
+      // Se a URL começa com javascript:, executa usando Function constructor (mais seguro que eval)
       if (props.action.url.startsWith('javascript:')) {
-        // eslint-disable-next-line no-eval
-        eval(props.action.url.replace('javascript:', ''))
+        try {
+          const code = props.action.url.replace('javascript:', '')
+          const fn = new Function(code)
+          fn()
+        } catch (error) {
+          console.error('Error executing action URL:', error)
+        }
       } else {
         // Caso contrário, navega para a URL
         router.visit(props.action.url)
