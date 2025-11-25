@@ -1,4 +1,9 @@
-
+import type { App, Plugin } from 'vue'
+import { defineAsyncComponent } from 'vue'
+import type { Component } from 'vue'
+import ActionRegistry from '../utils/ActionRegistry'
+import FilterRegistry from '../utils/FilterRegistry'
+import TableRegistry from '../utils/TableRegistry'
 import ComponentRegistry from '../utils/ComponentRegistry'
 import BreadcrumbRegistry from '../utils/BreadcrumbRegistry'
 
@@ -232,9 +237,9 @@ const install = (app: App, options: RaptorPluginOptions = {}): void => {
 }
 
 /**
- * Export do plugin
+ * Export do plugin com tipagem explícita
  */
-export const RaptorPlugin = {
+export const RaptorPlugin: Plugin = {
     install
 }
 

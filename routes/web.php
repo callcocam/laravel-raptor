@@ -35,4 +35,7 @@ Route::middleware(['web', 'auth', $context])
         // Suas rotas de tenant aqui
         $injector = new TenantRouteInjector(getDirectoriesPath($context));
         $injector->registerRoutes();
+
+        Route::put('/tenant/update-theme', [\Callcocam\LaravelRaptor\Http\Controllers\TenantThemeController::class, 'update'])
+            ->name('tenant.update-theme');
     });
