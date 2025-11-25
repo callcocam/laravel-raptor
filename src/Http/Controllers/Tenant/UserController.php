@@ -20,12 +20,13 @@ use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolis
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
-use Callcocam\LaravelRaptor\Support\Pages\Index; 
+use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\EmailColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends TenantController
 {
@@ -93,7 +94,19 @@ class UserController extends TenantController
                 ->showToggle()
                 ->columnSpan('6')
                 ->helpText('Digite a senha novamente'),
-
+            CheckboxField::make('roles', 'Papéis')
+                ->options(DB::table(config('raptor.shinobi.tables.roles'))->pluck('name', 'id')->toArray())
+                ->multiple()
+                ->defaultUsing(function ($model) {
+                    if ($model) {
+                        return DB::table(config('raptor.shinobi.tables.role_user'))
+                            ->where('user_id', $model->id)
+                            ->pluck('role_id')
+                            ->toArray();
+                    }
+                    return [];
+                })
+                ->helpText('Atribua papéis ao usuário'),
             CheckboxField::make('email_verified_at', 'E-mail Verificado')
                 ->helpText('Marque se o e-mail já foi verificado'),
         ]);

@@ -20,10 +20,22 @@ trait BelongsToRelationship
 
     protected ?Closure $usingRelationshipQuery = null;
 
-    public function relationship(Closure|string $relationship)
+    public function relationship(Closure|string $relationship, $relationshipName = null, $relationshipKey = null, $queryUsingRelationship = null): static
     {
 
         $this->relationship = $relationship;
+
+        if ($relationshipName) {
+            $this->relationshipName = $relationshipName;
+        }
+
+        if ($relationshipKey) {
+            $this->relationshipKey = $relationshipKey;
+        }
+
+        if ($queryUsingRelationship) {
+            $this->usingRelationshipQuery = $queryUsingRelationship;
+        }
 
         return $this;
     }
@@ -69,8 +81,11 @@ trait BelongsToRelationship
         return $this;
     }
 
-    public function getUsingRelationshipQuery($query, $request = null): ?Closure
+    public function getUsingRelationshipQuery($query, $request = null)
     {
+        if (!$this->usingRelationshipQuery) {
+            return $query;
+        }
         return $this->evaluate($this->usingRelationshipQuery, [
             'query' => $query,
             'request' => $request,

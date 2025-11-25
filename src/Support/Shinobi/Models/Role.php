@@ -61,4 +61,11 @@ class Role extends AbstractModel implements RoleContract
 
         return true;
     }
+
+    public function disable(): static
+    {
+        static::$landlord->disable();
+
+        return $this;
+    }
 }

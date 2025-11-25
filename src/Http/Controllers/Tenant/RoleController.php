@@ -19,11 +19,12 @@ use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolis
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
-use Callcocam\LaravelRaptor\Support\Pages\Index; 
+use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends TenantController
 {
@@ -55,7 +56,7 @@ class RoleController extends TenantController
             'edit' => Edit::route('/roles/{record}/edit')
                 ->label('Editar Role')
                 ->name('roles.edit')
-                ->middlewares(['auth', 'verified']), 
+                ->middlewares(['auth', 'verified']),
             'execute' => Execute::route('/roles/execute/actions')
                 ->label('Executar Role')
                 ->name('roles.execute')
@@ -80,6 +81,24 @@ class RoleController extends TenantController
                 ->rows(3)
                 ->placeholder('Descreva as responsabilidades desta role')
                 ->helpText('Descrição detalhada da role'),
+
+
+            CheckboxField::make('permissions', 'Permissões')
+                ->multiple()
+                ->options(DB::table(config('raptor.shinobi.tables.permissions'))->pluck('name', 'id')->toArray())
+                ->columns(2)
+                ->searchable()
+                ->showSelectAll(true)
+                ->defaultUsing(function ($model) {
+                    if ($model) {
+                        return DB::table(config('raptor.shinobi.tables.permission_role'))
+                            ->where('role_id', $model->id)
+                            ->pluck('permission_id')
+                            ->toArray();
+                    }
+                    return [];
+                })
+                ->helpText('Selecione as permissões associadas a esta role'),
 
             CheckboxField::make('special', 'Permissões Especiais')
                 ->helpText('Marque se esta role deve ter permissões especiais de administrador'),
@@ -126,15 +145,15 @@ class RoleController extends TenantController
                     ]),
                 \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
             ])
-        ->actions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('roles.show'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('roles.edit'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('roles.restore'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('roles.forceDelete'),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('roles.destroy'),
-        ])->headerActions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('products.create') 
-        ]);
+            ->actions([
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('roles.show'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('roles.edit'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('roles.restore'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('roles.forceDelete'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('roles.destroy'),
+            ])->headerActions([
+                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('roles.create')
+            ]);
     }
 
     protected function infolist(InfoListBuilder $infolist): InfoListBuilder

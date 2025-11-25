@@ -74,8 +74,7 @@ abstract class AbstractController extends ResourceController
     public function store(Request $request): BaseRedirectResponse
     {
         try {
-            $model  = app($this->model());
-            dd($request->all());
+            $model  = app($this->model()); 
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
             $validationRules = array_merge(
@@ -88,6 +87,8 @@ abstract class AbstractController extends ResourceController
             $validated = $request->validate($validationRules, $validationMessages);
 
             $record = $model->create($form->getFormData($validated, null));
+
+            $form->saveRelatedData($validated, $record, $request);
 
             $route = str($request->route()->getAction('as'))->replace('.store', '.edit')->toString();
 

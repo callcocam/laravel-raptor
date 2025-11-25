@@ -59,11 +59,10 @@ trait BelongsToOptions
                     }
 
                     // 3. Pegar o model relacionado de forma segura
-                    $relatedModel = $relationInstance->getRelated();
-
+                    $relatedModel = $this->getUsingRelationshipQuery($relationInstance->getRelated()); 
                     // 4. Validar nomes das colunas para evitar injeção
                     $labelColumn = $this->getOptionLabel() ?? 'name';
-                    $keyColumn = $this->getOptionKey() ?? 'id'; 
+                    $keyColumn = $this->getOptionKey() ?? 'id';
 
                     $this->options = $relatedModel
                         ->select([$keyColumn, $labelColumn])
@@ -71,6 +70,7 @@ trait BelongsToOptions
                         ->toArray();
                 } catch (\Throwable $e) {
                     \Log::error('Error loading relationship options: ' . $e->getMessage());
+                    dd($e->getMessage());
                     $this->options = [];
                 }
             }
