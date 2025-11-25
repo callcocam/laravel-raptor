@@ -10,7 +10,7 @@ export interface TableAction {
   name: string
   label: string
   type: string | null
-  actionType?: 'link' | 'api' | 'callback' | 'modal' | 'table'
+  actionType?: 'link' | 'api' | 'callback' | 'modal' | 'table' | 'submit' | 'cancel'
   icon: string
   tooltip: string
   options: any[]
@@ -33,7 +33,9 @@ export interface TableAction {
     only?: string[]
   }
   modalSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
-
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
+  processingLabel?: string
 }
 
 /**

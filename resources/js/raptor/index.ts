@@ -82,7 +82,7 @@ ComponentRegistry.markAsInitialized()
  * sobrescritos pela aplicação se necessário.
  */
 BreadcrumbRegistry.registerBulk({
-  'breadcrumb-default': defineAsyncComponent(() => import('~/components/breadcrumbs/DefaultBreadcrumb.vue')),
+    'breadcrumb-default': defineAsyncComponent(() => import('~/components/breadcrumbs/DefaultBreadcrumb.vue')),
     'breadcrumb-page-header': defineAsyncComponent(() => import('~/components/breadcrumbs/PageHeaderBreadcrumb.vue')),
 })
 
@@ -122,7 +122,7 @@ ActionRegistry.registerBulk({
     'action-modal-form': defineAsyncComponent(() => import('~/components/actions/types/ActionModalForm.vue')),
     'action-modal-slideover': defineAsyncComponent(() => import('~/components/actions/types/ActionModalSlideover.vue')),
     'action-callback': defineAsyncComponent(() => import('~/components/actions/types/ActionCallback.vue')),
-    'LinkButton': defineAsyncComponent(() => import('~/components/actions/types/ActionButton.vue')),
+    'action-form-button': defineAsyncComponent(() => import('~/components/actions/types/ActionFormButton.vue')),
 })
 
 ActionRegistry.markAsInitialized()

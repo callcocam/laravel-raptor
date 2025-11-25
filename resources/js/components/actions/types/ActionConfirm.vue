@@ -9,7 +9,7 @@
 <template>
   <AlertDialog v-model:open="isOpen">
     <AlertDialogTrigger as-child>
-      <Button :variant="variant" :size="size" class="gap-1 h-7 px-2.5">
+      <Button :variant="variant" :size="size" >
         <component v-if="iconComponent" :is="iconComponent" class="h-3 w-3" />
         <span class="text-xs">{{ action.label }}</span>
       </Button>

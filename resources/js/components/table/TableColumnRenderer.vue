@@ -4,7 +4,7 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
-import ComponentRegistry from "../../utils/ComponentRegistry";
+import ComponentRegistry from "~/utils/ComponentRegistry";
 
 const props = defineProps({
   record: {

@@ -136,7 +136,7 @@ trait WithRequests
         return [
             // Ações para o formulário
             \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make("{$resourceName}.index")
-                ->variant('destructive') 
+                ->color('gray') 
                 ->size('sm')
                 ->label(sprintf("Voltar %s", $this->getResourcePluralLabel())),
             \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')

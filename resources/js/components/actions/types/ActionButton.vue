@@ -6,9 +6,10 @@
  -->
 <template>
   <Button
-    :variant="variant"
-    :size="size"
-    :class="buttonClasses"
+    :variant="computedVariant"
+    :size="computedSize"
+    :as-child="asChild"
+    :class="cn('gap-1.5', className)"
     @click="handleClick"
   >
     <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
@@ -25,25 +26,30 @@ import type { TableAction } from '~/types/table'
 
 interface Props {
   action: TableAction
+  variant?: 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'
   size?: 'default' | 'sm' | 'lg' | 'icon'
+  asChild?: boolean
   className?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'sm'
+  size: 'sm',
+  asChild: false
 })
 
 const emit = defineEmits<{
   (e: 'click'): void
 }>()
 
-// Mapeia cor para variant do shadcn
-const variant = computed(() => {
+// Variant computado - usa prop ou mapeia da cor
+const computedVariant = computed(() => {
+  if (props.variant) return props.variant
+  
   const colorMap: Record<string, any> = {
     'green': 'default',
     'blue': 'default',
     'red': 'destructive',
-    'yellow': 'warning',
+    'yellow': 'outline',
     'gray': 'secondary',
     'default': 'default'
   }
@@ -51,19 +57,20 @@ const variant = computed(() => {
   return colorMap[props.action.color || 'default'] || 'default'
 })
 
+// Size computado - usa prop ou padrão
+const computedSize = computed(() => props.size)
+
 // Classes do ícone
 const iconClasses = computed(() => {
-  return props.size === 'sm' ? 'h-3 w-3' : 'h-3.5 w-3.5'
+  const sizeMap: Record<string, string> = {
+    'sm': 'h-3 w-3',
+    'default': 'h-3.5 w-3.5',
+    'lg': 'h-4 w-4',
+    'icon': 'h-4 w-4'
+  }
+  return sizeMap[props.size] || 'h-3.5 w-3.5'
 })
-
-// Classes do botão
-const buttonClasses = computed(() => {
-  return cn(
-    'gap-1 h-7 px-2.5',
-    props.className
-  )
-})
-
+ 
 // Componente do ícone dinâmico
 const iconComponent = computed(() => {
   if (!props.action.icon) return null

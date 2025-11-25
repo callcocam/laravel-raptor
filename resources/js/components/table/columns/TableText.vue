@@ -15,8 +15,17 @@ const props = defineProps<{
 
 /**
  * Obtém o valor da propriedade, suportando acesso aninhado (ex: 'category.name')
+ * Prioriza valores formatados (ex: 'email_formatted' sobre 'email')
  */
 const value = computed(() => {
+  // Primeiro tenta buscar o valor formatado (ex: email_formatted)
+  const formattedKey = `${props.column.name}_formatted`
+  
+  if (props.record && typeof props.record === 'object' && formattedKey in props.record) {
+    return props.record[formattedKey] ?? ''
+  }
+  
+  // Se não houver versão formatada, busca o valor original
   const keys = props.column.name.split('.')
   let result = props.record
   

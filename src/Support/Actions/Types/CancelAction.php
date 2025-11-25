@@ -22,8 +22,9 @@ class CancelAction extends Action
 
         $this->label('Cancelar');
         $this->icon('X');
-        $this->variant('outline');
+        $this->variant('secondary'); 
         $this->size('default');
+        $this->component('action-button-link');
         $this->url(function ($target, $request) {
             // Volta para a página anterior (index)
             $name = sprintf('%s.%s', $request->getContext(), $this->getName());
