@@ -29,7 +29,10 @@ trait BelongsToColor
      */
     public function getColor(): ?string
     {
-        return $this->evaluate($this->color);
+        return $this->evaluate($this->color, [
+            'model' => $this->getRecord(),
+            'value' => data_get($this->getRecord(), $this->getName()),
+        ]);
     }
 
     /**

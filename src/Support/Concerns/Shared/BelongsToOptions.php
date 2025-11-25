@@ -26,7 +26,7 @@ trait BelongsToOptions
     /**
      * Set the options for the filter.
      */
-    public function options(array $options): static
+    public function options(array|Closure $options): static
     {
         $this->options = $options;
 

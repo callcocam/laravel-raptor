@@ -6,12 +6,29 @@
  */
 namespace Callcocam\LaravelRaptor\Support\Table\Columns\Types;
 
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToBadge;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToLimit;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Column;
 
 class TextColumn extends Column
 {
+    use BelongsToBadge;
+    use BelongsToLimit;
+
     public function render(mixed $value, $row = null): mixed
     {
+        if (is_string($value) && $this->hasLimit()) {
+            return $this->applyLimit($value);
+        }
+
         return $value;
+    }
+
+    public function toArray(): array
+    {
+        return array_merge(parent::toArray(), [
+            'isBadge' => $this->isBadge(),
+            'limit' => $this->getLimit(),
+        ]);
     }
 }

@@ -49,6 +49,16 @@ trait BelongsToHelpers
     }
 
     /**
+     * Define o texto de ajuda (exibido abaixo do campo)
+     */
+    public function helperText(string|Closure $text): static
+    {
+        $this->helpText = $text;
+
+        return $this;
+    }
+
+    /**
      * Define uma dica (similar ao helpText, mas pode ter estilo diferente)
      */
     public function hint(string|Closure $hint): static

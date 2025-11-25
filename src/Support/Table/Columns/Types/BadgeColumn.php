@@ -20,7 +20,7 @@ class BadgeColumn extends Column
         return $this;
     }
 
-    public function color(string $value, string $color): self
+    public function colorMap(string $value, string $color): self
     {
         $this->colorMap[$value] = $color;
         return $this;

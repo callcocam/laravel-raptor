@@ -61,6 +61,7 @@ return [
         'models' => [
             'tenant' => \Callcocam\LaravelRaptor\Models\Tenant::class,
             'user' => \App\Models\User::class,
+            'translate' => \Callcocam\LaravelRaptor\Models\TranslationOverride::class,
         ]
     ],
 
@@ -130,6 +131,19 @@ return [
             'permission_user' => 'permission_user',
             'permission_role' => 'permission_role',
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Database Tables
+    |--------------------------------------------------------------------------
+    |
+    | Nomes das tabelas do banco de dados usadas pelo Raptor
+    |
+    */
+    'tables' => [
+        'tenants' => 'tenants',
+        'translation_overrides' => 'translation_overrides',
     ],
 
     /*
@@ -245,15 +259,57 @@ return [
             // Controllers da aplicação
             'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
             'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
-            
+
             // Controllers do package Raptor
             'Callcocam\\LaravelRaptor\\Http\\Controllers\\Admin' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Admin'),
             'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Tenant'),
             'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
-            
+
             // Adicione mais diretórios conforme necessário:
             // 'Seu\\Namespace\\Controllers' => base_path('caminho/para/controllers'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Translation Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configurações para o sistema de traduções customizadas por tenant
+    | Sistema de prioridade: Tenant Override > Global Override > Laravel Lang Files
+    |
+    */
+    'translation' => [
+        // Habilita o sistema de traduções customizadas
+        'enabled' => env('RAPTOR_TRANSLATION_ENABLED', true),
+
+        // Intercepta automaticamente chamadas ao __() e trans()
+        'intercept_default_get' => env('RAPTOR_TRANSLATION_INTERCEPT', true),
+
+        // Grupos de tradução que devem ser ignorados pelo sistema de override
+        // (mantém comportamento padrão do Laravel para não quebrar funcionalidades core)
+        'ignored_groups' => [
+            'validation',
+            'passwords',
+            'pagination',
+            'auth',
+        ],
+
+        // Configurações de cache
+        'cache_enabled' => env('RAPTOR_TRANSLATION_CACHE_ENABLED', true),
+        'cache_ttl' => env('RAPTOR_TRANSLATION_CACHE_TTL', 3600), // 1 hora
+        'cache_prefix' => 'translation',
+
+        // Locales disponíveis no sistema
+        'available_locales' => [
+            'pt_BR',
+            'en',
+            'es',
+            'fr',
+        ],
+
+        // Locale padrão
+        'default_locale' => env('RAPTOR_TRANSLATION_DEFAULT_LOCALE', 'pt_BR'),
     ],
 
 ];

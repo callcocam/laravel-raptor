@@ -34,6 +34,24 @@ trait BelongsToValidation
     }
 
     /**
+     * Marca o campo como opcional (nullable)
+     */
+    public function nullable(bool $nullable = true): static
+    {
+        if ($nullable && $this->hasRule('required')) {
+            // Remove 'required' das rules
+            if (is_string($this->rules)) {
+                $this->rules = str_replace('required', '', $this->rules);
+                $this->rules = trim(str_replace('||', '|', $this->rules), '|');
+            } elseif (is_array($this->rules)) {
+                $this->rules = array_filter($this->rules, fn($rule) => $rule !== 'required' && $rule !== 'required|string' && $rule !== 'required|array');
+            }
+        }
+
+        return $this;
+    }
+
+    /**
      * Define as regras de validação do campo
      */
     public function rules(array|string|Closure $rules): static
