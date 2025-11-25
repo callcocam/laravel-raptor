@@ -106,7 +106,7 @@ abstract class Page
 
     public function getLabel(): string
     {
-        return $this->label;
+        return __($this->label);
     }
 
     public function getName(): string
@@ -136,7 +136,7 @@ abstract class Page
 
     public function getGroup(): string
     {
-        return $this->group;
+        return __($this->group);
     }
 
     public function isGroupCollapsible(): bool

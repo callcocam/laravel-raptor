@@ -48,7 +48,7 @@ class NavigationService
             ],
         ];
 
-        $this->controllerDirectories = config(sprintf('raptor.route_injector.directories.%s', $context), data_get($controllerDirectories, $context, [])); 
+        $this->controllerDirectories = config(sprintf('raptor.route_injector.directories.%s', $context), data_get($controllerDirectories, $context, []));
     }
 
     /**
@@ -202,9 +202,12 @@ class NavigationService
 
     public function generateNavigationItem(Page $page, ?string $modelClass): array
     {
+
+        $title = $page->getLabel() ?: ($modelClass ? (new $modelClass())->getTable() : $this->generateLabelFromPath($page->getPath()));
+
         return [
-            'title' => $page->getLabel() ?: $this->generateLabelFromPath($page->getPath()),
-            'label' => $page->getLabel() ?: $this->generateLabelFromPath($page->getPath()),
+            'title' => __($title),
+            'label' => __($title),
             'href' => $page->getPath(),
             'routeName' => $page->getName(),
             'icon' => $page->getIcon(),
