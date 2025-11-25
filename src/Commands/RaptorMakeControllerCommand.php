@@ -33,6 +33,16 @@ class RaptorMakeControllerCommand extends GeneratorCommand
         return $rootNamespace . '\Http\Controllers\\' . $context;
     }
 
+    protected function qualifyClass($name): string
+    {
+        // Adiciona 'Controller' ao final se não estiver presente
+        if (!str_ends_with($name, 'Controller')) {
+            $name .= 'Controller';
+        }
+
+        return parent::qualifyClass($name);
+    }
+
     protected function buildClass($name): string
     {
         $stub = parent::buildClass($name);

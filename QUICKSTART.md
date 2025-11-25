@@ -31,7 +31,14 @@ php artisan migrate
 ### 3️⃣ Gere os Recursos Raptor
 
 ```bash
+# Gera no contexto Tenant (padrão)
 php artisan raptor:generate Category --all
+
+# Ou especifique o contexto explicitamente
+php artisan raptor:generate Category --all --context=Tenant
+
+# Gera no contexto Landlord
+php artisan raptor:generate Category --all --context=Landlord
 ```
 
 ## ✨ O que foi gerado?
@@ -59,12 +66,14 @@ class Category extends AbstractModel
 }
 ```
 
-### Controller (`app/Http/Controllers/CategoryController.php`)
-- ✅ Páginas (index, create, edit, execute)
+### Controller (`app/Http/Controllers/Tenant/CategoryController.php`)
+- ✅ Páginas (index, create, edit, execute) com rotas corretas
 - ✅ Form com campos apropriados
 - ✅ Table com colunas e filtros
 - ✅ InfoList para visualização
 - ✅ Actions (CRUD, Modal, Export, Import)
+- ✅ Contexto configurado (tenant, landlord, etc)
+- ✅ resourcePath() retornando o contexto correto
 
 ### Policy (`app/Policies/CategoryPolicy.php`)
 - ✅ Permissões baseadas em contexto (landlord/tenant)
@@ -81,9 +90,14 @@ class Category extends AbstractModel
 
 ## 💡 Exemplos Práticos
 
-### Gerar tudo de uma vez
+### Gerar tudo de uma vez (contexto Tenant - padrão)
 ```bash
 php artisan raptor:generate Product --all
+```
+
+### Gerar no contexto Landlord
+```bash
+php artisan raptor:generate Tenant --all --context=Landlord
 ```
 
 ### Gerar apenas Model e Controller
@@ -94,6 +108,11 @@ php artisan raptor:generate Order --model --controller
 ### Usar tabela customizada
 ```bash
 php artisan raptor:generate Order --all --table=customer_orders
+```
+
+### Contexto específico com tabela customizada
+```bash
+php artisan raptor:generate Report --all --context=Admin --table=system_reports
 ```
 
 ### Sobrescrever arquivos existentes

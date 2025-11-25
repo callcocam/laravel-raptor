@@ -50,9 +50,9 @@ class {{ class }} extends AbstractController
     protected function infolist(InfoList $infoList): InfoList
     {
         $infoList->columns([
-            \Callcocam\LaravelRaptor\Support\Info\Columns\Types\CardColumn::make('category_info')
-                ->title('Informações da Categoria')
-                ->description('Dados básicos da categoria')
+            \Callcocam\LaravelRaptor\Support\Info\Columns\Types\CardColumn::make('info')
+                ->title('Informações')
+                ->description('Dados básicos')
                 ->collapsible(true, true)
                 ->columns([
                     \Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn::make('name')
@@ -80,15 +80,15 @@ class {{ class }} extends AbstractController
     {
         $form->columns([
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('name')
-                ->label('Nome da Categoria')
+                ->label('Nome')
                 ->required()
                 ->rules(['required', 'string', 'max:255'])
-                ->placeholder('Digite o nome da categoria')
+                ->placeholder('Digite o nome')
                 ->columnSpanFull(), 
 
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField::make('description')
                 ->label('Descrição')
-                ->placeholder('Descrição da categoria')
+                ->placeholder('Descrição')
                 ->rows(4)
                 ->columnSpanFull(),
         ]);

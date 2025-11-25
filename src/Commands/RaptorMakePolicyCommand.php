@@ -30,6 +30,16 @@ class RaptorMakePolicyCommand extends GeneratorCommand
         return $rootNamespace . '\Policies';
     }
 
+    protected function qualifyClass($name): string
+    {
+        // Adiciona 'Policy' ao final se não estiver presente
+        if (!str_ends_with($name, 'Policy')) {
+            $name .= 'Policy';
+        }
+
+        return parent::qualifyClass($name);
+    }
+
     protected function buildClass($name): string
     {
         $stub = parent::buildClass($name);

@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Created by Claudio Campos.
+ * User: callcocam, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ */
+ 
 namespace {{ namespace }};
 
 use Illuminate\Auth\Access\Response;
@@ -9,7 +15,7 @@ use {{ namespacedUserModel }};
 class {{ class }}
 {
 
-     protected $permission = "{{ model }}s";
+     protected $permission = "{{ modelVariable }}s";
     /**
      * Determine whether the user can view any models.
      */

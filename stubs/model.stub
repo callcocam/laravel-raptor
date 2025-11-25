@@ -1,7 +1,12 @@
 <?php
 
-namespace {{ namespace }};
+/**
+ * Created by Claudio Campos.
+ * User: callcocam, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ */
 
+namespace {{ namespace }};
 
 use Callcocam\LaravelRaptor\Models\AbstractModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
