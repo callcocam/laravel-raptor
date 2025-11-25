@@ -6,6 +6,7 @@
  * https://www.sigasmart.com.br
  */
 
+use Callcocam\LaravelRaptor\Http\Controllers\Api\TenantThemeController;
 use Callcocam\LaravelRaptor\Http\Landlord\ImageController;
 use Callcocam\LaravelRaptor\Http\Landlord\PermissionController;
 use Callcocam\LaravelRaptor\Http\Landlord\RoleController;
@@ -73,5 +74,12 @@ $applyPrefix(function () {
         Route::post('upload', [ImageController::class, 'upload'])->name('upload');
         Route::delete('{id}', [ImageController::class, 'destroy'])->name('destroy');
     });
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gerenciamento de Tema do Tenant
+    |--------------------------------------------------------------------------
+    */
+    Route::patch('tenants/{tenant}/theme', [TenantThemeController::class, 'update'])->name('tenants.theme.update');
 
 });

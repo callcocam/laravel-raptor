@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor;
 
 use Callcocam\LaravelRaptor\Commands\LaravelRaptorCommand;
 use Callcocam\LaravelRaptor\Commands\SyncCommand;
+use Callcocam\LaravelRaptor\Console\Commands\ThemeSetupCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
@@ -76,6 +77,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->hasCommands([
                 LaravelRaptorCommand::class,
                 SyncCommand::class,
+                ThemeSetupCommand::class,
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 // Customize the install command created by the package tools
