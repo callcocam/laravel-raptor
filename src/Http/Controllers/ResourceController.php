@@ -202,7 +202,7 @@ abstract class ResourceController extends Controller
 
     public function getTitle(): string
     {
-        return __($this->getResourcePluralLabel());
+        return __($this->getResourceLabel());
     }
 
     public function getSubtitle(): ?string
