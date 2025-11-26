@@ -81,6 +81,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 'create_jobs_table',
                 'create_translation_groups_table',
                 'create_translation_overrides_table',
+                'create_inspirations_table',
             ])
             ->hasCommands([
                 LaravelRaptorCommand::class,
