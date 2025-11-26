@@ -9,6 +9,7 @@
       :id="column.name"
       :name="column.name"
       :required="column.required"
+      :disabled="column.disabled"
       :checked="internalValue"
       @update:checked="updateValue"
       :aria-invalid="hasError"
@@ -38,6 +39,8 @@ interface FormColumn {
   name: string
   label?: string
   required?: boolean
+  disabled?: boolean
+  readonly?: boolean
   description?: string
   tooltip?: string
   helpText?: string

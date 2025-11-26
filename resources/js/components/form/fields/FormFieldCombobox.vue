@@ -15,6 +15,7 @@
         <Button
           variant="outline"
           role="combobox"
+          :disabled="column.disabled"
           :aria-expanded="open"
           :aria-invalid="hasError"
           :class="[
@@ -97,6 +98,8 @@ interface FormColumn {
   searchPlaceholder?: string
   emptyText?: string
   required?: boolean
+  disabled?: boolean
+  readonly?: boolean
   options?: ComboboxOption[] | Record<string, string>
   tooltip?: string
   helpText?: string

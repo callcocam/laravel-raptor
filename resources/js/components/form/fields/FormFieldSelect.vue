@@ -10,7 +10,7 @@
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select v-model="internalValue" :required="column.required"  class="h-9">
+    <Select v-model="internalValue" :required="column.required" :disabled="column.disabled" class="h-9">
       <SelectTrigger :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
         <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
       </SelectTrigger>
@@ -55,6 +55,8 @@ interface FormColumn {
   label?: string
   placeholder?: string
   required?: boolean
+  disabled?: boolean
+  readonly?: boolean
   options?: SelectOption[] | Record<string, string>
   tooltip?: string
   helpText?: string

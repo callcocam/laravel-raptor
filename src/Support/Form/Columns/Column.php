@@ -95,12 +95,16 @@ abstract class Column extends AbstractColumn
             'component' => $this->getComponent(),
             'required' => $this->isRequired(),
             'messages' => $this->getMessages(),
+            'readonly' => $this->isReadOnly(),
+            'disabled' => $this->isDisabled(),
             'attributes' => array_filter([
                 'id' => $this->getId(),
                 'type' => $this->getType(),
                 'name' => $this->getName(),
                 'placeholder' => $this->getPlaceholder(),
                 'required' => $this->isRequired(),
+                'readonly' => $this->isReadOnly(),
+                'disabled' => $this->isDisabled(),
             ]),
         ], $this->getGridLayoutConfig());
     }

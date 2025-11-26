@@ -16,6 +16,7 @@
       :type="column.withTime ? 'datetime-local' : 'date'"
       :required="column.required"
       :disabled="column.disabled"
+      :readonly="column.readonly"
       :min="column.minDate"
       :max="column.maxDate"
       :modelValue="modelValue || undefined"
@@ -42,6 +43,7 @@ interface FormColumn {
   label?: string
   required?: boolean
   disabled?: boolean
+  readonly?: boolean
   minDate?: string
   maxDate?: string
   withTime?: boolean

@@ -28,12 +28,36 @@ trait BelongsToHelpers
 
     protected ?string $placeholder = null;
 
+    protected bool $isReadOnly = false;
+
+    protected bool $isDisabled = false;
+
     /**
      * Define o valor padrão do campo
      */
     public function default(mixed $value): static
     {
         $this->default = $value;
+
+        return $this;
+    }
+
+    /**
+     * Define o campo como somente leitura (readonly)
+     */
+    public function readonly(bool $condition = true): static
+    {
+        $this->isReadOnly = $condition;
+
+        return $this;
+    }
+
+    /**
+     * Define o campo como desabilitado (disabled)
+     */
+    public function disabled(bool $condition = true): static
+    {
+        $this->isDisabled = $condition;
 
         return $this;
     }
@@ -184,5 +208,37 @@ trait BelongsToHelpers
     public function getPlaceholder(): ?string
     {
         return $this->evaluate($this->placeholder);
+    }
+
+    /**
+     * Verifica se o campo é somente leitura
+     */
+    public function isReadOnly(): bool
+    {
+        return $this->isReadOnly;
+    }
+
+    /**
+     * Retorna se o campo é readonly (alias para isReadOnly)
+     */
+    public function getReadOnly(): bool
+    {
+        return $this->isReadOnly();
+    }
+
+    /**
+     * Verifica se o campo está desabilitado
+     */
+    public function isDisabled(): bool
+    {
+        return $this->isDisabled;
+    }
+
+    /**
+     * Retorna se o campo está disabled (alias para isDisabled)
+     */
+    public function getDisabled(): bool
+    {
+        return $this->isDisabled();
     }
 }

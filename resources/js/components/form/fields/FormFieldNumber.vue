@@ -31,6 +31,7 @@
         :placeholder="column.placeholder || column.label"
         :required="column.required"
         :disabled="column.disabled"
+        :readonly="column.readonly"
         :min="column.min"
         :max="column.max"
         :step="column.step || 1"
@@ -62,6 +63,7 @@
       :placeholder="column.placeholder || column.label"
       :required="column.required"
       :disabled="column.disabled"
+      :readonly="column.readonly"
       :min="column.min"
       :max="column.max"
       :step="column.step || 1"
@@ -91,6 +93,7 @@ interface FormColumn {
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  readonly?: boolean
   min?: number
   max?: number
   step?: number

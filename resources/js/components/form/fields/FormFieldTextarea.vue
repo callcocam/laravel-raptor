@@ -16,6 +16,7 @@
       :placeholder="column.placeholder || column.label"
       :required="column.required"
       :disabled="column.disabled"
+      :readonly="column.readonly"
       :rows="column.rows || 3"
       :maxlength="column.maxLength"
       :modelValue="modelValue || undefined"
@@ -52,6 +53,7 @@ interface FormColumn {
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  readonly?: boolean
   rows?: number
   maxLength?: number
   tooltip?: string

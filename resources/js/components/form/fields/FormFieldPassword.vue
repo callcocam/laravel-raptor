@@ -18,6 +18,7 @@
         :placeholder="column.placeholder || column.label"
         :required="column.required"
         :disabled="column.disabled"
+        :readonly="column.readonly"
         :minlength="column.minLength"
         :modelValue="modelValue || undefined"
         @update:modelValue="updateValue"
@@ -58,6 +59,7 @@ interface FormColumn {
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  readonly?: boolean
   minLength?: number
   showToggle?: boolean
   tooltip?: string

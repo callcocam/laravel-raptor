@@ -17,6 +17,7 @@
       :placeholder="column.placeholder || column.label"
       :required="column.required"
       :disabled="column.disabled"
+      :readonly="column.readonly"
       :modelValue="modelValue || undefined"
       @update:modelValue="updateValue"
       :aria-invalid="hasError"
@@ -43,6 +44,7 @@ interface FormColumn {
   placeholder?: string
   required?: boolean
   disabled?: boolean
+  readonly?: boolean
   tooltip?: string
   helpText?: string
   hint?: string
