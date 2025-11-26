@@ -80,16 +80,26 @@ abstract class AbstractController extends ResourceController
             $model  = app($this->model());
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
+            
+            // Prepara os dados ANTES da validação (converte valores formatados)
+            $preparedData = $form->prepareDataForValidation($request, null);
+            
             $validationRules = array_merge(
                 $form->getValidationRules(),
                 $this->rules()
             );
             $validationMessages = $form->getValidationMessages();
 
-            // Valida os dados
-            $validated = $request->validate($validationRules, $validationMessages);
+            // Valida os dados já preparados
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                $preparedData, 
+                $validationRules, 
+                $validationMessages
+            );
+            
+            $validated = $validator->validate();
 
-            $record = $model->create($form->getFormData($validated, null));
+            $record = $model->create($validated);
 
             $form->saveRelatedData($validated, $record, $request);
 
@@ -159,17 +169,28 @@ abstract class AbstractController extends ResourceController
 
         try {
             $model = $this->model()::findOrFail($record);
-
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
+
+            // Prepara os dados ANTES da validação (converte valores formatados)
+            $preparedData = $form->prepareDataForValidation($request, $model);
+
             $validationRules = array_merge(
                 $form->getValidationRules($model, $request),
                 $this->rules($model)
             );
             $validationMessages = $form->getValidationMessages();
-            $validated = $request->validate($validationRules, $validationMessages);
+            
+            // Valida os dados já preparados
+            $validator = \Illuminate\Support\Facades\Validator::make(
+                $preparedData, 
+                $validationRules, 
+                $validationMessages
+            );
+            
+            $validated = $validator->validate();
 
-            $model->update($form->getFormData($validated, $model));
+            $model->update($validated);
 
             //Vamo fazer atualizações de relacionados se necessário
             $form->updateRelatedData($validated, $model, $request);

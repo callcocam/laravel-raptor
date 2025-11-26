@@ -58,6 +58,48 @@ trait InteractWithForm
     }
 
     /**
+     * Prepara os dados do request ANTES da validação
+     * 
+     * Converte valores formatados (ex: money) para formato validável
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @param mixed $model Modelo existente (para edição)
+     * @return array Dados preparados para validação
+     */
+    public function prepareDataForValidation($request, $model = null): array
+    {
+        $data = $request->all();
+
+        // Aplica conversões necessárias antes da validação
+        foreach ($this->getColumns() as $column) {
+            $columnName = $column->getName();
+
+            // Verifica se o campo está presente no request
+            if (!array_key_exists($columnName, $data)) {
+                continue;
+            }
+
+            try {
+                // Aplica valueUsing se existir (converte dados formatados)
+                $valueUsing = $column->getValueUsing($data, $model);
+
+                if ($valueUsing !== null) {
+                    if (is_array($valueUsing)) {
+                        $data = array_merge($data, $valueUsing);
+                    } else {
+                        $data[$columnName] = $valueUsing;
+                    }
+                }
+            } catch (\Throwable $e) {
+                logger()->warning("Error preparing field '{$columnName}' for validation: " . $e->getMessage());
+                // Mantém o valor original
+            }
+        }
+
+        return $data;
+    }
+
+    /**
      * Extrai as mensagens de validação customizadas
      */
     public function getValidationMessages(): array
