@@ -21,9 +21,11 @@ use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
 use Callcocam\LaravelRaptor\Models\Auth\User;
+use Callcocam\LaravelRaptor\Models\Inspiration;
 use Callcocam\LaravelRaptor\Models\Permission;
 use Callcocam\LaravelRaptor\Models\Role;
 use Callcocam\LaravelRaptor\Models\Tenant;
+use Callcocam\LaravelRaptor\Policies\InspirationPolicy;
 use Callcocam\LaravelRaptor\Policies\PermissionPolicy;
 use Callcocam\LaravelRaptor\Policies\RolePolicy;
 use Callcocam\LaravelRaptor\Policies\TenantPolicy;
@@ -183,5 +185,6 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(Tenant::class, TenantPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
+        Gate::policy(Inspiration::class, InspirationPolicy::class);
     }
 }
