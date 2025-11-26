@@ -132,6 +132,61 @@ class TranslateController extends LandlordController
 
         $table->headerActions([
             \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('translates.create'),
+
+            // Action para gerar arquivos JSON
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('generate_json')
+                ->label('Gerar JSON')
+                ->icon('FileJson')
+                ->color('success')
+                ->callback(function () {
+                    $translationService = app(\Callcocam\LaravelRaptor\Services\TranslationService::class);
+
+                    try {
+                        // Gera arquivos para todos os locales globais
+                        $files = $translationService->generateAllJsonFiles(null);
+
+                        return [
+                            'success' => true,
+                            'message' => 'Arquivos JSON gerados com sucesso!',
+                            'files' => $files,
+                            'count' => count($files),
+                        ];
+                    } catch (\Exception $e) {
+                        return [
+                            'success' => false,
+                            'message' => 'Erro ao gerar arquivos JSON: ' . $e->getMessage(),
+                        ];
+                    }
+                }),
+
+            // Action para sincronizar JSON com banco
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('sync_json')
+                ->label('Sincronizar JSON')
+                ->icon('RefreshCw')
+                ->color('info')
+                ->callback(function () {
+                    $translationService = app(\Callcocam\LaravelRaptor\Services\TranslationService::class);
+
+                    try {
+                        $locales = ['pt_BR', 'en', 'es', 'fr'];
+                        $stats = [];
+
+                        foreach ($locales as $locale) {
+                            $stats[$locale] = $translationService->syncJsonWithDatabase($locale, null);
+                        }
+
+                        return [
+                            'success' => true,
+                            'message' => 'Arquivos JSON sincronizados com sucesso!',
+                            'stats' => $stats,
+                        ];
+                    } catch (\Exception $e) {
+                        return [
+                            'success' => false,
+                            'message' => 'Erro ao sincronizar: ' . $e->getMessage(),
+                        ];
+                    }
+                }) ,
         ]);
 
         return $table;

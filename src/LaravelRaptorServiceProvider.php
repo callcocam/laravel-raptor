@@ -14,6 +14,8 @@ use Callcocam\LaravelRaptor\Commands\RaptorMakeControllerCommand;
 use Callcocam\LaravelRaptor\Commands\RaptorMakeModelCommand;
 use Callcocam\LaravelRaptor\Commands\RaptorMakePolicyCommand;
 use Callcocam\LaravelRaptor\Commands\SyncCommand;
+use Callcocam\LaravelRaptor\Commands\TranslationGenerateJsonCommand;
+use Callcocam\LaravelRaptor\Commands\TranslationSyncCommand;
 use Callcocam\LaravelRaptor\Console\Commands\ThemeSetupCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
@@ -88,6 +90,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 RaptorMakeModelCommand::class,
                 RaptorMakeControllerCommand::class,
                 RaptorMakePolicyCommand::class,
+                TranslationGenerateJsonCommand::class,
+                TranslationSyncCommand::class,
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 // Customize the install command created by the package tools

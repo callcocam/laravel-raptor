@@ -364,4 +364,218 @@ class TranslationService
             'runtime_cache_size' => count(self::$runtimeCache),
         ];
     }
+
+    /**
+     * Gera arquivo JSON de tradução para um locale específico
+     *
+     * @param string $locale Locale (ex: 'pt_BR', 'en')
+     * @param string|null $tenantId ID do tenant (null para global)
+     * @param string|null $outputPath Caminho de saída customizado (opcional)
+     * @return string Caminho do arquivo gerado
+     */
+    public function generateJsonFile(string $locale, ?string $tenantId = null, ?string $outputPath = null): string
+    {
+        // Busca todas as traduções do locale
+        $translations = $this->getAllTranslations($locale, $tenantId);
+
+        // Define o caminho de saída
+        if (!$outputPath) {
+            $langPath = lang_path();
+            $localeFormatted = str_replace('_', '-', strtolower($locale)); // pt_BR -> pt-br
+            
+            if ($tenantId) {
+                // Para tenant específico: lang/tenants/{tenant_id}/pt-br.json
+                $outputPath = "{$langPath}/tenants/{$tenantId}/{$localeFormatted}.json";
+            } else {
+                // Para global: lang/pt-br.json
+                $outputPath = "{$langPath}/{$localeFormatted}.json";
+            }
+        }
+
+        // Cria o diretório se não existir
+        $directory = dirname($outputPath);
+        if (!is_dir($directory)) {
+            mkdir($directory, 0755, true);
+        }
+
+        // Mescla com traduções existentes do Laravel se for global
+        $mergedTranslations = $translations;
+        
+        if (!$tenantId && file_exists($outputPath)) {
+            $existingTranslations = json_decode(file_get_contents($outputPath), true) ?? [];
+            $mergedTranslations = array_merge($existingTranslations, $translations);
+        }
+
+        // Ordena as chaves alfabeticamente
+        ksort($mergedTranslations);
+
+        // Escreve o arquivo JSON
+        file_put_contents(
+            $outputPath,
+            json_encode($mergedTranslations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+
+        return $outputPath;
+    }
+
+    /**
+     * Obtém todas as traduções de um locale
+     *
+     * @param string $locale
+     * @param string|null $tenantId
+     * @return array Formato: ['chave' => 'tradução']
+     */
+    public function getAllTranslations(string $locale, ?string $tenantId = null): array
+    {
+        $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
+        $overrideTable = config('raptor.tables.translation_overrides', 'translation_overrides');
+
+        $query = DB::table($overrideTable)
+            ->join($groupTable, "{$groupTable}.id", '=', "{$overrideTable}.translation_group_id")
+            ->where("{$groupTable}.locale", $locale)
+            ->where("{$groupTable}.tenant_id", $tenantId)
+            ->select(
+                "{$groupTable}.group",
+                "{$overrideTable}.key",
+                "{$overrideTable}.value"
+            );
+
+        $results = $query->get();
+
+        $translations = [];
+        
+        foreach ($results as $row) {
+            // Gera a chave no formato: group.key ou apenas key se group for null
+            $fullKey = $row->group ? "{$row->group}.{$row->key}" : $row->key;
+            $translations[$fullKey] = $row->value;
+        }
+
+        return $translations;
+    }
+
+    /**
+     * Gera arquivos JSON para todos os locales
+     *
+     * @param string|null $tenantId
+     * @return array Lista de arquivos gerados
+     */
+    public function generateAllJsonFiles(?string $tenantId = null): array
+    {
+        $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
+        
+        // Busca todos os locales disponíveis
+        $locales = DB::table($groupTable)
+            ->where('tenant_id', $tenantId)
+            ->distinct()
+            ->pluck('locale')
+            ->toArray();
+
+        $generatedFiles = [];
+
+        foreach ($locales as $locale) {
+            $generatedFiles[] = $this->generateJsonFile($locale, $tenantId);
+        }
+
+        return $generatedFiles;
+    }
+
+    /**
+     * Importa traduções de um arquivo JSON para o banco de dados
+     *
+     * @param string $filePath Caminho do arquivo JSON
+     * @param string $locale Locale das traduções
+     * @param string|null $tenantId ID do tenant (null para global)
+     * @return int Número de traduções importadas
+     */
+    public function importFromJsonFile(string $filePath, string $locale, ?string $tenantId = null): int
+    {
+        if (!file_exists($filePath)) {
+            throw new \InvalidArgumentException("Arquivo não encontrado: {$filePath}");
+        }
+
+        $translations = json_decode(file_get_contents($filePath), true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \InvalidArgumentException("Erro ao decodificar JSON: " . json_last_error_msg());
+        }
+
+        $count = 0;
+
+        foreach ($translations as $fullKey => $value) {
+            // Separa group e key
+            $parts = explode('.', $fullKey, 2);
+            
+            if (count($parts) === 2) {
+                [$group, $key] = $parts;
+            } else {
+                $group = null;
+                $key = $fullKey;
+            }
+
+            $this->setOverride($tenantId, $group, $key, $value, $locale);
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * Sincroniza traduções entre arquivo JSON e banco de dados
+     * 
+     * @param string $locale
+     * @param string|null $tenantId
+     * @return array Estatísticas da sincronização
+     */
+    public function syncJsonWithDatabase(string $locale, ?string $tenantId = null): array
+    {
+        $localeFormatted = str_replace('_', '-', strtolower($locale));
+        $langPath = lang_path();
+        
+        if ($tenantId) {
+            $jsonPath = "{$langPath}/tenants/{$tenantId}/{$localeFormatted}.json";
+        } else {
+            $jsonPath = "{$langPath}/{$localeFormatted}.json";
+        }
+
+        $stats = [
+            'added' => 0,
+            'updated' => 0,
+            'unchanged' => 0,
+        ];
+
+        if (!file_exists($jsonPath)) {
+            // Se não existe, gera o arquivo
+            $this->generateJsonFile($locale, $tenantId, $jsonPath);
+            $stats['added'] = count($this->getAllTranslations($locale, $tenantId));
+            return $stats;
+        }
+
+        // Carrega traduções do arquivo
+        $fileTranslations = json_decode(file_get_contents($jsonPath), true) ?? [];
+        
+        // Carrega traduções do banco
+        $dbTranslations = $this->getAllTranslations($locale, $tenantId);
+
+        // Atualiza arquivo com novas traduções do banco
+        foreach ($dbTranslations as $key => $value) {
+            if (!isset($fileTranslations[$key])) {
+                $fileTranslations[$key] = $value;
+                $stats['added']++;
+            } elseif ($fileTranslations[$key] !== $value) {
+                $fileTranslations[$key] = $value;
+                $stats['updated']++;
+            } else {
+                $stats['unchanged']++;
+            }
+        }
+
+        // Salva arquivo atualizado
+        ksort($fileTranslations);
+        file_put_contents(
+            $jsonPath,
+            json_encode($fileTranslations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+
+        return $stats;
+    }
 }

@@ -19,6 +19,7 @@ abstract class ResourceController extends Controller
     use EvaluatesClosures;
     use HasBreadcrumbs;
     use WithRequests;
+    use \Callcocam\LaravelRaptor\Support\Concerns\HasTranslations;
     /**
      * Define as variáveis basicas que podem ser substituídas pelos controllers filhos
      */
