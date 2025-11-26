@@ -9,6 +9,8 @@ interface Props {
   model?: any
   infolist?: Record<string, any>
   pageHeaderActions?: any[]
+  action?: string
+  actionName?: string
 }
 
 defineProps<Props>()

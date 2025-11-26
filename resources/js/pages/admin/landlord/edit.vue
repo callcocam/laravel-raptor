@@ -22,6 +22,7 @@ interface Props {
   }
   pageHeaderActions?: any[]
   action?: string
+  actionName?: string
 }
 
 defineProps<Props>()

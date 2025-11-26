@@ -19,7 +19,7 @@ class TranslationGroup extends Model
 
     protected $fillable = [
         'tenant_id',
-        'group',
+        'name',
         'locale',
     ];
 

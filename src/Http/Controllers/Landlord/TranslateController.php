@@ -12,7 +12,6 @@ use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
@@ -134,7 +133,7 @@ class TranslateController extends LandlordController
             \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('translates.create'),
 
             // Action para gerar arquivos JSON
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('generate_json')
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('translates.generate_json')
                 ->label('Gerar JSON')
                 ->icon('FileJson')
                 ->color('success')
@@ -143,24 +142,16 @@ class TranslateController extends LandlordController
 
                     try {
                         // Gera arquivos para todos os locales globais
-                        $files = $translationService->generateAllJsonFiles(null);
+                        $translationService->generateAllJsonFiles(null);
 
-                        return [
-                            'success' => true,
-                            'message' => 'Arquivos JSON gerados com sucesso!',
-                            'files' => $files,
-                            'count' => count($files),
-                        ];
+                        return redirect()->back()->with('success', 'Arquivos JSON gerados com sucesso!');
                     } catch (\Exception $e) {
-                        return [
-                            'success' => false,
-                            'message' => 'Erro ao gerar arquivos JSON: ' . $e->getMessage(),
-                        ];
+                        return redirect()->back()->with('error', 'Erro ao gerar arquivos JSON: ' . $e->getMessage());
                     }
                 }),
 
             // Action para sincronizar JSON com banco
-            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('sync_json')
+            \Callcocam\LaravelRaptor\Support\Actions\Types\ModalAction::make('translates.sync_json')
                 ->label('Sincronizar JSON')
                 ->icon('RefreshCw')
                 ->color('info')
@@ -175,18 +166,11 @@ class TranslateController extends LandlordController
                             $stats[$locale] = $translationService->syncJsonWithDatabase($locale, null);
                         }
 
-                        return [
-                            'success' => true,
-                            'message' => 'Arquivos JSON sincronizados com sucesso!',
-                            'stats' => $stats,
-                        ];
+                        return redirect()->back()->with('success', 'Arquivos JSON sincronizados com sucesso!');
                     } catch (\Exception $e) {
-                        return [
-                            'success' => false,
-                            'message' => 'Erro ao sincronizar: ' . $e->getMessage(),
-                        ];
+                        return redirect()->back()->with('error', 'Erro ao sincronizar: ' . $e->getMessage());
                     }
-                }) ,
+                }),
         ]);
 
         return $table;
@@ -218,7 +202,7 @@ class TranslateController extends LandlordController
                 ->nullable()
                 ->columnSpanFull(),
 
-            TextField::make('group')
+            TextField::make('name')
                 ->label('Grupo')
                 ->helperText('Ex: products, cart, checkout (opcional)')
                 ->placeholder('Deixe vazio se não houver grupo')
@@ -316,7 +300,7 @@ class TranslateController extends LandlordController
                 ->label('Tenant')
                 ->default('Global (Sistema)'),
 
-            TextInfolist::make('group')
+            TextInfolist::make('name')
                 ->label('Grupo')
                 ->default('—'),
 

@@ -30,13 +30,7 @@ abstract class ExecuteAction extends Action
             ->column(HiddenField::make('actionType', $this->actionType))
             ->column(HiddenField::make('actionName',  $name))
             ->url(function () {
-                $name = str($this->getName())
-                    ->replace('importApi', 'execute')
-                    ->replace('import', 'execute')
-                    ->replace('update', 'execute')
-                    ->replace('delete', 'execute')
-                    ->replace('store', 'execute')
-                    ->replace('export', 'execute')->toString();
+                $name = preg_replace('/\..+$/', '.execute', $this->getName()); // Substitui o sufixo por '.execute'
                 $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
                 if (Route::has($route)) {
                     return route($route);

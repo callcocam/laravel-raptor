@@ -8,9 +8,12 @@ import HeaderActions from "~/components/table/HeaderActions.vue";
 interface Props {
   message?: string;
   resourceLabel?: string;
+  resourcePluralLabel?: string;
   breadcrumbs?: BackendBreadcrumb[];
   headerActions?: any;
   table?: any;
+  action?: string;
+  actionName?: string;
 }
 
 const props = defineProps<Props>();
@@ -18,14 +21,13 @@ const props = defineProps<Props>();
 const layoutProps = {
   message: props.message,
   resourceLabel: props.resourceLabel,
+  resourcePluralLabel: props.resourcePluralLabel,
   breadcrumbs: props.breadcrumbs,
-};
-
-console.log("IndexPage props:", props);
+}; 
 </script>
 
 <template>
-  <ResourceLayout v-bind="layoutProps" title="Dashboard">
+  <ResourceLayout v-bind="layoutProps" :title="actionName || 'List'">
     <template #header>
       <!-- Breadcrumbs com Header Actions -->
       <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">

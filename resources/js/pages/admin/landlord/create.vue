@@ -21,6 +21,8 @@ interface Props {
     formActions?: any[]
   }
   pageHeaderActions?: any[]
+  action?: string
+  actionName?: string
 }
 
 defineProps<Props>()

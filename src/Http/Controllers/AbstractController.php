@@ -41,11 +41,12 @@ abstract class AbstractController extends ResourceController
             'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
-            'resourceLabel' => $this->getResourceLabel(),
+            'resourceLabel' => $this->getTitle(),
             'resourcePluralLabel' => $this->getTitle(),
             'maxWidth' => $this->getMaxWidth(),
             'breadcrumbs' => $this->breadcrumbs(),
             'table' => $data,
+            'actionName' => __('Listagem de :resource', ['resource' => $this->getTitle()]),
         ]);
     }
 
@@ -69,6 +70,7 @@ abstract class AbstractController extends ResourceController
                 ->values()
                 ->toArray(),
             'action' => $this->getFormDefaultStoreAction($request->route()->getAction('as'), null),
+            'actionName' => __('Criar :resource', ['resource' => $this->getTitle()]),
         ]);
     }
 
@@ -124,6 +126,7 @@ abstract class AbstractController extends ResourceController
                 ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
+            'actionName' => __('Visualizar :resource', ['resource' => $this->getTitle()]),
         ]);
     }
 
@@ -146,7 +149,8 @@ abstract class AbstractController extends ResourceController
                 ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
-            'action' => $this->getFormDefaultUpdateAction($request->route()->getAction('as'), $record),
+            'actionName' => __('Editar :resource', ['resource' => $this->getTitle()]),
+            'action' => $this->getFormDefaultUpdateAction($request->route()->getAction('as'), $model->getKey()),
         ]);
     }
 

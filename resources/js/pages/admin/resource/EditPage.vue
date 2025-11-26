@@ -8,10 +8,7 @@ import HeaderActions from "~/components/table/HeaderActions.vue";
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+  CardContent 
 } from "@/components/ui/card";
 
 interface FormColumn {
@@ -34,6 +31,7 @@ interface Props {
   };
   pageHeaderActions?: any[];
   action?: string;
+  actionName?: string;
 }
 
 const props = defineProps<Props>();
@@ -61,7 +59,7 @@ const formData = useForm(initialData);
 </script>
 
 <template>
-  <ResourceLayout v-bind="layoutProps" title="Editar">
+  <ResourceLayout v-bind="layoutProps" :title="actionName || `Editar ${resourceLabel}`">
     <template #header>
       <!-- Breadcrumbs com Header Actions -->
       <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">

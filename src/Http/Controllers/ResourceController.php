@@ -207,6 +207,6 @@ abstract class ResourceController extends Controller
 
     public function getSubtitle(): ?string
     {
-        return __('Manage your :resource', ['resource' => $this->getResourcePluralLabel()]);
+        return __('Manage your :resource', ['resource' => $this->getTitle()]);
     }
 }

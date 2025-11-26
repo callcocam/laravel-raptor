@@ -58,15 +58,15 @@ class TranslationService
      * 3. null (permite Laravel usar arquivo de lang)
      *
      * @param string|null $tenantId ID do tenant atual
-     * @param string|null $group Grupo da tradução (ex: 'products')
+     * @param string|null $name Nome do grupo da tradução (ex: 'products')
      * @param string $key Chave da tradução (ex: 'product')
      * @param string $locale Locale (ex: 'pt_BR')
      * @return string|null Valor da tradução ou null para usar fallback do Laravel
      */
-    public function get(?string $tenantId, ?string $group, string $key, string $locale): ?string
+    public function get(?string $tenantId, ?string $name, string $key, string $locale): ?string
     {
         // Verifica cache em memória (runtime)
-        $runtimeKey = $this->getRuntimeCacheKey($tenantId, $group, $key, $locale);
+        $runtimeKey = $this->getRuntimeCacheKey($tenantId, $name, $key, $locale);
 
         if (isset(self::$runtimeCache[$runtimeKey])) {
             return self::$runtimeCache[$runtimeKey];
@@ -74,7 +74,7 @@ class TranslationService
 
         // Verifica cache persistente
         if ($this->cacheEnabled) {
-            $cacheKey = $this->getCacheKey($tenantId, $group, $key, $locale);
+            $cacheKey = $this->getCacheKey($tenantId, $name, $key, $locale);
             $cached = Cache::get($cacheKey);
 
             if ($cached !== null) {
@@ -83,14 +83,14 @@ class TranslationService
         }
 
         // Busca no banco de dados
-        $value = $this->fetchFromDatabase($tenantId, $group, $key, $locale);
+        $value = $this->fetchFromDatabase($tenantId, $name, $key, $locale);
 
         // Armazena nos caches
         self::$runtimeCache[$runtimeKey] = $value;
 
         if ($this->cacheEnabled && $value !== null) {
             Cache::put(
-                $this->getCacheKey($tenantId, $group, $key, $locale),
+                $this->getCacheKey($tenantId, $name, $key, $locale),
                 $value,
                 $this->cacheTtl
             );
@@ -103,12 +103,12 @@ class TranslationService
      * Busca tradução no banco de dados com prioridade Tenant > Global
      *
      * @param string|null $tenantId
-     * @param string|null $group
+     * @param string|null $name
      * @param string $key
      * @param string $locale
      * @return string|null
      */
-    protected function fetchFromDatabase(?string $tenantId, ?string $group, string $key, string $locale): ?string
+    protected function fetchFromDatabase(?string $tenantId, ?string $name, string $key, string $locale): ?string
     {
         $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
         $overridesTable = config('raptor.tables.translation_overrides', 'translation_overrides');
@@ -122,7 +122,7 @@ class TranslationService
                 "{$groupTable}.id"
             )
             ->where("{$groupTable}.locale", $locale)
-            ->where("{$groupTable}.group", $group)
+            ->where("{$groupTable}.name", $name)
             ->where("{$overridesTable}.key", $key)
             ->when($tenantId, fn($q) => $q->where("{$groupTable}.tenant_id", $tenantId))
             // Prioriza tenant sobre global
@@ -232,7 +232,7 @@ class TranslationService
      * Cria ou atualiza uma tradução override
      *
      * @param string|null $tenantId
-     * @param string|null $group
+     * @param string|null $name
      * @param string $key
      * @param string $locale
      * @param string $value
@@ -240,7 +240,7 @@ class TranslationService
      */
     public function setOverride(
         ?string $tenantId,
-        ?string $group,
+        ?string $name,
         string $key,
         string $locale,
         string $value
@@ -249,7 +249,7 @@ class TranslationService
         $translationGroup = \Callcocam\LaravelRaptor\Models\TranslationGroup::firstOrCreate(
             [
                 'tenant_id' => $tenantId,
-                'group' => $group,
+                'name' => $name,
                 'locale' => $locale,
             ]
         );
@@ -275,21 +275,21 @@ class TranslationService
      * Remove uma tradução override
      *
      * @param string|null $tenantId
-     * @param string|null $group
+     * @param string|null $name
      * @param string $key
      * @param string $locale
      * @return bool
      */
     public function deleteOverride(
         ?string $tenantId,
-        ?string $group,
+        ?string $name,
         string $key,
         string $locale
     ): bool {
         $deleted = TranslationOverride::query()
-            ->whereHas('group', function ($query) use ($tenantId, $group, $locale) {
+            ->whereHas('group', function ($query) use ($tenantId, $name, $locale) {
                 $query->where('tenant_id', $tenantId)
-                    ->where('group', $group)
+                    ->where('name', $name)
                     ->where('locale', $locale);
             })
             ->where('key', $key)
@@ -306,15 +306,15 @@ class TranslationService
      * Gera chave de cache persistente
      *
      * @param string|null $tenantId
-     * @param string|null $group
+     * @param string|null $name
      * @param string $key
      * @param string $locale
      * @return string
      */
-    protected function getCacheKey(?string $tenantId, ?string $group, string $key, string $locale): string
+    protected function getCacheKey(?string $tenantId, ?string $name, string $key, string $locale): string
     {
         $tenant = $tenantId ?? 'global';
-        $grp = $group ?? 'null';
+        $grp = $name ?? 'null';
 
         return "{$this->cachePrefix}:{$tenant}:{$grp}:{$key}:{$locale}";
     }
@@ -323,14 +323,14 @@ class TranslationService
      * Gera chave de cache em memória (runtime)
      *
      * @param string|null $tenantId
-     * @param string|null $group
+     * @param string|null $name
      * @param string $key
      * @param string $locale
      * @return string
      */
-    protected function getRuntimeCacheKey(?string $tenantId, ?string $group, string $key, string $locale): string
+    protected function getRuntimeCacheKey(?string $tenantId, ?string $name, string $key, string $locale): string
     {
-        return $this->getCacheKey($tenantId, $group, $key, $locale);
+        return $this->getCacheKey($tenantId, $name, $key, $locale);
     }
 
     /**
@@ -356,10 +356,10 @@ class TranslationService
                 ->pluck('locale')
                 ->toArray(),
             'groups' => DB::table($groupTable)
-                ->select('group')
+                ->select('name')
                 ->distinct()
-                ->whereNotNull('group')
-                ->pluck('group')
+                ->whereNotNull('name')
+                ->pluck('name')
                 ->toArray(),
             'runtime_cache_size' => count(self::$runtimeCache),
         ];
@@ -381,8 +381,8 @@ class TranslationService
         // Define o caminho de saída
         if (!$outputPath) {
             $langPath = lang_path();
-            $localeFormatted = str_replace('_', '-', strtolower($locale)); // pt_BR -> pt-br
-            
+            $localeFormatted = $locale; // pt_BR -> pt-br
+
             if ($tenantId) {
                 // Para tenant específico: lang/tenants/{tenant_id}/pt-br.json
                 $outputPath = "{$langPath}/tenants/{$tenantId}/{$localeFormatted}.json";
@@ -400,7 +400,7 @@ class TranslationService
 
         // Mescla com traduções existentes do Laravel se for global
         $mergedTranslations = $translations;
-        
+
         if (!$tenantId && file_exists($outputPath)) {
             $existingTranslations = json_decode(file_get_contents($outputPath), true) ?? [];
             $mergedTranslations = array_merge($existingTranslations, $translations);
@@ -435,7 +435,6 @@ class TranslationService
             ->where("{$groupTable}.locale", $locale)
             ->where("{$groupTable}.tenant_id", $tenantId)
             ->select(
-                "{$groupTable}.group",
                 "{$overrideTable}.key",
                 "{$overrideTable}.value"
             );
@@ -443,11 +442,10 @@ class TranslationService
         $results = $query->get();
 
         $translations = [];
-        
+
         foreach ($results as $row) {
-            // Gera a chave no formato: group.key ou apenas key se group for null
-            $fullKey = $row->group ? "{$row->group}.{$row->key}" : $row->key;
-            $translations[$fullKey] = $row->value;
+            // Usa APENAS a key da translation_overrides (sem prefixo do grupo)
+            $translations[$row->key] = $row->value;
         }
 
         return $translations;
@@ -462,7 +460,7 @@ class TranslationService
     public function generateAllJsonFiles(?string $tenantId = null): array
     {
         $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
-        
+
         // Busca todos os locales disponíveis
         $locales = DB::table($groupTable)
             ->where('tenant_id', $tenantId)
@@ -485,34 +483,27 @@ class TranslationService
      * @param string $filePath Caminho do arquivo JSON
      * @param string $locale Locale das traduções
      * @param string|null $tenantId ID do tenant (null para global)
+     * @param string|null $defaultGroup Grupo padrão para organização (opcional)
      * @return int Número de traduções importadas
      */
-    public function importFromJsonFile(string $filePath, string $locale, ?string $tenantId = null): int
+    public function importFromJsonFile(string $filePath, string $locale, ?string $tenantId = null, ?string $defaultGroup = null): int
     {
         if (!file_exists($filePath)) {
             throw new \InvalidArgumentException("Arquivo não encontrado: {$filePath}");
         }
 
         $translations = json_decode(file_get_contents($filePath), true);
-        
+
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \InvalidArgumentException("Erro ao decodificar JSON: " . json_last_error_msg());
         }
 
         $count = 0;
 
-        foreach ($translations as $fullKey => $value) {
-            // Separa group e key
-            $parts = explode('.', $fullKey, 2);
-            
-            if (count($parts) === 2) {
-                [$group, $key] = $parts;
-            } else {
-                $group = null;
-                $key = $fullKey;
-            }
-
-            $this->setOverride($tenantId, $group, $key, $value, $locale);
+        foreach ($translations as $key => $value) {
+            // Usa a key diretamente (sem separar por grupo)
+            // O grupo serve apenas para organização visual
+            $this->setOverride($tenantId, $defaultGroup, $key, $locale, $value);
             $count++;
         }
 
@@ -528,9 +519,9 @@ class TranslationService
      */
     public function syncJsonWithDatabase(string $locale, ?string $tenantId = null): array
     {
-        $localeFormatted = str_replace('_', '-', strtolower($locale));
+        $localeFormatted = $locale;
         $langPath = lang_path();
-        
+
         if ($tenantId) {
             $jsonPath = "{$langPath}/tenants/{$tenantId}/{$localeFormatted}.json";
         } else {
@@ -552,7 +543,7 @@ class TranslationService
 
         // Carrega traduções do arquivo
         $fileTranslations = json_decode(file_get_contents($jsonPath), true) ?? [];
-        
+
         // Carrega traduções do banco
         $dbTranslations = $this->getAllTranslations($locale, $tenantId);
 

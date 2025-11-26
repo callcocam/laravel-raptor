@@ -61,7 +61,7 @@ trait HasBreadcrumbs
         // Primeiro breadcrumb: Dashboard (contexto: landlord ou tenant)
         $context = $parts[0]; // 'landlord' ou 'tenant'
         $breadcrumbs[] = [
-            'label' => 'Dashboard',
+            'label' => __('Dashboard'),
             'url' => $this->getBreadcrumbUrl($context.'.dashboard'),
         ];
 
@@ -103,10 +103,10 @@ trait HasBreadcrumbs
     {
         // Mapeia actions comuns para labels mais amigáveis
         $actionLabels = [
-            'index' => 'List',
-            'create' => 'Create',
-            'edit' => 'Edit',
-            'show' => 'View',
+            'index' => __('List'),
+            'create' => __('Create'),
+            'edit' => __('Edit'),
+            'show' => __('View'),
         ];
 
         if (isset($actionLabels[$label])) {
@@ -114,7 +114,7 @@ trait HasBreadcrumbs
         }
 
         // Transforma snake_case ou kebab-case em Title Case
-        return str($label)->replace(['-', '_'], ' ')->title()->toString();
+        return __(str($label)->replace(['-', '_'], ' ')->title()->toString());
     }
 
     /**
