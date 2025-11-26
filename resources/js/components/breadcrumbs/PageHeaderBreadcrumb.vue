@@ -8,18 +8,18 @@
 <template>
   <div class="w-full p-4 items-center">
     <!-- Header Section com Título e Ações -->
-    <div class="flex items-center justify-between gap-4">
-      <div class="space-y-2 flex-1 min-w-0">
-        <h1 v-if="resourceLabel" class="text-3xl font-bold tracking-tight">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="space-y-2 flex-1 min-w-0 w-full sm:w-auto">
+        <h1 v-if="resourceLabel" class="text-2xl sm:text-3xl font-bold tracking-tight break-words">
           {{ resourceLabel }}
         </h1>
-        <p v-if="message" class="text-sm text-muted-foreground">
+        <p v-if="message" class="text-sm text-muted-foreground break-words">
           {{ message }}
         </p>
       </div>
 
       <!-- Slot para Header Actions -->
-      <div v-if="$slots.default" class="flex items-center gap-2 flex-shrink-0 ml-auto">
+      <div v-if="$slots.default" class="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto sm:ml-auto">
         <slot />
       </div>
     </div>

@@ -26,6 +26,13 @@ class AbstractModel extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function tenant()
+    {
+        return $this->belongsTo(
+            config('raptor.landlord.models.tenant', Tenant::class),
+            'tenant_id'
+        );
+    }
     /**
      * @return SlugOptions
      */

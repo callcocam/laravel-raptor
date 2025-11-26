@@ -68,7 +68,8 @@ class ModelSource extends AbstractSource
         $query = $this->buildQuery();
 
         // Retorna paginação - Eloquent aplica casts automaticamente
-        return $query->paginate($this->perPage, ['*'], 'page', $this->page);
+        return $query
+            ->paginate($this->perPage, ['*'], 'page', $this->page)->onEachSide(2);
     }
 
     /**

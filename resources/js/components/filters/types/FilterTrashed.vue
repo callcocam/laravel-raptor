@@ -5,11 +5,11 @@
  * Específico para soft deletes do Laravel
  -->
 <template>
-  <Select
+  <Select class="h-9"
     :modelValue="modelValue ? String(modelValue) : undefined"
     @update:modelValue="handleSelect"
   >
-    <SelectTrigger :id="filter.name" class="w-auto min-w-[150px]">
+    <SelectTrigger :id="filter.name" class="min-w-[150px] w-full">
       <SelectValue :placeholder="filter.placeholder || filter.label" />
     </SelectTrigger>
     <SelectContent> 

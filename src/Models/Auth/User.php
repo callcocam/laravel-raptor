@@ -21,4 +21,6 @@ use Illuminate\Foundation\Auth\Access\Authorizable;
 class User extends AbstractModel implements AuthenticatableContract, AuthorizableContract, CanResetPasswordContract
 {
     use Authenticatable, Authorizable, CanResetPassword, HasRolesAndPermissions, MustVerifyEmail;
+
+    protected $with = ['tenant'];
 }

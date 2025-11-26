@@ -6,29 +6,21 @@
  * Pode ser usado independentemente ou com tabelas
  -->
 <template>
-  <div
-    v-if="filters && filters.length > 0"
-    class="flex items-center gap-2 mb-4 flex-wrap"
-  >
-    <div class="flex flex-1 items-center gap-4 w-full sm:w-auto">
-      <div class="relative flex-1 sm:flex-none" v-if="searchable">
-        <Input placeholder="Buscar..." class="w-full sm:w-64 h-9" v-model="filterValues.search"/>
-        <Search class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+  <div v-if="filters && filters.length > 0" class="flex flex-col gap-2 mb-4">
+    <!-- Barra de busca sempre visível -->
+    <div class="flex items-center gap-2 w-full">
+      <div class="relative flex-1" v-if="searchable">
+        <Input placeholder="Buscar..." class="w-full h-9 pr-10" v-model="filterValues.search"/>
+        <Search class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
       </div>
 
-      <FilterRenderer
-        v-for="filter in filters"
-        :key="filter.name"
-        :filter="filter"
-        :modelValue="filterValues[filter.name]"
-        @update:modelValue="(value) => updateFilter(filter.name, value)"
-      />
       <Button
         type="button"
         v-if="!autoApply"
         size="sm"
         @click="applyFilters"
         :disabled="isLoading"
+        class="flex-shrink-0"
       >
         <Search class="mr-2 h-4 w-4" />
         Aplicar
@@ -40,9 +32,42 @@
         size="sm"
         @click="clearFilters"
         type="button"
+        class="flex-shrink-0"
       >
         Limpar
       </Button>
+
+      <!-- Popover para filtros avançados -->
+      <Popover v-if="hasAdvancedFilters">
+        <PopoverTrigger as-child>
+          <Button variant="outline" size="sm" class="flex-shrink-0">
+            <SlidersHorizontal class="mr-2 h-4 w-4" />
+            Filtros
+            <Badge v-if="activeFiltersCount > 0" variant="secondary" class="ml-2 h-5 px-1.5">
+              {{ activeFiltersCount }}
+            </Badge>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent class="w-80 p-4" align="end">
+          <div class="space-y-4 w-full">
+            <div class="space-y-2">
+              <h4 class="font-medium text-sm">Filtros Avançados</h4>
+              <p class="text-xs text-muted-foreground">Refine sua pesquisa</p>
+            </div>
+            
+            <div class="space-y-3">
+              <div v-for="filter in filters" :key="filter.name" class="w-full">
+                <FilterRenderer
+                  :filter="filter"
+                  :modelValue="filterValues[filter.name]"
+                  @update:modelValue="(value) => updateFilter(filter.name, value)"
+                  class="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   </div>
 </template>
@@ -51,9 +76,11 @@
 import { ref, computed, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-vue-next";
+import { Badge } from "@/components/ui/badge";
+import { Search, SlidersHorizontal } from "lucide-vue-next";
 import FilterRenderer from "./FilterRenderer.vue";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface Filter {
   name: string;
@@ -90,6 +117,23 @@ const route = computed(() => new URL(page.url, window.location.origin));
 
 // Estado interno dos filtros
 const filterValues = ref<Record<string, any>>({});
+
+// Verifica se tem filtros avançados (além do search)
+const hasAdvancedFilters = computed(() => {
+  return props.filters && props.filters.length > 0;
+});
+
+// Conta quantos filtros avançados estão ativos (excluindo search)
+const activeFiltersCount = computed(() => {
+  return Object.entries(filterValues.value).filter(([key, value]) => {
+    if (key === 'search') return false; // Ignora o campo de busca
+    if (value === null || value === undefined || value === "") return false;
+    if (typeof value === "object") {
+      return Object.values(value).some((v) => v !== null && v !== undefined && v !== "");
+    }
+    return true;
+  }).length;
+});
 
 // Inicializa valores dos filtros da URL
 const initializeFromQuery = () => {

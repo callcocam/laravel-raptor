@@ -10,7 +10,7 @@
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select v-model="internalValue" :required="column.required">
+    <Select v-model="internalValue" :required="column.required"  class="h-9">
       <SelectTrigger :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
         <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
       </SelectTrigger>
