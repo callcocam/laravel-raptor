@@ -77,6 +77,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 'create_personal_access_tokens_table',
                 'create_cache_table',
                 'create_jobs_table',
+                'create_translation_groups_table',
+                'create_translation_overrides_table',
             ])
             ->hasCommands([
                 LaravelRaptorCommand::class,
