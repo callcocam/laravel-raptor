@@ -8,156 +8,66 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TranslationOverride extends AbstractModel
+class TranslationOverride extends Model
 {
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'translation_overrides';
+    use HasUlids;
 
-    /**
-     * Indica que este model não usa ULID como primary key
-     * (usa auto-increment ID padrão)
-     *
-     * @var bool
-     */
-    public $incrementing = true;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<string>
-     */
     protected $fillable = [
-        'tenant_id',
-        'group',
+        'translation_group_id',
         'key',
-        'locale',
         'value',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected function casts(): array
+    public function getTable(): string
     {
-        return [
-            'created_at' => 'datetime',
-            'updated_at' => 'datetime',
-        ];
+        return config('raptor.tables.translation_overrides', 'translation_overrides');
     }
 
     /**
-     * Boot do model - desabilita o landlord para este model
-     * pois ele gerencia traduções globais e por tenant
+     * Relacionamento: TranslationOverride pertence a um TranslationGroup
      */
-    public function __construct(array $attributes = [])
-    {
-        parent::__construct($attributes);
-
-        // Define a tabela dinamicamente do config
-        $this->table = config('raptor.tables.translation_overrides', 'translation_overrides');
-
-        // Desabilita landlord para este model permitir traduções globais
-        static::$landlord->disable();
-    }
-
-    /**
-     * Relacionamento: TranslationOverride pertence a um Tenant
-     */
-    public function tenant(): BelongsTo
+    public function group(): BelongsTo
     {
         return $this->belongsTo(
-            config('raptor.landlord.models.tenant', Tenant::class),
-            'tenant_id'
+            config('raptor.landlord.models.translation_group', TranslationGroup::class),
+            'translation_group_id'
         );
     }
 
     /**
-     * Scope: Apenas traduções globais (tenant_id NULL)
+     * Accessor: Acessa tenant_id via relacionamento group
      */
-    public function scopeGlobal($query)
+    public function getTenantIdAttribute(): ?string
     {
-        return $query->whereNull('tenant_id');
+        return $this->group?->tenant_id;
     }
 
     /**
-     * Scope: Traduções de um tenant específico
+     * Accessor: Acessa group (nome do grupo) via relacionamento
      */
-    public function scopeForTenant($query, $tenantId)
+    public function getGroupNameAttribute(): ?string
     {
-        return $query->where('tenant_id', $tenantId);
+        return $this->group?->group;
     }
 
     /**
-     * Scope: Busca por grupo, key e locale
+     * Accessor: Acessa locale via relacionamento group
      */
-    public function scopeByTranslation($query, ?string $group, string $key, string $locale)
+    public function getLocaleAttribute(): ?string
     {
-        return $query
-            ->where('group', $group)
-            ->where('key', $key)
-            ->where('locale', $locale);
-    }
-
-    /**
-     * Scope: Busca por locale
-     */
-    public function scopeByLocale($query, string $locale)
-    {
-        return $query->where('locale', $locale);
-    }
-
-    /**
-     * Verifica se é uma tradução global
-     */
-    public function isGlobal(): bool
-    {
-        return $this->tenant_id === null;
+        return $this->group?->locale;
     }
 
     /**
      * Retorna a chave completa da tradução (group.key)
      */
-    public function getFullKey(): string
+    public function getFullKeyAttribute(): string
     {
-        return $this->group ? "{$this->group}.{$this->key}" : $this->key;
-    }
-
-    /**
-     * Método estático para buscar uma tradução override
-     */
-    public static function findOverride(?string $tenantId, ?string $group, string $key, string $locale): ?self
-    {
-        return static::query()
-            ->where('tenant_id', $tenantId)
-            ->byTranslation($group, $key, $locale)
-            ->first();
-    }
-
-    /**
-     * Método estático para buscar tradução com fallback
-     * Prioridade: Tenant > Global DB > null
-     */
-    public static function getTranslation(?string $tenantId, ?string $group, string $key, string $locale): ?string
-    {
-        // Tenta buscar override do tenant
-        if ($tenantId) {
-            $tenantOverride = static::findOverride($tenantId, $group, $key, $locale);
-            if ($tenantOverride) {
-                return $tenantOverride->value;
-            }
-        }
-
-        // Fallback: busca tradução global em DB
-        $globalOverride = static::findOverride(null, $group, $key, $locale);
-
-        return $globalOverride?->value;
+        $group = $this->group?->group;
+        return $group ? "{$group}.{$this->key}" : $this->key;
     }
 }

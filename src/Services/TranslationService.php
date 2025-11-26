@@ -110,8 +110,27 @@ class TranslationService
      */
     protected function fetchFromDatabase(?string $tenantId, ?string $group, string $key, string $locale): ?string
     {
-        // Usa o método estático do model que já implementa a lógica de fallback
-        return TranslationOverride::getTranslation($tenantId, $group, $key, $locale);
+        $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
+        $overridesTable = config('raptor.tables.translation_overrides', 'translation_overrides');
+
+        // Buscar override com JOIN na tabela pai
+        $override = TranslationOverride::query()
+            ->join(
+                $groupTable,
+                "{$overridesTable}.translation_group_id",
+                '=',
+                "{$groupTable}.id"
+            )
+            ->where("{$groupTable}.locale", $locale)
+            ->where("{$groupTable}.group", $group)
+            ->where("{$overridesTable}.key", $key)
+            ->when($tenantId, fn($q) => $q->where("{$groupTable}.tenant_id", $tenantId))
+            // Prioriza tenant sobre global
+            ->orderByRaw("CASE WHEN {$groupTable}.tenant_id IS NOT NULL THEN 1 ELSE 2 END")
+            ->select("{$overridesTable}.value")
+            ->first();
+
+        return $override?->value;
     }
 
     /**
@@ -134,27 +153,33 @@ class TranslationService
 
         $translations = [];
 
-        // Busca traduções do tenant
+        // Busca traduções do tenant via JOIN
         if ($tenantId) {
             $tenantTranslations = TranslationOverride::query()
-                ->where('tenant_id', $tenantId)
-                ->where('locale', $locale)
+                ->with('group')
+                ->whereHas('group', function ($query) use ($tenantId, $locale) {
+                    $query->where('tenant_id', $tenantId)
+                        ->where('locale', $locale);
+                })
                 ->get();
 
             foreach ($tenantTranslations as $translation) {
-                $fullKey = $translation->getFullKey();
+                $fullKey = $translation->full_key;
                 $translations[$fullKey] = $translation->value;
             }
         }
 
         // Busca traduções globais (que não foram sobrescritas pelo tenant)
         $globalTranslations = TranslationOverride::query()
-            ->whereNull('tenant_id')
-            ->where('locale', $locale)
+            ->with('group')
+            ->whereHas('group', function ($query) use ($locale) {
+                $query->whereNull('tenant_id')
+                    ->where('locale', $locale);
+            })
             ->get();
 
         foreach ($globalTranslations as $translation) {
-            $fullKey = $translation->getFullKey();
+            $fullKey = $translation->full_key;
 
             // Só adiciona se não foi sobrescrito pelo tenant
             if (!isset($translations[$fullKey])) {
@@ -220,12 +245,20 @@ class TranslationService
         string $locale,
         string $value
     ): TranslationOverride {
-        $override = TranslationOverride::updateOrCreate(
+        // 1. Encontra ou cria o grupo pai
+        $translationGroup = \Callcocam\LaravelRaptor\Models\TranslationGroup::firstOrCreate(
             [
                 'tenant_id' => $tenantId,
                 'group' => $group,
-                'key' => $key,
                 'locale' => $locale,
+            ]
+        );
+
+        // 2. Cria ou atualiza o override
+        $override = TranslationOverride::updateOrCreate(
+            [
+                'translation_group_id' => $translationGroup->id,
+                'key' => $key,
             ],
             [
                 'value' => $value,
@@ -254,10 +287,12 @@ class TranslationService
         string $locale
     ): bool {
         $deleted = TranslationOverride::query()
-            ->where('tenant_id', $tenantId)
-            ->where('group', $group)
+            ->whereHas('group', function ($query) use ($tenantId, $group, $locale) {
+                $query->where('tenant_id', $tenantId)
+                    ->where('group', $group)
+                    ->where('locale', $locale);
+            })
             ->where('key', $key)
-            ->where('locale', $locale)
             ->delete();
 
         if ($deleted) {
@@ -305,15 +340,23 @@ class TranslationService
      */
     public function getStats(): array
     {
+        $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
+
         return [
             'total_overrides' => TranslationOverride::count(),
-            'global_overrides' => TranslationOverride::whereNull('tenant_id')->count(),
-            'tenant_overrides' => TranslationOverride::whereNotNull('tenant_id')->count(),
-            'locales' => TranslationOverride::select('locale')
+            'global_overrides' => TranslationOverride::query()
+                ->whereHas('group', fn($q) => $q->whereNull('tenant_id'))
+                ->count(),
+            'tenant_overrides' => TranslationOverride::query()
+                ->whereHas('group', fn($q) => $q->whereNotNull('tenant_id'))
+                ->count(),
+            'locales' => DB::table($groupTable)
+                ->select('locale')
                 ->distinct()
                 ->pluck('locale')
                 ->toArray(),
-            'groups' => TranslationOverride::select('group')
+            'groups' => DB::table($groupTable)
+                ->select('group')
                 ->distinct()
                 ->whereNotNull('group')
                 ->pluck('group')

@@ -91,15 +91,15 @@ class TernaryFilter extends FilterBuilder
     {
         // Configura as opções baseadas nos labels
         $this->options = [
-            ['value' => '', 'label' => $this->placeholderLabel ?? 'Todos'],
+            ['value' => 'all', 'label' => $this->placeholderLabel ?? 'Todos'],
             ['value' => '1', 'label' => $this->trueLabel ?? 'Sim'],
             ['value' => '0', 'label' => $this->falseLabel ?? 'Não'],
         ];
 
         // Configura a query
         $this->queryUsing(function ($query, $value) {
-            // Valor vazio ou null = não aplica filtro (ou aplica nullQuery se definida)
-            if ($value === '' || $value === null) {
+            // Valor 'all' ou vazio ou null = não aplica filtro (ou aplica nullQuery se definida)
+            if ($value === 'all' || $value === '' || $value === null) {
                 if ($this->nullQuery) {
                     return call_user_func($this->nullQuery, $query);
                 }

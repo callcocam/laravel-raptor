@@ -61,6 +61,7 @@ return [
         'models' => [
             'tenant' => \Callcocam\LaravelRaptor\Models\Tenant::class,
             'user' => \App\Models\User::class,
+            'translation_group' => \Callcocam\LaravelRaptor\Models\TranslationGroup::class,
             'translate' => \Callcocam\LaravelRaptor\Models\TranslationOverride::class,
         ]
     ],
@@ -143,6 +144,7 @@ return [
     */
     'tables' => [
         'tenants' => 'tenants',
+        'translation_groups' => 'translation_groups',
         'translation_overrides' => 'translation_overrides',
     ],
 

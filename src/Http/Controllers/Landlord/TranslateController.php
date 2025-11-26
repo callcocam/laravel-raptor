@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
@@ -29,7 +30,7 @@ class TranslateController extends LandlordController
      */
     public function model(): ?string
     {
-        return config('raptor.landlord.models.translate', \Callcocam\LaravelRaptor\Models\TranslationOverride::class);
+        return config('raptor.landlord.models.translation_group', \Callcocam\LaravelRaptor\Models\TranslationGroup::class);
     }
 
     /**
@@ -66,6 +67,11 @@ class TranslateController extends LandlordController
      */
     protected function table(TableBuilder $table): TableBuilder
     {
+        // Eager load o relacionamento group para evitar N+1
+        // $table->query(function ($query) {
+        //     return $query->with('group.tenant');
+        // });
+
         $table->columns([
             TextColumn::make('tenant.name')
                 ->label('Tenant')
@@ -75,21 +81,16 @@ class TranslateController extends LandlordController
                 ->sortable()
                 ->searchable(),
 
-            TextColumn::make('group')
+            TextColumn::make('name')
                 ->label('Grupo')
                 ->sortable()
                 ->searchable()
                 ->default('—'),
 
-            TextColumn::make('key')
-                ->label('Chave')
-                ->sortable()
-                ->searchable(),
-
             TextColumn::make('locale')
                 ->label('Idioma')
                 ->badge()
-                ->color(fn($value) => match($value) {
+                ->color(fn($value) => match ($value) {
                     'pt_BR' => 'primary',
                     'en' => 'success',
                     'es' => 'warning',
@@ -97,11 +98,6 @@ class TranslateController extends LandlordController
                     default => 'secondary',
                 })
                 ->sortable(),
-
-            TextColumn::make('value')
-                ->label('Tradução')
-                ->limit(50)
-                ->searchable(),
         ]);
 
         $table->filters([
@@ -113,15 +109,6 @@ class TranslateController extends LandlordController
                     'es' => 'Español',
                     'fr' => 'Français',
                 ]),
-
-            \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('group')
-                ->label('Grupo')
-                ->options($this->model()::query()
-                    ->select('group')
-                    ->distinct()
-                    ->whereNotNull('group')
-                    ->pluck('group', 'group')
-                    ->toArray()),
 
             \Callcocam\LaravelRaptor\Support\Table\Filters\TernaryFilter::make('is_global')
                 ->label('Tipo')
@@ -182,11 +169,6 @@ class TranslateController extends LandlordController
                 ->placeholder('Deixe vazio se não houver grupo')
                 ->columnSpanFull(),
 
-            TextField::make('key')
-                ->label('Chave')
-                ->helperText('Ex: product, add_to_cart, title')
-                ->required()
-                ->columnSpanFull(),
 
             SelectField::make('locale')
                 ->label('Idioma')
@@ -195,16 +177,77 @@ class TranslateController extends LandlordController
                 ->default(config('raptor.translation.default_locale', 'pt_BR'))
                 ->columnSpanFull(),
 
-            TextareaField::make('value')
-                ->label('Tradução')
-                ->helperText('Valor traduzido que substituirá a tradução padrão')
-                ->required()
-                ->rows(3)
-                ->columnSpanFull(),
+            RepeaterField::make('overrides')
+                ->relationship('overrides')
+                ->label('Chaves e Traduções')
+                ->helperText('Adicione uma ou mais chaves e seus respectivos valores traduzidos.')
+                ->default([])
+                ->columnSpanFull()
+                ->fields([
+
+                    TextField::make('key')
+                        ->label('Chave')
+                        ->helperText('Ex: product, add_to_cart, title')
+                        ->required()
+                        ->columnSpan('5'),
+
+                    TextField::make('value')
+                        ->label('Tradução')
+                        ->helperText('Valor traduzido que substituirá a tradução padrão')
+                        ->required()
+                        ->columnSpan('7'),
+                ])
         ]);
 
         return $form;
     }
+
+    /**
+     * Override do store para criar grupo pai + traduções filhas
+     */
+    // public function store(\Illuminate\Http\Request $request)
+    // {
+    //     // Validar dados
+    //     $validated = $request->validate([
+    //         'tenant_id' => 'nullable|exists:' . config('raptor.tables.tenants', 'tenants') . ',id',
+    //         'group' => 'nullable|string|max:255',
+    //         'locale' => 'required|string|in:pt_BR,en,es,fr',
+    //         'key_value_pairs' => 'required|array|min:1',
+    //         'key_value_pairs.*.key' => 'required|string|max:255',
+    //         'key_value_pairs.*.value' => 'required|string',
+    //     ]);
+
+    //     try {
+    //         \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+    //             // 1. Criar grupo pai
+    //             $translationGroup = \Callcocam\LaravelRaptor\Models\TranslationGroup::create([
+    //                 'tenant_id' => $validated['tenant_id'] ?? null,
+    //                 'group' => $validated['group'] ?? null,
+    //                 'locale' => $validated['locale'],
+    //             ]);
+
+    //             // 2. Criar traduções filhas em lote
+    //             $overrides = collect($validated['key_value_pairs'])->map(fn($pair) => [
+    //                 'translation_group_id' => $translationGroup->id,
+    //                 'key' => $pair['key'],
+    //                 'value' => $pair['value'],
+    //                 'created_at' => now(),
+    //                 'updated_at' => now(),
+    //             ])->toArray();
+
+    //             $translationGroup->overrides()->insert($overrides);
+    //         });
+
+    //         return redirect()
+    //             ->route('translates.index')
+    //             ->with('success', 'Traduções criadas com sucesso!');
+
+    //     } catch (\Exception $e) {
+    //         return back()
+    //             ->withInput()
+    //             ->with('error', 'Erro ao criar traduções: ' . $e->getMessage());
+    //     }
+    // }
 
     /**
      * Define a infolist de visualização
