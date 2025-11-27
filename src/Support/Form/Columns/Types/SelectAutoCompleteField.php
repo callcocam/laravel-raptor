@@ -36,21 +36,16 @@ class SelectAutoCompleteField extends SelectField
 
     public function toArray($model = null): array
     {
-        $options = $this->getOptions();
         $optionsData = (object) [];
 
         // Processa as opções BRUTAS antes da normalização
         if (! empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
-            // Pega as opções brutas (antes de normalizar)
-            $rawOptions = $this->evaluate($this->options);
-            $processed = $this->processOptionsForAutoComplete($rawOptions);
-            $options = $processed['options'];
+            // Pega as opções brutas (antes de normalizar) 
+            $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
             $optionsData = $processed['optionsData'];
         }
 
-        // Chama o parent::toArray() do SelectField e sobrescreve options e optionsData
         $baseArray = parent::toArray($model);
-        $baseArray['options'] = $options;
         $baseArray['optionsData'] = $optionsData;
 
         return array_merge($baseArray, $this->autoCompleteToArray());

@@ -23,12 +23,27 @@ trait BelongsToOptions
 
     protected Closure|string|null $optionLabel = 'name';
 
+    protected array|Closure|string|null  $rawOptions = null;
+
     /**
      * Set the options for the filter.
      */
     public function options(array|Closure $options): static
     {
         $this->options = $options;
+
+        $this->rawOptions = $this->evaluate($options);
+
+        return $this;
+    }
+
+    public function rawOptions(array|Closure|string|null $options = null): static
+    {
+        if ($options === null) {
+            return $this->rawOptions;
+        }
+
+        $this->rawOptions = $options;
 
         return $this;
     }
@@ -61,7 +76,7 @@ trait BelongsToOptions
                         }
 
                         // 3. Pegar o model relacionado de forma segura
-                        $relatedModel = $this->getUsingRelationshipQuery($relationInstance->getRelated()); 
+                        $relatedModel = $this->getUsingRelationshipQuery($relationInstance->getRelated());
                         // 4. Validar nomes das colunas para evitar injeção
                         $labelColumn = $this->getOptionLabel() ?? 'name';
                         $keyColumn = $this->getOptionKey() ?? 'id';
@@ -80,6 +95,11 @@ trait BelongsToOptions
         $options = $this->evaluate($this->options);
 
         return $this->normalizeOptions($options);
+    }
+
+    protected function getRawOptions()
+    {
+        return $this->rawOptions;
     }
 
     /**
