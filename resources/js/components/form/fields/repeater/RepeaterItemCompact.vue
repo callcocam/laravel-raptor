@@ -103,24 +103,13 @@ const hasErrors = computed(() => {
 });
 
 const getFieldColumnClass = (field: FormColumn, hasOrderable: boolean) => {
-  const span = field.columnSpan || "full";
-
-  // Ajusta o span considerando se tem drag handle e botão de remover
-  const baseSpan = span === "full" ? 12 : parseInt(span);
-
-  // Subtrai colunas usadas por drag handle (1) e botão remover (1)
-  const columnsUsed = (hasOrderable ? 1 : 0) + (props.canRemove ? 1 : 0);
-  const availableColumns = 12 - columnsUsed;
-
-  // Calcula o span ajustado
-  let adjustedSpan = baseSpan;
-  if (span === "full") {
-    adjustedSpan = availableColumns;
-  } else if (baseSpan > availableColumns) {
-    adjustedSpan = availableColumns;
+   const span = field.columnSpan || 'full'
+  
+  if (span === 'full') {
+    return 'col-span-12'
   }
-
-  return `col-span-${adjustedSpan}`;
+  
+  return `col-span-12 md:col-span-${span}`
 };
 
 const getFieldError = (fieldName: string) => {
