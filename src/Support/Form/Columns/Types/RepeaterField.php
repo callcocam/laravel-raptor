@@ -50,7 +50,7 @@ class RepeaterField extends Column
                 $data = [];
                 foreach ($values as $columnName => $value) {
                     $field = collect($fields)->firstWhere('name', $columnName);
-                    if ($field) {
+                    if ($field) { 
                         $valueUsing = $field->getValueUsing($values, $model);
                         if ($valueUsing !== null) {
                             if (is_array($valueUsing)) {
@@ -115,7 +115,7 @@ class RepeaterField extends Column
                 }
 
                 $newValue[$key] = $processedData;
-            } 
+            }
             return $newValue;
         });
     }

@@ -31,7 +31,7 @@ trait BelongsToFields
 
     public function addField(AbstractColumn $field, $order = 0): static
     {
-        $this->fields[] = $field->order($order);
+        $this->fields[] = $field->order($order)->relationshipName($this->getRelationshipName() ?? $this->getName());
         return $this;
     }
 

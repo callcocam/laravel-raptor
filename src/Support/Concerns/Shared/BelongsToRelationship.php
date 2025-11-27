@@ -25,8 +25,11 @@ trait BelongsToRelationship
 
         $this->relationship = $relationship;
 
-        if ($relationshipName) {
-            $this->relationshipName = $relationshipName;
+        $this->relationshipName = $relationshipName;
+        if (!$relationshipName) {
+            if (is_string($relationship)) {
+                $this->relationshipName = $relationship;
+            }  
         }
 
         if ($relationshipKey) {

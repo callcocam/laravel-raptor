@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Concerns\Shared;
 
 use Closure;
+use Illuminate\Support\Facades\Log;
 
 trait BelongsToOptions
 {
@@ -23,7 +24,7 @@ trait BelongsToOptions
 
     protected Closure|string|null $optionLabel = 'name';
 
-    protected array|Closure|string|null  $rawOptions = null;
+    protected array  $rawOptions = [];
 
     /**
      * Set the options for the filter.
@@ -37,12 +38,8 @@ trait BelongsToOptions
         return $this;
     }
 
-    public function rawOptions(array|Closure|string|null $options = null): static
+    public function rawOptions(array $options = []): static
     {
-        if ($options === null) {
-            return $this->rawOptions;
-        }
-
         $this->rawOptions = $options;
 
         return $this;
@@ -86,7 +83,7 @@ trait BelongsToOptions
                             ->pluck($labelColumn, $keyColumn)
                             ->toArray();
                     } catch (\Throwable $e) {
-                        \Log::error('Error loading relationship options: ' . $e->getMessage());
+                        Log::error('Error loading relationship options: ' . $e->getMessage());
                         $this->options = [];
                     }
                 }

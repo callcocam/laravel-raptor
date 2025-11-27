@@ -10,6 +10,10 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
+use Closure;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 /**
  * SelectAutoCompleteField - Campo de seleção com auto-preenchimento
@@ -38,11 +42,19 @@ class SelectSearchField extends Column
 
     protected Closure|string|null $dependsOn = null;
 
+    protected ?Builder $baseQuery = null;
+
+    protected int $limit = 100;
+
+    protected array $searchableFields = ['id', 'name'];
+
+    protected array $where = [];
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->component('form-field-search-select');
-        $this->setUp();
+        $this->setUp(); 
     }
 
     public function searchable(bool $searchable = true): self
@@ -63,11 +75,113 @@ class SelectSearchField extends Column
     {
         return $this->evaluate($this->dependsOn);
     }
+    /**
+     * Define a query para busca dinâmica
+     *
+     * @param Builder|Closure|string|Model $query Classe do model ou instância
+     * @param string|null $label Coluna para exibir (padrão: 'name')
+     * @param string|null $value Coluna para valor (padrão: 'id')
+     * @param array|null $select Colunas para seleção (padrão: ['id', 'name'])
+     * @return self
+     */
+    public function query(Builder|Closure|string|Model $query, ?string $label = null, ?string $value = null, ?array $select = ['id', 'name']): self
+    {
+        return $this->baseQuery($query, $label, $value, $select)->searchable(true)->required(true);
+    }
 
-   public function toArray($model = null): array
+    /**
+     * Define a query para busca dinâmica
+     *
+     * @param Builder|Closure|string|Model $query Classe do model ou instância
+     * @param string|null $label Coluna para exibir (padrão: 'name')
+     * @param string|null $value Coluna para valor (padrão: 'id')
+     * @param array|null $select Colunas para seleção (padrão: ['id', 'name'])
+     * @return self
+     */
+    public function baseQuery(Builder|Closure|string|Model $query, ?string $label = null, ?string $value = null, ?array $select = ['id', 'name']): self
+    {
+        if ($query instanceof Builder) {
+            $this->baseQuery = $query;
+        } elseif ($query instanceof Closure) {
+            $this->baseQuery = $this->evaluate($query);
+        } elseif ($query instanceof Model) {
+            $this->baseQuery = $query->newQuery()->select($select);
+        } elseif (is_string($query)) {
+            $this->baseQuery = (new $query())->newQuery()->select($select);
+        }
+        if ($select) {
+            $this->searchableFields = $select;
+        }
+        if ($label) {
+            $this->autoCompleteLabel($label);
+        }
+        if ($value) {
+            $this->autoCompleteValue($value);
+        }
+        return $this;
+    }
+
+    public function getBaseQuery(): ?Builder
+    {
+        return $this->baseQuery;
+    }
+
+    public function getSearchableFields(): array
+    {
+        return $this->searchableFields;
+    }
+
+    public function searchableFields(array $fields): self
+    {
+        $this->searchableFields = $fields;
+
+        return $this;
+    }
+
+    public function limit(int $limit): self
+    {
+        $this->limit = $limit;
+
+        return $this;
+    }
+
+    public function where(array $where): self
+    {
+        $this->where = $where;
+
+        return $this;
+    }
+    public function getWhere(): array
+    {
+        return $this->where;
+    }
+
+    protected function processOptionsForQuery(): array
+    {
+        $query = $this->getBaseQuery();
+        if ($query) {
+            return $query
+                ->when($this->getWhere(), function ($query) {
+                    $query->whereIn($this->getOptionValueKey(), $this->getWhere());
+                })
+                ->select($this->getSearchableFields())
+                ->limit($this->limit)->get()->toArray();
+        }
+        return [];
+    }
+
+    public function toArray($model = null): array
     {
 
         $optionsData = (object) [];
+
+        $baseSearchableFields = collect(data_get($model, $this->getRelationshipName(), []))->pluck($this->getName())->toArray();
+
+        if ($baseSearchableFields) {
+            $this->where($baseSearchableFields);
+        }
+
+        $this->options($this->processOptionsForQuery());
 
         // Processa as opções BRUTAS antes da normalização
         if (! empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
