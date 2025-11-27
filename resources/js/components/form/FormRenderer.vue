@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, provide } from "vue";
 import { Form } from "@inertiajs/vue3";
 import FieldRenderer from "./columns/FieldRenderer.vue";
 
@@ -80,6 +80,9 @@ const emit = defineEmits<{
 
 // Referência ao form data (pode ser Inertia form ou objeto reativo)
 const formData = computed(() => props.modelValue);
+
+// Provê formData para componentes filhos (para cálculos)
+provide('formData', formData);
 
 // Handler para atualização de campos
 const handleFieldUpdate = (fieldName: string, value: any) => {

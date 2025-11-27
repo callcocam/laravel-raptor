@@ -103,10 +103,9 @@
       v-show="!isCollapsed"
       class="p-4 grid grid-cols-12 gap-4"
     >
-      <component
+      <FieldRenderer
         v-for="field in fields"
         :key="`${itemId}-${field.name}`"
-        :is="getFieldComponent(field)"
         :column="field"
         :modelValue="item[field.name]"
         :error="getFieldError(field.name)"
@@ -118,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, provide, toRef } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   ChevronDown,
@@ -128,18 +127,7 @@ import {
   Copy,
   Trash2,
 } from 'lucide-vue-next'
-
-// Import field components
-import FormFieldText from '../FormFieldText.vue'
-import FormFieldEmail from '../FormFieldEmail.vue'
-import FormFieldPassword from '../FormFieldPassword.vue'
-import FormFieldTextarea from '../FormFieldTextarea.vue'
-import FormFieldNumber from '../FormFieldNumber.vue'
-import FormFieldDate from '../FormFieldDate.vue'
-import FormFieldCheckbox from '../FormFieldCheckbox.vue'
-import FormFieldSelect from '../FormFieldSelect.vue'
-import FormFieldCombobox from '../FormFieldCombobox.vue'
-import FormFieldFileUpload from '../FormFieldFileUpload.vue'
+import FieldRenderer from '../../columns/FieldRenderer.vue'
 
 interface FormColumn {
   name: string
@@ -180,19 +168,8 @@ defineEmits<{
   (e: 'moveDown', index: number): void
 }>()
 
-// Component registry
-const componentRegistry: Record<string, any> = {
-  'form-field-text': FormFieldText,
-  'form-field-email': FormFieldEmail,
-  'form-field-password': FormFieldPassword,
-  'form-field-textarea': FormFieldTextarea,
-  'form-field-number': FormFieldNumber,
-  'form-field-date': FormFieldDate,
-  'form-field-checkbox': FormFieldCheckbox,
-  'form-field-select': FormFieldSelect,
-  'form-field-combobox': FormFieldCombobox,
-  'form-field-file-upload': FormFieldFileUpload,
-}
+// Provê o item atual como formData para os campos poderem fazer cálculos
+provide('formData', toRef(props, 'item'))
 
 const isCollapsed = ref(false)
 
@@ -203,11 +180,6 @@ const hasErrors = computed(() => {
 
 const toggleCollapse = () => {
   isCollapsed.value = !isCollapsed.value
-}
-
-const getFieldComponent = (field: FormColumn) => {
-  const componentName = field.component || 'form-field-text'
-  return componentRegistry[componentName] || FormFieldText
 }
 
 const getFieldColumnClass = (field: FormColumn) => {

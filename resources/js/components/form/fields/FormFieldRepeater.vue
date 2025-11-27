@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, inject } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import Draggable from 'vuedraggable'
 import RepeaterItem from './repeater/RepeaterItem.vue'
@@ -160,6 +160,9 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'update:modelValue', value: any[]): void
 }>()
+
+// Injeta formData do formulário principal para atualizar campos calculados
+const parentFormData = inject<any>('formData', ref({}))
 
 // Ensure errors passed to RepeaterItem are always Record<string, any> | undefined
 const itemErrors = computed<Record<string, any> | undefined>(() => {
@@ -331,10 +334,10 @@ function updateCalculatedFields(): void {
     return
   }
 
-  // Para cada item, atualiza os campos calculados
+  // Para cada item, atualiza os campos calculados dentro do item
   items.value.forEach((item) => {
     Object.keys(calculationResults.value).forEach(fieldName => {
-      // Só atualiza se o campo existir nas definições
+      // Só atualiza se o campo existir nas definições do repeater
       const fieldExists = fields.value.some(f => f.name === fieldName)
       if (fieldExists) {
         const calculatedValue = getCalculatedValue(fieldName)
@@ -344,6 +347,20 @@ function updateCalculatedFields(): void {
       }
     })
   })
+
+  // Atualiza campos calculados no formData principal (fora do repeater)
+  if (parentFormData.value && typeof parentFormData.value === 'object') {
+    Object.keys(calculationResults.value).forEach(fieldName => {
+      // Se o campo NÃO existe dentro do repeater, atualiza no formData principal
+      const fieldExistsInRepeater = fields.value.some(f => f.name === fieldName)
+      if (!fieldExistsInRepeater) {
+        const calculatedValue = getCalculatedValue(fieldName)
+        if (calculatedValue !== null) {
+          parentFormData.value[fieldName] = calculatedValue
+        }
+      }
+    })
+  }
 }
 
 function clearAll(): void {

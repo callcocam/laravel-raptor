@@ -82,10 +82,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted } from 'vue'
+import { computed, h, onMounted, inject, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import * as LucideIcons from 'lucide-vue-next'
+import { useFieldCalculations, type FieldCalculation } from '~/composables/useFieldCalculations'
 
 interface FormColumn {
   name: string
@@ -105,6 +106,7 @@ interface FormColumn {
   append?: string
   prefix?: string
   suffix?: string
+  calculation?: FieldCalculation
 }
 
 interface Props {
@@ -121,6 +123,15 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: 'update:modelValue', value: number | null): void
 }>()
+
+// Injeta formData do formulário pai (se disponível)
+const formData = inject<any>('formData', ref({}))
+
+// Configurações de cálculo
+const { calculateFieldValue } = useFieldCalculations(formData)
+const calculatedValue = props.column.calculation 
+  ? calculateFieldValue(props.column.calculation)
+  : computed(() => null)
 
 const hasError = computed(() => !!props.error)
 
@@ -161,6 +172,11 @@ const errorArray = computed(() => {
 
 const internalValue = computed({
   get: () => {
+    // Se tem cálculo, usa o valor calculado
+    if (props.column.calculation && calculatedValue.value !== null) {
+      return calculatedValue.value
+    }
+    
     if (props.modelValue !== null && props.modelValue !== undefined) {
       return props.modelValue
     }
@@ -171,7 +187,19 @@ const internalValue = computed({
   }
 })
 
+// Atualiza quando o valor calculado muda
+watch(calculatedValue, (newValue) => {
+  if (props.column.calculation && newValue !== null) {
+    emit('update:modelValue', newValue)
+  }
+}, { immediate: true })
+
 const updateValue = (value: number | string | null) => {
+  // Se tem cálculo, não permite edição manual
+  if (props.column.calculation) {
+    return
+  }
+  
   const numValue = value !== null && value !== '' ? Number(value) : null
   emit('update:modelValue', numValue)
 }
