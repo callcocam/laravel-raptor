@@ -122,18 +122,23 @@ trait HasAutoComplete
 
     /**
      * Processa as opções para incluir dados necessários para autoComplete
+     * Retorna array com 'options' (formato normal) e 'optionsData' (dados completos)
      * 
      * @param array|Collection $options
-     * @return array
+     * @return array ['options' => [], 'optionsData' => []]
      */
     protected function processOptionsForAutoComplete($options): array
     {
         if (empty($this->autoCompleteFields) && !$this->optionValueKey && !$this->optionLabelKey) {
             // Comportamento padrão - retorna como está
-            return is_array($options) ? $options : $options->toArray();
+            return [
+                'options' => is_array($options) ? $options : $options->toArray(),
+                'optionsData' => [],
+            ];
         }
 
-        $processed = [];
+        $normalOptions = [];
+        $optionsData = [];
 
         foreach ($options as $key => $value) {
             // Se value é um objeto ou array, processa
@@ -141,26 +146,25 @@ trait HasAutoComplete
                 $item = is_object($value) ? (array) $value : $value;
                 
                 // Define valor e label
-                $optionValue = $this->optionValueKey ? ($item[$this->optionValueKey] ?? $key) : $key;
+                $optionValue = $this->optionValueKey ? ($item[$this->optionValueKey] ?? $key) : ($item['id'] ?? $key);
                 $optionLabel = $this->optionLabelKey ? ($item[$this->optionLabelKey] ?? $value) : ($item['name'] ?? $item['label'] ?? $value);
                 
-                // Monta opção com dados completos para autoComplete
-                $processed[] = [
-                    'value' => $optionValue,
-                    'label' => $optionLabel,
-                    'data' => $item, // Dados completos do objeto
-                ];
+                // Opções no formato normal (key => label)
+                $normalOptions[$optionValue] = $optionLabel;
+                
+                // Dados completos indexados pelo valor
+                $optionsData[$optionValue] = $item;
             } else {
                 // Valor simples (string/number)
-                $processed[] = [
-                    'value' => $key,
-                    'label' => $value,
-                    'data' => null,
-                ];
+                $normalOptions[$key] = $value;
+                $optionsData[$key] = null;
             }
         }
 
-        return $processed;
+        return [
+            'options' => $normalOptions,
+            'optionsData' => $optionsData,
+        ];
     }
 
     /**

@@ -19,16 +19,10 @@ interface AutoCompleteConfig {
   returnFullObject: boolean
 }
 
-interface SelectOption {
-  value: string | number
-  label: string
-  data?: Record<string, any>
-}
-
 export function useAutoComplete(
   fieldName: string,
   autoComplete: AutoCompleteConfig | undefined,
-  options: Ref<SelectOption[] | Record<string, string>[]>
+  optionsData: Ref<Record<string, any>>
 ) {
   // Injeta formData do contexto
   const formData = inject<Ref<Record<string, any>>>('formData')
@@ -46,16 +40,16 @@ export function useAutoComplete(
         return
       }
 
-      // Encontra a opção selecionada
-      const selectedOption = findSelectedOption(newValue, options.value)
+      // Busca os dados da opção selecionada em optionsData
+      const selectedData = optionsData.value[newValue]
       
-      if (!selectedOption || !selectedOption.data) {
+      if (!selectedData) {
         return
       }
 
       // Preenche os campos relacionados
       autoComplete.fields.forEach((field) => {
-        const sourceValue = selectedOption.data?.[field.source]
+        const sourceValue = selectedData[field.source]
         
         if (sourceValue !== undefined && sourceValue !== null) {
           // Atualiza o campo target no formData
@@ -64,77 +58,4 @@ export function useAutoComplete(
       })
     }
   )
-}
-
-/**
- * Encontra a opção selecionada nas options
- */
-function findSelectedOption(
-  value: any,
-  options: SelectOption[] | Record<string, string>[]
-): SelectOption | null {
-  if (!Array.isArray(options)) {
-    return null
-  }
-
-  // Procura nas opções processadas
-  for (const option of options) {
-    if ('value' in option && option.value === value) {
-      return option as SelectOption
-    }
-  }
-
-  return null
-}
-
-/**
- * Normaliza opções para o formato esperado pelo autoComplete
- * 
- * @param options Opções originais (podem ser array de objetos ou key-value)
- * @param valueKey Campo a ser usado como valor
- * @param labelKey Campo a ser usado como label
- */
-export function normalizeOptions(
-  options: any,
-  valueKey: string | null = null,
-  labelKey: string | null = null
-): SelectOption[] {
-  if (!options) {
-    return []
-  }
-
-  // Se já está no formato correto (array com value, label, data)
-  if (Array.isArray(options) && options.length > 0 && 'value' in options[0]) {
-    return options as SelectOption[]
-  }
-
-  // Se é um objeto simples { key: value }
-  if (!Array.isArray(options) && typeof options === 'object') {
-    return Object.entries(options).map(([key, value]) => ({
-      value: key,
-      label: String(value),
-      data: undefined,
-    }))
-  }
-
-  // Se é um array de objetos
-  if (Array.isArray(options)) {
-    return options.map((item) => {
-      if (typeof item === 'object' && item !== null) {
-        return {
-          value: valueKey ? item[valueKey] : (item.id ?? item.value),
-          label: labelKey ? item[labelKey] : (item.name ?? item.label ?? String(item)),
-          data: item,
-        }
-      }
-      
-      return {
-        value: item,
-        label: String(item),
-        data: undefined,
-      }
-    })
-  }
-
-  return []
 }

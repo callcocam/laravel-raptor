@@ -72,14 +72,18 @@ class ComboboxField extends Column
     public function toArray($model = null): array
     {
         $options = $this->getOptions();
+        $optionsData = [];
         
         // Se tem autoComplete configurado, processa as opções
         if (!empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
-            $options = $this->processOptionsForAutoComplete($options);
+            $processed = $this->processOptionsForAutoComplete($options);
+            $options = $processed['options'];
+            $optionsData = $processed['optionsData'];
         }
         
         return array_merge(parent::toArray($model), [
             'options' => $options,
+            'optionsData' => $optionsData,
             'searchPlaceholder' => $this->searchPlaceholder,
             'emptyText' => $this->emptyText,
         ], $this->autoCompleteToArray());
