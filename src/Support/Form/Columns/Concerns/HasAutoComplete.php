@@ -133,7 +133,7 @@ trait HasAutoComplete
             // Comportamento padrão - retorna como está
             return [
                 'options' => is_array($options) ? $options : $options->toArray(),
-                'optionsData' => [],
+                'optionsData' => (object)[],
             ];
         }
 
@@ -163,7 +163,7 @@ trait HasAutoComplete
 
         return [
             'options' => $normalOptions,
-            'optionsData' => $optionsData,
+            'optionsData' => empty($optionsData) ? (object)[] : $optionsData,
         ];
     }
 

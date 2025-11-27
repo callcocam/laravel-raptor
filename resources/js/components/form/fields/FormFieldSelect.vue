@@ -113,7 +113,11 @@ const options = computed(() => {
 })
 
 // Computed para optionsData
-const optionsData = computed(() => props.column.optionsData || {})
+const optionsData = computed(() => {
+  const data = props.column.optionsData || {}
+  // Garantir que seja um objeto, não um array
+  return Array.isArray(data) ? {} : data
+})
 
 // Configura autoComplete se habilitado
 useAutoComplete(props.column.name, props.column.autoComplete, optionsData)
