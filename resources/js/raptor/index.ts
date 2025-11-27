@@ -63,6 +63,7 @@ ComponentRegistry.registerBulk({
     'form-field-repeater': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRepeater.vue')),
     'form-field-repeater-compact': defineAsyncComponent(() => import('~/components/form/fields/repeater/RepeaterItemCompact.vue')),
     'form-field-money': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMoney.vue')),
+    'form-field-search-select': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSearchSelect.vue')),
 })
 
 // Legacy components (backwards compatibility)

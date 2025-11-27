@@ -9,10 +9,13 @@
 namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
 use Closure;
 
 class SelectField extends Column
 {
+    use HasAutoComplete;
+    
     protected bool $isRequired = false;
 
     protected ?string $placeholder = null;
@@ -50,11 +53,24 @@ class SelectField extends Column
 
     public function toArray($model = null): array
     {
-        return array_merge(parent::toArray($model), [
+
+        $optionsData = (object) [];
+
+        // Processa as opções BRUTAS antes da normalização
+        if (! empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
+            // Pega as opções brutas (antes de normalizar) 
+            $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
+            $optionsData = $processed['optionsData'];
+        }
+
+        $baseArray = array_merge(parent::toArray($model), [
             'searchable' => $this->searchable,
             'multiple' => $this->isMultiple(),
             'options' => $this->getOptions(),
             'dependsOn' => $this->getDependsOn(),
         ]);
+        $baseArray['optionsData'] = $optionsData;
+
+        return array_merge($baseArray, $this->autoCompleteToArray());
     }
 }
