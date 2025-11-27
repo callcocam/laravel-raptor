@@ -61,6 +61,7 @@ ComponentRegistry.registerBulk({
     'form-field-combobox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCombobox.vue')),
     'form-field-cascading': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCascading.vue')),
     'form-field-repeater': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRepeater.vue')),
+    'form-field-repeater-compact': defineAsyncComponent(() => import('~/components/form/fields/repeater/RepeaterItemCompact.vue')),
     'form-field-money': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMoney.vue')),
 })
 

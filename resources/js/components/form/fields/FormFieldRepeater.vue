@@ -30,7 +30,21 @@
         @end="emitValue"
       >
         <template #item="{ element: item, index }">
+          <RepeaterItemCompact
+            v-if="column.compact"
+            :item="item"
+            :itemId="item._id"
+            :index="index"
+            :isLast="index === items.length - 1"
+            :fields="fields"
+            :errors="itemErrors"
+            :orderable="column.orderable"
+            :canRemove="canRemoveItem"
+            @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
+            @remove="removeItem"
+          />
           <RepeaterItem
+            v-else
             :item="item"
             :itemId="item._id"
             :index="index"
@@ -52,25 +66,43 @@
 
       <!-- Non-draggable list (when not orderable) -->
       <template v-else-if="items.length > 0">
-        <RepeaterItem
-          v-for="(item, index) in items"
-          :key="item._id"
-          :item="item"
-          :itemId="item._id"
-          :index="index"
-          :isLast="index === items.length - 1"
-          :fields="fields"
-          :errors="itemErrors"
-          :collapsible="column.collapsible"
-          :orderable="column.orderable"
-          :canRemove="canRemoveItem"
-          :canDuplicate="column.allowDuplication"
-          @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
-          @remove="removeItem"
-          @duplicate="duplicateItem"
-          @moveUp="moveItemUp"
-          @moveDown="moveItemDown"
-        />
+        <template v-if="column.compact">
+          <RepeaterItemCompact
+            v-for="(item, index) in items"
+            :key="item._id"
+            :item="item"
+            :itemId="item._id"
+            :index="index"
+            :isLast="index === items.length - 1"
+            :fields="fields"
+            :errors="itemErrors"
+            :orderable="column.orderable"
+            :canRemove="canRemoveItem"
+            @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
+            @remove="removeItem"
+          />
+        </template>
+        <template v-else>
+          <RepeaterItem
+            v-for="(item, index) in items"
+            :key="item._id"
+            :item="item"
+            :itemId="item._id"
+            :index="index"
+            :isLast="index === items.length - 1"
+            :fields="fields"
+            :errors="itemErrors"
+            :collapsible="column.collapsible"
+            :orderable="column.orderable"
+            :canRemove="canRemoveItem"
+            :canDuplicate="column.allowDuplication"
+            @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
+            @remove="removeItem"
+            @duplicate="duplicateItem"
+            @moveUp="moveItemUp"
+            @moveDown="moveItemDown"
+          />
+        </template>
       </template>
 
       <!-- Empty State -->
@@ -106,6 +138,7 @@ import { computed, ref, watch, inject } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import Draggable from 'vuedraggable'
 import RepeaterItem from './repeater/RepeaterItem.vue'
+import RepeaterItemCompact from './repeater/RepeaterItemCompact.vue'
 import RepeaterActions from './repeater/RepeaterActions.vue'
 import RepeaterEmptyState from './repeater/RepeaterEmptyState.vue'
 import { useRepeaterCalculations, type Calculation } from '~/composables/useRepeaterCalculations'
@@ -139,6 +172,7 @@ interface RepeaterColumn {
   defaultItems?: any[]
   collapsible?: boolean
   orderable?: boolean
+  compact?: boolean
   allowDuplication?: boolean
   emptyTitle?: string
   emptyDescription?: string

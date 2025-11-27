@@ -175,23 +175,23 @@ trait InteractWithForm
     public function saveRelatedData(array $data, $model, $request): void
     {
         foreach ($this->getColumns() as $column) {
-            $columnName = $column->getName();
-
+            $columnName = $column->getName(); 
+            $valueUsing = data_get($column->getValueUsing($data, $model), $columnName, data_get($data, $columnName));
+ 
             // Verifica se há dados para este campo
-            if (!isset($data[$columnName])) {
+            if (!$valueUsing) {
                 continue;
             }
-
             // Se o campo tem relacionamento definido explicitamente
             if ($column->hasRelationship()) {
-                $relationship = $column->getRelationship();
-                $this->handleExplicitRelationship($model, $relationship, $columnName, $data[$columnName]);
+                $relationship = $column->getRelationship(); 
+                $this->handleExplicitRelationship($model, $relationship, $columnName, $valueUsing);
                 continue;
             }
 
             // Detecta relacionamento automaticamente pelo método no model
             if (method_exists($model, $columnName)) {
-                $this->handleAutoDetectedRelationship($model, $columnName, $data[$columnName], $request);
+                $this->handleAutoDetectedRelationship($model, $columnName, $valueUsing, $request);
             }
         }
     }
@@ -203,22 +203,23 @@ trait InteractWithForm
     {
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
+            $valueUsing = data_get($column->getValueUsing($data, $model), $columnName, data_get($data, $columnName));
 
             // Verifica se há dados para este campo
-            if (!isset($data[$columnName])) {
+            if (!$valueUsing) {
                 continue;
             }
 
             // Se o campo tem relacionamento definido explicitamente
             if ($column->hasRelationship()) {
                 $relationship = $column->getRelationship();
-                $this->handleExplicitRelationship($model, $relationship, $columnName, $data[$columnName]);
+                $this->handleExplicitRelationship($model, $relationship, $columnName, $valueUsing);
                 continue;
             }
 
             // Detecta relacionamento automaticamente pelo método no model
             if (method_exists($model, $columnName)) {
-                $this->handleAutoDetectedRelationship($model, $columnName, $data[$columnName], $request);
+                $this->handleAutoDetectedRelationship($model, $columnName, $valueUsing, $request);
             }
         }
     }
@@ -239,7 +240,7 @@ trait InteractWithForm
             $model->$relationship()->sync($value);
         }
         // HasMany - Um para muitos
-        elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
+        elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) { 
             if (is_array($value)) {
                 $this->syncHasManyRelation($model, $relationship, $value);
             }

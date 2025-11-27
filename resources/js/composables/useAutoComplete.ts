@@ -7,8 +7,9 @@
 import { inject, watch, type Ref } from 'vue'
 
 interface AutoCompleteField {
-  source: string
+  source: string | number | boolean | null
   target: string
+  isFixedValue?: boolean
 }
 
 interface AutoCompleteConfig {
@@ -49,7 +50,15 @@ export function useAutoComplete(
 
       // Preenche os campos relacionados
       autoComplete.fields.forEach((field) => {
-        const sourceValue = selectedData[field.source]
+        let sourceValue
+        
+        // Se é um valor fixo, usa diretamente
+        if (field.isFixedValue) {
+          sourceValue = field.source
+        } else {
+          // Se é um campo, busca no selectedData
+          sourceValue = selectedData[field.source as string]
+        }
         
         if (sourceValue !== undefined && sourceValue !== null) {
           // Atualiza o campo target no formData

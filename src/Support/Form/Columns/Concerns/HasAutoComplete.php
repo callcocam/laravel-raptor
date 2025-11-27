@@ -18,15 +18,16 @@ trait HasAutoComplete
     /**
      * Define um campo que será preenchido automaticamente
      * 
-     * @param string $sourceField Campo no objeto da opção
+     * @param string|int|float|bool|null $sourceField Campo no objeto da opção OU valor fixo
      * @param string $targetField Campo no formulário que será preenchido
      * @return static
      */
-    public function complete(string $sourceField, string $targetField): static
+    public function complete(string|int|float|bool|null $sourceField, string $targetField): static
     {
         $this->autoCompleteFields[] = [
             'source' => $sourceField,
             'target' => $targetField,
+            'isFixedValue' => !is_string($sourceField) || is_numeric($sourceField),
         ];
         
         return $this;

@@ -58,11 +58,10 @@ class MoneyField extends Column
 
             if (is_null($currentValue)) {
                 return null;
-            }
-
+            } 
             // Converte para float e formata de acordo com a configuração
             return number_format(
-                (float) $currentValue, 
+                 $currentValue, 
                 $this->decimals, 
                 $this->decimalSeparator, 
                 $this->thousandsSeparator
