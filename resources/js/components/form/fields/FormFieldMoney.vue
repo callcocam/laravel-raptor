@@ -45,9 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, inject } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { useFieldCalculations, type FieldCalculation } from '~/composables/useFieldCalculations'
 
 interface FormColumn {
   name: string
@@ -64,6 +65,7 @@ interface FormColumn {
   decimals?: number
   decimalSeparator?: string
   thousandsSeparator?: string
+  calculation?: FieldCalculation
 }
 
 interface Props {
@@ -81,8 +83,17 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string | null): void
 }>()
 
+// Injeta formData do formulário pai (se disponível)
+const formData = inject<any>('formData', ref({}))
+
 const displayValue = ref('')
 const cursorPosition = ref(0)
+
+// Configurações de cálculo
+const { calculateFieldValue } = useFieldCalculations(formData)
+const calculatedValue = props.column.calculation 
+  ? calculateFieldValue(props.column.calculation)
+  : computed(() => null)
 
 // Configurações de moeda
 const currency = computed(() => props.column.currency || 'BRL')
@@ -158,6 +169,11 @@ const parseMoneyToFloat = (value: string): number | null => {
 
 // Atualiza o displayValue quando o modelValue muda
 watch(() => props.modelValue, (newValue) => {
+  // Se tem cálculo, ignora o modelValue e usa o calculado
+  if (props.column.calculation && calculatedValue.value !== null) {
+    return
+  }
+  
   if (newValue === null || newValue === undefined || newValue === '') {
     displayValue.value = ''
   } else {
@@ -166,8 +182,22 @@ watch(() => props.modelValue, (newValue) => {
   }
 }, { immediate: true })
 
+// Atualiza quando o valor calculado muda
+watch(calculatedValue, (newValue) => {
+  if (props.column.calculation && newValue !== null) {
+    const formatted = formatMoney(newValue)
+    displayValue.value = formatted
+    emit('update:modelValue', formatted)
+  }
+}, { immediate: true })
+
 // Handler de input - formata em tempo real
 const handleInput = (event: Event) => {
+  // Se tem cálculo, não permite edição manual
+  if (props.column.calculation) {
+    return
+  }
+  
   const target = event.target as HTMLInputElement
   const inputValue = target.value
   

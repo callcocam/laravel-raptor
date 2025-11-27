@@ -108,6 +108,7 @@ import Draggable from 'vuedraggable'
 import RepeaterItem from './repeater/RepeaterItem.vue'
 import RepeaterActions from './repeater/RepeaterActions.vue'
 import RepeaterEmptyState from './repeater/RepeaterEmptyState.vue'
+import { useRepeaterCalculations, type Calculation } from '~/composables/useRepeaterCalculations'
 
 interface FormColumn {
   name: string
@@ -142,6 +143,7 @@ interface RepeaterColumn {
   emptyTitle?: string
   emptyDescription?: string
   fields?: FormColumn[]
+  calculations?: Calculation[]
 }
 
 interface Props {
@@ -190,6 +192,13 @@ if (items.value.length === 0 && props.column.minItems && props.column.minItems >
     _id: `item-${Date.now()}-${index}`,
   }))
 }
+
+// Setup calculations
+const calculations = computed(() => props.column.calculations || [])
+const { calculationResults, getCalculatedValue, isCalculatedField } = useRepeaterCalculations(
+  items,
+  calculations.value
+)
 
 // Watch for external changes to modelValue
 watch(
@@ -306,8 +315,35 @@ function moveItemDown(index: number): void {
 function updateItemField(index: number, fieldName: string, value: any): void {
   if (items.value[index]) {
     items.value[index][fieldName] = value
+    
+    // Atualiza campos calculados se houver
+    updateCalculatedFields()
+    
     emitValue()
   }
+}
+
+/**
+ * Atualiza campos que são resultados de cálculos
+ */
+function updateCalculatedFields(): void {
+  if (!calculations.value || calculations.value.length === 0) {
+    return
+  }
+
+  // Para cada item, atualiza os campos calculados
+  items.value.forEach((item) => {
+    Object.keys(calculationResults.value).forEach(fieldName => {
+      // Só atualiza se o campo existir nas definições
+      const fieldExists = fields.value.some(f => f.name === fieldName)
+      if (fieldExists) {
+        const calculatedValue = getCalculatedValue(fieldName)
+        if (calculatedValue !== null) {
+          item[fieldName] = calculatedValue
+        }
+      }
+    })
+  })
 }
 
 function clearAll(): void {
@@ -334,4 +370,22 @@ function emitValue(): void {
   const cleanItems = items.value.map(({ _id, ...rest }) => rest)
   emit('update:modelValue', cleanItems)
 }
+
+// Watch para recalcular quando items mudar
+watch(
+  () => items.value,
+  () => {
+    if (calculations.value && calculations.value.length > 0) {
+      updateCalculatedFields()
+    }
+  },
+  { deep: true }
+)
+
+// Expor valores calculados para uso externo (opcional)
+defineExpose({
+  calculationResults,
+  getCalculatedValue,
+  isCalculatedField,
+})
 </script>

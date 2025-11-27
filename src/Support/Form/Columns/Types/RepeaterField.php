@@ -23,6 +23,7 @@ class RepeaterField extends Column
     protected array $defaultItems = [];
     protected bool $collapsible = false;
     protected bool $orderable = false;
+    protected array $calculations = [];
 
     public function __construct(string $name, ?string $label = null)
     {
@@ -73,6 +74,110 @@ class RepeaterField extends Column
         return $this;
     }
 
+    /**
+     * Adiciona um cálculo de soma nos itens do repeater
+     * 
+     * @param string $sourceField Campo que será somado
+     * @param array $targetFields Campos onde o resultado será exibido
+     * @return self
+     */
+    public function sum(string $sourceField, array $targetFields): self
+    {
+        $this->calculations[] = [
+            'type' => 'sum',
+            'sourceField' => $sourceField,
+            'targetFields' => $targetFields,
+        ];
+        return $this;
+    }
+
+    /**
+     * Adiciona um cálculo de média nos itens do repeater
+     * 
+     * @param string $sourceField Campo que será calculado a média
+     * @param array $targetFields Campos onde o resultado será exibido
+     * @return self
+     */
+    public function avg(string $sourceField, array $targetFields): self
+    {
+        $this->calculations[] = [
+            'type' => 'avg',
+            'sourceField' => $sourceField,
+            'targetFields' => $targetFields,
+        ];
+        return $this;
+    }
+
+    /**
+     * Adiciona um cálculo de mínimo nos itens do repeater
+     * 
+     * @param string $sourceField Campo que será analisado
+     * @param array $targetFields Campos onde o resultado será exibido
+     * @return self
+     */
+    public function min(string $sourceField, array $targetFields): self
+    {
+        $this->calculations[] = [
+            'type' => 'min',
+            'sourceField' => $sourceField,
+            'targetFields' => $targetFields,
+        ];
+        return $this;
+    }
+
+    /**
+     * Adiciona um cálculo de máximo nos itens do repeater
+     * 
+     * @param string $sourceField Campo que será analisado
+     * @param array $targetFields Campos onde o resultado será exibido
+     * @return self
+     */
+    public function max(string $sourceField, array $targetFields): self
+    {
+        $this->calculations[] = [
+            'type' => 'max',
+            'sourceField' => $sourceField,
+            'targetFields' => $targetFields,
+        ];
+        return $this;
+    }
+
+    /**
+     * Adiciona um cálculo de contagem nos itens do repeater
+     * 
+     * @param string $sourceField Campo que será contado (valores não vazios)
+     * @param array $targetFields Campos onde o resultado será exibido
+     * @return self
+     */
+    public function count(string $sourceField, array $targetFields): self
+    {
+        $this->calculations[] = [
+            'type' => 'count',
+            'sourceField' => $sourceField,
+            'targetFields' => $targetFields,
+        ];
+        return $this;
+    }
+
+    /**
+     * Adiciona um cálculo customizado nos itens do repeater
+     * 
+     * @param string $type Tipo de cálculo customizado
+     * @param string $sourceField Campo fonte
+     * @param array $targetFields Campos onde o resultado será exibido
+     * @param array $options Opções adicionais para o cálculo
+     * @return self
+     */
+    public function calculate(string $type, string $sourceField, array $targetFields, array $options = []): self
+    {
+        $this->calculations[] = array_merge([
+            'type' => $type,
+            'sourceField' => $sourceField,
+            'targetFields' => $targetFields,
+        ], $options);
+        return $this;
+    }
+
     public function toArray($model = null): array
     {
         // Converte cada field para array
@@ -89,6 +194,7 @@ class RepeaterField extends Column
             'collapsible' => $this->collapsible,
             'orderable' => $this->orderable,
             'fields' => $fieldsArray,
+            'calculations' => $this->calculations,
         ]);
     }
 }

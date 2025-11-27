@@ -22,6 +22,8 @@ class MoneyField extends Column
     
     protected string $thousandsSeparator = '.';
 
+    protected ?array $calculation = null;
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
@@ -206,6 +208,184 @@ class MoneyField extends Column
     }
 
     /**
+     * Define uma soma de campos
+     * 
+     * @param array $fields Campos que serão somados
+     * @return static
+     */
+    public function sum(array $fields): static
+    {
+        $this->calculation = [
+            'type' => 'sum',
+            'fields' => $fields,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define uma subtração de campos
+     * 
+     * @param string $minuend Campo minuendo (de onde subtrai)
+     * @param array $subtrahends Campos subtraendos (o que será subtraído)
+     * @return static
+     */
+    public function subtract(string $minuend, array $subtrahends): static
+    {
+        $this->calculation = [
+            'type' => 'subtract',
+            'minuend' => $minuend,
+            'subtrahends' => $subtrahends,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define uma multiplicação de campos
+     * 
+     * @param array $fields Campos que serão multiplicados
+     * @return static
+     */
+    public function multiply(array $fields): static
+    {
+        $this->calculation = [
+            'type' => 'multiply',
+            'fields' => $fields,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define uma divisão de campos
+     * 
+     * @param string $dividend Campo dividendo (numerador)
+     * @param string $divisor Campo divisor (denominador)
+     * @return static
+     */
+    public function divide(string $dividend, string $divisor): static
+    {
+        $this->calculation = [
+            'type' => 'divide',
+            'dividend' => $dividend,
+            'divisor' => $divisor,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define uma média de campos
+     * 
+     * @param array $fields Campos para calcular a média
+     * @return static
+     */
+    public function average(array $fields): static
+    {
+        $this->calculation = [
+            'type' => 'average',
+            'fields' => $fields,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define valor mínimo entre campos
+     * 
+     * @param array $fields Campos para comparar
+     * @return static
+     */
+    public function min(array $fields): static
+    {
+        $this->calculation = [
+            'type' => 'min',
+            'fields' => $fields,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define valor máximo entre campos
+     * 
+     * @param array $fields Campos para comparar
+     * @return static
+     */
+    public function max(array $fields): static
+    {
+        $this->calculation = [
+            'type' => 'max',
+            'fields' => $fields,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define cálculo de porcentagem
+     * 
+     * @param string $value Campo do valor base
+     * @param float|string $percentage Porcentagem ou nome do campo com a porcentagem
+     * @return static
+     */
+    public function percentage(string $value, float|string $percentage): static
+    {
+        $this->calculation = [
+            'type' => 'percentage',
+            'value' => $value,
+            'percentage' => $percentage,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Define um cálculo customizado usando expressão
+     * 
+     * @param string $expression Expressão de cálculo (ex: "field1 + field2 * 0.1")
+     * @param array $fields Campos usados na expressão
+     * @return static
+     */
+    public function calculate(string $expression, array $fields = []): static
+    {
+        $this->calculation = [
+            'type' => 'custom',
+            'expression' => $expression,
+            'fields' => $fields,
+        ];
+        
+        $this->readonly();
+        
+        return $this;
+    }
+
+    /**
+     * Retorna a configuração do cálculo
+     */
+    public function getCalculation(): ?array
+    {
+        return $this->calculation;
+    }
+
+    /**
      * Adiciona as configurações de moeda ao array
      */
     public function toArray($model = null): array
@@ -216,6 +396,7 @@ class MoneyField extends Column
             'decimals' => $this->getDecimals(),
             'decimalSeparator' => $this->getDecimalSeparator(),
             'thousandsSeparator' => $this->getThousandsSeparator(),
+            'calculation' => $this->getCalculation(),
         ]);
     }
 }
