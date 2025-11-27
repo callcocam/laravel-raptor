@@ -84,10 +84,12 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useAutoComplete, normalizeOptions } from '../../../composables/useAutoComplete'
 
 interface ComboboxOption {
   label?: string
   value?: string | number
+  data?: Record<string, any>
   [key: string]: any
 }
 
@@ -104,6 +106,13 @@ interface FormColumn {
   tooltip?: string
   helpText?: string
   hint?: string
+  autoComplete?: {
+    enabled: boolean
+    fields: Array<{ source: string, target: string }>
+    optionValueKey: string | null
+    optionLabelKey: string | null
+    returnFullObject: boolean
+  }
 }
 
 interface Props {
@@ -136,6 +145,16 @@ const errorArray = computed(() => {
 const options = computed(() => {
   if (!props.column.options) return []
 
+  // Se tem autoComplete configurado, normaliza as opções
+  if (props.column.autoComplete?.enabled) {
+    return normalizeOptions(
+      props.column.options,
+      props.column.autoComplete.optionValueKey,
+      props.column.autoComplete.optionLabelKey
+    )
+  }
+
+  // Comportamento padrão
   if (!Array.isArray(props.column.options)) {
     return Object.entries(props.column.options).map(([value, label]) => ({
       value,
@@ -145,6 +164,9 @@ const options = computed(() => {
 
   return props.column.options
 })
+
+// Configura autoComplete se habilitado
+useAutoComplete(props.column.name, props.column.autoComplete, options)
 
 const internalValue = computed({
   get: () => props.modelValue,

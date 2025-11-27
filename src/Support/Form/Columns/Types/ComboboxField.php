@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
 
 /**
  * ComboboxField - Campo de seleção com busca (autocomplete)
@@ -26,6 +27,7 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
  */
 class ComboboxField extends Column
 {
+    use HasAutoComplete;
     protected bool $isRequired = false;
 
     protected ?string $placeholder = null;
@@ -69,10 +71,17 @@ class ComboboxField extends Column
 
     public function toArray($model = null): array
     {
+        $options = $this->getOptions();
+        
+        // Se tem autoComplete configurado, processa as opções
+        if (!empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
+            $options = $this->processOptionsForAutoComplete($options);
+        }
+        
         return array_merge(parent::toArray($model), [
-            'options' => $this->getOptions(),
+            'options' => $options,
             'searchPlaceholder' => $this->searchPlaceholder,
             'emptyText' => $this->emptyText,
-        ]);
+        ], $this->autoCompleteToArray());
     }
 }
