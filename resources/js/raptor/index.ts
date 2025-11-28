@@ -68,6 +68,7 @@ ComponentRegistry.registerBulk({
     'form-field-busca-cep': defineAsyncComponent(() => import('~/components/form/fields/FormFieldBuscaCep.vue')),
     'form-field-cnpj': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCnpj.vue')),
     'form-field-mask': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMask.vue')),
+    'form-field-relationship': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRelationship.vue')),
 })
 
 // Legacy components (backwards compatibility)
