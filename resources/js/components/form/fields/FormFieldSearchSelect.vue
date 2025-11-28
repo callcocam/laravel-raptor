@@ -3,7 +3,7 @@
  *
  * Searchable select com funcionalidade de autocomplete
  -->
- <template>
+<template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
@@ -12,102 +12,64 @@
 
     <!-- Container relativo para posicionar o dropdown -->
     <div class="relative w-full" ref="containerRef">
-      <Button
-        type="button"
-        ref="triggerRef" 
-        variant="outline" 
-        role="combobox" 
-        :disabled="column.disabled" 
-        :aria-expanded="open"
-        :aria-invalid="hasError" 
-        :class="[
+      <Button type="button" ref="triggerRef" variant="outline" role="combobox" :disabled="column.disabled"
+        :aria-expanded="open" :aria-invalid="hasError" :class="[
           'w-full justify-between',
           hasError ? 'border-destructive' : '',
           !selectedOption && 'text-muted-foreground'
-        ]"
-        @click="toggleOpen"
-      >
+        ]" @click="toggleOpen">
         {{ selectedOption?.label || column.placeholder || 'Selecione...' }}
         <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
 
       <!-- Dropdown personalizado -->
       <Teleport to="body">
-        <Transition
-          enter-active-class="transition ease-out duration-200"
-          enter-from-class="opacity-0 scale-95"
-          enter-to-class="opacity-100 scale-100"
-          leave-active-class="transition ease-in duration-150"
-          leave-from-class="opacity-100 scale-100"
-          leave-to-class="opacity-0 scale-95"
-        >
-          <div
-            v-if="open"
-            ref="dropdownRef"
+        <Transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-150"
+          leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+          <div v-if="open" ref="dropdownRef"
             class="absolute z-50 mt-1 rounded-md border bg-popover text-popover-foreground shadow-md p-0"
-            :style="dropdownStyle"
-          >
+            :style="dropdownStyle">
             <div class="flex flex-col w-full">
               <!-- Campo de busca -->
               <div class="border-b px-3 py-2" ref="searchInputContainer">
-                <Input 
-                  ref="searchInput" 
-                  v-model="searchQuery" 
-                  type="text"
-                  :placeholder="column.searchPlaceholder || 'Buscar...'" 
-                  class="h-9"
-                  autofocus="true"
-                  :disabled="isSearching"
-                  @keydown.enter.prevent="selectFirstFiltered" 
-                  @keydown.escape="open = false"
-                  @keydown.down.prevent="focusFirstOption"
-                />
+                <Input ref="searchInput" v-model="searchQuery" type="text"
+                  :placeholder="column.searchPlaceholder || 'Buscar...'" class="h-9" autofocus="true"
+                  :disabled="isSearching" @keydown.enter.prevent="selectFirstFiltered" @keydown.escape="open = false"
+                  @keydown.down.prevent="focusFirstOption" />
               </div>
 
               <!-- Lista de opções -->
               <div class="max-h-[300px] overflow-y-auto p-1">
                 <!-- Loading -->
-                <div 
-                  v-if="isSearching" 
-                  class="py-6 text-center text-sm text-muted-foreground"
-                >
+                <div v-if="isSearching" class="py-6 text-center text-sm text-muted-foreground">
                   Buscando...
                 </div>
 
                 <!-- Empty state -->
-                <div 
-                  v-else-if="filteredOptions.length === 0" 
-                  class="py-6 text-center text-sm text-muted-foreground"
-                >
+                <div v-else-if="filteredOptions.length === 0" class="py-6 text-center text-sm text-muted-foreground">
                   {{ column.emptyText || 'Nenhum resultado encontrado.' }}
                 </div>
 
                 <!-- Options list -->
-                <button 
-                  v-for="(option, index) in filteredOptions" 
-                  v-else
-                  :key="getOptionValue(option)" 
-                  type="button"
-                  :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
-                  class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-                  @click="selectOption(getOptionValue(option))"
-                  @keydown.enter.prevent="selectOption(getOptionValue(option))"
-                  @keydown.space.prevent="selectOption(getOptionValue(option))"
-                >
-                  <span 
-                class="flex-1 text-left" 
-                v-html="highlightSearchTerm(getOptionLabel(option), searchQuery)"
-              ></span>
-                  <CheckIcon 
-                    :class="cn(
+                <div v-else class="flex flex-col gap-1 w-full ">
+                  <button v-for="(option, index) in filteredOptions" :key="getOptionValue(option)" type="button"
+                    :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
+                    class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                    @click="selectOption(getOptionValue(option))"
+                    @keydown.enter.prevent="selectOption(getOptionValue(option))"
+                    @keydown.space.prevent="selectOption(getOptionValue(option))">
+                    <span class="flex-1 text-left"
+                      v-html="highlightSearchTerm(getOptionLabel(option), searchQuery)"></span>
+                    <CheckIcon :class="cn(
                       'ml-2 h-4 w-4',
                       internalValue === getOptionValue(option)
                         ? 'opacity-100'
                         : 'opacity-0'
                     )
-                    " 
-                  />
-                </button>
+                      " />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -202,7 +164,7 @@ const dropdownStyle = ref<{ width: string; top: string; left: string }>({
   left: '0px',
 })
 
-const hasError = computed(() => !!props.error) 
+const hasError = computed(() => !!props.error)
 const errorArray = computed(() => {
   if (!props.error) return []
   if (Array.isArray(props.error)) {
@@ -257,7 +219,7 @@ const internalValue = computed({
 
 const selectedOption = computed(() => {
   if (!internalValue.value) return null
-  
+
   // Se for searchable, busca primeiro nos resultados da busca, depois nas opções padrão
   if (props.column.searchable) {
     // Primeiro tenta encontrar nos resultados da busca
@@ -265,13 +227,13 @@ const selectedOption = computed(() => {
       (option) => getOptionValue(option) === internalValue.value
     )
     if (foundInSearch) return foundInSearch
-    
+
     // Se não encontrou, busca nas opções padrão
     return options.value.find(
       (option) => getOptionValue(option) === internalValue.value
     )
   }
-  
+
   // Se não for searchable, busca apenas nas opções padrão
   return options.value.find(
     (option) => getOptionValue(option) === internalValue.value
@@ -324,11 +286,11 @@ function highlightSearchTerm(text: string, searchTerm: string) {
   if (!searchTerm || !searchTerm.trim()) {
     return text
   }
-  
+
   const term = searchTerm.trim()
   const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
   const parts = text.split(regex)
-  
+
   return parts.map((part, index) => {
     if (regex.test(part)) {
       return `<mark class="bg-yellow-400/50 text-yellow-900 dark:text-yellow-100 font-medium">${part}</mark>`
@@ -377,10 +339,10 @@ function focusFirstOption() {
 function performSearch(query: string) {
   if (!props.column.searchable) return
 
-  isSearching.value = true 
+  isSearching.value = true
   console.log('index', props.index)
 
-  router.get(window.location.pathname,{ [props.column.name]: query }, { 
+  router.get(window.location.pathname, { [props.column.name]: query }, {
     preserveState: true,
     preserveScroll: true,
     replace: true,
@@ -388,7 +350,7 @@ function performSearch(query: string) {
     onSuccess: () => {
       // Após a busca, as opções serão atualizadas via watch nas props
       // Aguarda um tick para garantir que as props foram atualizadas
-      nextTick(() => {         
+      nextTick(() => {
         isSearching.value = false
       })
     },
@@ -443,7 +405,7 @@ function updateDropdownPosition() {
   if (!triggerEl || typeof triggerEl.getBoundingClientRect !== 'function') return
 
   const triggerRect = triggerEl.getBoundingClientRect()
-  
+
   dropdownStyle.value = {
     width: `${triggerRect.width}px`,
     top: `${triggerRect.bottom + window.scrollY + 4}px`,
@@ -456,24 +418,24 @@ watch(open, (isOpen) => {
   if (isOpen) {
     // NÃO limpa o searchQuery - preserva o estado
     // searchQuery.value = ''
-    
+
     // Atualiza posição do dropdown
     nextTick(() => {
       updateDropdownPosition()
-      
+
       // Se for searchable, carrega opções iniciais se não houver resultados e não houver busca ativa
       if (props.column.searchable && searchResults.value.length === 0 && !searchQuery.value.trim()) {
         searchResults.value = options.value
       }
     })
-    
+
     // Atualiza posição quando a janela é redimensionada ou scrolla
     const handleResize = () => updateDropdownPosition()
     const handleScroll = () => updateDropdownPosition()
-    
+
     window.addEventListener('resize', handleResize)
     window.addEventListener('scroll', handleScroll, true)
-    
+
     // Remove listeners quando fecha
     const unwatch = watch(() => open.value, (newValue) => {
       if (!newValue) {
