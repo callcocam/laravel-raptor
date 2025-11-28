@@ -2,6 +2,7 @@
   <component
     :is="component"
     :column="column"
+    :index="index"
     :error="error"
     v-model="internalValue"
   />
@@ -15,18 +16,19 @@ interface Props {
   column: {
     name: string
     component?: string
+    index?: number
     [key: string]: any
   }
   modelValue?: any
   error?: string | string[]
+  index?: number
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: any): void
-}>()
-
+}>() 
 /**
  * Obtém o componente a ser renderizado do ComponentRegistry
  *

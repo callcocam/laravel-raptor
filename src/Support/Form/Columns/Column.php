@@ -26,13 +26,16 @@ abstract class Column extends AbstractColumn
 
     protected ?Closure $defaultUsing = null;
 
+    protected int $index = 0;
+
+
     public function __construct($name, $label = null)
     {
         $this->name($name);
         $this->id($name);
         $this->label($label ?? ucfirst($name));
         $this->columnSpanFull();
-
+        $this->index++;
         $this->valueUsing(function ($request, $model) {
             return null;
         });
@@ -76,6 +79,18 @@ abstract class Column extends AbstractColumn
         return !is_null($this->defaultUsing);
     }
 
+    public function index(int $index): static
+    {
+        $this->index = $index;
+
+        return $this;
+    }
+
+    public function getIndex(): ?int
+    {
+        return $this->index;
+    }
+
     public function toArray($model = null): array
     {
         if ($model) {
@@ -97,6 +112,7 @@ abstract class Column extends AbstractColumn
             'messages' => $this->getMessages(),
             'readonly' => $this->isReadOnly(),
             'disabled' => $this->isDisabled(),
+            'index' => $this->getIndex(),
             'attributes' => array_filter([
                 'id' => $this->getId(),
                 'type' => $this->getType(),

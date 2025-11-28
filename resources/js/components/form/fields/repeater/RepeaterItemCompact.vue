@@ -18,7 +18,7 @@
         class="drag-handle cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors p-1"
         title="Arrastar para reordenar"
       >
-        <GripVertical class="h-4 w-4" />
+        <GripVertical class="h-4 w-4" /> 
       </button>
     </div>
     <!-- Item Fields - Grid compacto -->
@@ -27,6 +27,7 @@
       <FieldRenderer
         v-for="field in fields"
         :key="`${itemId}-${field.name}`"
+        :index="index"
         :column="field"
         :modelValue="item[field.name]"
         :error="getFieldError(field.name)"
@@ -87,8 +88,7 @@ const props = withDefaults(defineProps<Props>(), {
   orderable: false,
   canRemove: true,
   isDragging: false,
-});
-
+}); 
 defineEmits<{
   (e: "updateField", fieldName: string, value: any): void;
   (e: "remove", index: number): void;

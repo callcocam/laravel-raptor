@@ -56,6 +56,7 @@
                   type="text"
                   :placeholder="column.searchPlaceholder || 'Buscar...'" 
                   class="h-9"
+                  autofocus="true"
                   :disabled="isSearching"
                   @keydown.enter.prevent="selectFirstFiltered" 
                   @keydown.escape="open = false"
@@ -93,7 +94,10 @@
                   @keydown.enter.prevent="selectOption(getOptionValue(option))"
                   @keydown.space.prevent="selectOption(getOptionValue(option))"
                 >
-                  <span class="flex-1 text-left">{{ getOptionLabel(option) }}</span>
+                  <span 
+                class="flex-1 text-left" 
+                v-html="highlightSearchTerm(getOptionLabel(option), searchQuery)"
+              ></span>
                   <CheckIcon 
                     :class="cn(
                       'ml-2 h-4 w-4',
@@ -128,7 +132,7 @@ import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
 import { onClickOutside } from '@vueuse/core'
-import { router, usePage } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 import { useDebounceFn } from '@vueuse/core'
 
 interface ComboboxOption {
@@ -140,6 +144,7 @@ interface ComboboxOption {
 
 interface FormColumn {
   name: string
+  index?: number
   label?: string
   placeholder?: string
   searchPlaceholder?: string
@@ -168,11 +173,13 @@ interface Props {
   column: FormColumn
   modelValue?: string | number | null
   error?: string | string[]
+  index?: number
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   error: undefined,
+  index: 0,
 })
 
 const emit = defineEmits<{
@@ -195,8 +202,7 @@ const dropdownStyle = ref<{ width: string; top: string; left: string }>({
   left: '0px',
 })
 
-const hasError = computed(() => !!props.error)
-
+const hasError = computed(() => !!props.error) 
 const errorArray = computed(() => {
   if (!props.error) return []
   if (Array.isArray(props.error)) {
@@ -220,7 +226,7 @@ const options = computed(() => {
 
 // Watch para atualizar os resultados quando as opções mudarem (após busca no backend)
 watch(() => props.column.options, (newOptions) => {
-  if (props.column.searchable) {
+  if (props.column.searchable && open.value) {
     // Se as opções foram atualizadas e há uma busca ativa, atualiza os resultados
     if (searchQuery.value.trim() && newOptions) {
       if (Array.isArray(newOptions)) {
@@ -276,10 +282,15 @@ const selectedOption = computed(() => {
 const filteredOptions = computed(() => {
   // Se for searchable, usa os resultados da busca
   if (props.column.searchable) {
+    // Se a busca estiver vazia, mostra as opções iniciais
+    if (!searchQuery.value.trim()) {
+      return options.value
+    }
+    // Se houver busca, mostra os resultados da busca
     return searchResults.value
   }
 
-  // Busca local
+  // Busca local (quando não é searchable)
   if (!searchQuery.value.trim()) {
     return options.value
   }
@@ -306,6 +317,24 @@ function getOptionLabel(option: ComboboxOption): string {
     return String(option.label ?? option.value ?? '')
   }
   return String(option)
+}
+
+// Função para destacar o termo pesquisado no texto
+function highlightSearchTerm(text: string, searchTerm: string) {
+  if (!searchTerm || !searchTerm.trim()) {
+    return text
+  }
+  
+  const term = searchTerm.trim()
+  const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+  const parts = text.split(regex)
+  
+  return parts.map((part, index) => {
+    if (regex.test(part)) {
+      return `<mark class="bg-yellow-400/50 text-yellow-900 dark:text-yellow-100 font-medium">${part}</mark>`
+    }
+    return part
+  }).join('')
 }
 
 function toggleOpen() {
@@ -348,19 +377,14 @@ function focusFirstOption() {
 function performSearch(query: string) {
   if (!props.column.searchable) return
 
-  isSearching.value = true
+  isSearching.value = true 
+  console.log('index', props.index)
 
-  const searchUrl = props.column.searchUrl || window.location.href
-  const url = new URL(searchUrl, window.location.origin)
-  
-  // Adiciona o parâmetro de busca (backend espera apenas o nome do campo)
-  url.searchParams.set(props.column.name, query)
-
-  router.visit(url.toString(), {
-    only: ['form'], // Busca apenas o formulário atualizado
+  router.get(window.location.pathname,{ [props.column.name]: query }, { 
     preserveState: true,
     preserveScroll: true,
-    // replace: true,
+    replace: true,
+    only: ['form'],
     onSuccess: () => {
       // Após a busca, as opções serão atualizadas via watch nas props
       // Aguarda um tick para garantir que as props foram atualizadas
@@ -381,8 +405,8 @@ const debouncedSearch = useDebounceFn(
     if (query.trim()) {
       performSearch(query)
     } else {
-      // Limpa os resultados se a busca estiver vazia
-      searchResults.value = []
+      // Quando limpa a busca, faz uma requisição vazia para limpar os resultados no backend
+      performSearch('')
     }
   },
   props.column.searchDebounce || 300
@@ -427,26 +451,19 @@ function updateDropdownPosition() {
   }
 }
 
-// Limpa a busca e foca no input quando o dropdown abre
+// Limpa a busca quando o dropdown abre
 watch(open, (isOpen) => {
   if (isOpen) {
-    searchQuery.value = ''
+    // NÃO limpa o searchQuery - preserva o estado
+    // searchQuery.value = ''
     
     // Atualiza posição do dropdown
     nextTick(() => {
       updateDropdownPosition()
       
-      // Se for searchable, carrega opções iniciais se não houver resultados
-      if (props.column.searchable && searchResults.value.length === 0) {
+      // Se for searchable, carrega opções iniciais se não houver resultados e não houver busca ativa
+      if (props.column.searchable && searchResults.value.length === 0 && !searchQuery.value.trim()) {
         searchResults.value = options.value
-      }
-      
-      // Foca no input
-      const inputEl = searchInputContainer.value?.querySelector('input') as HTMLInputElement
-      if (inputEl) {
-        inputEl.focus()
-        const length = inputEl.value.length
-        inputEl.setSelectionRange(length, length)
       }
     })
     
@@ -458,31 +475,20 @@ watch(open, (isOpen) => {
     window.addEventListener('scroll', handleScroll, true)
     
     // Remove listeners quando fecha
-    watch(() => open.value, (newValue) => {
+    const unwatch = watch(() => open.value, (newValue) => {
       if (!newValue) {
         window.removeEventListener('resize', handleResize)
         window.removeEventListener('scroll', handleScroll, true)
+        unwatch()
       }
     })
   } else {
     // Limpa os resultados ao fechar apenas se não houver valor selecionado
     if (props.column.searchable && !internalValue.value) {
       searchResults.value = []
+      // Limpa a busca apenas ao fechar
+      searchQuery.value = ''
     }
-  }
-})
-
-// Watch adicional para manter o foco quando searchQuery muda (após busca)
-watch(searchQuery, () => {
-  if (open.value) {
-    nextTick(() => {
-      const inputEl = searchInputContainer.value?.querySelector('input') as HTMLInputElement
-      if (inputEl && document.activeElement !== inputEl) {
-        inputEl.focus()
-        const length = inputEl.value.length
-        inputEl.setSelectionRange(length, length)
-      }
-    })
   }
 })
 </script>

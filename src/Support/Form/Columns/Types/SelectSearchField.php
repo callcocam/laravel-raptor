@@ -50,13 +50,15 @@ class SelectSearchField extends Column
 
     protected array $searchableFields = ['id', 'name'];
 
+    protected array $selectFields = ['id', 'name'];
+
     protected array $where = [];
 
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->component('form-field-search-select');
-        $this->setUp();
+        $this->setUp(); 
     }
 
     public function searchable(bool $searchable = true): self
@@ -113,7 +115,7 @@ class SelectSearchField extends Column
         }
 
         if ($select) {
-            $this->searchableFields = $select;
+            $this->selectFields($select);
         }
         if ($label) {
             $this->autoCompleteLabel($label);
@@ -144,6 +146,18 @@ class SelectSearchField extends Column
         return $this;
     }
 
+    public function selectFields(array $fields): self
+    {
+        $this->selectFields = $fields;
+
+        return $this;
+    }
+
+    public function getSelectFields(): array
+    {
+        return $this->selectFields;
+    }
+
     public function limit(int $limit): self
     {
         $this->limit = $limit;
@@ -170,14 +184,15 @@ class SelectSearchField extends Column
                 ->when($this->getWhere(), function ($query) {
                     $query->whereIn($this->getOptionKey(), $this->getWhere());
                 })
-                ->when(request()->has($this->getName()), function ($query) {
-                    // $searchableFields = implode(',', $this->getSearchableFields());
-                    // $where = "CONCAT({$searchableFields}) LIKE '%" . strtolower(request()->input($this->getName())) . "%'";
+                ->when(request()->has($this->getName()), function ($query) { 
+                    $searchableFields = implode(', ', $this->getSearchableFields());
+                    Log::info('searchableFields', [$searchableFields, $this->getSelectFields()]);
+                    Log::info('selectFields', $this->getSelectFields());
                     $search = request()->input($this->getName());
-                    $name = $this->getOptionLabel();
-                    $query->orWhere($name, 'like', '%' . $search . '%');
+                    $where = "CONCAT({$searchableFields}) LIKE '%" . $search . "%'"; 
+                    $query->orWhereRaw($where);
                 })
-                ->select($this->getSearchableFields())
+                ->select($this->getSelectFields())
                 ->limit($this->limit)->get()->toArray();
         }
         return [];

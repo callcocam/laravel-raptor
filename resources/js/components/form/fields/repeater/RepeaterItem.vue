@@ -107,6 +107,7 @@
         v-for="field in fields"
         :key="`${itemId}-${field.name}`"
         :column="field"
+        :index="index"
         :modelValue="item[field.name]"
         :error="getFieldError(field.name)"
         @update:modelValue="(value: any) => $emit('updateField', field.name, value)"

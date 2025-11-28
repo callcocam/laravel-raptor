@@ -51,6 +51,7 @@ class RepeaterField extends Column
                 foreach ($values as $columnName => $value) {
                     $field = collect($fields)->firstWhere('name', $columnName);
                     if ($field) { 
+                        $field->index($key);
                         $valueUsing = $field->getValueUsing($values, $model);
                         if ($valueUsing !== null) {
                             if (is_array($valueUsing)) {
@@ -102,7 +103,7 @@ class RepeaterField extends Column
                     // Aplica defaultUsing de cada campo interno
                     // Passa os dados do item para o campo processar
                     $defaultUsing = $field->getDefaultUsing([$columnName => $rawValue], $item);
-
+                    $field->index($key);
                     if ($defaultUsing !== null) {
                         if (is_array($defaultUsing)) {
                             $processedData = array_merge($processedData, $defaultUsing);

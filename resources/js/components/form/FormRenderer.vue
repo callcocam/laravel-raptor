@@ -14,6 +14,7 @@
     >
       <FieldRenderer
         :column="column"
+        :index="index"
         :error="formErrors[column.name]"
         :modelValue="formData[column.name]"
         @update:modelValue="(value) => handleFieldUpdate(column.name, value)"
