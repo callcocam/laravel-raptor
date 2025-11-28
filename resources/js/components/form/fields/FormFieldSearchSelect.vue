@@ -6,54 +6,29 @@
     </FieldLabel>
 
     <div class="relative w-full" ref="containerRef">
-      <Button 
-        type="button" 
-        ref="triggerRef" 
-        variant="outline" 
-        role="combobox"
-        :disabled="column.disabled"
-        :aria-expanded="open" 
-        :aria-invalid="hasError"
-        :class="[
+      <Button type="button" ref="triggerRef" variant="outline" role="combobox" :disabled="column.disabled"
+        :aria-expanded="open" :aria-invalid="hasError" :class="[
           'w-full justify-between',
           hasError ? 'border-destructive' : '',
           !selectedOption && 'text-muted-foreground'
-        ]" 
-        @click="toggleOpen"
-      >
+        ]" @click="toggleOpen">
         {{ selectedOption?.label || column.placeholder || 'Selecione...' }}
         <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
 
       <Teleport to="body">
-        <Transition 
-          enter-active-class="transition ease-out duration-200"
-          enter-from-class="opacity-0 scale-95"
-          enter-to-class="opacity-100 scale-100"
-          leave-active-class="transition ease-in duration-150"
-          leave-from-class="opacity-100 scale-100"
-          leave-to-class="opacity-0 scale-95"
-        >
-          <div 
-            v-if="open" 
-            ref="dropdownRef"
+        <Transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100" leave-active-class="transition ease-in duration-150"
+          leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+          <div v-if="open" ref="dropdownRef"
             class="absolute z-50 mt-1 rounded-md border bg-popover text-popover-foreground shadow-md p-0"
-            :style="dropdownStyle"
-          >
+            :style="dropdownStyle">
             <div class="flex flex-col w-full">
               <!-- Campo de busca -->
               <div class="border-b px-3 py-2">
-                <Input 
-                  ref="searchInput"
-                  v-model="searchQuery"
-                  type="text"
-                  :placeholder="column.searchPlaceholder || 'Buscar...'"
-                  class="h-9"
-                  autofocus
-                  :disabled="isSearching"
-                  @keydown.enter.prevent="selectFirstOption"
-                  @keydown.escape="open = false"
-                />
+                <Input ref="searchInput" v-model="searchQuery" type="text"
+                  :placeholder="column.searchPlaceholder || 'Buscar...'" class="h-9" autofocus :disabled="isSearching"
+                  @keydown.enter.prevent="selectFirstOption" @keydown.escape="open = false" />
               </div>
 
               <!-- Lista de opções -->
@@ -67,21 +42,15 @@
                 </div>
 
                 <div v-else class="flex flex-col gap-1 w-full">
-                  <button
-                    v-for="(option, index) in displayOptions"
-                    :key="option.value"
-                    type="button"
+                  <button v-for="(option, index) in displayOptions" :key="option.value" type="button"
                     :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
                     class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                    @click="selectOption(option.value)"
-                  >
+                    @click="selectOption(option.value)">
                     <span class="flex-1 text-left" v-html="highlightSearchTerm(option.label, searchQuery)"></span>
-                    <CheckIcon 
-                      :class="cn(
-                        'ml-2 h-4 w-4',
-                        internalValue === option.value ? 'opacity-100' : 'opacity-0'
-                      )" 
-                    />
+                    <CheckIcon :class="cn(
+                      'ml-2 h-4 w-4',
+                      internalValue === option.value ? 'opacity-100' : 'opacity-0'
+                    )" />
                   </button>
                 </div>
               </div>
@@ -199,7 +168,7 @@ const normalizedOptions = computed(() => {
 // SEMPRE inclui o item selecionado se ele não estiver na lista
 const displayOptions = computed(() => {
   let options: ComboboxOption[] = []
-  
+
   if (props.column.searchable) {
     // Backend já filtrou, só mostra o que veio
     options = normalizedOptions.value
@@ -243,20 +212,20 @@ const internalValue = computed({
 
 const selectedOption = computed(() => {
   if (!internalValue.value) return null
-  
+
   // Primeiro tenta encontrar nas options normalizadas
   let option = normalizedOptions.value.find(opt => opt.value === internalValue.value)
-  
+
   // Se não encontrou, usa o cache
   if (!option && selectedOptionCache.value?.value === internalValue.value) {
     option = selectedOptionCache.value
   }
-  
+
   // Atualiza o cache sempre que encontrar a opção
   if (option) {
     selectedOptionCache.value = option
   }
-  
+
   return option || selectedOptionCache.value
 })
 
@@ -265,7 +234,7 @@ function highlightSearchTerm(text: string, searchTerm: string) {
 
   const term = searchTerm.trim()
   const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
-  
+
   return text.replace(regex, '<mark class="bg-yellow-400/50 text-yellow-900 dark:text-yellow-100 font-medium">$1</mark>')
 }
 
@@ -275,7 +244,7 @@ function toggleOpen() {
 
 function selectOption(selectedValue: string | number) {
   internalValue.value = selectedValue === internalValue.value ? null : selectedValue
-  
+
   // Salva a opção selecionada no cache antes de fechar
   if (selectedValue !== internalValue.value) {
     const option = displayOptions.value.find(opt => opt.value === selectedValue)
@@ -285,7 +254,7 @@ function selectOption(selectedValue: string | number) {
   } else {
     selectedOptionCache.value = null
   }
-  
+
   open.value = false
   searchQuery.value = ''
 }
@@ -310,7 +279,7 @@ function performSearch(query: string) {
 
   isSearching.value = true
 
-  router.get(window.location.pathname, { [props.column.name]: query }, {
+  const options = {
     preserveState: true,
     preserveScroll: true,
     replace: true,
@@ -321,7 +290,13 @@ function performSearch(query: string) {
         searchInput.value?.$el?.focus()
       })
     }
-  })
+  }
+
+  if (query.trim() === '') {
+    router.get(window.location.pathname, {}, options)
+  } else {
+    router.get(window.location.pathname, { [props.column.name]: query }, options)
+  }
 }
 
 const debouncedSearch = useDebounceFn(
