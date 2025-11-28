@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
+use Callcocam\LaravelRaptor\Support\Concerns\HasMak;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Closure;
 
@@ -17,6 +18,7 @@ abstract class Column extends AbstractColumn
 {
     use BelongsToHelpers;
     use HasGridLayout;
+    use HasMak;
 
     protected string $type = 'text';
 
@@ -37,8 +39,15 @@ abstract class Column extends AbstractColumn
         $this->columnSpanFull();
         $this->index++;
         $this->valueUsing(function ($request, $model) {
+            if ($this->hasMak()) { 
+                return [
+                    $this->getName() => $this->clearMak(data_get($request, $this->getName())),
+                ];
+            }
             return null;
         });
+
+
     }
 
 
@@ -113,6 +122,7 @@ abstract class Column extends AbstractColumn
             'readonly' => $this->isReadOnly(),
             'disabled' => $this->isDisabled(),
             'index' => $this->getIndex(),
+            'mask' => $this->getMask(),
             'attributes' => array_filter([
                 'id' => $this->getId(),
                 'type' => $this->getType(),
