@@ -65,6 +65,7 @@ ComponentRegistry.registerBulk({
     'form-field-money': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMoney.vue')),
     'form-field-search-select': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSearchSelect.vue')),
     'form-field-search-combobox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSearchCombobox.vue')),
+    'form-field-busca-cep': defineAsyncComponent(() => import('~/components/form/fields/FormFieldBuscaCep.vue')),
 })
 
 // Legacy components (backwards compatibility)

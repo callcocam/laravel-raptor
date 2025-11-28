@@ -1,0 +1,142 @@
+<?php
+
+/**
+ * Created by Claudio Campos.
+ * User: callcocam, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ */
+
+namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
+
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToFields;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
+
+/**
+ * BuscaCepField - Campo de busca de CEP com preenchimento automático
+ * 
+ * Integra com API ViaCEP para buscar endereço automaticamente
+ * 
+ * @example
+ * BuscaCepField::make('zip_code')
+ *     ->label('Endereço')
+ *     ->fieldMapping([
+ *         'logradouro' => 'street',
+ *         'bairro' => 'neighborhood',
+ *         'localidade' => 'city',
+ *         'uf' => 'state',
+ *         'complemento' => 'complement',
+ *     ])
+ *     ->fields([
+ *         TextField::make('street')->label('Rua')->required()->columnSpan(8),
+ *         TextField::make('number')->label('Número')->required()->columnSpan(4),
+ *         TextField::make('complement')->label('Complemento')->columnSpan(6),
+ *         TextField::make('neighborhood')->label('Bairro')->required()->columnSpan(6),
+ *         TextField::make('city')->label('Cidade')->required()->readonly()->columnSpan(8),
+ *         TextField::make('state')->label('UF')->required()->readonly()->columnSpan(4),
+ *     ])
+ */
+class BuscaCepField extends Column
+{
+    use BelongsToFields;
+
+    protected array $fieldMapping = [];
+
+    public function __construct(string $name, ?string $label = null)
+    {
+        parent::__construct($name, $label);
+        $this->component('form-field-busca-cep');
+        $this->setUp();
+    }
+
+    protected function setUp(): void
+    {
+        // Mapeamento padrão da API ViaCEP
+        $this->fieldMapping = [
+            'logradouro' => 'street',
+            'bairro' => 'neighborhood',
+            'localidade' => 'city',
+            'estado' => 'state',
+            'complemento' => 'complement',
+        ];
+
+        // Campos padrão
+        $this->fields([
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('street')
+                ->label('Rua')
+                ->required()
+                ->placeholder('Rua, avenida, etc.')
+                ->columnSpan(8),
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('number')
+                ->label('Número')
+                ->required()
+                ->placeholder('Nº')
+                ->columnSpan(4),
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('complement')
+                ->label('Complemento')
+                ->placeholder('Apto, bloco, etc.')
+                ->columnSpan(6),
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('neighborhood')
+                ->label('Bairro')
+                ->required()
+                ->placeholder('Bairro')
+                ->columnSpan(6),
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('city')
+                ->label('Cidade')
+                ->required()
+                ->readonly()
+                ->placeholder('Cidade')
+                ->columnSpan(8),
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('state')
+                ->label('UF')
+                ->required()
+                ->readonly()
+                ->placeholder('UF')
+                ->columnSpan(4),
+        ]);
+    }
+
+    /**
+     * Define o mapeamento dos campos da API para os campos do formulário
+     * 
+     * @param array $mapping Mapeamento ['campo_api' => 'campo_formulario']
+     * @return static
+     * 
+     * @example
+     * ->fieldMapping([
+     *     'logradouro' => 'street',
+     *     'bairro' => 'neighborhood',
+     *     'localidade' => 'city',
+     *     'uf' => 'state',
+     * ])
+     */
+    public function fieldMapping(array $mapping): static
+    {
+        $this->fieldMapping = array_merge($this->fieldMapping, $mapping);
+        
+        return $this;
+    }
+
+    /**
+     * Retorna o mapeamento de campos
+     * 
+     * @return array
+     */
+    public function getFieldMapping(): array
+    {
+        return $this->fieldMapping;
+    }
+
+    public function toArray($model = null): array
+    {
+        $baseArray = parent::toArray($model);
+          // Converte cada field para array
+        $fieldsArray = array_map(function ($field) use ($model) {
+            return $field->toArray($model);
+        }, $this->getFields());
+        // Adiciona o mapeamento de campos ao array
+        $baseArray['fieldMapping'] = $this->getFieldMapping();
+        $baseArray['fields'] = $fieldsArray;
+        
+        return $baseArray;
+    }
+}
