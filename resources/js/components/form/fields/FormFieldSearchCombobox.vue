@@ -1,8 +1,3 @@
-<!--
- * FormFieldCombobox - Combobox/autocomplete field using shadcn-vue Field primitives
- *
- * Searchable select with autocomplete functionality
- -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
@@ -42,19 +37,17 @@
             }}</CommandEmpty>
             <CommandGroup>
               <CommandItem
-                v-for="option in options"
-                :key="getOptionValue(option)"
-                :value="getOptionValue(option)"
+                v-for="option in displayOptions"
+                :key="option.value"
+                :value="String(option.value)"
                 @select="(ev) => selectOption(ev.detail.value as string)"
               >
-                {{ getOptionLabel(option) }}
+                {{ option.label }}
                 <CheckIcon
                   :class="
                     cn(
                       'ml-auto h-4 w-4',
-                      internalValue === getOptionValue(option)
-                        ? 'opacity-100'
-                        : 'opacity-0'
+                      internalValue === option.value ? 'opacity-100' : 'opacity-0'
                     )
                   "
                 />
@@ -93,9 +86,8 @@ import { useDebounceFn } from "@vueuse/core";
 import { router } from "@inertiajs/vue3";
 
 interface ComboboxOption {
-  label?: string;
-  value?: string | number;
-  data?: Record<string, any>;
+  label: string;
+  value: string | number;
   [key: string]: any;
 }
 
@@ -141,8 +133,11 @@ const emit = defineEmits<{
 }>();
 
 const search = ref("");
-
 const open = ref(false);
+const searchInput = ref<InstanceType<typeof CommandInput> | null>(null);
+
+// Cache para manter o item selecionado
+const selectedOptionCache = ref<ComboboxOption | null>(null);
 
 const hasError = computed(() => !!props.error);
 
@@ -154,29 +149,40 @@ const errorArray = computed(() => {
   return [{ message: props.error }];
 });
 
-const searchInput = ref<InstanceType<typeof CommandInput> | null>(null);
-const options = computed(() => {
+// Normaliza as options
+const normalizedOptions = computed(() => {
   if (!props.column.options) return [];
 
-  // Comportamento padrão - normaliza options para formato consistente
-  if (!Array.isArray(props.column.options)) {
-    return Object.entries(props.column.options).map(([value, label]) => ({
-      value,
-      label,
-    }));
+  if (Array.isArray(props.column.options)) {
+    return props.column.options;
   }
 
-  return props.column.options;
+  return Object.entries(props.column.options).map(([value, label]) => ({
+    value,
+    label: String(label),
+  }));
 });
 
-// Computed para optionsData
+// Options para exibição - sempre inclui o item selecionado se não estiver na lista
+const displayOptions = computed(() => {
+  const options = normalizedOptions.value;
+
+  // Garante que o item selecionado está sempre visível
+  if (internalValue.value && selectedOptionCache.value) {
+    const hasSelected = options.some((opt) => opt.value === internalValue.value);
+    if (!hasSelected) {
+      return [selectedOptionCache.value, ...options];
+    }
+  }
+
+  return options;
+});
+
 const optionsData = computed(() => {
   const data = props.column.optionsData || {};
-  // Garantir que seja um objeto, não um array
   return Array.isArray(data) ? {} : data;
 });
 
-// Configura autoComplete se habilitado
 useAutoComplete(props.column.name, props.column.autoComplete, optionsData);
 
 const internalValue = computed({
@@ -184,30 +190,44 @@ const internalValue = computed({
   set: (value) => emit("update:modelValue", value),
 });
 
-const selectedOption = computed(() =>
-  options.value.find((option) => getOptionValue(option) === internalValue.value)
-);
+const selectedOption = computed(() => {
+  if (!internalValue.value) return null;
 
-function getOptionValue(option: ComboboxOption): string {
-  if (typeof option === "object" && option !== null) {
-    return String(option.value ?? option.label ?? "");
-  }
-  return String(option);
-}
+  // Tenta encontrar nas options normalizadas
+  let option = normalizedOptions.value.find((opt) => opt.value === internalValue.value);
 
-function getOptionLabel(option: ComboboxOption): string {
-  if (typeof option === "object" && option !== null) {
-    return String(option.label ?? option.value ?? "");
+  // Se não encontrou, usa o cache
+  if (!option && selectedOptionCache.value?.value === internalValue.value) {
+    option = selectedOptionCache.value;
   }
-  return String(option);
-}
+
+  // Atualiza o cache quando encontrar
+  if (option) {
+    selectedOptionCache.value = option;
+  }
+
+  return option || selectedOptionCache.value;
+});
 
 function selectOption(selectedValue: string) {
-  internalValue.value = selectedValue === internalValue.value ? null : selectedValue;
+  const newValue = selectedValue === String(internalValue.value) ? null : selectedValue;
+
+  // Salva no cache antes de mudar o valor
+  if (newValue) {
+    const option = displayOptions.value.find(
+      (opt) => String(opt.value) === selectedValue
+    );
+    if (option) {
+      selectedOptionCache.value = option;
+    }
+  } else {
+    selectedOptionCache.value = null;
+  }
+
+  internalValue.value = newValue;
   open.value = false;
 }
 
-// Busca no backend
 function performSearch(query: string) {
   if (!props.column.searchable) return;
 
@@ -237,22 +257,13 @@ const debouncedSearch = useDebounceFn(
 
 watch(open, (isOpen) => {
   if (!isOpen) {
-    if (internalValue.value !== null && internalValue.value !== undefined) {
-      search.value = getOptionLabel(
-        options.value.find(
-          (option) => getOptionValue(option) === internalValue.value
-        ) as ComboboxOption
-      );
-    } else {
-      search.value = "";
-    }
+    search.value = "";
   }
 });
 
-watch(
-  () => search.value,
-  (newValue) => {
+watch(search, (newValue) => {
+  if (props.column.searchable) {
     debouncedSearch(newValue);
   }
-);
+});
 </script>
