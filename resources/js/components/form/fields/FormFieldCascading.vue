@@ -140,13 +140,20 @@ const getCascadingValues = () => {
  * Update a specific cascading field value
  */
 const updateCascadingValue = (fieldName: string, value: any) => {
+  console.log(`[Cascading] Updating ${fieldName} = ${value}`);
+  
   if (value === null || value === undefined || value === "") {
     delete cascadingValues.value[fieldName];
   } else {
     cascadingValues.value[fieldName] = value;
   }
 
-  // Emit todos os valores selecionados como objeto
+  console.log('[Cascading] Current values:', cascadingValues.value);
+  console.log('[Cascading] column name:', props.column.name);
+
+  // Emite o objeto completo com todos os valores selecionados
+  // O backend (CascadingField.php) vai processar e pegar o último valor válido
+  console.log('[Cascading] Emitting', props.column.name, '=', cascadingValues.value);
   emit("update:modelValue", { ...cascadingValues.value });
 };
 

@@ -40,6 +40,10 @@ trait InteractWithForm
             $columnRules = $column->getRules($record);
 
             if (!empty($columnRules)) {
+                if(method_exists($column, 'getFieldsUsing')){ 
+                    // Para campos que possuem fieldsUsing (ex: CascadingField), aplica regras em ambos os campos 
+                    $rules[$column->getFieldsUsing()] = $columnRules;
+                }
                 if (!in_array($column->getType(), ['password'])) {
                     $rules[$column->getName()] =  $columnRules;
                 } else {

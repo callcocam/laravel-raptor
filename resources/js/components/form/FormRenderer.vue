@@ -94,20 +94,12 @@ provide('formData', formData);
 
 // Handler para atualização de campos
 const handleFieldUpdate = (fieldName: string, value: any) => {
-  // Se for um Inertia form, usar a sintaxe correta
+  console.log('Updating field:', fieldName, 'to value:', value);
+  
   if (props.modelValue && typeof props.modelValue === "object") {
-    // Se o valor for um objeto (ex: dados de CNPJ com múltiplos campos)
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      // Atualiza múltiplos campos de uma vez
-      Object.keys(value).forEach(key => {
-        // eslint-disable-next-line vue/no-mutating-props
-        props.modelValue[key] = value[key];
-      });
-    } else {
-      // Atualizar diretamente no objeto (Inertia form é reativo e espera mutação in-place)
-      // eslint-disable-next-line vue/no-mutating-props
-      props.modelValue[fieldName] = value;
-    }
+    // Sempre atribui diretamente ao campo
+    // eslint-disable-next-line vue/no-mutating-props
+    props.modelValue[fieldName] = value;
   }
 };
 
