@@ -11,8 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
 use Closure;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder; 
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 class RelationshipField extends Column
