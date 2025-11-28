@@ -11,7 +11,7 @@
     </FieldLabel>
 
     <Popover v-model:open="open">
-      <PopoverTrigger as-child>
+      <PopoverTrigger as-child class="w-full">
         <Button
           variant="outline"
           role="combobox"

@@ -1,29 +1,95 @@
 <!--
- * FormFieldSelect - Select input field using shadcn-vue Field primitives
+ * FormFieldCombobox - Combobox/autocomplete field usando shadcn-vue Field primitives
  *
- * Modern replacement for FormColumnSelect with improved accessibility
+ * Searchable select com funcionalidade de autocomplete
  -->
-<template>
+ <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select v-model="internalValue" :required="column.required" :disabled="column.disabled" class="h-9">
-      <SelectTrigger :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
-        <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem
-          v-for="option in options"
-          :key="getOptionValue(option)"
-          :value="getOptionValue(option)"
+    <Popover v-model:open="open">
+      <PopoverTrigger as-child class="w-full">
+        <Button 
+          variant="outline" 
+          role="combobox" 
+          :disabled="column.disabled" 
+          :aria-expanded="open"
+          :aria-invalid="hasError" 
+          :class="[
+            'w-full justify-between',
+            hasError ? 'border-destructive' : '',
+            !selectedOption && 'text-muted-foreground'
+          ]"
         >
-          {{ getOptionLabel(option) }}
-        </SelectItem>
-      </SelectContent>
-    </Select>
+          {{ selectedOption?.label || column.placeholder || 'Selecione...' }}
+          <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent class="w-full p-0" align="start">
+        <div class="flex flex-col">
+          <!-- Campo de busca -->
+          <div class="border-b px-3 py-2" ref="searchInputContainer">
+            <Input 
+              ref="searchInput" 
+              v-model="searchQuery" 
+              type="text"
+              :placeholder="column.searchPlaceholder || 'Buscar...'" 
+              class="h-9"
+              :disabled="isSearching"
+              @keydown.enter.prevent="selectFirstFiltered" 
+              @keydown.escape="open = false"
+              @keydown.down.prevent="focusFirstOption"
+            />
+          </div>
+
+          <!-- Lista de opções -->
+          <div class="max-h-[300px] overflow-y-auto p-1">
+            <!-- Loading -->
+            <div 
+              v-if="isSearching" 
+              class="py-6 text-center text-sm text-muted-foreground"
+            >
+              Buscando...
+            </div>
+
+            <!-- Empty state -->
+            <div 
+              v-else-if="filteredOptions.length === 0" 
+              class="py-6 text-center text-sm text-muted-foreground"
+            >
+              {{ column.emptyText || 'Nenhum resultado encontrado.' }}
+            </div>
+
+            <!-- Options list -->
+            <button 
+              v-for="(option, index) in filteredOptions" 
+              v-else
+              :key="getOptionValue(option)" 
+              type="button"
+              :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
+              class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+              @click="selectOption(getOptionValue(option))"
+              @keydown.enter.prevent="selectOption(getOptionValue(option))"
+              @keydown.space.prevent="selectOption(getOptionValue(option))"
+            >
+              <span class="flex-1 text-left">{{ getOptionLabel(option) }}</span>
+              <CheckIcon 
+                :class="cn(
+                  'ml-2 h-4 w-4',
+                  internalValue === getOptionValue(option)
+                    ? 'opacity-100'
+                    : 'opacity-0'
+                )
+                " 
+              />
+            </button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
 
     <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
       {{ column.helpText || column.hint || column.tooltip }}
@@ -34,18 +100,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick, onMounted } from 'vue'
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
+import { router, usePage } from '@inertiajs/vue3'
+import { useDebounceFn } from '@vueuse/core'
 
-interface SelectOption {
+interface ComboboxOption {
   label?: string
   value?: string | number
   data?: Record<string, any>
@@ -56,14 +122,19 @@ interface FormColumn {
   name: string
   label?: string
   placeholder?: string
+  searchPlaceholder?: string
+  emptyText?: string
   required?: boolean
   disabled?: boolean
   readonly?: boolean
-  options?: SelectOption[] | Record<string, string>
+  options?: ComboboxOption[] | Record<string, string>
   optionsData?: Record<string, any>
   tooltip?: string
   helpText?: string
   hint?: string
+  searchable?: boolean
+  searchUrl?: string // URL customizada para busca
+  searchDebounce?: number // Tempo de debounce em ms (default: 300)
   autoComplete?: {
     enabled: boolean
     fields: Array<{ source: string, target: string }>
@@ -88,6 +159,14 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number | null): void
 }>()
 
+const open = ref(false)
+const searchQuery = ref('')
+const searchInput = ref<InstanceType<typeof Input> | null>(null)
+const searchInputContainer = ref<HTMLDivElement | null>(null)
+const optionRefs = ref<HTMLButtonElement[]>([])
+const isSearching = ref(false)
+const searchResults = ref<ComboboxOption[]>([])
+
 const hasError = computed(() => !!props.error)
 
 const errorArray = computed(() => {
@@ -98,10 +177,9 @@ const errorArray = computed(() => {
   return [{ message: props.error }]
 })
 
-const options = computed(() => { 
+const options = computed(() => {
   if (!props.column.options) return []
 
-  // Comportamento padrão - normaliza options para formato consistente
   if (!Array.isArray(props.column.options)) {
     return Object.entries(props.column.options).map(([value, label]) => ({
       value,
@@ -112,30 +190,227 @@ const options = computed(() => {
   return props.column.options
 })
 
-// Computed para optionsData
+// Watch para atualizar os resultados quando as opções mudarem (após busca no backend)
+watch(() => props.column.options, (newOptions) => {
+  if (props.column.searchable) {
+    // Se as opções foram atualizadas e há uma busca ativa, atualiza os resultados
+    if (searchQuery.value.trim() && newOptions) {
+      if (Array.isArray(newOptions)) {
+        searchResults.value = newOptions
+      } else if (typeof newOptions === 'object') {
+        // Converte objeto para array
+        searchResults.value = Object.entries(newOptions).map(([value, label]) => ({
+          value,
+          label,
+        }))
+      }
+    }
+  }
+}, { deep: true })
+
 const optionsData = computed(() => {
   const data = props.column.optionsData || {}
-  // Garantir que seja um objeto, não um array
   return Array.isArray(data) ? {} : data
 })
 
 // Configura autoComplete se habilitado
 useAutoComplete(props.column.name, props.column.autoComplete, optionsData)
 
-const getOptionValue = (option: SelectOption | string): string => {
-  if (typeof option === 'string') return option
-  return String(option.value ?? option.label ?? '')
-}
-
-const getOptionLabel = (option: SelectOption | string): string => {
-  if (typeof option === 'string') return option
-  return option.label ?? String(option.value) ?? ''
-}
-
 const internalValue = computed({
-  get: () => props.modelValue ? String(props.modelValue) : undefined,
-  set: (value) => {
-    emit('update:modelValue', value || null)
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value),
+})
+
+const selectedOption = computed(() => {
+  if (!internalValue.value) return null
+  
+  // Se for searchable, busca primeiro nos resultados da busca, depois nas opções padrão
+  if (props.column.searchable) {
+    // Primeiro tenta encontrar nos resultados da busca
+    const foundInSearch = searchResults.value.find(
+      (option) => getOptionValue(option) === internalValue.value
+    )
+    if (foundInSearch) return foundInSearch
+    
+    // Se não encontrou, busca nas opções padrão
+    return options.value.find(
+      (option) => getOptionValue(option) === internalValue.value
+    )
+  }
+  
+  // Se não for searchable, busca apenas nas opções padrão
+  return options.value.find(
+    (option) => getOptionValue(option) === internalValue.value
+  )
+})
+
+// Filtra opções baseado na busca
+const filteredOptions = computed(() => {
+  // Se for searchable, usa os resultados da busca
+  if (props.column.searchable) {
+    return searchResults.value
+  }
+
+  // Busca local
+  if (!searchQuery.value.trim()) {
+    return options.value
+  }
+
+  const query = searchQuery.value.toLowerCase().trim()
+
+  return options.value.filter((option) => {
+    const label = getOptionLabel(option).toLowerCase()
+    const value = String(getOptionValue(option)).toLowerCase()
+
+    return label.includes(query) || value.includes(query)
+  })
+})
+
+function getOptionValue(option: ComboboxOption): string {
+  if (typeof option === 'object' && option !== null) {
+    return String(option.value ?? option.label ?? '')
+  }
+  return String(option)
+}
+
+function getOptionLabel(option: ComboboxOption): string {
+  if (typeof option === 'object' && option !== null) {
+    return String(option.label ?? option.value ?? '')
+  }
+  return String(option)
+}
+
+function selectOption(selectedValue: string) {
+  internalValue.value = selectedValue === internalValue.value ? null : selectedValue
+  open.value = false
+  searchQuery.value = ''
+}
+
+function selectFirstFiltered() {
+  if (filteredOptions.value.length > 0) {
+    selectOption(getOptionValue(filteredOptions.value[0]))
+  }
+}
+
+function focusFirstOption() {
+  nextTick(() => {
+    if (optionRefs.value[0]) {
+      optionRefs.value[0].focus()
+    }
+  })
+}
+
+// Função de busca no backend
+function performSearch(query: string) {
+  if (!props.column.searchable) return
+
+  isSearching.value = true
+
+  const searchUrl = props.column.searchUrl || window.location.href
+  const url = new URL(searchUrl, window.location.origin)
+  
+  // Adiciona o parâmetro de busca (backend espera apenas o nome do campo)
+  url.searchParams.set(props.column.name, query)
+
+  router.visit(url.toString(), {
+    only: ['form'], // Busca apenas o formulário atualizado
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+    onSuccess: () => {
+      // Após a busca, as opções serão atualizadas via watch nas props
+      // Aguarda um tick para garantir que as props foram atualizadas
+      nextTick(() => {
+        // const page = usePage()
+        // const form = (page.props as any).form || page.props
+        // const columns = form.columns || []
+        // const updatedColumn = columns.find((col: any) => col.name === props.column.name)
+        
+        // if (updatedColumn && updatedColumn.options) {
+        //   // Atualiza os resultados com as opções retornadas do backend
+        //   if (Array.isArray(updatedColumn.options)) {
+        //     searchResults.value = updatedColumn.options
+        //   } else if (typeof updatedColumn.options === 'object') {
+        //     // Converte objeto para array
+        //     searchResults.value = Object.entries(updatedColumn.options).map(([value, label]) => ({
+        //       value,
+        //       label: String(label),
+        //     }))
+        //   } else {
+        //     searchResults.value = []
+        //   }
+        // } else {
+        //   // Se não encontrou opções, limpa os resultados
+        //   searchResults.value = []
+        // }
+        
+        isSearching.value = false
+      })
+    },
+    onError: (errors: any) => {
+      console.error('Erro na busca:', errors)
+      isSearching.value = false
+    }
+  })
+}
+
+// Debounce da busca
+const debouncedSearch = useDebounceFn(
+  (query: string) => {
+    if (query.trim()) {
+      performSearch(query)
+    } else {
+      // Limpa os resultados se a busca estiver vazia
+      searchResults.value = []
+    }
   },
+  props.column.searchDebounce || 300
+)
+
+// Watch na query de busca
+watch(searchQuery, (newQuery) => {
+  if (props.column.searchable) {
+    debouncedSearch(newQuery)
+  }
+})
+
+// Inicializa: se houver valor selecionado e for searchable, garante que a opção está disponível
+onMounted(() => {
+  if (props.column.searchable && internalValue.value && options.value.length > 0) {
+    // Se há um valor selecionado, garante que está nas opções iniciais
+    const selected = options.value.find(
+      (option) => getOptionValue(option) === internalValue.value
+    )
+    if (selected && searchResults.value.length === 0) {
+      // Se encontrou a opção selecionada e não há resultados de busca, carrega as opções iniciais
+      searchResults.value = options.value
+    }
+  }
+})
+
+// Limpa a busca e foca no input quando o popover abre
+watch(open, (isOpen) => {
+  if (isOpen) {
+    searchQuery.value = ''
+    
+    // Se for searchable, carrega opções iniciais se não houver resultados
+    if (props.column.searchable && searchResults.value.length === 0) {
+      searchResults.value = options.value
+    }
+    
+    nextTick(() => {
+      // Foca no campo de busca quando o popover abre
+      // Busca o elemento input nativo dentro do componente ou container
+      const inputEl = searchInputContainer.value?.querySelector('input') as HTMLInputElement
+      if (inputEl) {
+        inputEl.focus()
+      }
+    })
+  } else {
+    // Limpa os resultados ao fechar apenas se não houver valor selecionado
+    if (props.column.searchable && !internalValue.value) {
+      searchResults.value = []
+    }
+  }
 })
 </script>

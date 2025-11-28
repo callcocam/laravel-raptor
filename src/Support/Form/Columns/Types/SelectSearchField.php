@@ -14,6 +14,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -39,7 +40,7 @@ class SelectSearchField extends Column
 
     protected ?string $placeholder = null;
 
-    protected bool $searchable = false;
+    protected bool $searchable = true;
 
     protected Closure|string|null $dependsOn = null;
 
@@ -169,6 +170,13 @@ class SelectSearchField extends Column
                 ->when($this->getWhere(), function ($query) {
                     $query->whereIn($this->getOptionKey(), $this->getWhere());
                 })
+                ->when(request()->has($this->getName()), function ($query) {
+                    // $searchableFields = implode(',', $this->getSearchableFields());
+                    // $where = "CONCAT({$searchableFields}) LIKE '%" . strtolower(request()->input($this->getName())) . "%'";
+                    $search = request()->input($this->getName());
+                    $name = $this->getOptionLabel();
+                    $query->where($name, 'like', '%' . $search . '%');
+                })
                 ->select($this->getSearchableFields())
                 ->limit($this->limit)->get()->toArray();
         }
@@ -189,7 +197,7 @@ class SelectSearchField extends Column
         $optionsData = (object) [];
         $collection = data_get($model, $this->getRelationshipName(), []);
         $baseSearchableFields = [];
-        if ($collection instanceof Collection) { 
+        if ($collection instanceof Collection) {
             $baseSearchableFields = $collection->pluck($this->getName())->toArray();
         } elseif ($collection instanceof Model) {
             $baseSearchableFields[] = data_get($collection, $this->getOptionKey());
