@@ -56,7 +56,7 @@ class BuscaCepField extends Column
         $this->fieldMapping = [
             'cep' => 'zip_code',
             'logradouro' => 'street',
-            'bairro' => 'neighborhood',
+            'bairro' => 'district',
             'localidade' => 'city',
             'estado' => 'state',
             'complemento' => 'complement',
@@ -83,7 +83,7 @@ class BuscaCepField extends Column
                 ->label('Complemento')
                 ->placeholder('Apto, bloco, etc.')
                 ->columnSpan(6),
-            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('neighborhood')
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('district')
                 ->label('Bairro')
                 ->required()
                 ->placeholder('Bairro')

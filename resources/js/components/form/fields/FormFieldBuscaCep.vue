@@ -14,15 +14,61 @@
     </FieldDescription>
 
     <div class="grid grid-cols-12 gap-4">
-      <!-- Campo CEP --> 
-
       <!-- Campos de endereço dinâmicos -->
       <div
         v-for="(field, index) in addressFields"
         :key="field.name"
-        :class="getColumnClasses(field)"
+        :class="getCepFieldClass(field)"
       >
+        <!-- Campo CEP com botão -->
+        <div v-if="field.name === executeOnChangeField" class="flex gap-2">
+          <div class="relative flex-1">
+            <FieldRenderer
+              :column="field"
+              :index="index"
+              :error="cepError ? cepError : props.error?.[field.name]"
+              :modelValue="fieldValues[field.name]"
+              @update:modelValue="(value) => handleFieldUpdate(field.name, value)"
+            />
+            <div v-if="isSearching" class="absolute right-3 top-1/2 -translate-y-1/2">
+              <svg
+                class="animate-spin h-4 w-4 text-muted-foreground"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="default"
+            @click="handleSearchClick"
+            :disabled="!canSearch || isSearching"
+            class="shrink-0 mt-6"
+          >
+            <Search class="h-4 w-4 mr-2" /> 
+          </Button>
+        </div>
+
+        <!-- Outros campos normais -->
         <FieldRenderer
+          v-else
           :column="field"
           :index="index"
           :error="props.error?.[field.name]"
@@ -36,14 +82,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-vue-next";
 
 import {
   FieldLegend,
   FieldSet,
-  Field,
-  FieldLabel,
-  FieldError,
   FieldDescription,
 } from "@/components/ui/field";
 import FieldRenderer from "../columns/FieldRenderer.vue";
@@ -101,6 +145,23 @@ const addressFields = computed(() => props.column.fields || []);
 // Campo que aciona a busca (definido via executeOnChange)
 const executeOnChangeField = computed(() => props.column.executeOnChange || 'zip_code');
 
+// Pode buscar se tiver 8 dígitos
+const canSearch = computed(() => {
+  const cepValue = fieldValues.value[executeOnChangeField.value];
+  if (!cepValue) return false;
+  const cleaned = String(cepValue).replace(/\D/g, '');
+  return cleaned.length === 8;
+});
+
+// Retorna classe do campo, ajustando para o campo CEP que tem botão
+const getCepFieldClass = (field: AddressField) => {
+  // Se for o campo CEP, não usa a classe de grid pois o flex já controla
+  if (field.name === executeOnChangeField.value) {
+    return getColumnClasses(field);
+  }
+  return getColumnClasses(field);
+};
+
 // Inicializa valores dos campos
 watch(
   () => props.modelValue,
@@ -114,19 +175,18 @@ watch(
   { immediate: true }
 );
 
-// Watch para acionar busca quando o campo executeOnChange mudar
-watch(
-  () => fieldValues.value[executeOnChangeField.value],
-  (newCep, oldCep) => {
-    // Só busca se o CEP mudou e tem 8 dígitos
-    if (newCep && newCep !== oldCep) {
-      const cleaned = String(newCep).replace(/\D/g, '');
-      if (cleaned.length === 8) {
-        searchCep(cleaned);
-      }
+// Handler de clique no botão buscar
+const handleSearchClick = () => {
+  const cepValue = fieldValues.value[executeOnChangeField.value];
+  if (cepValue) {
+    const cleaned = String(cepValue).replace(/\D/g, '');
+    if (cleaned.length === 8) {
+      searchCep(cleaned);
+    } else {
+      cepError.value = "CEP deve ter 8 dígitos.";
     }
   }
-);
+};
 
 // Busca CEP na API ViaCEP
 async function searchCep(cep: string) {

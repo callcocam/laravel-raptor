@@ -22,4 +22,9 @@ class Address extends AbstractModel
     {
         return $this->morphTo();
     }
+
+    protected function slugTo()
+    {
+        return false;
+    }
 }
