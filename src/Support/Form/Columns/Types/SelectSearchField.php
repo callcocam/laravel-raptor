@@ -57,7 +57,8 @@ class SelectSearchField extends Column
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
-        $this->component('form-field-search-select');
+        // $this->component('form-field-search-select');
+        $this->component('form-field-search-combobox');
         $this->setUp(); 
     }
 
