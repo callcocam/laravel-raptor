@@ -98,7 +98,6 @@
     <FieldError :errors="errorArray" />
   </Field>
 </template>
-
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
@@ -168,6 +167,9 @@ const optionRefs = ref<HTMLButtonElement[]>([])
 const isSearching = ref(false)
 const dropdownStyle = ref({ width: '0px', top: '0px', left: '0px' })
 
+// Guarda o item selecionado para garantir que não desapareça
+const selectedOptionCache = ref<ComboboxOption | null>(null)
+
 const hasError = computed(() => !!props.error)
 const errorArray = computed(() => {
   if (!props.error) return []
@@ -194,23 +196,37 @@ const normalizedOptions = computed(() => {
 
 // Se for searchable, sempre mostra as options que vêm do backend
 // Se não for searchable, filtra localmente
+// SEMPRE inclui o item selecionado se ele não estiver na lista
 const displayOptions = computed(() => {
+  let options: ComboboxOption[] = []
+  
   if (props.column.searchable) {
     // Backend já filtrou, só mostra o que veio
-    return normalizedOptions.value
+    options = normalizedOptions.value
+  } else {
+    // Filtro local
+    if (!searchQuery.value.trim()) {
+      options = normalizedOptions.value
+    } else {
+      const query = searchQuery.value.toLowerCase().trim()
+      options = normalizedOptions.value.filter((option) => {
+        const label = option.label.toLowerCase()
+        const value = String(option.value).toLowerCase()
+        return label.includes(query) || value.includes(query)
+      })
+    }
   }
 
-  // Filtro local
-  if (!searchQuery.value.trim()) {
-    return normalizedOptions.value
+  // Garante que o item selecionado está sempre visível
+  if (internalValue.value && selectedOptionCache.value) {
+    const hasSelected = options.some(opt => opt.value === internalValue.value)
+    if (!hasSelected) {
+      // Adiciona o item selecionado no topo da lista
+      options = [selectedOptionCache.value, ...options]
+    }
   }
 
-  const query = searchQuery.value.toLowerCase().trim()
-  return normalizedOptions.value.filter((option) => {
-    const label = option.label.toLowerCase()
-    const value = String(option.value).toLowerCase()
-    return label.includes(query) || value.includes(query)
-  })
+  return options
 })
 
 const optionsData = computed(() => {
@@ -227,7 +243,21 @@ const internalValue = computed({
 
 const selectedOption = computed(() => {
   if (!internalValue.value) return null
-  return normalizedOptions.value.find(opt => opt.value === internalValue.value)
+  
+  // Primeiro tenta encontrar nas options normalizadas
+  let option = normalizedOptions.value.find(opt => opt.value === internalValue.value)
+  
+  // Se não encontrou, usa o cache
+  if (!option && selectedOptionCache.value?.value === internalValue.value) {
+    option = selectedOptionCache.value
+  }
+  
+  // Atualiza o cache sempre que encontrar a opção
+  if (option) {
+    selectedOptionCache.value = option
+  }
+  
+  return option || selectedOptionCache.value
 })
 
 function highlightSearchTerm(text: string, searchTerm: string) {
@@ -245,6 +275,17 @@ function toggleOpen() {
 
 function selectOption(selectedValue: string | number) {
   internalValue.value = selectedValue === internalValue.value ? null : selectedValue
+  
+  // Salva a opção selecionada no cache antes de fechar
+  if (selectedValue !== internalValue.value) {
+    const option = displayOptions.value.find(opt => opt.value === selectedValue)
+    if (option) {
+      selectedOptionCache.value = option
+    }
+  } else {
+    selectedOptionCache.value = null
+  }
+  
   open.value = false
   searchQuery.value = ''
 }
