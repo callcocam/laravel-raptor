@@ -185,6 +185,7 @@ class SelectSearchField extends Column
                     $query->whereIn($this->getOptionKey(), $this->getWhere());
                 })
                 ->when(request()->has($this->getName()), function ($query) { 
+                    Log::info('index', [$this->getIndex(), $this->getName()]);
                     $searchableFields = implode(', ', $this->getSearchableFields()); 
                     $search = request()->input($this->getName());
                     $where = "CONCAT({$searchableFields}) LIKE '%" . $search . "%'"; 

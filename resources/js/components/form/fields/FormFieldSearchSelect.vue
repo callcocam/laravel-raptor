@@ -33,10 +33,9 @@
             <div class="flex flex-col w-full">
               <!-- Campo de busca -->
               <div class="border-b px-3 py-2" ref="searchInputContainer">
-                <Input ref="searchInput" v-model="searchQuery" type="text"
+                <Input ref="searchInput" v-model="searchQuery" type="text" :id="columnId + '_search'"
                   :placeholder="column.searchPlaceholder || 'Buscar...'" class="h-9" autofocus="true"
-                  :disabled="isSearching" @keydown.enter.prevent="selectFirstFiltered" @keydown.escape="open = false"
-                  @keydown.down.prevent="focusFirstOption" />
+                  :disabled="isSearching" @keydown.enter.prevent="selectFirstFiltered" @keydown.escape="open = false" />
               </div>
 
               <!-- Lista de opções -->
@@ -52,7 +51,7 @@
                 </div>
 
                 <!-- Options list -->
-                <div v-else class="flex flex-col gap-1 w-full ">
+                <div v-else class="flex flex-col gap-1 w-full " ref="optionsListRef" :id="columnId">
                   <button v-for="(option, index) in filteredOptions" :key="getOptionValue(option)" type="button"
                     :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
                     class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
@@ -143,6 +142,7 @@ const props = withDefaults(defineProps<Props>(), {
   error: undefined,
   index: 0,
 })
+const columnId = computed(() => props.modelValue ? props.modelValue.toString() : 'form')
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number | null): void
@@ -163,6 +163,7 @@ const dropdownStyle = ref<{ width: string; top: string; left: string }>({
   top: '0px',
   left: '0px',
 })
+const optionsListRef = ref<HTMLDivElement | undefined>(undefined)
 
 const hasError = computed(() => !!props.error)
 const errorArray = computed(() => {
@@ -329,8 +330,9 @@ function selectFirstFiltered() {
 
 function focusFirstOption() {
   nextTick(() => {
+    console.log('optionRefs', optionRefs.value)
     if (optionRefs.value[0]) {
-      optionRefs.value[0].focus()
+      (optionRefs.value[0] as HTMLButtonElement).focus()
     }
   })
 }
@@ -340,7 +342,7 @@ function performSearch(query: string) {
   if (!props.column.searchable) return
 
   isSearching.value = true
-  console.log('index', props.index)
+  console.log(optionsListRef.value ? optionsListRef.value : 'form')
 
   router.get(window.location.pathname, { [props.column.name]: query }, {
     preserveState: true,
@@ -352,6 +354,12 @@ function performSearch(query: string) {
       // Aguarda um tick para garantir que as props foram atualizadas
       nextTick(() => {
         isSearching.value = false
+        const searchInputElement = document.getElementById(columnId.value + '_search') as HTMLInputElement
+        if (searchInputElement) {
+          setTimeout(() => {
+            searchInputElement.focus()
+          }, 100)
+        }
       })
     },
     onError: (errors: any) => {
