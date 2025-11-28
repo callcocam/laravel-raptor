@@ -11,8 +11,6 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns\Concerns;
 trait HasAutoComplete
 {
     protected array $autoCompleteFields = [];
-    protected ?string $optionValueKey = null;
-    protected ?string $optionLabelKey = null;
     protected bool $returnFullObject = false;
 
     /**
@@ -50,26 +48,32 @@ trait HasAutoComplete
 
     /**
      * Define qual campo do objeto será usado como valor da opção
+     * Usa optionKey do BelongsToOptions
      * 
      * @param string $key Nome do campo (ex: 'id', 'uuid', 'code')
      * @return static
      */
     public function autoCompleteValue(string $key): static
     {
-        $this->optionValueKey = $key;
+        if (method_exists($this, 'optionKey')) {
+            $this->optionKey($key);
+        }
         
         return $this;
     }
 
     /**
      * Define qual campo do objeto será usado como label da opção
+     * Usa optionLabel do BelongsToOptions
      * 
      * @param string $key Nome do campo (ex: 'name', 'title', 'description')
      * @return static
      */
     public function autoCompleteLabel(string $key): static
     {
-        $this->optionLabelKey = $key;
+        if (method_exists($this, 'optionLabel')) {
+            $this->optionLabel($key);
+        }
         
         return $this;
     }
@@ -99,18 +103,20 @@ trait HasAutoComplete
 
     /**
      * Retorna a chave de valor da opção
+     * Usa optionKey do BelongsToOptions
      */
     public function getOptionValueKey(): ?string
     {
-        return $this->optionValueKey;
+        return method_exists($this, 'getOptionKey') ? $this->getOptionKey() : null;
     }
 
     /**
      * Retorna a chave de label da opção
+     * Usa optionLabel do BelongsToOptions
      */
     public function getOptionLabelKey(): ?string
     {
-        return $this->optionLabelKey;
+        return method_exists($this, 'getOptionLabel') ? $this->getOptionLabel() : null;
     }
 
     /**
@@ -130,7 +136,11 @@ trait HasAutoComplete
      */
     protected function processOptionsForAutoComplete($options): array
     {
-        if (empty($this->autoCompleteFields) && !$this->optionValueKey && !$this->optionLabelKey) {
+        // Usa optionKey e optionLabel do BelongsToOptions
+        $optionKey = method_exists($this, 'getOptionKey') ? $this->getOptionKey() : null;
+        $optionLabel = method_exists($this, 'getOptionLabel') ? $this->getOptionLabel() : null;
+        
+        if (empty($this->autoCompleteFields) && !$optionKey && !$optionLabel) {
             // Comportamento padrão - retorna como está
             return [
                 'options' => is_array($options) ? $options : $options->toArray(),
@@ -146,12 +156,12 @@ trait HasAutoComplete
             if (is_object($value) || is_array($value)) {
                 $item = is_object($value) ? (array) $value : $value;
                 
-                // Define valor e label
-                $optionValue = $this->optionValueKey ? ($item[$this->optionValueKey] ?? $key) : ($item['id'] ?? $key);
-                $optionLabel = $this->optionLabelKey ? ($item[$this->optionLabelKey] ?? $value) : ($item['name'] ?? $item['label'] ?? $value);
+                // Define valor e label usando optionKey e optionLabel
+                $optionValue = $optionKey ? ($item[$optionKey] ?? $key) : ($item['id'] ?? $key);
+                $optionLabelValue = $optionLabel ? ($item[$optionLabel] ?? $value) : ($item['name'] ?? $item['label'] ?? $value);
                 
                 // Opções no formato normal (key => label)
-                $normalOptions[$optionValue] = $optionLabel;
+                $normalOptions[$optionValue] = $optionLabelValue;
                 
                 // Dados completos indexados pelo valor
                 $optionsData[$optionValue] = $item;
@@ -173,12 +183,16 @@ trait HasAutoComplete
      */
     protected function autoCompleteToArray(): array
     {
+        // Usa optionKey e optionLabel do BelongsToOptions
+        $optionKey = method_exists($this, 'getOptionKey') ? $this->getOptionKey() : null;
+        $optionLabel = method_exists($this, 'getOptionLabel') ? $this->getOptionLabel() : null;
+        
         return [
             'autoComplete' => [
                 'enabled' => !empty($this->autoCompleteFields),
                 'fields' => $this->autoCompleteFields,
-                'optionValueKey' => $this->optionValueKey,
-                'optionLabelKey' => $this->optionLabelKey,
+                'optionValueKey' => $optionKey,
+                'optionLabelKey' => $optionLabel,
                 'returnFullObject' => $this->returnFullObject,
             ],
         ];

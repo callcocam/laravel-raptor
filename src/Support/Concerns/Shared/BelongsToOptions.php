@@ -44,6 +44,27 @@ trait BelongsToOptions
 
         return $this;
     }
+    // public function getOptions(): array
+    // {
+    //     if (method_exists($this, 'hasRelationship') && $this->hasRelationship()) {
+    //         $relationship = $this->getRelationship();
+
+    //         if ($relationship) {
+    //             $relatedModel = $this->processRelationshipOptions();
+    //             if ($relatedModel) {
+    //                 $labelColumn = $this->getOptionLabel() ?? 'name';
+    //                 $keyColumn = $this->getOptionKey() ?? 'id';
+
+    //                 $this->options = $relatedModel
+    //                     ->select([$keyColumn, $labelColumn])
+    //                     ->pluck($labelColumn, $keyColumn)
+    //                     ->toArray();
+    //                 return $this->normalizeOptions($this->options);
+    //             }
+    //         }
+    //     }
+    //     return $this->normalizeOptions($this->options);
+    // }
 
     /**
      * Get the options for the filter.
@@ -52,41 +73,15 @@ trait BelongsToOptions
     public function getOptions(): array
     {
         if (method_exists($this, 'hasRelationship') && $this->hasRelationship()) {
-            $relationship = $this->getRelationship();
+            // 3. Pegar o model relacionado de forma segura
+            if ($relatedModel = $this->processRelationshipOptions()) {
+                $labelColumn = $this->getOptionLabel() ?? 'name';
+                $keyColumn = $this->getOptionKey() ?? 'id';
 
-            if ($relationship) {
-                // 1. Validar que o relacionamento existe no model
-                $record = $this->getRecord();
-
-                // Validar que record não é null antes de chamar method_exists
-                if (!$record || !is_object($record)) {
-                    $this->options = [];
-                } elseif (!method_exists($record, $relationship)) {
-                    throw new \InvalidArgumentException("Relationship '{$relationship}' does not exist.");
-                } else {
-                    // 2. Verificar se é realmente um relacionamento válido
-                    try {
-                        $relationInstance = $record->$relationship();
-
-                        if (!$relationInstance instanceof \Illuminate\Database\Eloquent\Relations\Relation) {
-                            throw new \InvalidArgumentException("'{$relationship}' is not a valid relationship.");
-                        }
-
-                        // 3. Pegar o model relacionado de forma segura
-                        $relatedModel = $this->getUsingRelationshipQuery($relationInstance->getRelated());
-                        // 4. Validar nomes das colunas para evitar injeção
-                        $labelColumn = $this->getOptionLabel() ?? 'name';
-                        $keyColumn = $this->getOptionKey() ?? 'id';
-
-                        $this->options = $relatedModel
-                            ->select([$keyColumn, $labelColumn])
-                            ->pluck($labelColumn, $keyColumn)
-                            ->toArray();
-                    } catch (\Throwable $e) {
-                        Log::error('Error loading relationship options: ' . $e->getMessage());
-                        $this->options = [];
-                    }
-                }
+                $this->options = $relatedModel
+                    ->select([$keyColumn, $labelColumn])
+                    ->pluck($labelColumn, $keyColumn)
+                    ->toArray();
             }
         }
         $options = $this->evaluate($this->options);

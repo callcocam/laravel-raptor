@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -54,7 +55,7 @@ class SelectSearchField extends Column
     {
         parent::__construct($name, $label);
         $this->component('form-field-search-select');
-        $this->setUp(); 
+        $this->setUp();
     }
 
     public function searchable(bool $searchable = true): self
@@ -109,6 +110,7 @@ class SelectSearchField extends Column
         } elseif (is_string($query)) {
             $this->baseQuery = (new $query())->newQuery()->select($select);
         }
+
         if ($select) {
             $this->searchableFields = $select;
         }
@@ -123,6 +125,9 @@ class SelectSearchField extends Column
 
     public function getBaseQuery(): ?Builder
     {
+        if ($this->hasRelationship()) {
+            return $this->processRelationshipOptions()->newQuery();
+        }
         return $this->baseQuery;
     }
 
@@ -162,7 +167,7 @@ class SelectSearchField extends Column
         if ($query) {
             return $query
                 ->when($this->getWhere(), function ($query) {
-                    $query->whereIn($this->getOptionValueKey(), $this->getWhere());
+                    $query->whereIn($this->getOptionKey(), $this->getWhere());
                 })
                 ->select($this->getSearchableFields())
                 ->limit($this->limit)->get()->toArray();
@@ -170,13 +175,25 @@ class SelectSearchField extends Column
         return [];
     }
 
+    public function getOptions(): array
+    {
+        $options = $this->evaluate($this->options);
+
+        return $this->normalizeOptions($options);
+    }
+
     public function toArray($model = null): array
     {
+        $this->record($model);
 
         $optionsData = (object) [];
-
-        $baseSearchableFields = collect(data_get($model, $this->getRelationshipName(), []))->pluck($this->getName())->toArray();
-
+        $collection = data_get($model, $this->getRelationshipName(), []);
+        $baseSearchableFields = [];
+        if ($collection instanceof Collection) { 
+            $baseSearchableFields = $collection->pluck($this->getName())->toArray();
+        } elseif ($collection instanceof Model) {
+            $baseSearchableFields[] = data_get($collection, $this->getOptionKey());
+        }
         if ($baseSearchableFields) {
             $this->where($baseSearchableFields);
         }
@@ -184,7 +201,9 @@ class SelectSearchField extends Column
         $this->options($this->processOptionsForQuery());
 
         // Processa as opções BRUTAS antes da normalização
-        if (! empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
+        $optionKey = $this->getOptionKey();
+        $optionLabel = $this->getOptionLabel();
+        if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) {
             // Pega as opções brutas (antes de normalizar) 
             $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
             $optionsData = $processed['optionsData'];

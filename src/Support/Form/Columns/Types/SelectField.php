@@ -57,7 +57,9 @@ class SelectField extends Column
         $optionsData = (object) [];
 
         // Processa as opções BRUTAS antes da normalização
-        if (! empty($this->autoCompleteFields) || $this->optionValueKey || $this->optionLabelKey) {
+        $optionKey = $this->getOptionKey();
+        $optionLabel = $this->getOptionLabel();
+        if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) {
             // Pega as opções brutas (antes de normalizar) 
             $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
             $optionsData = $processed['optionsData'];
