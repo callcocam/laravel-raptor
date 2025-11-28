@@ -362,8 +362,7 @@ function performSearch(query: string) {
         }
       })
     },
-    onError: (errors: any) => {
-      console.error('Erro na busca:', errors)
+    onError: (errors: any) => { 
       isSearching.value = false
     }
   })
