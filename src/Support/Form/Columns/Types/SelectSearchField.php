@@ -175,7 +175,7 @@ class SelectSearchField extends Column
                     // $where = "CONCAT({$searchableFields}) LIKE '%" . strtolower(request()->input($this->getName())) . "%'";
                     $search = request()->input($this->getName());
                     $name = $this->getOptionLabel();
-                    $query->where($name, 'like', '%' . $search . '%');
+                    $query->orWhere($name, 'like', '%' . $search . '%');
                 })
                 ->select($this->getSearchableFields())
                 ->limit($this->limit)->get()->toArray();

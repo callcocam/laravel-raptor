@@ -10,86 +10,106 @@
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Popover v-model:open="open">
-      <PopoverTrigger as-child class="w-full">
-        <Button 
-          variant="outline" 
-          role="combobox" 
-          :disabled="column.disabled" 
-          :aria-expanded="open"
-          :aria-invalid="hasError" 
-          :class="[
-            'w-full justify-between',
-            hasError ? 'border-destructive' : '',
-            !selectedOption && 'text-muted-foreground'
-          ]"
+    <!-- Container relativo para posicionar o dropdown -->
+    <div class="relative w-full" ref="containerRef">
+      <Button
+        type="button"
+        ref="triggerRef" 
+        variant="outline" 
+        role="combobox" 
+        :disabled="column.disabled" 
+        :aria-expanded="open"
+        :aria-invalid="hasError" 
+        :class="[
+          'w-full justify-between',
+          hasError ? 'border-destructive' : '',
+          !selectedOption && 'text-muted-foreground'
+        ]"
+        @click="toggleOpen"
+      >
+        {{ selectedOption?.label || column.placeholder || 'Selecione...' }}
+        <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+      </Button>
+
+      <!-- Dropdown personalizado -->
+      <Teleport to="body">
+        <Transition
+          enter-active-class="transition ease-out duration-200"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+          leave-active-class="transition ease-in duration-150"
+          leave-from-class="opacity-100 scale-100"
+          leave-to-class="opacity-0 scale-95"
         >
-          {{ selectedOption?.label || column.placeholder || 'Selecione...' }}
-          <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent class="w-full p-0" align="start">
-        <div class="flex flex-col">
-          <!-- Campo de busca -->
-          <div class="border-b px-3 py-2" ref="searchInputContainer">
-            <Input 
-              ref="searchInput" 
-              v-model="searchQuery" 
-              type="text"
-              :placeholder="column.searchPlaceholder || 'Buscar...'" 
-              class="h-9"
-              :disabled="isSearching"
-              @keydown.enter.prevent="selectFirstFiltered" 
-              @keydown.escape="open = false"
-              @keydown.down.prevent="focusFirstOption"
-            />
-          </div>
+          <div
+            v-if="open"
+            ref="dropdownRef"
+            class="absolute z-50 mt-1 rounded-md border bg-popover text-popover-foreground shadow-md p-0"
+            :style="dropdownStyle"
+          >
+            <div class="flex flex-col w-full">
+              <!-- Campo de busca -->
+              <div class="border-b px-3 py-2" ref="searchInputContainer">
+                <Input 
+                  ref="searchInput" 
+                  v-model="searchQuery" 
+                  type="text"
+                  :placeholder="column.searchPlaceholder || 'Buscar...'" 
+                  class="h-9"
+                  :disabled="isSearching"
+                  @keydown.enter.prevent="selectFirstFiltered" 
+                  @keydown.escape="open = false"
+                  @keydown.down.prevent="focusFirstOption"
+                />
+              </div>
 
-          <!-- Lista de opções -->
-          <div class="max-h-[300px] overflow-y-auto p-1">
-            <!-- Loading -->
-            <div 
-              v-if="isSearching" 
-              class="py-6 text-center text-sm text-muted-foreground"
-            >
-              Buscando...
+              <!-- Lista de opções -->
+              <div class="max-h-[300px] overflow-y-auto p-1">
+                <!-- Loading -->
+                <div 
+                  v-if="isSearching" 
+                  class="py-6 text-center text-sm text-muted-foreground"
+                >
+                  Buscando...
+                </div>
+
+                <!-- Empty state -->
+                <div 
+                  v-else-if="filteredOptions.length === 0" 
+                  class="py-6 text-center text-sm text-muted-foreground"
+                >
+                  {{ column.emptyText || 'Nenhum resultado encontrado.' }}
+                </div>
+
+                <!-- Options list -->
+                <button 
+                  v-for="(option, index) in filteredOptions" 
+                  v-else
+                  :key="getOptionValue(option)" 
+                  type="button"
+                  :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
+                  class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
+                  @click="selectOption(getOptionValue(option))"
+                  @keydown.enter.prevent="selectOption(getOptionValue(option))"
+                  @keydown.space.prevent="selectOption(getOptionValue(option))"
+                >
+                  <span class="flex-1 text-left">{{ getOptionLabel(option) }}</span>
+                  <CheckIcon 
+                    :class="cn(
+                      'ml-2 h-4 w-4',
+                      internalValue === getOptionValue(option)
+                        ? 'opacity-100'
+                        : 'opacity-0'
+                    )
+                    " 
+                  />
+                </button>
+              </div>
             </div>
-
-            <!-- Empty state -->
-            <div 
-              v-else-if="filteredOptions.length === 0" 
-              class="py-6 text-center text-sm text-muted-foreground"
-            >
-              {{ column.emptyText || 'Nenhum resultado encontrado.' }}
-            </div>
-
-            <!-- Options list -->
-            <button 
-              v-for="(option, index) in filteredOptions" 
-              v-else
-              :key="getOptionValue(option)" 
-              type="button"
-              :ref="el => { if (el) optionRefs[index] = el as HTMLButtonElement }"
-              class="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
-              @click="selectOption(getOptionValue(option))"
-              @keydown.enter.prevent="selectOption(getOptionValue(option))"
-              @keydown.space.prevent="selectOption(getOptionValue(option))"
-            >
-              <span class="flex-1 text-left">{{ getOptionLabel(option) }}</span>
-              <CheckIcon 
-                :class="cn(
-                  'ml-2 h-4 w-4',
-                  internalValue === getOptionValue(option)
-                    ? 'opacity-100'
-                    : 'opacity-0'
-                )
-                " 
-              />
-            </button>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+        </Transition>
+      </Teleport>
+    </div>
 
     <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
       {{ column.helpText || column.hint || column.tooltip }}
@@ -106,8 +126,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
+import { onClickOutside } from '@vueuse/core'
 import { router, usePage } from '@inertiajs/vue3'
 import { useDebounceFn } from '@vueuse/core'
 
@@ -163,9 +183,17 @@ const open = ref(false)
 const searchQuery = ref('')
 const searchInput = ref<InstanceType<typeof Input> | null>(null)
 const searchInputContainer = ref<HTMLDivElement | null>(null)
+const triggerRef = ref<HTMLButtonElement | null>(null)
+const containerRef = ref<HTMLElement | null>(null)
+const dropdownRef = ref<HTMLDivElement | null>(null)
 const optionRefs = ref<HTMLButtonElement[]>([])
 const isSearching = ref(false)
 const searchResults = ref<ComboboxOption[]>([])
+const dropdownStyle = ref<{ width: string; top: string; left: string }>({
+  width: '0px',
+  top: '0px',
+  left: '0px',
+})
 
 const hasError = computed(() => !!props.error)
 
@@ -280,11 +308,27 @@ function getOptionLabel(option: ComboboxOption): string {
   return String(option)
 }
 
+function toggleOpen() {
+  open.value = !open.value
+}
+
 function selectOption(selectedValue: string) {
   internalValue.value = selectedValue === internalValue.value ? null : selectedValue
   open.value = false
   searchQuery.value = ''
 }
+
+// Fecha o dropdown ao clicar fora
+onClickOutside(dropdownRef, (event) => {
+  // Não fecha se o clique foi no trigger
+  if (triggerRef.value) {
+    const triggerEl = (triggerRef.value as any).$el as HTMLElement || triggerRef.value
+    if (triggerEl && typeof triggerEl.contains === 'function' && triggerEl.contains(event.target as Node)) {
+      return
+    }
+  }
+  open.value = false
+}, { ignore: [containerRef] })
 
 function selectFirstFiltered() {
   if (filteredOptions.value.length > 0) {
@@ -316,34 +360,11 @@ function performSearch(query: string) {
     only: ['form'], // Busca apenas o formulário atualizado
     preserveState: true,
     preserveScroll: true,
-    replace: true,
+    // replace: true,
     onSuccess: () => {
       // Após a busca, as opções serão atualizadas via watch nas props
       // Aguarda um tick para garantir que as props foram atualizadas
-      nextTick(() => {
-        // const page = usePage()
-        // const form = (page.props as any).form || page.props
-        // const columns = form.columns || []
-        // const updatedColumn = columns.find((col: any) => col.name === props.column.name)
-        
-        // if (updatedColumn && updatedColumn.options) {
-        //   // Atualiza os resultados com as opções retornadas do backend
-        //   if (Array.isArray(updatedColumn.options)) {
-        //     searchResults.value = updatedColumn.options
-        //   } else if (typeof updatedColumn.options === 'object') {
-        //     // Converte objeto para array
-        //     searchResults.value = Object.entries(updatedColumn.options).map(([value, label]) => ({
-        //       value,
-        //       label: String(label),
-        //     }))
-        //   } else {
-        //     searchResults.value = []
-        //   }
-        // } else {
-        //   // Se não encontrou opções, limpa os resultados
-        //   searchResults.value = []
-        // }
-        
+      nextTick(() => {         
         isSearching.value = false
       })
     },
@@ -388,22 +409,59 @@ onMounted(() => {
   }
 })
 
-// Limpa a busca e foca no input quando o popover abre
+// Atualiza a largura do popover baseado no trigger
+// Atualiza a posição e largura do dropdown
+function updateDropdownPosition() {
+  if (!triggerRef.value || !dropdownRef.value) return
+
+  // Acessa o elemento HTML nativo do componente Button
+  const triggerEl = (triggerRef.value as any).$el as HTMLElement || triggerRef.value
+  if (!triggerEl || typeof triggerEl.getBoundingClientRect !== 'function') return
+
+  const triggerRect = triggerEl.getBoundingClientRect()
+  
+  dropdownStyle.value = {
+    width: `${triggerRect.width}px`,
+    top: `${triggerRect.bottom + window.scrollY + 4}px`,
+    left: `${triggerRect.left + window.scrollX}px`,
+  }
+}
+
+// Limpa a busca e foca no input quando o dropdown abre
 watch(open, (isOpen) => {
   if (isOpen) {
     searchQuery.value = ''
     
-    // Se for searchable, carrega opções iniciais se não houver resultados
-    if (props.column.searchable && searchResults.value.length === 0) {
-      searchResults.value = options.value
-    }
-    
+    // Atualiza posição do dropdown
     nextTick(() => {
-      // Foca no campo de busca quando o popover abre
-      // Busca o elemento input nativo dentro do componente ou container
+      updateDropdownPosition()
+      
+      // Se for searchable, carrega opções iniciais se não houver resultados
+      if (props.column.searchable && searchResults.value.length === 0) {
+        searchResults.value = options.value
+      }
+      
+      // Foca no input
       const inputEl = searchInputContainer.value?.querySelector('input') as HTMLInputElement
       if (inputEl) {
         inputEl.focus()
+        const length = inputEl.value.length
+        inputEl.setSelectionRange(length, length)
+      }
+    })
+    
+    // Atualiza posição quando a janela é redimensionada ou scrolla
+    const handleResize = () => updateDropdownPosition()
+    const handleScroll = () => updateDropdownPosition()
+    
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('scroll', handleScroll, true)
+    
+    // Remove listeners quando fecha
+    watch(() => open.value, (newValue) => {
+      if (!newValue) {
+        window.removeEventListener('resize', handleResize)
+        window.removeEventListener('scroll', handleScroll, true)
       }
     })
   } else {
@@ -411,6 +469,20 @@ watch(open, (isOpen) => {
     if (props.column.searchable && !internalValue.value) {
       searchResults.value = []
     }
+  }
+})
+
+// Watch adicional para manter o foco quando searchQuery muda (após busca)
+watch(searchQuery, () => {
+  if (open.value) {
+    nextTick(() => {
+      const inputEl = searchInputContainer.value?.querySelector('input') as HTMLInputElement
+      if (inputEl && document.activeElement !== inputEl) {
+        inputEl.focus()
+        const length = inputEl.value.length
+        inputEl.setSelectionRange(length, length)
+      }
+    })
   }
 })
 </script>
