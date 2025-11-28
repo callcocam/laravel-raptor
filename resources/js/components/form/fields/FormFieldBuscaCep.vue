@@ -9,63 +9,12 @@
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLegend>
-    <FieldDescription    v-if="column.helpText || column.hint || column.tooltip">
+    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
       {{ column.helpText || column.hint || column.tooltip }}
     </FieldDescription>
 
     <div class="grid grid-cols-12 gap-4">
-      <!-- Campo CEP -->
-      <Field
-        orientation="vertical"
-        :data-invalid="hasError(column.name)"
-        class="col-span-12 md:col-span-4 gap-y-1"
-      >
-        <FieldLabel :for="column.name">
-          CEP
-          <span v-if="column.required" class="text-destructive">*</span>
-        </FieldLabel>
-
-        <div class="relative">
-          <Input
-            :id="column.name"
-            :name="column.name"
-            type="text"
-            v-model="cepValue"
-            @input="handleCepInput"
-            @blur="searchCep"
-            placeholder="00000-000"
-            maxlength="9"
-            :disabled="isSearching"
-            :aria-invalid="hasError(column.name)"
-            :class="hasError(column.name) ? 'border-destructive' : ''"
-          />
-          <div v-if="isSearching" class="absolute right-3 top-1/2 -translate-y-1/2">
-            <svg
-              class="animate-spin h-4 w-4 text-muted-foreground"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                class="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                stroke-width="4"
-              ></circle>
-              <path
-                class="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-          </div>
-        </div>
-
-        <FieldError v-if="cepError" :errors="[{ message: cepError }]" />
-        <FieldError v-else :errors="getErrorArray(column.name)" />
-      </Field>
+      <!-- Campo CEP --> 
 
       <!-- Campos de endereço dinâmicos -->
       <div
@@ -89,14 +38,14 @@
 import { computed, ref, watch } from "vue";
 import { Input } from "@/components/ui/input";
 
-import {  
-  FieldLegend, 
-  FieldSet,  
+import {
+  FieldLegend,
+  FieldSet,
   Field,
   FieldLabel,
   FieldError,
   FieldDescription,
-} from "@/components/ui/field"; 
+} from "@/components/ui/field";
 import FieldRenderer from "../columns/FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
 
@@ -109,6 +58,7 @@ interface AddressField {
   readonly?: boolean;
   helpText?: string;
   columnSpan?: string;
+  [key: string]: any;
 }
 
 interface FormColumn {
@@ -120,6 +70,7 @@ interface FormColumn {
   hint?: string;
   fields?: AddressField[];
   fieldMapping?: Record<string, string>;
+  executeOnChange?: string;
 }
 
 interface Props {
@@ -140,7 +91,6 @@ const emit = defineEmits<{
 // Grid layout composable
 const { getColumnClasses } = useGridLayout();
 
-const cepValue = ref("");
 const isSearching = ref(false);
 const cepError = ref("");
 const fieldValues = ref<Record<string, any>>({});
@@ -148,12 +98,14 @@ const fieldValues = ref<Record<string, any>>({});
 // Campos de endereço do backend
 const addressFields = computed(() => props.column.fields || []);
 
+// Campo que aciona a busca (definido via executeOnChange)
+const executeOnChangeField = computed(() => props.column.executeOnChange || 'zip_code');
+
 // Inicializa valores dos campos
 watch(
   () => props.modelValue,
   (newValue) => {
     if (newValue) {
-      cepValue.value = formatCep(newValue[props.column.name] || "");
       addressFields.value.forEach((field) => {
         fieldValues.value[field.name] = newValue[field.name] || "";
       });
@@ -162,68 +114,64 @@ watch(
   { immediate: true }
 );
 
-// Formata CEP com máscara
-function formatCep(value: string): string {
-  const cleaned = value.replace(/\D/g, "");
-  if (cleaned.length <= 5) return cleaned;
-  return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`;
-}
-
-// Handle input do CEP
-function handleCepInput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const formatted = formatCep(input.value);
-  cepValue.value = formatted;
-
-  // Emite o valor sem formatação
-  emitValue(props.column.name, formatted.replace(/\D/g, ""));
-}
+// Watch para acionar busca quando o campo executeOnChange mudar
+watch(
+  () => fieldValues.value[executeOnChangeField.value],
+  (newCep, oldCep) => {
+    // Só busca se o CEP mudou e tem 8 dígitos
+    if (newCep && newCep !== oldCep) {
+      const cleaned = String(newCep).replace(/\D/g, '');
+      if (cleaned.length === 8) {
+        searchCep(cleaned);
+      }
+    }
+  }
+);
 
 // Busca CEP na API ViaCEP
-async function searchCep() {
-  const cep = cepValue.value.replace(/\D/g, "");
-
-  // Valida CEP
-  if (!cep) {
-    cepError.value = "";
-    return;
-  }
-
-  if (cep.length !== 8) {
-    cepError.value = "CEP inválido. Digite 8 dígitos.";
-    return;
-  }
-
+async function searchCep(cep: string) {
+  // CEP já vem validado do watch (8 dígitos, sem formatação)
   isSearching.value = true;
   cepError.value = "";
 
   try {
     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
     const data = await response.json();
-    console.log(data);
+    console.log("ViaCEP response:", data);
+
     if (data.erro) {
       cepError.value = "CEP não encontrado.";
       return;
     }
 
-    // Usa o mapeamento definido no backend ou padrão
-    const fieldMapping = props.column.fieldMapping || {
-      logradouro: 'street',
-      bairro: 'neighborhood',
-      localidade: 'city',
-      uf: 'state',
-      complemento: 'complement',
-    };
+    // Usa o mapeamento definido no backend (obrigatório)
+    const fieldMapping = props.column.fieldMapping;
+
+    if (!fieldMapping) {
+      console.error("Field mapping não definido no backend!");
+      cepError.value = "Configuração de mapeamento ausente.";
+      return;
+    }
+
+    console.log("Field mapping:", fieldMapping);
+    console.log("Address fields:", addressFields.value);
 
     // Mapeia os campos da API para os campos do formulário
     Object.entries(fieldMapping).forEach(([apiField, formField]) => {
       const value = data[apiField] || "";
-      
-      if (fieldValues.value.hasOwnProperty(formField)) {
-        fieldValues.value[formField] = value;
-        emitValue(formField, value);
-      }
+      console.log(`Mapping ${apiField} (${value}) -> ${formField}`);
+
+      // Atualiza fieldValues primeiro
+      fieldValues.value[formField] = value;
     });
+
+    // Emite todos os valores de uma vez
+    const updatedValues = {
+      ...props.modelValue,
+      ...fieldValues.value,
+    };
+    console.log("Emitting all address values:", updatedValues);
+    emit("update:modelValue", updatedValues);
   } catch (error) {
     console.error("Erro ao buscar CEP:", error);
     cepError.value = "Erro ao buscar CEP. Tente novamente.";
@@ -238,6 +186,7 @@ function emitValue(fieldName: string, value: any) {
     ...props.modelValue,
     [fieldName]: value,
   };
+  console.log(`Emitting ${fieldName}:`, value, "Updated values:", updatedValues);
   emit("update:modelValue", updatedValues);
 }
 
@@ -246,17 +195,6 @@ function handleFieldUpdate(fieldName: string, value: any) {
   fieldValues.value[fieldName] = value;
   emitValue(fieldName, value);
 }
-
-// Watch para mudanças nos campos
-watch(
-  fieldValues,
-  (newValues) => {
-    Object.keys(newValues).forEach((fieldName) => {
-      emitValue(fieldName, newValues[fieldName]);
-    });
-  },
-  { deep: true }
-);
 
 // Verifica se campo tem erro
 function hasError(fieldName: string): boolean {

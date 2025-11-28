@@ -41,17 +41,20 @@ class BuscaCepField extends Column
 
     protected array $fieldMapping = [];
 
+    protected  string $exuteOnChange = 'zip_code';
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->component('form-field-busca-cep');
-        $this->setUp();
+        $this->setUp(); 
     }
 
     protected function setUp(): void
     {
         // Mapeamento padrão da API ViaCEP
         $this->fieldMapping = [
+            'cep' => 'zip_code',
             'logradouro' => 'street',
             'bairro' => 'neighborhood',
             'localidade' => 'city',
@@ -60,17 +63,22 @@ class BuscaCepField extends Column
         ];
 
         // Campos padrão
-        $this->fields([
+        $this->fields([ 
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('zip_code') 
+                ->label('CEP')
+                ->required()
+                ->placeholder('Digite o CEP')
+                ->columnSpan(4),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('street')
                 ->label('Rua')
                 ->required()
                 ->placeholder('Rua, avenida, etc.')
-                ->columnSpan(8),
+                ->columnSpan(6),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('number')
                 ->label('Número')
                 ->required()
                 ->placeholder('Nº')
-                ->columnSpan(4),
+                ->columnSpan(2),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('complement')
                 ->label('Complemento')
                 ->placeholder('Apto, bloco, etc.')
@@ -93,6 +101,17 @@ class BuscaCepField extends Column
                 ->placeholder('UF')
                 ->columnSpan(4),
         ]);
+    }
+
+    public function executeOnChange(string $fieldName): static
+    {
+        $this->exuteOnChange = $fieldName;
+        return $this;
+    }
+
+    public function getExecuteOnChange(): string
+    {
+        return $this->exuteOnChange;
     }
 
     /**
@@ -136,6 +155,7 @@ class BuscaCepField extends Column
         // Adiciona o mapeamento de campos ao array
         $baseArray['fieldMapping'] = $this->getFieldMapping();
         $baseArray['fields'] = $fieldsArray;
+        $baseArray['executeOnChange'] = $this->getExecuteOnChange();
         
         return $baseArray;
     }
