@@ -79,19 +79,7 @@ class PermissionController extends TenantController
             TextareaField::make('description', 'Descrição')
                 ->rows(3)
                 ->placeholder('Descreva o que esta permissão permite fazer')
-                ->helpText('Descrição detalhada da permissão'),
-
-            SelectField::make('resource', 'Recurso')
-                ->options([
-                    'users' => 'Usuários',
-                    'roles' => 'Roles',
-                    'permissions' => 'Permissões',
-                    'posts' => 'Posts',
-                    'pages' => 'Páginas',
-                    'settings' => 'Configurações',
-                ])
-                ->placeholder('Selecione o recurso')
-                ->helpText('Recurso ao qual esta permissão se aplica'),
+                ->helpText('Descrição detalhada da permissão'), 
         ]);
 
         return $form;
@@ -107,11 +95,7 @@ class PermissionController extends TenantController
             TextColumn::make('slug', 'Slug')
                 ->searchable()
                 ->sortable(),
-
-            TextColumn::make('resource', 'Recurso')
-                ->searchable()
-                ->sortable(),
-
+ 
             TextColumn::make('description', 'Descrição')
                 ->searchable(),
 
@@ -147,8 +131,7 @@ class PermissionController extends TenantController
     {
         return $infolist->columns([
             TextInfolist::make('name', 'Nome'),
-            TextInfolist::make('slug', 'Slug'),
-            TextInfolist::make('resource', 'Recurso'),
+            TextInfolist::make('slug', 'Slug'), 
             TextInfolist::make('description', 'Descrição'),
             TextInfolist::make('created_at', 'Criado em')
                 ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
