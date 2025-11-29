@@ -98,11 +98,7 @@ class PermissionController extends LandlordController
 
             TextColumn::make('slug', 'Slug')
                 ->searchable()
-                ->sortable(),
-
-            TextColumn::make('resource', 'Recurso')
-                ->searchable()
-                ->sortable(),
+                ->sortable(), 
 
             TextColumn::make('description', 'Descrição')
                 ->searchable(),
