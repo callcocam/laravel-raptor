@@ -9,7 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
-use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests; 
+use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
@@ -19,7 +19,7 @@ use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolis
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
-use Callcocam\LaravelRaptor\Support\Pages\Index; 
+use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
@@ -70,29 +70,20 @@ class PermissionController extends LandlordController
             TextField::make('name', 'Nome')
                 ->required()
                 ->placeholder('Ex: Editar Usuários')
-                ->helpText('Nome descritivo da permissão'),
+                ->helpText('Nome descritivo da permissão')
+                ->columnSpanFull(),
 
             TextField::make('slug', 'Slug')
                 ->required()
                 ->placeholder('Ex: users.edit')
-                ->helpText('Identificador único da permissão (formato: recurso.acao)'),
+                ->helpText('Identificador único da permissão (formato: recurso.acao)')
+                ->columnSpanFull(),
 
             TextareaField::make('description', 'Descrição')
                 ->rows(3)
                 ->placeholder('Descreva o que esta permissão permite fazer')
-                ->helpText('Descrição detalhada da permissão'),
-
-            SelectField::make('resource', 'Recurso')
-                ->options([
-                    'users' => 'Usuários',
-                    'roles' => 'Roles',
-                    'permissions' => 'Permissões',
-                    'posts' => 'Posts',
-                    'pages' => 'Páginas',
-                    'settings' => 'Configurações',
-                ])
-                ->placeholder('Selecione o recurso')
-                ->helpText('Recurso ao qual esta permissão se aplica'),
+                ->helpText('Descrição detalhada da permissão')
+                ->columnSpanFull()
         ]);
 
         return $form;
@@ -148,8 +139,7 @@ class PermissionController extends LandlordController
     {
         return $infolist->columns([
             TextInfolist::make('name', 'Nome'),
-            TextInfolist::make('slug', 'Slug'),
-            TextInfolist::make('resource', 'Recurso'),
+            TextInfolist::make('slug', 'Slug'), 
             TextInfolist::make('description', 'Descrição'),
             TextInfolist::make('created_at', 'Criado em')
                 ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
