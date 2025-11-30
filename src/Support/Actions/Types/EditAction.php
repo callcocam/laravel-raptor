@@ -24,7 +24,7 @@ class EditAction extends Action
             ->icon('Edit')
             ->color('blue')
             ->component('action-button-link') 
-            ->policy("update")
+            ->policy("edit")
             ->tooltip('Editar registro');
         $this->setUp();
     }
