@@ -9,10 +9,8 @@
 namespace Callcocam\LaravelRaptor\Services;
 
 use Callcocam\LaravelRaptor\Enums\PermissionStatus;
-use Callcocam\LaravelRaptor\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 use ReflectionClass;
 
 class PermissionGenerator
@@ -35,7 +33,7 @@ class PermissionGenerator
 
     public function save($drop = false): void
     {
-        if ($drop) { 
+        if ($drop) {
             DB::table('permissions')->delete();
         }
         $this->registerRoutes();
@@ -112,14 +110,14 @@ class PermissionGenerator
                 return;
             }
             $context = 'tenant';
-           if(!str($controllerClass)->contains('Tenant')){ 
+            if (!str($controllerClass)->contains('Tenant')) {
                 $context = 'landlord';
-           } 
+            }
             $data = [];
             foreach ($pages as $page) {
                 // Lógica para registrar permissões com base nas páginas
                 // Exemplo: Permission::firstOrCreate(['name' => $page['name'], 'route' => $page['route']]);
-                $name = $page->getLabel();
+                $name = sprintf('%s - (%s)', $page->getLabel(), $page->getAction());
                 $route = sprintf('%s.%s', $context, $page->getName());
                 // Gera um ID único baseado no nome da rota (sempre o mesmo para a mesma rota)
                 $id = substr(hash('sha256', $route), 0, 26);
