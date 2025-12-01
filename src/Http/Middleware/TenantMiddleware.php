@@ -27,11 +27,12 @@ class TenantMiddleware
         $domain = str($host)->replace('www.', '')->toString();
 
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
+        
         $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
-
-        dd($domainColumn, $domain);
+      
         $tenant = $tenantModel::where($domainColumn, $domain)->first();
 
+        
         if (! $tenant) {
             abort(404, 'Tenant não encontrado.');
         }
