@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Middleware;
 
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
+use Callcocam\LaravelRaptor\Models\Tenant;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Closure;
 use Illuminate\Http\Request;
@@ -24,14 +25,14 @@ class TenantMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
+
         $domain = str($host)->replace('www.', '')->toString();
 
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
-        
+
         $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
       
         $tenant = $tenantModel::where($domainColumn, $domain)->first();
-
         
         if (! $tenant) {
             abort(404, 'Tenant não encontrado.');
