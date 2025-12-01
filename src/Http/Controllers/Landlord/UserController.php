@@ -79,6 +79,9 @@ class UserController extends LandlordController
             EmailField::make('email', 'E-mail')
                 ->required()
                 ->columnSpan('5')
+                ->rules(function ($record) {
+                    return ['required', 'string', 'max:255', 'unique:users,email' . ($record ? ",{$record->id}" : '')];
+                })
                 ->placeholder('email@exemplo.com')
                 ->helpText('E-mail único para login'),
 

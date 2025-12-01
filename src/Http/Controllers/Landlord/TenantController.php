@@ -8,8 +8,12 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
+use App\Models\Client;
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
@@ -119,19 +123,152 @@ class TenantController extends LandlordController
             TextField::make('name')
                 ->label('Nome')
                 ->required()
-                ->columnSpanFull(),
+                ->rules(['required', 'string', 'max:255'])
+                ->placeholder('Nome do inquilino')
+                ->columnSpan('6'),
+
+            TextField::make('slug')
+                ->label('Slug')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->placeholder('slug-do-inquilino')
+                ->columnSpan('6'),
 
             TextField::make('domain')
                 ->label('Domínio')
                 ->required()
-                ->columnSpanFull(),
+                ->rules(function ($record) {
+                    return ['required', 'string', 'max:255', 'unique:tenants,domain' . ($record ? ",{$record->id}" : '')];
+                })
+                ->placeholder('exemplo.com')
+                ->columnSpan('4'),
 
-            TextareaField::make('description')
-                ->label('Descrição')
-                ->columnSpanFull(),
+            TextField::make('database')
+                ->label('Database')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->placeholder('nome_do_banco')
+                ->columnSpan('4'),
 
-            CheckboxField::make('status')
-                ->label('Ativo')
+            TextField::make('prefix')
+                ->label('Prefixo')
+                ->rules(['nullable', 'string', 'max:255'])
+                ->placeholder('prefixo_')
+                ->columnSpan('4'),
+
+            TextField::make('email')
+                ->label('E-mail')
+                ->rules(['nullable', 'email', 'max:255'])
+                ->placeholder('contato@exemplo.com')
+                ->columnSpan('6'),
+
+            TextField::make('phone')
+                ->label('Telefone')
+                ->phone()
+                ->rules(['nullable', 'string', 'max:255'])
+                ->placeholder('(00) 00000-0000')
+                ->columnSpan('6'),
+
+            TextField::make('document')
+                ->label('Documento')
+                ->cnpj()
+                ->rules(['nullable', 'string', 'max:255'])
+                ->placeholder('CNPJ/CPF')
+                ->columnSpan('6'),
+
+            SelectField::make('status')
+                ->label('Status')
+                ->required()
+                ->options([
+                    'draft' => 'Rascunho',
+                    'published' => 'Publicado',
+                ])
+                ->default('draft')
+                ->columnSpan('6'),
+
+            CheckboxField::make('is_primary')
+                ->label('Inquilino Principal')
+                ->default(false)
+                ->columnSpan('12'),
+
+            SectionField::make('settings')
+                ->label('Configurações (JSON)')
+                // ->collapsible(true) // Habilita accordion
+                // ->defaultOpen(true) // Inicia aberto
+                ->fields([
+                    RepeaterField::make('clients')
+                        ->label('Clientes')
+                        ->compact()
+                        ->fields([
+                            SelectField::make('name')
+                                ->label('Nome')
+                                ->options(Client::all()->pluck('name', 'id')->toArray())
+                                ->required()
+                                ->columnSpanSeven(),
+                            TextField::make('subdomain')
+                                ->label('Subdomínio')
+                                ->required()
+                                ->columnSpanFive(),
+                        ])
+                        ->placeholder('Adicione recursos ao inquilino')
+                        ->columnSpanFull(),
+                    SectionField::make('theme')
+                        ->label('Tema')
+                        ->fields([
+                            SelectField::make('color')
+                                ->label('Cor do Tema')
+                                ->options([
+                                    'default' => 'Padrão',
+                                    'blue' => 'Azul',
+                                    'green' => 'Verde',
+                                    'amber' => 'Âmbar',
+                                    'rose' => 'Rosa',
+                                    'purple' => 'Roxo',
+                                    'orange' => 'Laranja',
+                                    'teal' => 'Azul Turquesa',
+                                    'red' => 'Vermelho',
+                                    'yellow' => 'Amarelo',
+                                    'violet' => 'Violeta',
+                                ])
+                                ->default('green')
+                                ->columnSpan('3'),
+
+                            SelectField::make('font')
+                                ->label('Fonte')
+                                ->options([
+                                    'default' => 'Padrão (Geist)',
+                                    'inter' => 'Inter',
+                                    'noto-sans' => 'Noto Sans',
+                                    'nunito-sans' => 'Nunito Sans',
+                                    'figtree' => 'Figtree',
+                                ])
+                                ->default('inter')
+                                ->columnSpan('3'),
+
+                            SelectField::make('rounded')
+                                ->label('Arredondamento')
+                                ->options([
+                                    'none' => 'Nenhum',
+                                    'small' => 'Pequeno',
+                                    'medium' => 'Médio',
+                                    'large' => 'Grande',
+                                    'full' => 'Completo',
+                                ])
+                                ->default('small')
+                                ->columnSpan('3'),
+
+                            SelectField::make('variant')
+                                ->label('Variante')
+                                ->options([
+                                    'default' => 'Padrão',
+                                    'mono' => 'Monoespaçado',
+                                    'scaled' => 'Escalado',
+                                ])
+                                ->default('default')
+                                ->columnSpan('3'),
+                        ])
+                        ->placeholder('Configurações de tema')
+                        ->columnSpanFull(),
+                ])
+                ->placeholder('Configurações gerais do inquilino')
                 ->columnSpanFull(),
         ]);
 

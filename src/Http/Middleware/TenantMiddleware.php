@@ -29,6 +29,7 @@ class TenantMiddleware
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
         $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
 
+        dd($domainColumn, $domain);
         $tenant = $tenantModel::where($domainColumn, $domain)->first();
 
         if (! $tenant) {
@@ -38,7 +39,7 @@ class TenantMiddleware
         if ($tenant->status !== TenantStatus::Published) {
             abort(403, 'Este tenant está inativo.');
         }
-
+ 
         app()->instance('tenant.context', true);
         app()->instance('current.tenant', $tenant);
         config(['app.context' => 'tenant']);
