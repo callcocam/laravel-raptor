@@ -62,17 +62,4 @@ return new class extends Migration
         $tableName = config('raptor.tables.tenants', 'tenants');
         Schema::dropIfExists($tableName);
     }
-};
-
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        $tableName = config('raptor.tables.tenants', 'tenants');
-        Schema::dropIfExists($tableName);
-    }
-};
+}; 

@@ -8,9 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Http\Middleware;
 
-use Callcocam\LaravelRaptor\Enums\TenantStatus;
-use Callcocam\LaravelRaptor\Models\Tenant;
-use Callcocam\LaravelRaptor\Models\TenantDomain;
+use Callcocam\LaravelRaptor\Enums\TenantStatus; 
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Closure;
 use Illuminate\Http\Request;

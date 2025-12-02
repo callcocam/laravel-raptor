@@ -190,34 +190,24 @@ class TenantController extends LandlordController
                 ->columnSpan('12'),
 
             // Seção de Domínios
-            SectionField::make('domains_section')
-                ->label('Domínios')
-                ->description('Gerencie os domínios de acesso deste tenant')
-                ->collapsible(true)
-                ->defaultOpen(true)
+            RepeaterField::make('domains')
+                ->label('Lista de Domínios')
+                ->relationship('domains')
+                ->compact()
                 ->fields([
-                    RepeaterField::make('domains')
-                        ->label('Lista de Domínios')
-                        ->relationship('domains')
-                        ->compact()
-                        ->fields([
-                            TextField::make('domain')
-                                ->label('Domínio')
-                                ->required()
-                                ->placeholder('exemplo.com.br')
-                                ->helpText('Digite o domínio completo (ex: empresa.com.br, app.empresa.com)')
-                                ->rules(['required', 'string', 'max:255'])
-                                ->columnSpan('9'),
-                            
-                            CheckboxField::make('is_primary')
-                                ->label('Principal')
-                                ->helpText('Domínio principal do tenant')
-                                ->default(false)
-                                ->columnSpan('3'),
-                        ])
-                        ->addActionLabel('+ Adicionar Domínio')
-                        ->deleteActionLabel('Remover')
-                        ->columnSpanFull(),
+                    TextField::make('domain')
+                        ->label('Domínio')
+                        ->required()
+                        ->placeholder('exemplo.com.br')
+                        ->helpText('Digite o domínio completo (ex: empresa.com.br, app.empresa.com)')
+                        ->rules(['required', 'string', 'max:255'])
+                        ->columnSpan('9'),
+
+                    CheckboxField::make('is_primary')
+                        ->label('Principal')
+                        ->helpText('Domínio principal do tenant')
+                        ->default(false)
+                        ->columnSpan('3'),
                 ])
                 ->columnSpanFull(),
 
@@ -225,23 +215,7 @@ class TenantController extends LandlordController
                 ->label('Configurações (JSON)')
                 // ->collapsible(true) // Habilita accordion
                 // ->defaultOpen(true) // Inicia aberto
-                ->fields([
-                    RepeaterField::make('clients')
-                        ->label('Clientes')
-                        ->compact()
-                        ->fields([
-                            SelectField::make('name')
-                                ->label('Nome')
-                                ->options(Client::all()->pluck('name', 'id')->toArray())
-                                ->required()
-                                ->columnSpanSeven(),
-                            TextField::make('subdomain')
-                                ->label('Subdomínio')
-                                ->required()
-                                ->columnSpanFive(),
-                        ])
-                        ->placeholder('Adicione recursos ao inquilino')
-                        ->columnSpanFull(),
+                ->fields([ 
                     SectionField::make('theme')
                         ->label('Tema')
                         ->fields([

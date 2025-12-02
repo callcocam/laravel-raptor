@@ -62,6 +62,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->hasMigrations([
                 // Tabelas principais (ordem de dependência)
                 'create_tenants_table',
+                'create_tenant_domains_table',
                 'create_users_table',
                 'create_roles_table',
                 'create_permissions_table',

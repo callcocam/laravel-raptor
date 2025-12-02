@@ -8,13 +8,17 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
-class TenantDomain extends Model
+class TenantDomain extends AbstractModel
 {
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        static::$landlord->disable();
+    }
     /**
      * The table associated with the model.
      *
@@ -156,5 +160,10 @@ class TenantDomain extends Model
         } else {
             $this->attributes['domain'] = null;
         }
+    }
+
+    protected function slugTo()
+    {
+        return true;
     }
 }
