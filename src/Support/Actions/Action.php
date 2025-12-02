@@ -232,4 +232,30 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
         return $this;
     }
+
+    public function target(string $target): self
+    {
+        $this->target = $target;
+
+        return $this;
+    }
+
+    public function targetBlank(): self
+    {
+        $this->target = '_blank';
+
+        return $this;
+    }
+
+    public function targetSelf(): self
+    {
+        $this->target = '_self';
+
+        return $this;
+    }
+
+    public function getTarget(): string
+    {
+        return $this->target;
+    }
 }
