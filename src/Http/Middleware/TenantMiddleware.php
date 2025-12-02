@@ -10,9 +10,11 @@ namespace Callcocam\LaravelRaptor\Http\Middleware;
 
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Callcocam\LaravelRaptor\Models\Tenant;
+use Callcocam\LaravelRaptor\Models\TenantDomain;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class TenantMiddleware
@@ -25,17 +27,33 @@ class TenantMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $host = $request->getHost();
-
         $domain = str($host)->replace('www.', '')->toString();
 
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
-
-        $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
-      
-        $tenant = $tenantModel::where($domainColumn, $domain)->first();
         
-        if (! $tenant) {
+        // Busca tenant via tenant_domains com JOIN otimizado (1 query apenas)
+        // Suporta múltiplos domínios por tenant
+        $tenant = DB::table('tenants')
+            ->join('tenant_domains', 'tenants.id', '=', 'tenant_domains.tenant_id')
+            ->where('tenant_domains.domain', $domain)
+            ->where('tenants.status', TenantStatus::Published->value)
+            ->whereNull('tenants.deleted_at')
+            ->select('tenants.*')
+            ->first();
+
+        // Fallback: busca por coluna 'domain' se tenant_domains estiver vazio (retrocompatibilidade)
+        if (!$tenant) {
+            $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
+            $tenant = $tenantModel::where($domainColumn, $domain)->first();
+        }
+        
+        if (!$tenant) {
             abort(404, 'Tenant não encontrado.');
+        }
+
+        // Converte stdClass para model instance se veio do DB::table
+        if (!($tenant instanceof $tenantModel)) {
+            $tenant = $tenantModel::find($tenant->id);
         }
 
         if ($tenant->status !== TenantStatus::Published) {

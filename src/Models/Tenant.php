@@ -64,6 +64,38 @@ class Tenant extends AbstractModel
     }
 
     /**
+     * Relacionamento: Tenant tem muitos domínios
+     */
+    public function domains(): HasMany
+    {
+        return $this->hasMany(TenantDomain::class);
+    }
+
+    /**
+     * Retorna o domínio primário do tenant.
+     */
+    public function getPrimaryDomain(): ?TenantDomain
+    {
+        return $this->domains()->where('is_primary', true)->first();
+    }
+
+    /**
+     * Retorna todos os domínios secundários do tenant.
+     */
+    public function getSecondaryDomains()
+    {
+        return $this->domains()->where('is_primary', false)->get();
+    }
+
+    /**
+     * Retorna todos os domínios do tenant como array de strings.
+     */
+    public function getAllDomainsList(): array
+    {
+        return $this->domains()->pluck('domain')->toArray();
+    }
+
+    /**
      * Scope: Apenas tenants ativos
      */
     public function scopeActive($query)
@@ -82,10 +114,12 @@ class Tenant extends AbstractModel
 
     /**
      * Verifica se o tenant possui domínio customizado
+     * 
+     * @deprecated Use domains() relationship instead
      */
     public function hasCustomDomain(): bool
     {
-        return ! empty($this->custom_domain);
+        return $this->domains()->exists();
     }
 
     /**
@@ -93,12 +127,14 @@ class Tenant extends AbstractModel
      */
     public function getUrl(): string
     {
-        if ($this->hasCustomDomain()) {
-            return 'https://' . $this->custom_domain;
+        $primaryDomain = $this->getPrimaryDomain();
+        
+        if ($primaryDomain) {
+            return 'https://' . $primaryDomain->domain;
         }
 
+        // Fallback para compatibilidade
         $mainDomain = config('raptor.main_domain', 'localhost');
-
-        return 'https://' . $this->subdomain . '.' . $mainDomain;
+        return 'https://' . ($this->subdomain ?? $this->slug) . '.' . $mainDomain;
     }
 }

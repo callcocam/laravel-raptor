@@ -189,6 +189,38 @@ class TenantController extends LandlordController
                 ->default(false)
                 ->columnSpan('12'),
 
+            // Seção de Domínios
+            SectionField::make('domains_section')
+                ->label('Domínios')
+                ->description('Gerencie os domínios de acesso deste tenant')
+                ->collapsible(true)
+                ->defaultOpen(true)
+                ->fields([
+                    RepeaterField::make('domains')
+                        ->label('Lista de Domínios')
+                        ->relationship('domains')
+                        ->compact()
+                        ->fields([
+                            TextField::make('domain')
+                                ->label('Domínio')
+                                ->required()
+                                ->placeholder('exemplo.com.br')
+                                ->helpText('Digite o domínio completo (ex: empresa.com.br, app.empresa.com)')
+                                ->rules(['required', 'string', 'max:255'])
+                                ->columnSpan('9'),
+                            
+                            CheckboxField::make('is_primary')
+                                ->label('Principal')
+                                ->helpText('Domínio principal do tenant')
+                                ->default(false)
+                                ->columnSpan('3'),
+                        ])
+                        ->addActionLabel('+ Adicionar Domínio')
+                        ->deleteActionLabel('Remover')
+                        ->columnSpanFull(),
+                ])
+                ->columnSpanFull(),
+
             SectionField::make('settings')
                 ->label('Configurações (JSON)')
                 // ->collapsible(true) // Habilita accordion
