@@ -43,17 +43,18 @@ trait HasPermissions
         if ((method_exists($this, 'hasPermissionFlags') and $this->hasPermissionFlags())) {
             return $this->hasPermissionThroughFlag();
         }
+        $model = null;
         // Fetch permission if we pass through a string
         if (is_string($permission)) {
-            $permission = $this->getPermissionModel()->where('slug', $permission)->first();
+            $model = $this->getPermissionModel()->where('slug', $permission)->first();
 
-            if (! $permission) {
-                throw new PermissionNotFoundException;
+            if (! $model) {
+                throw new PermissionNotFoundException("There is no permission named [$permission] in the system. Please check your permissions setup in Shinobi.");
             }
         }
 
         // Check role permissions
-        if (method_exists($this, 'hasPermissionThroughRole') and $this->hasPermissionThroughRole($permission)) {
+        if (method_exists($this, 'hasPermissionThroughRole') and $this->hasPermissionThroughRole($model ?? $permission)) {
             return true;
         }
 
