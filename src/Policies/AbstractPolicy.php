@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Policies;
 
 use App\Models\User;
+use Callcocam\LaravelRaptor\Models\AbstractModel;
 
 abstract class AbstractPolicy
 {
@@ -29,7 +30,7 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, $model): bool
+    public function view(User $user, AbstractModel $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -51,7 +52,7 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, $model): bool
+    public function update(User $user, AbstractModel $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -65,7 +66,7 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, $model): bool
+    public function delete(User $user, AbstractModel $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -75,7 +76,7 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, $model): bool
+    public function restore(User $user, AbstractModel $model): bool
     {
         if (is_null($this->permission)) {
             return false;
