@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
@@ -33,6 +34,8 @@ class TenantDomain extends AbstractModel
      */
     protected $fillable = [
         'tenant_id',
+        'domainable_type',
+        'domainable_id',
         'domain',
         'is_primary',
     ];
@@ -83,6 +86,33 @@ class TenantDomain extends AbstractModel
     }
 
     /**
+     * Relacionamento polimórfico: Domínio pode pertencer a Client, Store, etc.
+     * 
+     * Quando NULL: domínio principal do tenant
+     * Quando preenchido: domínio secundário vinculado a um modelo específico
+     */
+    public function domainable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    /**
+     * Verifica se o domínio é do tenant (sem domainable)
+     */
+    public function isTenantDomain(): bool
+    {
+        return is_null($this->domainable_type) && is_null($this->domainable_id);
+    }
+
+    /**
+     * Verifica se o domínio está vinculado a um modelo específico
+     */
+    public function hasDomainable(): bool
+    {
+        return !is_null($this->domainable_type) && !is_null($this->domainable_id);
+    }
+
+    /**
      * Valida formato do domínio.
      */
     protected function validateDomain(): void
@@ -120,32 +150,66 @@ class TenantDomain extends AbstractModel
 
     /**
      * Garante que apenas um domínio seja primário por tenant.
+     * 
+     * Apenas domínios sem domainable podem ser primários
      */
     protected function ensureSinglePrimaryDomain(): void
     {
-        if ($this->is_primary && $this->tenant_id) {
-            // Remove flag is_primary dos outros domínios do mesmo tenant
-            static::where('tenant_id', $this->tenant_id)
-                ->where('id', '!=', $this->id ?? '')
-                ->where('is_primary', true)
-                ->update(['is_primary' => false]);
+        // Apenas domínios do tenant (sem domainable) podem ser primários
+        if ($this->is_primary) {
+            if ($this->hasDomainable()) {
+                $this->is_primary = false;
+                return;
+            }
+
+            if ($this->tenant_id) {
+                // Remove flag is_primary dos outros domínios do mesmo tenant
+                static::where('tenant_id', $this->tenant_id)
+                    ->where('id', '!=', $this->id ?? '')
+                    ->whereNull('domainable_type')
+                    ->whereNull('domainable_id')
+                    ->where('is_primary', true)
+                    ->update(['is_primary' => false]);
+            }
         }
     }
 
     /**
-     * Scope: Apenas domínios primários.
+     * Scope: Apenas domínios primários (do tenant, sem domainable).
      */
     public function scopePrimary($query)
     {
-        return $query->where('is_primary', true);
+        return $query->where('is_primary', true)
+            ->whereNull('domainable_type')
+            ->whereNull('domainable_id');
     }
 
     /**
-     * Scope: Apenas domínios secundários.
+     * Scope: Apenas domínios secundários (com domainable).
      */
     public function scopeSecondary($query)
     {
-        return $query->where('is_primary', false);
+        return $query->where(function ($q) {
+            $q->where('is_primary', false)
+              ->orWhereNotNull('domainable_type');
+        });
+    }
+
+    /**
+     * Scope: Domínios de um tipo específico de modelo
+     */
+    public function scopeForModel($query, string $modelType)
+    {
+        return $query->where('domainable_type', $modelType);
+    }
+
+    /**
+     * Scope: Domínios do tenant (sem domainable)
+     */
+    public function scopeTenantOnly($query)
+    {
+        return $query->whereNull('domainable_type')
+            ->whereNull('domainable_id');
     }
 
     /**

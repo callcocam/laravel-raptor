@@ -207,14 +207,13 @@ async function searchCep(cep: string) {
     // Usa o mapeamento definido no backend (obrigatório)
     const fieldMapping = props.column.fieldMapping;
 
-    if (!fieldMapping) {
-      console.error("Field mapping não definido no backend!");
+    console.log("Field mapping:", fieldMapping);
+
+    if (!fieldMapping) { 
       cepError.value = "Configuração de mapeamento ausente.";
       return;
     }
-
-    console.log("Field mapping:", fieldMapping);
-    console.log("Address fields:", addressFields.value);
+ 
 
     // Mapeia os campos da API para os campos do formulário
     Object.entries(fieldMapping).forEach(([apiField, formField]) => {
@@ -229,8 +228,7 @@ async function searchCep(cep: string) {
     const updatedValues = {
       ...props.modelValue,
       ...fieldValues.value,
-    };
-    console.log("Emitting all address values:", updatedValues);
+    }; 
     emit("update:modelValue", updatedValues);
   } catch (error) {
     console.error("Erro ao buscar CEP:", error);
@@ -245,8 +243,7 @@ function emitValue(fieldName: string, value: any) {
   const updatedValues = {
     ...props.modelValue,
     [fieldName]: value,
-  };
-  console.log(`Emitting ${fieldName}:`, value, "Updated values:", updatedValues);
+  }; 
   emit("update:modelValue", updatedValues);
 }
 

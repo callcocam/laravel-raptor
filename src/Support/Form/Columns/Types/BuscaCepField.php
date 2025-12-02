@@ -58,7 +58,7 @@ class BuscaCepField extends Column
             'logradouro' => 'street',
             'bairro' => 'district',
             'localidade' => 'city',
-            'estado' => 'state',
+            'uf' => 'state',
             'complemento' => 'complement',
         ];
 

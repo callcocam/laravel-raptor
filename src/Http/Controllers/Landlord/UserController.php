@@ -11,9 +11,11 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithRequests;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\ComboboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\EmailField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\PasswordField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
@@ -70,6 +72,11 @@ class UserController extends LandlordController
     protected function form(Form $form): Form
     {
         $form->columns([
+            ComboboxField::make('tenant_id', 'Tenant')
+                ->relationship('tenant', 'name')
+                ->required() 
+                ->placeholder('Selecione o tenant')
+                ->helpText('Atribua o usuário a um tenant'),
             TextField::make('name', 'Nome')
                 ->required()
                 ->columnSpan('7')

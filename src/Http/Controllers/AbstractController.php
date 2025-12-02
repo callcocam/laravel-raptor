@@ -78,12 +78,16 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model  = app($this->model());
+            
+            // Hook: antes de criar
+            $this->beforeCreate($request);
+            
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
-            
+
             // Prepara os dados ANTES da validação (converte valores formatados)
             $preparedData = $form->prepareDataForValidation($request, null);
-            
+
             $validationRules = array_merge(
                 $form->getValidationRules(),
                 $this->rules()
@@ -92,16 +96,19 @@ abstract class AbstractController extends ResourceController
 
             // Valida os dados já preparados
             $validator = \Illuminate\Support\Facades\Validator::make(
-                $preparedData, 
-                $validationRules, 
+                $preparedData,
+                $validationRules,
                 $validationMessages
             );
-            
+
             $validated = $validator->validate();
 
             $record = $model->create($validated);
 
             $form->saveRelatedData($validated, $record, $request);
+            
+            // Hook: depois de criar
+            $this->afterCreate($request, $record);
 
             $route = str($request->route()->getAction('as'))->replace('.store', '.edit')->toString();
 
@@ -169,6 +176,10 @@ abstract class AbstractController extends ResourceController
 
         try {
             $model = $this->model()::findOrFail($record);
+            
+            // Hook: antes de atualizar
+            $this->beforeUpdate($request, $record);
+            
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
 
@@ -180,20 +191,23 @@ abstract class AbstractController extends ResourceController
                 $this->rules($model)
             );
             $validationMessages = $form->getValidationMessages();
-            
+
             // Valida os dados já preparados
             $validator = \Illuminate\Support\Facades\Validator::make(
-                $preparedData, 
-                $validationRules, 
+                $preparedData,
+                $validationRules,
                 $validationMessages
             );
-            
+
             $validated = $validator->validate();
 
             $model->update($validated);
 
             //Vamo fazer atualizações de relacionados se necessário
             $form->updateRelatedData($validated, $model, $request);
+            
+            // Hook: depois de atualizar
+            $this->afterUpdate($request, $model);
 
             $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();
 
@@ -216,8 +230,14 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::findOrFail($record);
+            
+            // Hook: antes de deletar
+            $this->beforeDelete($record);
 
             $model->delete();
+            
+            // Hook: depois de deletar
+            $this->afterDelete($record, $model);
 
             $route = str(request()->route()->getAction('as'))->replace('destroy', 'index')->toString();
 
@@ -235,8 +255,14 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
+            
+            // Hook: antes de restaurar
+            $this->beforeRestore($record);
 
             $model->restore();
+            
+            // Hook: depois de restaurar
+            $this->afterRestore($record, $model);
 
             $route = str(request()->route()->getAction('as'))->replace('restore', 'index')->toString();
 
@@ -254,8 +280,14 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
+            
+            // Hook: antes de deletar permanentemente
+            $this->beforeForceDelete($record);
 
             $model->forceDelete();
+            
+            // Hook: depois de deletar permanentemente
+            $this->afterForceDelete($record, $model);
 
             $route = str(request()->route()->getAction('as'))->replace('forceDelete', 'index')->toString();
             return redirect()->route($route)
@@ -279,12 +311,20 @@ abstract class AbstractController extends ResourceController
                     ->back()
                     ->with('error', 'Nenhum item selecionado.');
             }
+            
+            // Hook: antes de ação em massa
+            $this->beforeBulkAction($request, $ids);
 
             // Chama método dinâmico baseado na action
             $methodName = 'bulk' . ucfirst($action);
 
             if (method_exists($this, $methodName)) {
-                return $this->$methodName($ids);
+                $result = $this->$methodName($ids);
+                
+                // Hook: depois de ação em massa
+                $this->afterBulkAction($request, $ids);
+                
+                return $result;
             }
 
             return redirect()
@@ -337,9 +377,17 @@ abstract class AbstractController extends ResourceController
             if (!empty($validationRules)) {
                 $request->validate($validationRules, $validationMessages);
             }
+            
+            // Hook: antes de executar action
+            $this->beforeExecute($request, $actionName);
 
             // Executa o callback da action
-            return $callback->executeCallback($request);
+            $result = $callback->executeCallback($request);
+            
+            // Hook: depois de executar action
+            $this->afterExecute($request, $actionName);
+            
+            return $result;
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
             throw $e;
@@ -354,6 +402,98 @@ abstract class AbstractController extends ResourceController
     {
         return [];
     }
+
+    protected function beforeCreate(Request $request)
+    {
+        //
+    }
+
+    protected function beforeUpdate(Request $request, string $id)
+    {
+        //
+    }
+
+    protected function beforeDelete(string $id)
+    {
+        //
+    }
+
+    protected function beforeRestore(string $id)
+    {
+        //
+    }
+
+    protected function beforeForceDelete(string $id)
+    {
+        //
+    }
+
+    protected function beforeBulkAction(Request $request, array $ids)
+    {
+        //
+    }
+
+    protected function beforeImport(Request $request)
+    {
+        //
+    }
+
+    protected function beforeExport(Request $request)
+    {
+        //
+    }
+
+    protected function beforeExecute(Request $request, string $action)
+    {
+        //
+    }
+
+    protected function afterExecute(Request $request, string $action)
+    {
+        //
+    }
+
+    protected function afterImport(Request $request)
+    {
+        //
+    }
+
+    protected function afterExport(Request $request)
+    {
+        //
+    }
+
+    protected function afterBulkAction(Request $request, array $ids)
+    {
+        //
+    }
+
+    protected function afterCreate(Request $request, $model)
+    {
+        //
+    }
+
+    protected function afterUpdate(Request $request, $model)
+    {
+        //
+    }
+
+    protected function afterDelete(string $id, $model)
+    {
+        //
+    }
+
+    protected function afterRestore(string $id, $model)
+    {
+        //
+    }
+
+    protected function afterForceDelete(string $id, $model)
+    {
+        //
+    }
+
+
 
     /**
      * Retorna as rotas padrão do formulário (store/update)

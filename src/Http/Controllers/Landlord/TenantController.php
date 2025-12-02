@@ -190,26 +190,26 @@ class TenantController extends LandlordController
                 ->columnSpan('12'),
 
             // Seção de Domínios
-            RepeaterField::make('domains')
-                ->label('Lista de Domínios')
-                ->relationship('domains')
-                ->compact()
-                ->fields([
-                    TextField::make('domain')
-                        ->label('Domínio')
-                        ->required()
-                        ->placeholder('exemplo.com.br')
-                        ->helpText('Digite o domínio completo (ex: empresa.com.br, app.empresa.com)')
-                        ->rules(['required', 'string', 'max:255'])
-                        ->columnSpan('9'),
+            // RepeaterField::make('domains')
+            //     ->label('Lista de Domínios')
+            //     ->relationship('domains')
+            //     ->compact()
+            //     ->fields([
+            //         TextField::make('domain')
+            //             ->label('Domínio')
+            //             ->required()
+            //             ->placeholder('exemplo.com.br')
+            //             ->helpText('Digite o domínio completo (ex: empresa.com.br, app.empresa.com)')
+            //             ->rules(['required', 'string', 'max:255'])
+            //             ->columnSpan('9'),
 
-                    CheckboxField::make('is_primary')
-                        ->label('Principal')
-                        ->helpText('Domínio principal do tenant')
-                        ->default(false)
-                        ->columnSpan('3'),
-                ])
-                ->columnSpanFull(),
+            //         CheckboxField::make('is_primary')
+            //             ->label('Principal')
+            //             ->helpText('Domínio principal do tenant')
+            //             ->default(false)
+            //             ->columnSpan('3'),
+            //     ])
+            //     ->columnSpanFull(),
 
             SectionField::make('settings')
                 ->label('Configurações (JSON)')
