@@ -12,6 +12,7 @@ use Exception;
 use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
 class ShinobiServiceProvider extends ServiceProvider
@@ -59,6 +60,7 @@ class ShinobiServiceProvider extends ServiceProvider
             } catch (Exception $e) {
                 //
                 // dd($e);
+                Log::error("Error checking permission [$permission] for user ID {$user->getAuthIdentifier()}: ".$e->getMessage());
             }
         });
     }
