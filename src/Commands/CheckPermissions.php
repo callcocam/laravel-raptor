@@ -129,13 +129,38 @@ class CheckPermissions extends Command
 
     protected function generateExpectedPermissions($controllers): \Illuminate\Support\Collection
     {
+        
+        if($this->confirm('Deseja resetar as permissões existentes antes de criar as faltantes?')) {
+            $permissionModel = config('raptor.shinobi.models.permission');
+            
+            // Remove todas as relações permission_role e permission_user primeiro
+            \DB::table('permission_role')->delete();
+            \DB::table('permission_user')->delete();
+            
+            // Remove todas as permissions usando delete() para respeitar foreign keys
+            app($permissionModel)->query()->forceDelete();
+            
+            $this->info('🗑️ Permissões e suas relações foram removidas.');
+        }
+
+        
         $permissions = collect();
         
-        // Ações padrão CRUD
-        $crudActions = ['viewAny', 'view', 'create', 'update', 'delete', 'restore', 'forceDelete'];
-        
-        // Ações extras do Raptor (baseado nas permissões existentes)
-        $raptorActions = ['index', 'edit', 'execute'];
+        // Todas as ações necessárias (sem duplicatas)
+        $actions = [
+            // Ações da UI (Raptor)
+            'index', 
+            'edit', 
+            'execute',
+            // Ações CRUD (Policies)
+            'viewAny', 
+            'view', 
+            'create', 
+            'update', 
+            'delete', 
+            'restore', 
+            'forceDelete'
+        ];
 
         foreach ($controllers as $controller) {
             // Extrair o nome do resource do controller
@@ -148,30 +173,21 @@ class CheckPermissions extends Command
             // Detectar contexto (landlord ou tenant) baseado no namespace
             $context = str_contains($controller['path'], 'Tenant/') ? 'tenant' : 'landlord';
 
-            // Gerar permissões para ações Raptor (usadas na UI)
-            foreach ($raptorActions as $action) {
+            // Gerar permissões para todas as ações
+            foreach ($actions as $action) {
                 $slug = "{$context}.{$resourceName}.{$action}";
-                $permissions->push([
-                    'slug' => $slug,
-                    'name' => ucfirst($action) . ' ' . Str::title(str_replace('-', ' ', $resourceName)),
-                    'resource' => $resourceName,
-                    'action' => $action,
-                    'context' => $context,
-                    'controller' => $controller['class'],
-                ]);
-            }
-            
-            // Gerar permissões CRUD padrão (para policies) também com contexto
-            foreach ($crudActions as $action) {
-                $slug = "{$context}.{$resourceName}.{$action}";
-                $permissions->push([
-                    'slug' => $slug,
-                    'name' => ucfirst($action) . ' ' . Str::title(str_replace('-', ' ', $resourceName)),
-                    'resource' => $resourceName,
-                    'action' => $action,
-                    'context' => $context,
-                    'controller' => $controller['class'],
-                ]);
+                
+                // Evita duplicatas
+                if (!$permissions->contains('slug', $slug)) {
+                    $permissions->push([
+                        'slug' => $slug,
+                        'name' => ucfirst($action) . ' ' . Str::title(str_replace('-', ' ', $resourceName)),
+                        'resource' => $resourceName,
+                        'action' => $action,
+                        'context' => $context,
+                        'controller' => $controller['class'],
+                    ]);
+                }
             }
         }
 

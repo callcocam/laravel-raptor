@@ -29,5 +29,6 @@ class LinkAction extends Action
     {
         parent::__construct($name ?? 'link');
         $this->component('action-link');
+        $this->policy('viewAny');
     }
 }
