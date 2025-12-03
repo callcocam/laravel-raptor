@@ -13,8 +13,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithTable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearch;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSorting;
 use Callcocam\LaravelRaptor\Support\Table\Sources\ModelSource;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder; 
 
 class TableBuilder
 {

@@ -46,11 +46,6 @@ trait ManagesCollection
     protected function addManyToCollection(array $items, string $key): static
     {
         foreach ($items as $item) {
-            if (method_exists($item, 'isVisible')) {
-                if (! $item->isVisible()) {
-                    continue;
-                }
-            }
             $this->addToCollection($item, $key);
         }
 
@@ -90,10 +85,7 @@ trait ManagesCollection
             ? $item->toArray()
             : $item;
 
-        $result = array_map($transformer ?? $defaultTransformer, $items);
-        
-        // Remove valores null (colunas invisíveis retornam null do transformer)
-        return array_filter($result, fn($value) => $value !== null);
+        return array_map($transformer ?? $defaultTransformer, $items);
     }
 
     /**

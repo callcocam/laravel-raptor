@@ -26,7 +26,9 @@ abstract class TenantController extends AbstractController
     
     protected function queryBuilder(): Builder
     { 
-        return app($this->model())->newQuery()->where('tenant_id', tenant_id());
+        return app($this->model())->newQuery()->where(function (Builder $query) {
+            $query->where('tenant_id', tenant_id())->orWhereNull('tenant_id');
+        });
     }
 
     /**
