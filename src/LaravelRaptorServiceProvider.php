@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor;
 
+use Callcocam\LaravelRaptor\Commands\CheckPermissions;
 use Callcocam\LaravelRaptor\Commands\LaravelRaptorCommand;
 use Callcocam\LaravelRaptor\Commands\RaptorGenerateCommand;
 use Callcocam\LaravelRaptor\Commands\RaptorMakeControllerCommand;
@@ -96,6 +97,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 RaptorMakePolicyCommand::class,
                 TranslationGenerateJsonCommand::class,
                 TranslationSyncCommand::class,
+                CheckPermissions::class,
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 // Customize the install command created by the package tools
