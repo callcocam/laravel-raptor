@@ -37,6 +37,11 @@ trait WithColumns
     {
         // Usa transformer customizado para lidar com lógica de searchable
         return $this->getCollectionAsArray('columns', function (AbstractColumn $column) use ($model) {
+            // Ignora colunas invisíveis
+            if (method_exists($column, 'isVisible') && !$column->isVisible()) {
+                return null;
+            }
+
             if (method_exists($column, 'isSearchable')) {
                 if ($column->isSearchable()) {
                     if (method_exists($this, 'setSearches')) {

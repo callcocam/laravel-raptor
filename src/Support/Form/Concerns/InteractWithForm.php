@@ -37,6 +37,11 @@ trait InteractWithForm
         $rules = [];
 
         foreach ($this->getColumns() as $column) {
+            // Ignora colunas invisíveis
+            if (method_exists($column, 'isVisible') && !$column->isVisible()) {
+                continue;
+            }
+
             $columnRules = $column->getRules($record);
 
             if (!empty($columnRules)) {
