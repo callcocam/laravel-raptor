@@ -31,6 +31,11 @@ trait HasRoles
      */
     public function hasRole($role): bool
     {
+        // Garante que roles estão carregadas (evita N+1)
+        if (!$this->relationLoaded('roles')) {
+            $this->load('roles');
+        }
+
         $slug = Str::slug($role);
 
         return (bool) $this->roles->where('slug', $slug)->count();
@@ -125,21 +130,30 @@ trait HasRoles
     /**
      * Get the specified roles.
      *
-     * @return Role
+     * @return array
      */
     protected function getRoles(array $roles)
     {
-        return array_map(function ($role) {
-            $model = $this->getRoleModel();
+        $roleModel = $this->getRoleModel();
+        $slugs = [];
+        $ids = [];
 
-            if ($role instanceof $model) {
-                return $role->id;
+        // Separa slugs de IDs/models
+        foreach ($roles as $role) {
+            if ($role instanceof Role) {
+                $ids[] = $role->id;
+            } else {
+                $slugs[] = $role;
             }
+        }
 
-            $role = $model->where('slug', $role)->first();
+        // Busca todas as roles de uma vez (1 query em vez de N)
+        if (!empty($slugs)) {
+            $found = $roleModel->whereIn('slug', $slugs)->pluck('id')->toArray();
+            $ids = array_merge($ids, $found);
+        }
 
-            return $role->id;
-        }, $roles);
+        return $ids;
     }
 
     public function hasPermissionRoleFlags()

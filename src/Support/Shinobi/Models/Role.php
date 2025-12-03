@@ -29,6 +29,9 @@ class Role extends AbstractModel implements RoleContract
         parent::__construct($attributes);
 
         $this->setTable(config('raptor.shinobi.tables.roles'));
+
+        // Desabilita tenant scoping para permissions (são globais)
+        static::$landlord->disable();
     }
 
     /**

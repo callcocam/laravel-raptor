@@ -29,6 +29,9 @@ class Permission extends AbstractModel implements PermissionContract
         parent::__construct($attributes);
 
         $this->setTable(config('raptor.shinobi.tables.permissions'));
+
+        // Desabilita tenant scoping para permissions (são globais)
+        static::$landlord->disable();
     }
 
     /**

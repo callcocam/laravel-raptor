@@ -119,21 +119,36 @@ trait HasPermissions
      * Get the specified permissions.
      *
      * @param  array  $permissions
-     * @return Permission
+     * @return array
      */
     protected function getPermissions(array $collection)
     {
-        return array_map(function ($permission) {
-            $model = $this->getPermissionModel();
+        $permissionModel = $this->getPermissionModel();
+        $slugs = [];
+        $ids = [];
 
+        // Separa slugs de IDs/models
+        foreach ($collection as $permission) {
             if ($permission instanceof Permission) {
-                return $permission->id;
+                $ids[] = $permission->id;
+            } else {
+                $slugs[] = $permission;
             }
+        }
 
-            $permission = $model->where('slug', $permission)->first();
+        // Busca todas as permissions de uma vez (1 query em vez de N)
+        if (!empty($slugs)) {
+            if ($permissionModel instanceof \Illuminate\Database\Eloquent\Collection) {
+                // Cache habilitado: busca in-memory
+                $found = $permissionModel->whereIn('slug', $slugs)->pluck('id')->toArray();
+            } else {
+                // Sem cache: query única
+                $found = $permissionModel->whereIn('slug', $slugs)->pluck('id')->toArray();
+            }
+            $ids = array_merge($ids, $found);
+        }
 
-            return $permission->id;
-        }, $collection);
+        return $ids;
     }
 
     /**
@@ -143,7 +158,10 @@ trait HasPermissions
      */
     protected function hasPermission($permission): bool
     {
-        $model = $this->getPermissionModel();
+        // Garante que permissions estão carregadas (evita N+1)
+        if (!$this->relationLoaded('permissions')) {
+            $this->load('permissions');
+        }
 
         if ($permission instanceof Permission) {
             $permission = $permission->slug;
