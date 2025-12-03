@@ -85,7 +85,17 @@ class RoleController extends TenantController
 
             CheckboxField::make('permissions', 'Permissões')
                 ->multiple()
-                ->options(DB::table(config('raptor.shinobi.tables.permissions'))->pluck('name', 'id')->toArray())
+                ->options(function () {
+                    $tenantId = config('app.current_tenant_id');
+                    
+                    return DB::table(config('raptor.shinobi.tables.permissions'))
+                        ->where(function ($query) use ($tenantId) {
+                            $query->whereNull('tenant_id')
+                                  ->orWhere('tenant_id', $tenantId);
+                        })
+                        ->pluck('name', 'id')
+                        ->toArray();
+                })
                 ->columns(2)
                 ->searchable()
                 ->showSelectAll(true)
@@ -177,5 +187,10 @@ class RoleController extends TenantController
     protected function resourcePath(): string
     {
         return 'tenant';
+    }
+    
+    protected function extractFillableData(array $data, $model): array
+    {
+        return array_merge($data, ['tenant_id' => tenant_id()]);
     }
 }

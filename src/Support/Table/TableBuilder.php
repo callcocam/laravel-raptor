@@ -13,13 +13,15 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithTable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearch;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSorting;
 use Callcocam\LaravelRaptor\Support\Table\Sources\ModelSource;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class TableBuilder
 {
     use WithTable;
     use HasSearch;
     use HasSorting;
-    
+
     protected $dataSource;
 
     protected $model;
@@ -32,7 +34,7 @@ class TableBuilder
 
     public function __construct($model = null, $type = 'model')
     {
-        $this->model = $model;
+
         // === INICIALIZAÇÃO DO SISTEMA AUTOMÁTICO COMPLETO ===
         CastRegistry::initialize(); // Carrega formatadores padrão
 
@@ -47,8 +49,15 @@ class TableBuilder
      */
     protected function createModelSource($model)
     {
-        return ModelSource::makeForModel($model, $this->config)
-            ->context($this); // Mantém contexto apenas para request params
+        if ($model instanceof Builder) {
+            $this->model = $model->getModel();
+            return ModelSource::makeForQuery($model, $this->config)
+                ->context($this);
+        } else {
+            $this->model = $model;
+            return ModelSource::makeForModel($model, $this->config)
+                ->context($this);
+        }
     }
 
     /**

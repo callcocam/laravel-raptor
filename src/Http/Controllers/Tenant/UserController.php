@@ -98,7 +98,17 @@ class UserController extends TenantController
                 ->columnSpan('6')
                 ->helpText('Digite a senha novamente'),
             CheckboxField::make('roles', 'Papéis')
-                ->options(DB::table(config('raptor.shinobi.tables.roles'))->pluck('name', 'id')->toArray())
+                ->options(function () {
+                    $tenantId = config('app.current_tenant_id');
+                    
+                    return DB::table(config('raptor.shinobi.tables.roles'))
+                        ->where(function ($query) use ($tenantId) {
+                            $query->whereNull('tenant_id')
+                                  ->orWhere('tenant_id', $tenantId);
+                        })
+                        ->pluck('name', 'id')
+                        ->toArray();
+                })
                 ->multiple()
                 ->defaultUsing(function ($model) {
                     if ($model) {

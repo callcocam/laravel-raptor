@@ -42,6 +42,14 @@ class ModelSource extends AbstractSource
 
     protected QueryBuilder $queryBuilder;
 
+
+    public static function makeForQuery($query, array $config = []): static
+    {
+        $instance = new static($query->getModel(), $config); 
+        $instance->baseQuery($query);
+        return $instance;
+    }
+
     /**
      * Inicialização - extrai colunas pesquisáveis do contexto
      */

@@ -11,6 +11,8 @@ namespace Callcocam\LaravelRaptor\Http\Controllers;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -23,6 +25,11 @@ abstract class AbstractController extends ResourceController
 
     abstract protected function form(Form $form): Form;
 
+    protected function queryBuilder(): Builder
+    {
+        return app($this->model())->newQuery();
+    }
+
 
     protected function infolist(InfoList $infoList): InfoList
     {
@@ -32,7 +39,7 @@ abstract class AbstractController extends ResourceController
 
     public function index(Request $request)
     {
-        $data = $this->table(TableBuilder::make($this->model(), 'model'))
+        $data = $this->table(TableBuilder::make($this->queryBuilder(), 'model'))
             ->request($request)
             ->toArray();
 
@@ -78,10 +85,10 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model  = app($this->model());
-            
+
             // Hook: antes de criar
             $this->beforeCreate($request);
-            
+
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
 
@@ -101,12 +108,12 @@ abstract class AbstractController extends ResourceController
                 $validationMessages
             );
 
-            $validated = $validator->validate();
+            $validated = $this->beforeExtraStore($validator->validate(), $request);
 
             $record = $model->create($validated);
 
             $form->saveRelatedData($validated, $record, $request);
-            
+
             // Hook: depois de criar
             $this->afterCreate($request, $record);
 
@@ -176,10 +183,10 @@ abstract class AbstractController extends ResourceController
 
         try {
             $model = $this->model()::findOrFail($record);
-            
+
             // Hook: antes de atualizar
             $this->beforeUpdate($request, $record);
-            
+
             // Extrai as regras de validação dos campos do formulário
             $form = $this->form(Form::make($model, 'model'));
 
@@ -199,13 +206,13 @@ abstract class AbstractController extends ResourceController
                 $validationMessages
             );
 
-            $validated = $validator->validate();
+            $validated = $this->beforeExtraUpdate($validator->validate(), $request, $model);
 
             $model->update($validated);
 
             //Vamo fazer atualizações de relacionados se necessário
             $form->updateRelatedData($validated, $model, $request);
-            
+
             // Hook: depois de atualizar
             $this->afterUpdate($request, $model);
 
@@ -230,12 +237,12 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::findOrFail($record);
-            
+
             // Hook: antes de deletar
             $this->beforeDelete($record);
 
             $model->delete();
-            
+
             // Hook: depois de deletar
             $this->afterDelete($record, $model);
 
@@ -255,12 +262,12 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
-            
+
             // Hook: antes de restaurar
             $this->beforeRestore($record);
 
             $model->restore();
-            
+
             // Hook: depois de restaurar
             $this->afterRestore($record, $model);
 
@@ -280,12 +287,12 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
-            
+
             // Hook: antes de deletar permanentemente
             $this->beforeForceDelete($record);
 
             $model->forceDelete();
-            
+
             // Hook: depois de deletar permanentemente
             $this->afterForceDelete($record, $model);
 
@@ -311,7 +318,7 @@ abstract class AbstractController extends ResourceController
                     ->back()
                     ->with('error', 'Nenhum item selecionado.');
             }
-            
+
             // Hook: antes de ação em massa
             $this->beforeBulkAction($request, $ids);
 
@@ -320,10 +327,10 @@ abstract class AbstractController extends ResourceController
 
             if (method_exists($this, $methodName)) {
                 $result = $this->$methodName($ids);
-                
+
                 // Hook: depois de ação em massa
                 $this->afterBulkAction($request, $ids);
-                
+
                 return $result;
             }
 
@@ -377,16 +384,16 @@ abstract class AbstractController extends ResourceController
             if (!empty($validationRules)) {
                 $request->validate($validationRules, $validationMessages);
             }
-            
+
             // Hook: antes de executar action
             $this->beforeExecute($request, $actionName);
 
             // Executa o callback da action
             $result = $callback->executeCallback($request);
-            
+
             // Hook: depois de executar action
             $this->afterExecute($request, $actionName);
-            
+
             return $result;
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
@@ -401,6 +408,16 @@ abstract class AbstractController extends ResourceController
     protected function rules(?string $id = null): array
     {
         return [];
+    }
+
+    protected function beforeExtraStore(array $data, \Illuminate\Http\Request $request)
+    {
+        return $data;
+    }
+
+    protected function beforeExtraUpdate(array $data, \Illuminate\Http\Request $request, Model $model)
+    {
+        return $data;
     }
 
     protected function beforeCreate(Request $request)

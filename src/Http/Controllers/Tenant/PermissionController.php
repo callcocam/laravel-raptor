@@ -147,4 +147,5 @@ class PermissionController extends TenantController
     {
         return 'tenant';
     }
+
 }

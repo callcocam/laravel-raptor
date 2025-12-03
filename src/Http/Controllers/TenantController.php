@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use Callcocam\LaravelRaptor\Support\Form\Form;
+use Illuminate\Database\Eloquent\Builder;
 
 abstract class TenantController extends AbstractController
 {
@@ -22,4 +23,29 @@ abstract class TenantController extends AbstractController
 
         return $form;
     }
+    
+    protected function queryBuilder(): Builder
+    { 
+        return app($this->model())->newQuery()->where('tenant_id', tenant_id());
+    }
+
+    /**
+     * Adiciona tenant_id automaticamente antes de criar
+     */
+    protected function beforeExtraStore(array $data, \Illuminate\Http\Request $request)
+    {
+        $data['tenant_id'] = tenant_id();
+        return $data;
+    }
+
+    /**
+     * Garante que tenant_id não seja alterado no update
+     */
+    protected function beforeExtraUpdate(array $data, \Illuminate\Http\Request $request, \Illuminate\Database\Eloquent\Model $model)
+    {
+        // Remove tenant_id dos dados caso alguém tente alterar
+        unset($data['tenant_id']);
+        return $data;
+    }
+
 }
