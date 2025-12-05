@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Toaster } from '@/components/ui/sonner'
+import FlashMessages from '~/components/FlashMessages.vue';
 import { useBreadcrumbs, type BackendBreadcrumb } from '~/composables/useBreadcrumbs';
 import { useLayout } from '~/composables/useLayout';
 import { dashboard } from '@/routes';
-import { Head, usePage } from '@inertiajs/vue3';
-import { computed, watch, nextTick } from 'vue';
-import { toast } from 'vue-sonner'
-import type { AppPageProps } from '@/types';
+import { Head } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface Props {
     title?: string;
@@ -25,8 +24,6 @@ const props = withDefaults(defineProps<Props>(), {
     title: 'Dashboard'
 });
 
-const page = usePage<AppPageProps>();
-
 // Mapeia breadcrumbs do backend para o formato do frontend
 const breadcrumbs = useBreadcrumbs(
     () => props.breadcrumbs,
@@ -38,34 +35,6 @@ const { containerClasses } = useLayout(props.maxWidth);
 
 // Título da página (usa title prop ou resourcePluralLabel como fallback)
 const pageTitle = computed(() => props.title || props.resourcePluralLabel || 'Dashboard');
-// Watch para mensagens flash e exibir toasts
-watch(
-    () => page.props.flash,
-    (flash) => {
-        if (flash.success) {
-            toast.success(flash.success);
-        }
-        if (flash.error) {
-            toast.error(flash.error);
-        }
-        if (flash.warning) {
-            toast.warning(flash.warning);
-        }
-        if (flash.info) {
-            toast.info(flash.info);
-        }
-
-        // Limpa as flash messages após mostrá-las
-        // Isso evita que elas apareçam novamente em navegações subsequentes
-        if (flash && Object.keys(flash).length > 0) {
-            // Usa nextTick para garantir que o toast foi mostrado antes de limpar
-            nextTick(() => {
-                page.props.flash = {};
-            });
-        }
-    },
-    { deep: true, immediate: true }
-);
 </script>
 
 <template>
@@ -73,6 +42,7 @@ watch(
 
   <AppLayout :breadcrumbs="breadcrumbs">
     <slot name="header"> </slot>
+    <FlashMessages />
     <Toaster />
     <div :class="containerClasses">
       <slot>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Toaster } from '@/components/ui/sonner'
-import { Head, usePage } from '@inertiajs/vue3';
-import { computed, watch, nextTick } from 'vue';
-import { toast } from 'vue-sonner'
-import type { AppPageProps } from '@/types';
+import FlashMessages from '~/components/FlashMessages.vue';
+import { useLayout } from '~/composables/useLayout';
+import { Head } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface Props {
     title?: string;
@@ -16,63 +16,18 @@ const props = withDefaults(defineProps<Props>(), {
     title: 'Dashboard'
 });
 
-const page = usePage<AppPageProps>();
-
 // Título da página
 const pageTitle = computed(() => props.title || 'Dashboard');
 
-// Classes do container baseado na largura máxima
-const containerClasses = computed(() => {
-    const baseClasses = 'mx-auto w-full';
-    const widthClass = {
-        'sm': 'max-w-sm',
-        'md': 'max-w-md',
-        'lg': 'max-w-lg',
-        'xl': 'max-w-xl',
-        '2xl': 'max-w-2xl',
-        '3xl': 'max-w-3xl',
-        '4xl': 'max-w-4xl',
-        '5xl': 'max-w-5xl',
-        '6xl': 'max-w-6xl',
-        '7xl': 'max-w-7xl',
-        'full': 'max-w-full',
-    }[props.maxWidth] || 'max-w-7xl';
-    
-    return `${baseClasses} ${widthClass}`;
-});
-
-// Watch para mensagens flash e exibir toasts
-watch(
-    () => page.props.flash,
-    (flash) => {
-        if (flash.success) {
-            toast.success(flash.success);
-        }
-        if (flash.error) {
-            toast.error(flash.error);
-        }
-        if (flash.warning) {
-            toast.warning(flash.warning);
-        }
-        if (flash.info) {
-            toast.info(flash.info);
-        }
-
-        // Limpa as flash messages após mostrá-las
-        if (flash && Object.keys(flash).length > 0) {
-            nextTick(() => {
-                page.props.flash = {};
-            });
-        }
-    },
-    { deep: true, immediate: true }
-);
+// Configuração de layout com largura máxima
+const { containerClasses } = useLayout(props.maxWidth);
 </script>
 
 <template>
   <Head :title="pageTitle" />
 
   <div class="min-h-screen bg-background">
+    <FlashMessages />
     <Toaster />
     
     <div :class="containerClasses">
