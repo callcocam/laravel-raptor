@@ -163,18 +163,33 @@ class LaravelRaptorCommand extends Command
     {
         $this->info('Limpando tabelas...');
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $driver = DB::getDriverName();
+        
+        // Desabilitar checagem de chaves estrangeiras conforme o driver
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        } elseif ($driver === 'pgsql') {
+            // PostgreSQL não precisa desabilitar constraints para TRUNCATE CASCADE
+        }
 
         $tables = ['permission_role', 'role_user', 'permission_user', 'permissions', 'roles', 'users', 'tenants'];
 
         foreach ($tables as $table) {
             if (Schema::hasTable($table)) {
-                DB::table($table)->truncate();
+                if ($driver === 'pgsql') {
+                    // PostgreSQL usa TRUNCATE CASCADE
+                    DB::statement("TRUNCATE TABLE {$table} RESTART IDENTITY CASCADE");
+                } else {
+                    DB::table($table)->truncate();
+                }
                 $this->line("  ✓ {$table}");
             }
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        // Reabilitar checagem de chaves estrangeiras
+        if ($driver === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
 
         $this->info('Tabelas limpas com sucesso!');
         $this->newLine();
@@ -200,6 +215,16 @@ class LaravelRaptorCommand extends Command
         $this->section('📦 Executando Migrações');
 
         try {
+            // Publicar migrações do pacote
+            $this->comment('   Publicando migrações do pacote...');
+            Artisan::call('vendor:publish', [
+                '--tag' => 'raptor-migrations',
+                '--force' => true
+            ]);
+            $this->comment('   ✓ Migrações publicadas');
+            
+            // Executar migrações
+            $this->comment('   Executando migrações...');
             Artisan::call('migrate', ['--force' => true]);
             $this->comment('   ✓ Migrações executadas');
         } catch (\Exception $e) {
@@ -263,7 +288,8 @@ class LaravelRaptorCommand extends Command
         $landlord = $tenantClass::create([
             'name' => 'Landlord - Administração',
             'slug' => config('raptor.landlord.subdomain', 'landlord'),
-            'domain' => config('raptor.landlord.subdomain', 'landlord') . ".{$this->baseDomain}",
+            'subdomain' => config('raptor.landlord.subdomain', 'landlord'),
+            'domain' => $this->baseDomain,
             'status' => TenantStatus::Published,
         ]);
         $this->line("  ✓ Landlord criado: {$landlord->name}");
@@ -282,7 +308,8 @@ class LaravelRaptorCommand extends Command
         $tenant = $tenantClass::create([
             'name' => 'Tenant - Área do Cliente',
             'slug' => 'tenant',
-            'domain' => "tenant.{$this->baseDomain}",
+            'subdomain' => 'tenant',
+            'domain' => $this->baseDomain,
             'status' => TenantStatus::Published,
         ]);
         $this->line("  ✓ Tenant Cliente criado: {$tenant->name}");

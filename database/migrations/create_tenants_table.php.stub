@@ -27,7 +27,7 @@ return new class extends Migration
             
             // Identificadores de acesso
             $table->string('subdomain')->unique()->comment('Subdomínio do tenant (ex: empresa.example.com)');
-            $table->string('custom_domain')->unique()->nullable()->comment('Domínio personalizado do tenant (ex: empresa.com.br)');
+            $table->string('domain')->nullable()->comment('Domínio base do tenant (ex: example.com)');
             
             // Configurações de banco de dados (para multi-database)
             $table->string('database')->unique()->nullable()->comment('Nome do banco de dados dedicado (se multi-database)');

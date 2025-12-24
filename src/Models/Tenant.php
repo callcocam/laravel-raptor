@@ -30,6 +30,8 @@ class Tenant extends AbstractModel
     protected $fillable = [
         'name',
         'slug',
+        'subdomain',
+        'domain',
         'database',
         'prefix',
         'email',
