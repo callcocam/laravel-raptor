@@ -88,7 +88,13 @@ class LaravelRaptorCommand extends Command
         // Gerenciamento de Tenants
         if ($runAll || $onlyTenants) {
             $this->section('📦 Gerenciamento de Tenants');
-            $tenant = $this->manageAllTenants();
+            $result = $this->manageAllTenants();
+            if (is_array($result)) {
+                $tenant = $result['tenant'];
+                $user = $result['user'] ?? null;
+            } else {
+                $tenant = $result;
+            }
         }
 
         // Gerenciamento de Usuários
@@ -97,7 +103,7 @@ class LaravelRaptorCommand extends Command
             if (!$tenant && $runAll) {
                 $tenant = $this->selectTenant();
             }
-            if ($tenant) {
+            if ($tenant && !$user) {
                 $user = $this->manageUser($tenant);
             }
         }
@@ -225,7 +231,7 @@ class LaravelRaptorCommand extends Command
             
             // Executar migrações
             $this->comment('   Executando migrações...');
-            Artisan::call('migrate', ['--force' => true]);
+            Artisan::call('migrate', ['--force' => true, '--fresh' => true]);
             $this->comment('   ✓ Migrações executadas');
         } catch (\Exception $e) {
             $this->error('   ✗ Erro ao executar migrações: ' . $e->getMessage());
@@ -264,17 +270,18 @@ class LaravelRaptorCommand extends Command
         $createDefault = $this->confirm('Deseja criar os tenants padrão (Landlord + Tenant)?', true);
 
         if ($createDefault) {
-            $this->createDefaultTenants();
-            return $tenantClass::first();
+            $landlordUser = $this->createDefaultTenants();
+            // Retorna o usuário landlord para poder associá-lo ao super-admin
+            return ['tenant' => $tenantClass::first(), 'user' => $landlordUser];
         }
 
-        return $this->createTenant();
+        return ['tenant' => $this->createTenant(), 'user' => null];
     }
 
     /**
      * Cria tenants padrão
      */
-    protected function createDefaultTenants(): void
+    protected function createDefaultTenants()
     {
         $this->info('Criando tenants padrão...');
 
@@ -300,7 +307,7 @@ class LaravelRaptorCommand extends Command
             'email' => "landlord@{$this->baseDomain}",
             'password' => Hash::make($this->defaultPassword),
             'email_verified_at' => now(),
-            'tenant_id' => $landlord->id,
+            'tenant_id' => null,
         ]);
         $this->line("  ✓ Usuário Landlord criado: {$landlordUser->email}");
 
@@ -326,6 +333,9 @@ class LaravelRaptorCommand extends Command
 
         $this->newLine();
         $this->info('Tenants e usuários padrão criados com sucesso!');
+        
+        // Retorna o usuário landlord para ser associado ao super-admin
+        return $landlordUser;
     }
 
     /**
@@ -498,11 +508,15 @@ class LaravelRaptorCommand extends Command
         $this->newLine();
         $this->info(count($createdRoles) . ' roles criadas com sucesso!');
 
-        // Associa usuário ao super-admin se existir
-        if ($user && count($createdRoles) > 0) {
-            if ($this->confirm('Deseja associar o usuário à role super-admin?', true)) {
-                $superAdmin = $roleClass::where('slug', 'super-admin')->first();
-                if ($superAdmin) {
+        // Associa automaticamente o usuário landlord ao super-admin
+        if ($user) {
+            $superAdmin = $roleClass::where('slug', 'super-admin')->first();
+            if ($superAdmin) {
+                // Verifica se é o usuário landlord (sem tenant_id)
+                if (is_null($user->tenant_id)) {
+                    $user->roles()->sync([$superAdmin->id]);
+                    $this->info("Usuário Landlord associado automaticamente à role 'Super Admin'!");
+                } elseif ($this->confirm('Deseja associar o usuário à role super-admin?', true)) {
                     $user->roles()->sync([$superAdmin->id]);
                     $this->info("Usuário associado à role 'Super Admin'!");
                 }

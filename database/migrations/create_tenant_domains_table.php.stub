@@ -25,6 +25,9 @@ return new class extends Migration
                 ->constrained('tenants')
                 ->onDelete('cascade')
                 ->comment('ID do tenant proprietário do domínio');
+                
+            // Relacionamento polimórfico (opcional - para Client, Store, etc)
+            $table->ulidMorphs('domainable');
             
             // Domínio (único no sistema)
             $table->string('domain')
