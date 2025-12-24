@@ -107,8 +107,8 @@ class TenantController extends LandlordController
                     LinkAction::make('view')
                         ->actionAlink()
                         ->label('Login como')
-                        ->url(function ($target) { 
-                            if($target->tenant_id === null){
+                        ->url(function ($target) {
+                            if ($target->tenant_id === null) {
                                 return null;
                             }
                             return sprintf("//%s/login-as" . '?%s', $target->tenant->domain, http_build_query([
@@ -151,6 +151,7 @@ class TenantController extends LandlordController
 
         $table->filters([
             \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('status')
+                ->visible(false)
                 ->label('Status')
                 ->options([
                     'draft' => 'Rascunho',

@@ -180,6 +180,7 @@ class FilterBuilder
             'component' => $this->component,
             'context' => $this->getContext(),
             'strategy' => $this->filterStrategy?->getName(),
+            'visible' => $this->isVisible(),
         ];
     }
 }

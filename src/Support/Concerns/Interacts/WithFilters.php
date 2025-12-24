@@ -31,7 +31,14 @@ trait WithFilters
      */
     public function getArrayFilters(): array
     {
-        return $this->getCollectionAsArray('filters');
+        return array_values(array_filter(
+            array_map(function ($filter) {
+                if (data_get($filter, 'visible', true) === false) {
+                    return null;
+                }
+                return $filter;
+            }, $this->getCollectionAsArray('filters'))
+        ));
     }
 
     public function getFilters(): array
