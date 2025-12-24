@@ -49,6 +49,10 @@ class TenantController extends LandlordController
                 ->name('tenants.index')
                 ->icon('Shield')
                 ->group('Segurança')
+                ->visible(function () {
+                    dd(config('app.current_client_id'));
+                    return  config('app.current_client_id');
+                })
                 ->groupCollapsible(true)
                 ->order(15)
                 ->middlewares(['auth', 'verified']),
@@ -107,8 +111,8 @@ class TenantController extends LandlordController
                     LinkAction::make('view')
                         ->actionAlink()
                         ->label('Login como')
-                        ->url(function ($target) { 
-                            if($target->tenant_id === null){
+                        ->url(function ($target) {
+                            if ($target->tenant_id === null) {
                                 return null;
                             }
                             return sprintf("//%s/login-as" . '?%s', $target->tenant->domain, http_build_query([

@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { usePage } from '@inertiajs/vue3';
-import * as LucideIcons from 'lucide-vue-next';
+import * as LucideIcons from 'lucide-vue-next'; 
 
 interface Props {
     dashboardUrl?: string;
@@ -22,28 +22,36 @@ interface Props {
     footerItems?: NavItem[];
 }
 
+const page = usePage();
+
 const props = withDefaults(defineProps<Props>(), {
     dashboardUrl: '/',
     dashboardSlot: false,
-    footerItems: () => [
-        {
-            title: 'Github Repo',
-            href: 'https://github.com/laravel/vue-starter-kit',
-            icon: 'Folder' as any,
-        }, 
-    ],
+    footerItems: () => [],
 });
-
-const page = usePage();
 
 const getIconComponent = (iconName: string) => {
     return (LucideIcons as any)[iconName] || LucideIcons.Circle;
 };
 
 const navigationItems = computed(() => {
-    const navData = (page.props.navigation as NavItem[]) || [];
+    // Pega navegação do raptor compartilhado pelo middleware
+    const navData = (page.props.raptor?.navigation as NavItem[]) || [];
 
     return navData.map(item => ({
+        ...item,
+        icon: typeof item.icon === 'string'
+            ? getIconComponent(item.icon)
+            : item.icon,
+    }));
+});
+
+const footerNavItems = computed(() => {
+    // Merge prop footerItems com navigationFooter do raptor
+    const raptorFooter = (page.props.raptor?.navigationFooter as NavItem[]) || [];
+    const allFooterItems = [...props.footerItems, ...raptorFooter];
+    
+    return allFooterItems.map(item => ({
         ...item,
         icon: typeof item.icon === 'string'
             ? getIconComponent(item.icon)
@@ -93,15 +101,6 @@ const groupedNavigation = computed(() => {
             collapsible: false,
         };
     });
-});
-
-const footerNavItems = computed(() => {
-    return props.footerItems.map(item => ({
-        ...item,
-        icon: typeof item.icon === 'string'
-            ? getIconComponent(item.icon)
-            : item.icon,
-    }));
 });
 </script>
 

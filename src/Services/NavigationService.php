@@ -188,7 +188,9 @@ class NavigationService
 
     public function filterIndexPages(array $pages): array
     {
-        return array_filter($pages, fn($page) => $page instanceof Index);
+        return array_filter($pages, function($page) {   
+            return $page instanceof Index;
+        });
     }
 
     public function checkPermissions(User $user, string $modelClass): bool

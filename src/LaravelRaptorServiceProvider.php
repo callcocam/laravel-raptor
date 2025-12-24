@@ -19,6 +19,7 @@ use Callcocam\LaravelRaptor\Commands\TranslationGenerateJsonCommand;
 use Callcocam\LaravelRaptor\Commands\TranslationSyncCommand;
 use Callcocam\LaravelRaptor\Console\Commands\ThemeSetupCommand;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
+use Callcocam\LaravelRaptor\Http\Middleware\ShareRaptorData;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantMiddleware;
 use Callcocam\LaravelRaptor\Models\Auth\User;
@@ -164,6 +165,10 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         $router->aliasMiddleware('landlord', LandlordMiddleware::class);
         $router->aliasMiddleware('tenant', TenantMiddleware::class);
         $router->aliasMiddleware('tenant.custom.domain', TenantCustomDomainMiddleware::class);
+        $router->aliasMiddleware('raptor.share', ShareRaptorData::class);
+        
+        // Adiciona o middleware ao grupo 'web' para compartilhar dados automaticamente
+        $router->pushMiddlewareToGroup('web', ShareRaptorData::class);
     }
 
     /**
