@@ -16,6 +16,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToIcon;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToId;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToLabel;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToName;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToVisible;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\FilterStrategy;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\LikeFilterStrategy;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\ExactFilterStrategy;
@@ -35,6 +36,7 @@ class FilterBuilder
     use EvaluatesClosures;
     use FactoryPattern;
     use BelongsToHelpers;
+    use BelongsToVisible;
 
     protected string $component = 'filter-text';
 
