@@ -84,6 +84,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         return $this->evaluate($this->url, [
             'request' => $this->getRequest(),
             'target' => $target,
+            'record' => $this->getRecord(),
+            'model' => $this->model,
         ]);
     }
 

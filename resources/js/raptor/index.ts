@@ -21,6 +21,9 @@ ComponentRegistry.registerBulk({
     'info-column-status': defineAsyncComponent(() => import('~/components/infolist/columns/InfolistStatus.vue')),
     'info-column-boolean': defineAsyncComponent(() => import('~/components/infolist/columns/InfolistBoolean.vue')),
     'info-column-card': defineAsyncComponent(() => import('~/components/infolist/columns/InfolistCard.vue')),
+    'info-column-link': defineAsyncComponent(() => import('~/components/infolist/columns/InfolistLink.vue')),
+    'info-column-has-many': defineAsyncComponent(() => import('~/components/infolist/columns/InfolistHasMany.vue')),
+    'info-column-belongs-to-many': defineAsyncComponent(() => import('~/components/infolist/columns/InfolistBelongsToMany.vue')),
 })
 
 /**

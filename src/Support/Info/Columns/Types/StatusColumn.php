@@ -45,6 +45,12 @@ class StatusColumn extends Column
     public function render(mixed $value, $row = null): array
     {
         $columnName = $this->getName();
+        
+        // Converte enum para string se necessário
+        if ($value instanceof \BackedEnum) {
+            $value = $value->value;
+        }
+        
         $statusKey = strtolower($value ?? '');
 
         // Busca no mapa de status

@@ -157,7 +157,7 @@ trait HasRoles
     }
 
     public function hasPermissionRoleFlags()
-    { 
+    {
         if ($this->hasRoles()) {
             // Garante que as roles estão carregadas
             if (!$this->relationLoaded('roles')) {
@@ -170,6 +170,24 @@ trait HasRoles
                 })->count() >= 1;
         }
 
+        return false;
+    }
+
+    /**
+     * Verifica se o usuário é administrador
+     */
+    public function isAdmin(): bool
+    {
+        if ($this->hasRoles()) {
+            // Garante que as roles estão carregadas
+            if (!$this->relationLoaded('roles')) {
+                $this->load('roles');
+            }
+            return $this->roles
+                ->filter(function ($role) {
+                    return $role->special;
+                })->count() >= 1;
+        }
         return false;
     }
 

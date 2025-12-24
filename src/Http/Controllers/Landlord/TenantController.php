@@ -8,17 +8,16 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
-use App\Models\Client;
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField;
-use Callcocam\LaravelRaptor\Support\Form\Form;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\StatusColumn as StatusColumnInfolist;
+use Callcocam\LaravelRaptor\Support\Form\Form;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\CardColumn;
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
@@ -27,6 +26,9 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\HasManyColumn;
+
 
 class TenantController extends LandlordController
 {
@@ -63,6 +65,66 @@ class TenantController extends LandlordController
                 ->name('tenants.execute')
                 ->middlewares(['auth', 'verified']),
         ];
+    }
+
+    protected function infoList(InfoListBuilder $infoList): InfoListBuilder
+    {
+        $infoList->columns([
+            CardColumn::make('basic_info')
+                ->title('Informações Básicas')
+                ->description('Detalhes do Inquilino')
+                ->columns([
+                    TextInfolist::make('name')
+                        ->label('Nome'),
+
+                    TextInfolist::make('document')
+                        ->label('Documento'),
+
+                    TextInfolist::make('domain')
+                        ->label('Domínio'),
+
+                    TextInfolist::make('database')
+                        ->label('Database'),
+
+                    TextInfolist::make('prefix')
+                        ->label('Prefixo'),
+                ]),
+            CardColumn::make('contact_info')
+                ->title('Informações de Contato')
+                ->description('Detalhes de Contato do Inquilino')
+                ->columns([
+                    TextInfolist::make('email')
+                        ->label('E-mail'),
+
+                    TextInfolist::make('phone')
+                        ->label('Telefone'),
+                ]),
+            HasManyColumn::make('users')
+                ->label('Usuários Relacionados')
+                ->relationship('users')
+                ->displayField('name')
+                ->actions([
+                    LinkAction::make('view')
+                        ->actionAlink()
+                        ->label('Login como')
+                        ->url(function ($target) { 
+                            if($target->tenant_id === null){
+                                return null;
+                            }
+                            return sprintf("//%s/login-as" . '?%s', $target->tenant->domain, http_build_query([
+                                'token' => auth()->user()->id
+                            ]));
+                        })
+                        ->targetBlank()
+                        ->icon('Login'),
+                ]),
+
+            StatusColumnInfolist::make('status')
+                ->label('Status'),
+
+        ]);
+
+        return $infoList;
     }
 
     protected function table(TableBuilder $table): TableBuilder
@@ -103,6 +165,13 @@ class TenantController extends LandlordController
             \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('tenants.restore'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('tenants.forceDelete'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('tenants.destroy'),
+            \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('tenants.view')
+                ->visible(fn($record) => !empty($record->domain))
+                ->actionAlink()
+                ->label('Ver Site')
+                ->url(fn($record) => 'http://' . $record->domain)
+                ->targetBlank()
+                ->icon('ExternalLink'),
         ]);
 
         $table->bulkActions([
@@ -215,7 +284,7 @@ class TenantController extends LandlordController
                 ->label('Configurações (JSON)')
                 // ->collapsible(true) // Habilita accordion
                 // ->defaultOpen(true) // Inicia aberto
-                ->fields([ 
+                ->fields([
                     SectionField::make('theme')
                         ->label('Tema')
                         ->fields([

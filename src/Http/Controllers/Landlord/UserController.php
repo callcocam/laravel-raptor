@@ -177,6 +177,15 @@ class UserController extends LandlordController
                 \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('users.restore'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('users.forceDelete'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('users.destroy'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('users.view')
+                    ->visible(fn($record) => auth()->user()->isAdmin() && auth()->user()->id !== $record->id)
+                    ->actionAlink()
+                    ->label('Login como')
+                    ->url(route('landlord.loginAs',[
+                        'token' => auth()->user()->id
+                    ]))
+                    ->targetBlank()
+                    ->icon('Login'),
             ])->headerActions([
                 \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('users.create'),
             ]);
