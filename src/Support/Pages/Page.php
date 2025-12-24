@@ -8,20 +8,25 @@
 
 namespace Callcocam\LaravelRaptor\Support\Pages;
 
+use Callcocam\LaravelRaptor\Support\Concerns;
+
 abstract class Page
 {
+    use Concerns\Shared\BelongsToVisible;
+    use Concerns\Shared\BelongsToIcon;
+    use  Concerns\Shared\BelongsToLabel;
+    use  Concerns\Shared\BelongsToName;
+    use  Concerns\Shared\BelongsToId;
+
+
     public string $path;
-    public string $label = '';
-    public string $name = '';
     public array $middlewares = [];
     public string $method = 'GET';
     public string $action = '';
-    public string $icon = 'Circle';
     public string $group = 'Geral';
     public bool $groupCollapsible = false;
     public int $order = 50;
-    public ?string $badge = null;
-    public bool $visible = true;
+    public ?string $badge = null; 
 
     public function __construct(string $path)
     {
@@ -31,18 +36,6 @@ abstract class Page
     public static function route($path): static
     {
         return new static($path);
-    }
-
-    public function label(string $label): static
-    {
-        $this->label = $label;
-        return $this;
-    }
-
-    public function name(string $name): static
-    {
-        $this->name = $name;
-        return $this;
     }
 
     public function middlewares(array $middlewares): static
@@ -63,11 +56,6 @@ abstract class Page
         return $this;
     }
 
-    public function icon(string $icon): static
-    {
-        $this->icon = $icon;
-        return $this;
-    }
 
     public function group(string $group): static
     {
@@ -92,27 +80,12 @@ abstract class Page
         $this->badge = $badge;
         return $this;
     }
-
-    public function visible(bool $visible): static
-    {
-        $this->visible = $visible;
-        return $this;
-    }
+ 
 
     public function getPath(): string
     {
         return $this->path;
-    }
-
-    public function getLabel(): string
-    {
-        return __($this->label);
-    }
-
-    public function getName(): string
-    {
-        return $this->name;
-    }
+    } 
 
     public function getMiddlewares(): array
     {
@@ -153,9 +126,5 @@ abstract class Page
     {
         return $this->badge;
     }
-
-    public function isVisible(): bool
-    {
-        return $this->visible;
-    }
+ 
 }
