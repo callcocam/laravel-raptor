@@ -107,6 +107,24 @@ trait BelongsToRelationship
 
     public function getUsingRelationshipQuery($query, $request = null)
     {
+
+        if (method_exists($this, 'getDependsOn')) {
+            if ($dependsOn = $this->getDependsOn()) {
+                $dependencyValue = null;
+                // Prioridade 1: pega da URL query (quando o usuário seleciona um campo)
+                if ($request) {
+                    $dependencyValue = $request->query($dependsOn);
+                } else {
+                    $dependencyValue = request()->query($dependsOn);
+                } 
+
+                // Aplica o filtro de dependência no query
+                if ($dependencyValue !== null) {
+                    $query->where($dependsOn, $dependencyValue);
+                }
+            }
+        }
+
         if (!$this->usingRelationshipQuery) {
             return $query;
         }

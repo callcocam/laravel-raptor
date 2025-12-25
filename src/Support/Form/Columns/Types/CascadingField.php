@@ -23,10 +23,6 @@ class CascadingField extends Column
 
     protected bool $searchable = false;
 
-    protected Closure|null $cascadingUsing = null;
-
-    protected Closure|string|Builder|null $queryUsing = null;
-
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
@@ -61,23 +57,6 @@ class CascadingField extends Column
         });
     }
 
-    public function queryUsing(Closure|string|Builder|null $queryUsing): self
-    {
-        $this->queryUsing = $queryUsing;
-
-        return $this;
-    }
-
-    public function getQueryUsing(): Closure|string|Builder|null
-    {
-        if (is_string($this->queryUsing)) {
-            return app($this->queryUsing);
-        }
-        if ($this->queryUsing instanceof Builder) {
-            return $this->queryUsing;
-        }
-        return $this->evaluate($this->queryUsing);
-    }
 
     public function searchable(bool $searchable = true): self
     {
@@ -90,10 +69,7 @@ class CascadingField extends Column
     {
         $fields = $this->getFields();
         $queryUsing = $this->getQueryUsing();
-        $cascadingFields = [];;
-        if ($cascadingUsing = $this->evaluate($this->cascadingUsing, ['model' => $model, 'fields' => $fields, 'queryUsing' => $queryUsing])) {
-            return $cascadingUsing;
-        }
+        $cascadingFields = [];
 
         // Pega os dados do cascading do modelo (se existir)
         $cascadingData = null;
@@ -103,7 +79,17 @@ class CascadingField extends Column
         }
 
         foreach ($fields as  $field) {
-            $query = clone $queryUsing;
+            $query =  null;
+            if (method_exists($field, 'getQueryUsing')) {
+                $fieldQueryUsing = $field->getQueryUsing();
+                if ($fieldQueryUsing instanceof Builder) {
+                    $query = clone $fieldQueryUsing;
+                } else {
+                    $query = clone $queryUsing;
+                }
+            } else {
+                $query = clone $queryUsing;
+            }
             $dependency = $field->getDependsOn();
 
             if ($dependency) {
@@ -116,7 +102,12 @@ class CascadingField extends Column
                 }
 
                 if ($dependencyValue) {
-                    $query->where($this->getFieldsUsing(), $dependencyValue);
+                    if ($fieldUsing = $this->getFieldsUsing()) {
+                        // Se for campo de relacionamento, filtra pelo campo correto
+                        $query->where($fieldUsing, $dependencyValue);
+                    } else {
+                        $query->where($dependency, $dependencyValue);
+                    }
                     $field->options($query->pluck($this->getOptionLabel(),  $this->getOptionKey())->toArray());
                 } else {
                     // Se não tem valor do campo pai, deixa vazio
@@ -124,7 +115,9 @@ class CascadingField extends Column
                 }
             } else {
                 // Se não tem dependência, busca os registros raiz (whereNull)
-                $query->whereNull($this->getFieldsUsing());
+                if ($fieldUsing = $this->getFieldsUsing()) {
+                    $query->whereNull($fieldUsing);
+                }
                 $field->options($query->pluck($this->getOptionLabel(),  $this->getOptionKey())->toArray());
             }
 
@@ -132,17 +125,6 @@ class CascadingField extends Column
         }
 
         return $cascadingFields;
-    }
-
-    public function getCascadingUsing(): Closure|null
-    {
-        return $this->cascadingUsing;
-    }
-
-    public function cascadingUsing(Closure|null $cascadingUsing): self
-    {
-        $this->cascadingUsing = $cascadingUsing;
-        return $this;
     }
 
     public function toArray($model = null): array

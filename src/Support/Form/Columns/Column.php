@@ -12,6 +12,7 @@ use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Concerns\HasMak;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
+use Illuminate\Database\Eloquent\Builder;
 use Closure;
 
 abstract class Column extends AbstractColumn
@@ -27,6 +28,8 @@ abstract class Column extends AbstractColumn
     protected Closure|null $valueUsing = null;
 
     protected ?Closure $defaultUsing = null;
+
+    protected Closure|string|Builder|null $queryUsing = null;
 
     protected int $index = 0;
 
@@ -86,6 +89,25 @@ abstract class Column extends AbstractColumn
     public function hasDefaultUsing(): bool
     {
         return !is_null($this->defaultUsing);
+    }
+
+    public function queryUsing(Closure|string|Builder|null $queryUsing): self
+    {
+        $this->queryUsing = $queryUsing;
+
+        return $this;
+    }
+
+
+    public function getQueryUsing(): Closure|string|Builder|null
+    {
+        if (is_string($this->queryUsing)) {
+            return app($this->queryUsing);
+        }
+        if ($this->queryUsing instanceof Builder) {
+            return $this->queryUsing;
+        }
+        return $this->evaluate($this->queryUsing);
     }
 
     public function index(int $index): static
