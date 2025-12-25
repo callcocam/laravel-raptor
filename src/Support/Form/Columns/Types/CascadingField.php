@@ -23,6 +23,8 @@ class CascadingField extends Column
 
     protected bool $searchable = false;
 
+    protected Closure|null $cascadingUsing = null;
+
     protected Closure|string|Builder|null $queryUsing = null;
 
     public function __construct(string $name, ?string $label = null)
@@ -88,7 +90,10 @@ class CascadingField extends Column
     {
         $fields = $this->getFields();
         $queryUsing = $this->getQueryUsing();
-        $cascadingFields = [];
+        $cascadingFields = [];;
+        if ($cascadingUsing = $this->evaluate($this->cascadingUsing, ['model' => $model, 'fields' => $fields, 'queryUsing' => $queryUsing])) {
+            return $cascadingUsing;
+        }
 
         // Pega os dados do cascading do modelo (se existir)
         $cascadingData = null;
@@ -127,6 +132,17 @@ class CascadingField extends Column
         }
 
         return $cascadingFields;
+    }
+
+    public function getCascadingUsing(): Closure|null
+    {
+        return $this->cascadingUsing;
+    }
+
+    public function cascadingUsing(Closure|null $cascadingUsing): self
+    {
+        $this->cascadingUsing = $cascadingUsing;
+        return $this;
     }
 
     public function toArray($model = null): array
