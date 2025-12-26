@@ -94,7 +94,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import FieldRenderer from "../columns/FieldRenderer.vue";
+import FieldRenderer from "../FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
 
 interface SectionField {

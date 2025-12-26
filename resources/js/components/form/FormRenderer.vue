@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { computed, provide } from "vue";
 import { Form } from "@inertiajs/vue3";
-import FieldRenderer from "./columns/FieldRenderer.vue";
+import FieldRenderer from "./FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
 
 interface FormColumn {

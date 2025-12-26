@@ -61,7 +61,7 @@
 import { computed, provide, toRef } from "vue";
 import { Button } from "@/components/ui/button";
 import { GripVertical, Trash2 } from "lucide-vue-next";
-import FieldRenderer from "../../columns/FieldRenderer.vue";
+import FieldRenderer from "../../FieldRenderer.vue";
 
 interface FormColumn {
   name: string;

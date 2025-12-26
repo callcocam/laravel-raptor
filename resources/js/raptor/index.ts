@@ -75,21 +75,6 @@ ComponentRegistry.registerBulk({
     'form-field-section': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSection.vue')),
 })
 
-// Legacy components (backwards compatibility)
-ComponentRegistry.registerBulk({
-    'form-column-text': defineAsyncComponent(() => import('~/components/form/columns/FormColumnText.vue')),
-    'form-column-textarea': defineAsyncComponent(() => import('~/components/form/columns/FormColumnTextarea.vue')),
-    'form-column-select': defineAsyncComponent(() => import('~/components/form/columns/FormColumnSelect.vue')),
-    'form-column-checkbox': defineAsyncComponent(() => import('~/components/form/columns/FormColumnCheckbox.vue')),
-    'form-column-date': defineAsyncComponent(() => import('~/components/form/columns/FormColumnDate.vue')),
-    'form-column-number': defineAsyncComponent(() => import('~/components/form/columns/FormColumnNumber.vue')),
-    'form-column-email': defineAsyncComponent(() => import('~/components/form/columns/FormColumnEmail.vue')),
-    'form-column-password': defineAsyncComponent(() => import('~/components/form/columns/FormColumnPassword.vue')),
-    'form-column-hidden': defineAsyncComponent(() => import('~/components/form/columns/FormColumnHidden.vue')),
-    'form-column-file-upload': defineAsyncComponent(() => import('~/components/form/columns/FormColumnFileUpload.vue')),
-    'form-column-combobox': defineAsyncComponent(() => import('~/components/form/columns/types/FormColumnCombobox.vue')),
-})
-
 ComponentRegistry.markAsInitialized()
 
 /**

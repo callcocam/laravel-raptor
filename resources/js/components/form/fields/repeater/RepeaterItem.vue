@@ -128,7 +128,7 @@ import {
   Copy,
   Trash2,
 } from 'lucide-vue-next'
-import FieldRenderer from '../../columns/FieldRenderer.vue'
+import FieldRenderer from '../../FieldRenderer.vue'
 
 interface FormColumn {
   name: string

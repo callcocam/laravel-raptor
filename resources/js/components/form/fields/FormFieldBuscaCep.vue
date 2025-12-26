@@ -90,7 +90,7 @@ import {
   FieldSet,
   FieldDescription,
 } from "@/components/ui/field";
-import FieldRenderer from "../columns/FieldRenderer.vue";
+import FieldRenderer from "../FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
 
 interface AddressField {
