@@ -84,16 +84,43 @@ class RaptorGenerateCommand extends Command
     protected function getTableColumns(string $table): array
     {
         $columns = [];
-        $tableColumns = DB::select("DESCRIBE {$table}");
+        $driver = DB::connection()->getDriverName();
 
-        foreach ($tableColumns as $column) {
-            $columns[] = [
-                'name' => $column->Field,
-                'type' => $column->Type,
-                'nullable' => $column->Null === 'YES',
-                'default' => $column->Default,
-                'key' => $column->Key,
-            ];
+        if ($driver === 'pgsql') {
+            // PostgreSQL query to get column information
+            $tableColumns = DB::select("
+                SELECT 
+                    column_name as name,
+                    data_type as type,
+                    is_nullable,
+                    column_default as default_value
+                FROM information_schema.columns
+                WHERE table_name = ?
+                ORDER BY ordinal_position
+            ", [$table]);
+
+            foreach ($tableColumns as $column) {
+                $columns[] = [
+                    'name' => $column->name,
+                    'type' => $column->type,
+                    'nullable' => $column->is_nullable === 'YES',
+                    'default' => $column->default_value,
+                    'key' => '',
+                ];
+            }
+        } else {
+            // MySQL/MariaDB query
+            $tableColumns = DB::select("DESCRIBE {$table}");
+
+            foreach ($tableColumns as $column) {
+                $columns[] = [
+                    'name' => $column->Field,
+                    'type' => $column->Type,
+                    'nullable' => $column->Null === 'YES',
+                    'default' => $column->Default,
+                    'key' => $column->Key,
+                ];
+            }
         }
 
         return $columns;
