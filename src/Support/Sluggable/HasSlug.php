@@ -18,7 +18,7 @@ trait HasSlug
     abstract public function getSlugOptions();
 
     /**
-     * @return string
+     * @return string|bool
      */
     protected function slugTo()
     {
@@ -26,7 +26,7 @@ trait HasSlug
     }
 
     /**
-     * @return string
+     * @return string|bool
      */
     protected function slugFrom()
     {
