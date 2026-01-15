@@ -103,8 +103,8 @@ class TenantMiddleware
 
         Landlord::addTenant($tenant);
 
-        // Configura conexão de banco de dados do tenant se necessário
-        static::configureTenantDatabase($tenant);
+        // Configura conexão de banco de dados seguindo a hierarquia: Store > Client > Tenant > Default
+        static::configureTenantDatabase($tenant, $domainData);
 
         // Se houver usuário autenticado, verifica se ele pertence a este tenant
         if ($request->user() && $request->user()->tenant_id !== $tenant->id) {
@@ -116,12 +116,44 @@ class TenantMiddleware
     }
 
     /**
-     * Configura a conexão de banco de dados do tenant.
+     * Configura a conexão de banco de dados seguindo a hierarquia:
+     * Store (maior prioridade) > Client > Tenant > Default
      */
-    protected static function configureTenantDatabase($tenant): void
+    protected static function configureTenantDatabase($tenant, $domainData): void
     {
-        // Se o tenant não tem database configurado, não configura conexão
-        if (empty($tenant->database)) {
+        $database = null;
+
+        // Prioridade 1: Store (mais alta)
+        if ($domainData->domainable_type === 'App\\Models\\Store' && $domainData->domainable_id) {
+            $store = \App\Models\Store::find($domainData->domainable_id);
+            if ($store) {
+                if (!empty($store->database)) {
+                    $database = $store->database;
+                } elseif ($store->client_id) {
+                    // Se Store não tem database, verifica o Client associado
+                    $client = \App\Models\Client::find($store->client_id);
+                    if ($client && !empty($client->database)) {
+                        $database = $client->database;
+                    }
+                }
+            }
+        }
+
+        // Prioridade 2: Client (quando domainable é Client diretamente)
+        if (!$database && $domainData->domainable_type === 'App\\Models\\Client' && $domainData->domainable_id) {
+            $client = \App\Models\Client::find($domainData->domainable_id);
+            if ($client && !empty($client->database)) {
+                $database = $client->database;
+            }
+        }
+
+        // Prioridade 3: Tenant
+        if (!$database && !empty($tenant->database)) {
+            $database = $tenant->database;
+        }
+
+        // Se não encontrou nenhum database configurado, não configura conexão
+        if (empty($database)) {
             return;
         }
 
@@ -130,19 +162,19 @@ class TenantMiddleware
         
         if (!isset($connections['tenant'])) {
             // Cria a conexão 'tenant' baseada na conexão padrão
-            static::createTenantConnection($tenant->database);
+            static::createTenantConnection($database);
         } else {
             // Atualiza o database da conexão existente se mudou
             $currentDatabase = Config::get('database.connections.tenant.database');
-            if ($currentDatabase !== $tenant->database) {
-                Config::set('database.connections.tenant.database', $tenant->database);
+            if ($currentDatabase !== $database) {
+                Config::set('database.connections.tenant.database', $database);
                 
                 // Reconecta
                 try {
                     DB::connection('tenant')->reconnect();
                 } catch (\Exception $e) {
                     // Se falhar, recria a conexão
-                    static::createTenantConnection($tenant->database);
+                    static::createTenantConnection($database);
                 }
             }
         }
