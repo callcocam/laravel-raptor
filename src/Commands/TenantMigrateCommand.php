@@ -436,15 +436,6 @@ class TenantMigrateCommand extends Command
                 continue;
             }
 
-            // Carrega a migration
-            require_once $migrationPath;
-            
-            $className = $this->getMigrationClassName($migrationFile);
-            if (!class_exists($className)) {
-                $this->warn("   ⚠️  Classe não encontrada: {$className}");
-                continue;
-            }
-
             // Verifica se já foi executada (se não for force)
             if (!$force && $this->migrationAlreadyRun($connectionName, $migrationFile)) {
                 $this->comment("   ⏭️  Migration já executada: {$migrationFile}");
@@ -454,14 +445,18 @@ class TenantMigrateCommand extends Command
             $this->line("   🔄 Executando: {$migrationFile}");
             
             try {
-                // Cria instância da migration
-                $migration = new $className();
+                // Carrega a migration e obtém a instância (suporta classes anônimas)
+                $migration = $this->loadMigration($migrationPath, $migrationFile);
+                
+                if (!$migration) {
+                    $this->warn("   ⚠️  Não foi possível carregar a migration: {$migrationFile}");
+                    continue;
+                }
                 
                 // Executa a migration usando a conexão específica
                 DB::connection($connectionName)->transaction(function () use ($migration, $connectionName) {
                     // Salva conexão padrão
                     $originalDefault = Config::get('database.default');
-                    $originalConnection = $migration->getConnection();
                     
                     try {
                         // Define conexão para a migration
@@ -489,6 +484,43 @@ class TenantMigrateCommand extends Command
                 throw $e;
             }
         }
+    }
+
+    /**
+     * Carrega a migration e retorna a instância (suporta classes anônimas e nomeadas)
+     */
+    protected function loadMigration(string $migrationPath, string $migrationFile)
+    {
+        // Carrega o arquivo (pode retornar uma classe anônima ou apenas carregar a classe)
+        $result = require $migrationPath;
+        
+        // Se retornou uma instância de Migration (classe anônima), usa ela
+        if ($result instanceof \Illuminate\Database\Migrations\Migration) {
+            return $result;
+        }
+        
+        // Se não retornou uma instância, tenta encontrar classe nomeada
+        // Primeiro tenta pelo nome inferido do arquivo
+        $className = $this->getMigrationClassName($migrationFile);
+        if (class_exists($className)) {
+            return new $className();
+        }
+        
+        // Se não encontrou, tenta encontrar qualquer classe Migration no arquivo
+        $fileContent = file_get_contents($migrationPath);
+        
+        // Procura por "class Nome extends Migration"
+        if (preg_match('/class\s+(\w+)\s+extends\s+Migration/', $fileContent, $matches)) {
+            $foundClassName = $matches[1];
+            if (class_exists($foundClassName)) {
+                return new $foundClassName();
+            }
+        }
+        
+        // Se ainda não encontrou, tenta procurar por "return new class extends Migration"
+        // Nesse caso, o require já deve ter retornado a instância
+        // Mas se não retornou, significa que é uma classe nomeada que não foi encontrada
+        return null;
     }
 
     /**
