@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Log;
 
 class TenantMiddleware
 {
@@ -170,7 +171,7 @@ class TenantMiddleware
             // Se falhar, remove a conexão
             Config::forget('database.connections.tenant');
             // Log do erro mas não aborta a requisição
-            \Log::warning("Não foi possível conectar ao banco de dados do tenant: {$database}. Erro: {$e->getMessage()}");
+            Log::warning("Não foi possível conectar ao banco de dados do tenant: {$database}. Erro: {$e->getMessage()}");
         }
     }
 }
