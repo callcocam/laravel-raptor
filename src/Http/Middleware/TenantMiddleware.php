@@ -12,6 +12,7 @@ use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -101,6 +102,9 @@ class TenantMiddleware
 
         Landlord::addTenant($tenant);
 
+        // Configura conexão de banco de dados do tenant se necessário
+        static::configureTenantDatabase($tenant);
+
         // Se houver usuário autenticado, verifica se ele pertence a este tenant
         if ($request->user() && $request->user()->tenant_id !== $tenant->id) {
             auth()->logout();
@@ -108,5 +112,65 @@ class TenantMiddleware
         }
 
         return $next($request);
+    }
+
+    /**
+     * Configura a conexão de banco de dados do tenant.
+     */
+    protected static function configureTenantDatabase($tenant): void
+    {
+        // Se o tenant não tem database configurado, remove a conexão 'tenant' se existir
+        if (empty($tenant->database)) {
+            Config::forget('database.connections.tenant');
+            return;
+        }
+
+        // Verifica se a conexão 'tenant' já existe
+        $connections = Config::get('database.connections', []);
+        
+        if (!isset($connections['tenant'])) {
+            // Cria a conexão 'tenant' baseada na conexão padrão
+            static::createTenantConnection($tenant->database);
+        } else {
+            // Atualiza o database da conexão existente se mudou
+            $currentDatabase = Config::get('database.connections.tenant.database');
+            if ($currentDatabase !== $tenant->database) {
+                Config::set('database.connections.tenant.database', $tenant->database);
+                
+                // Reconecta
+                try {
+                    DB::connection('tenant')->reconnect();
+                } catch (\Exception $e) {
+                    // Se falhar, recria a conexão
+                    static::createTenantConnection($tenant->database);
+                }
+            }
+        }
+    }
+
+    /**
+     * Cria a conexão 'tenant' baseada na conexão padrão.
+     */
+    protected static function createTenantConnection(string $database): void
+    {
+        $defaultConnection = Config::get('database.default');
+        $defaultConfig = Config::get("database.connections.{$defaultConnection}", []);
+
+        // Cria uma cópia da conexão padrão com o nome do banco do tenant
+        $tenantConfig = array_merge($defaultConfig, [
+            'database' => $database,
+        ]);
+
+        Config::set('database.connections.tenant', $tenantConfig);
+
+        // Tenta conectar para validar (opcional, pode ser feito lazy)
+        try {
+            DB::connection('tenant')->getPdo();
+        } catch (\Exception $e) {
+            // Se falhar, remove a conexão
+            Config::forget('database.connections.tenant');
+            // Log do erro mas não aborta a requisição
+            \Log::warning("Não foi possível conectar ao banco de dados do tenant: {$database}. Erro: {$e->getMessage()}");
+        }
     }
 }
