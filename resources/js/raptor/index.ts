@@ -218,6 +218,12 @@ const install = (app: App, options: RaptorPluginOptions = {}): void => {
         })
     }
 
+    // Registra componentes globais do Raptor
+    app.component(
+        'NotificationDropdown',
+        defineAsyncComponent(() => import('~/components/NotificationDropdown.vue'))
+    )
+
     // Registra formatadores personalizados
     if (options.customFormatters) {
         Object.entries(options.customFormatters).forEach(([name, func]) => {

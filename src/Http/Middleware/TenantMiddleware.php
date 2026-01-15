@@ -9,13 +9,12 @@
 namespace Callcocam\LaravelRaptor\Http\Middleware;
 
 use Callcocam\LaravelRaptor\Enums\TenantStatus; 
+use Callcocam\LaravelRaptor\Services\TenantConnectionService;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
-use Illuminate\Support\Facades\Log;
 
 class TenantMiddleware
 {
@@ -104,7 +103,7 @@ class TenantMiddleware
         Landlord::addTenant($tenant);
 
         // Configura conexão de banco de dados seguindo a hierarquia: Store > Client > Tenant > Default
-        static::configureTenantDatabase($tenant, $domainData);
+        app(TenantConnectionService::class)->configureTenantDatabase($tenant, $domainData);
 
         // Se houver usuário autenticado, verifica se ele pertence a este tenant
         if ($request->user() && $request->user()->tenant_id !== $tenant->id) {
@@ -113,98 +112,5 @@ class TenantMiddleware
         }
 
         return $next($request);
-    }
-
-    /**
-     * Configura a conexão de banco de dados seguindo a hierarquia:
-     * Store (maior prioridade) > Client > Tenant > Default
-     */
-    protected static function configureTenantDatabase($tenant, $domainData): void
-    {
-        $database = null;
-
-        // Prioridade 1: Store (mais alta)
-        if ($domainData->domainable_type === 'App\\Models\\Store' && $domainData->domainable_id) {
-            $store = \App\Models\Store::find($domainData->domainable_id);
-            if ($store) {
-                if (!empty($store->database)) {
-                    $database = $store->database;
-                } elseif ($store->client_id) {
-                    // Se Store não tem database, verifica o Client associado
-                    $client = \App\Models\Client::find($store->client_id);
-                    if ($client && !empty($client->database)) {
-                        $database = $client->database;
-                    }
-                }
-            }
-        }
-
-        // Prioridade 2: Client (quando domainable é Client diretamente)
-        if (!$database && $domainData->domainable_type === 'App\\Models\\Client' && $domainData->domainable_id) {
-            $client = \App\Models\Client::find($domainData->domainable_id);
-            if ($client && !empty($client->database)) {
-                $database = $client->database;
-            }
-        }
-
-        // Prioridade 3: Tenant
-        if (!$database && !empty($tenant->database)) {
-            $database = $tenant->database;
-        }
-
-        // Se não encontrou nenhum database configurado, não configura conexão
-        if (empty($database)) {
-            return;
-        }
-
-        // Verifica se a conexão 'tenant' já existe
-        $connections = Config::get('database.connections', []);
-        
-        if (!isset($connections['tenant'])) {
-            // Cria a conexão 'tenant' baseada na conexão padrão
-            static::createTenantConnection($database);
-        } else {
-            // Atualiza o database da conexão existente se mudou
-            $currentDatabase = Config::get('database.connections.tenant.database');
-            if ($currentDatabase !== $database) {
-                Config::set('database.connections.tenant.database', $database);
-                
-                // Reconecta
-                try {
-                    DB::connection('tenant')->reconnect();
-                } catch (\Exception $e) {
-                    // Se falhar, recria a conexão
-                    static::createTenantConnection($database);
-                }
-            }
-        }
-    }
-
-    /**
-     * Cria a conexão 'tenant' baseada na conexão padrão.
-     */
-    protected static function createTenantConnection(string $database): void
-    {
-        $defaultConnection = Config::get('database.default');
-        $defaultConfig = Config::get("database.connections.{$defaultConnection}", []);
-
-        // Cria uma cópia da conexão padrão com o nome do banco do tenant
-        $tenantConfig = array_merge($defaultConfig, [
-            'database' => $database,
-        ]);
-
-        Config::set('database.connections.tenant', $tenantConfig);
-
-        // Tenta conectar para validar (opcional, pode ser feito lazy)
-        try {
-            DB::connection('tenant')->getPdo();
-        } catch (\Exception $e) {
-            // Se falhar, remove a conexão do array de conexões
-            $connections = Config::get('database.connections', []);
-            unset($connections['tenant']);
-            Config::set('database.connections', $connections);
-            // Log do erro mas não aborta a requisição
-            Log::warning("Não foi possível conectar ao banco de dados do tenant: {$database}. Erro: {$e->getMessage()}");
-        }
     }
 }

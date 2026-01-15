@@ -168,7 +168,7 @@ class DomainDetectionService
             return self::$requestCache[$cacheKey] = 'landlord';
         }
 
-        return self::$requestCache[$cacheKey] = 'base';
+        return self::$requestCache[$cacheKey] = 'web';
     }
 
     /**
