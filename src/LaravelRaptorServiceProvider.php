@@ -15,6 +15,7 @@ use Callcocam\LaravelRaptor\Commands\RaptorMakeControllerCommand;
 use Callcocam\LaravelRaptor\Commands\RaptorMakeModelCommand;
 use Callcocam\LaravelRaptor\Commands\RaptorMakePolicyCommand;
 use Callcocam\LaravelRaptor\Commands\SyncCommand;
+use Callcocam\LaravelRaptor\Commands\TenantMigrateCommand;
 use Callcocam\LaravelRaptor\Commands\TranslationGenerateJsonCommand;
 use Callcocam\LaravelRaptor\Commands\TranslationSyncCommand;
 use Callcocam\LaravelRaptor\Console\Commands\ThemeSetupCommand;
@@ -99,6 +100,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 TranslationGenerateJsonCommand::class,
                 TranslationSyncCommand::class,
                 CheckPermissions::class,
+                TenantMigrateCommand::class,
             ])
             ->hasInstallCommand(function (InstallCommand $command) {
                 // Customize the install command created by the package tools

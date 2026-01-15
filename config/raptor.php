@@ -314,4 +314,66 @@ return [
         'default_locale' => env('RAPTOR_TRANSLATION_DEFAULT_LOCALE', 'pt_BR'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Multi-Database Migrations Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configurações para execução de migrations em múltiplos bancos de dados
+    | (tenants, clients e stores com banco dedicado)
+    |
+    | As migrations podem ser especificadas por:
+    | - Nome do arquivo de migration (ex: '2024_01_01_000000_create_users_table.php')
+    | - Padrão de busca (ex: '*_create_*_table.php')
+    | - Diretório completo (ex: 'database/migrations/tenant')
+    |
+    */
+    'migrations' => [
+        // Migrations padrões executadas em TODOS os bancos (tenant, client, store)
+        'default' => [
+            // Exemplo: migrations que devem rodar em todos os bancos
+            // '2024_01_01_000000_create_users_table.php',
+            // '2024_01_02_000000_create_products_table.php',
+        ],
+
+        // Migrations específicas para bancos de TENANTS
+        'tenant' => [
+            // Exemplo: migrations específicas para tenants
+            // '2024_01_03_000000_create_tenant_settings_table.php',
+        ],
+
+        // Migrations específicas para bancos de CLIENTS
+        'client' => [
+            // Exemplo: migrations específicas para clients
+            // '2024_01_04_000000_create_client_integrations_table.php',
+        ],
+
+        // Migrations específicas para bancos de STORES
+        'store' => [
+            // Exemplo: migrations específicas para stores
+            // '2024_01_05_000000_create_store_inventory_table.php',
+        ],
+
+        // Configurações adicionais
+        'options' => [
+            // Se true, cria o banco de dados automaticamente se não existir
+            'create_database_if_not_exists' => true,
+
+            // Se true, força a execução mesmo se já foi executada
+            'force' => false,
+
+            // Se true, executa em modo dry-run (apenas mostra o que seria executado)
+            'dry_run' => false,
+
+            // Timeout para criação de banco (em segundos)
+            'database_creation_timeout' => 30,
+        ],
+
+        // Models customizados (opcional, usa padrão se não especificado)
+        'models' => [
+            'client' => env('RAPTOR_MIGRATIONS_CLIENT_MODEL', 'App\\Models\\Client'),
+            'store' => env('RAPTOR_MIGRATIONS_STORE_MODEL', 'App\\Models\\Store'),
+        ],
+    ],
+
 ];

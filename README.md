@@ -263,6 +263,22 @@ protected function table(TableBuilder $table): TableBuilder
 }
 ```
 
+## Migrations em Múltiplos Bancos
+
+O Raptor inclui um comando para executar migrations em múltiplos bancos de dados (tenants, clients e stores):
+
+```bash
+php artisan raptor:migrate-tenants
+```
+
+Este comando:
+- Lista automaticamente todos os tenants/clients/stores com banco de dados configurado
+- Cria o banco de dados automaticamente se não existir
+- Executa migrations específicas conforme configuração
+- Suporta filtros por tipo e database
+
+**Documentação completa**: Veja [MULTI_DATABASE_MIGRATIONS.md](docs/MULTI_DATABASE_MIGRATIONS.md) para detalhes.
+
 ## Testing
 
 ```bash
