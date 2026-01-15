@@ -120,9 +120,8 @@ class TenantMiddleware
      */
     protected static function configureTenantDatabase($tenant): void
     {
-        // Se o tenant não tem database configurado, remove a conexão 'tenant' se existir
+        // Se o tenant não tem database configurado, não configura conexão
         if (empty($tenant->database)) {
-            Config::forget('database.connections.tenant');
             return;
         }
 
@@ -168,8 +167,10 @@ class TenantMiddleware
         try {
             DB::connection('tenant')->getPdo();
         } catch (\Exception $e) {
-            // Se falhar, remove a conexão
-            Config::forget('database.connections.tenant');
+            // Se falhar, remove a conexão do array de conexões
+            $connections = Config::get('database.connections', []);
+            unset($connections['tenant']);
+            Config::set('database.connections', $connections);
             // Log do erro mas não aborta a requisição
             Log::warning("Não foi possível conectar ao banco de dados do tenant: {$database}. Erro: {$e->getMessage()}");
         }
