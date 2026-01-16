@@ -42,9 +42,9 @@ class ImportAction extends ExecuteAction
                         'mimes' => 'O arquivo deve ser CSV ou XLSX.',
                         'max' => 'O arquivo não pode ser maior que 10MB.',
                     ])->columnSpan('full'),
-                CheckboxField::make('clean_data', 'Limpar dados existentes')
-                    ->default(false)
-                    ->columnSpan('full'),
+                // CheckboxField::make('clean_data', 'Limpar dados existentes')
+                //     ->default(false)
+                //     ->columnSpan('full'),
             ])
             ->confirm(Confirm::make(
                 title: 'Importar Registros',
@@ -56,4 +56,6 @@ class ImportAction extends ExecuteAction
             ));
         $this->setUp();
     }
+
+    
 }
