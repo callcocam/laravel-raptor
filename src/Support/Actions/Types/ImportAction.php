@@ -7,7 +7,8 @@
  */
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
- 
+
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField;
 use Callcocam\LaravelRaptor\Support\Table\Confirm;
 
@@ -23,14 +24,14 @@ class ImportAction extends ExecuteAction
         $this->name($name) // ✅ Sempre define o name
             ->label('Importar')
             ->icon('Upload')
-            ->color('blue') 
+            ->color('blue')
             ->tooltip('Importar registros')
             ->component('action-modal-form')
             ->policy('import')
             ->callback(function ($request) {
                 return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
             })
-            ->columns([ 
+            ->columns([
                 UploadField::make($fileName, 'Arquivo')
                     ->acceptedFileTypes(['.csv', '.xlsx'])
                     ->required()
@@ -41,6 +42,9 @@ class ImportAction extends ExecuteAction
                         'mimes' => 'O arquivo deve ser CSV ou XLSX.',
                         'max' => 'O arquivo não pode ser maior que 10MB.',
                     ])->columnSpan('full'),
+                CheckboxField::make('clean_data', 'Limpar dados existentes')
+                    ->default(false)
+                    ->columnSpan('full'),
             ])
             ->confirm(Confirm::make(
                 title: 'Importar Registros',
@@ -52,5 +56,4 @@ class ImportAction extends ExecuteAction
             ));
         $this->setUp();
     }
- 
 }
