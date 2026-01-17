@@ -205,6 +205,9 @@ class TenantRouteInjector
         $name = $page->getName() ?: $this->generateRouteName($controllerClass, $key);
         $middlewares = $page->getMiddlewares();
 
+        if (!$page->isVisible()){
+            return;
+        }
         $route = Route::match(
             [$method],
             $path,
