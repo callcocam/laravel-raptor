@@ -5,15 +5,9 @@
  -->
 <template>
   <Field orientation="horizontal" :data-invalid="hasError" class="gap-y-1">
-    <Checkbox
-      :id="column.name"
-      :name="column.name"
-      :required="column.required"
-      :disabled="column.disabled"
-      :checked="internalValue"
-      @update:checked="updateValue"
-      :aria-invalid="hasError"
-    />
+    <Checkbox :id="column.name" :name="column.name" :required="column.required" :disabled="column.disabled"
+      :checked="internalValue" @update:model-value="(val: boolean | 'indeterminate') => updateValue(val)"
+      :aria-invalid="hasError" />
 
     <div class="space-y-1">
       <FieldLabel :for="column.name">
@@ -80,7 +74,9 @@ const internalValue = computed(() => {
   return props.column.default || false
 })
 
-const updateValue = (value: boolean) => {
-  emit('update:modelValue', value)
+const updateValue = (value: boolean | 'indeterminate') => {
+  const booleanValue = value === 'indeterminate' ? false : value
+  console.log('Checkbox field updated:', props.column.name, '=>', booleanValue)
+  emit('update:modelValue', booleanValue)
 }
 </script>
