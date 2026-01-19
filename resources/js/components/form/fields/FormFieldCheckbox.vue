@@ -76,7 +76,6 @@ const internalValue = computed(() => {
 
 const updateValue = (value: boolean | 'indeterminate') => {
   const booleanValue = value === 'indeterminate' ? false : value
-  console.log('Checkbox field updated:', props.column.name, '=>', booleanValue)
   emit('update:modelValue', booleanValue)
 }
 </script>
