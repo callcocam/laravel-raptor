@@ -100,11 +100,11 @@ class UserController extends TenantController
             CheckboxField::make('roles', 'Papéis')
                 ->options(function () {
                     $tenantId = config('app.current_tenant_id');
-                    
+
                     return DB::table(config('raptor.shinobi.tables.roles'))
                         ->where(function ($query) use ($tenantId) {
                             $query->whereNull('tenant_id')
-                                  ->orWhere('tenant_id', $tenantId);
+                                ->orWhere('tenant_id', $tenantId);
                         })
                         ->pluck('name', 'id')
                         ->toArray();
@@ -165,6 +165,16 @@ class UserController extends TenantController
             ->actions([
                 \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('users.show'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('users.edit'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('tenant.loginAs')
+                    ->label('Login como')
+                    ->icon('Login')
+                    ->visible(function ($record) { 
+                        return auth()->user()->isAdmin();
+                    })
+                    ->color('secondary')
+                    ->url(fn($record) => route('tenant.loginAs', ['token' => $record->id]))
+                    ->actionAlink()
+                    ->tooltip('Faça login como este usuário'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('users.restore'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('users.forceDelete'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('users.destroy'),

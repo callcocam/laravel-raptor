@@ -40,9 +40,11 @@ Route::middleware(['web', 'auth', $context])
             ->name('tenant.update-theme');
     });
 
+
+
 $context = request()->getContext();
-Route::middleware(['web', 'guest', $context])
+Route::middleware(['web', $context])
     ->group(function () use ($context) {
-        Route::get('login-as', [\Callcocam\LaravelRaptor\Http\Controllers\LoginAsController::class, 'loginAs'])
+        Route::middleware('guest')->get('login-as', [\Callcocam\LaravelRaptor\Http\Controllers\LoginAsController::class, 'loginAs'])
             ->name($context . '.loginAs');
     });

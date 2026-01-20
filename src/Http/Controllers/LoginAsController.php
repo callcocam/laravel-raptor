@@ -5,24 +5,23 @@
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use Illuminate\Http\Request;
 
 class LoginAsController
 {
-    
     public function loginAs(Request $request)
     {
 
         $token = $request->query('token');
 
-        if (!$token) {
+        if (! $token) {
             return redirect()->back()->withErrors('Token inválido para login como cliente.');
         }
-     
 
-        if ($user = \App\Models\User::find($token)) { 
+        if ($user = \App\Models\User::find($token)) {
             // Autentica o usuário no contexto do cliente
             auth()->login($user);
         } else {
@@ -36,4 +35,5 @@ class LoginAsController
         // Redirecionar para o painel do cliente
         return redirect()->route('dashboard');
     }
+ 
 }
