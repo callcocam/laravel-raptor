@@ -36,19 +36,19 @@ class NavigationService
      */
     protected function loadControllerDirectories(): void
     {
-        $context = request()->getContext();
-
-        $controllerDirectories = [
-            'landlord' => [
+        // Usa a config completa do route_injector.directories
+        $allDirectories = config('raptor.route_injector.directories', []);
+        
+        // Se não houver config, usa os defaults
+        if (empty($allDirectories)) {
+            $allDirectories = [
                 'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../Http/Controllers/Landlord',
-            ],
-            'tenant' => [
                 'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
                 'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant',
-            ],
-        ];
+            ];
+        }
 
-        $this->controllerDirectories = config(sprintf('raptor.route_injector.directories.%s', $context), data_get($controllerDirectories, $context, []));
+        $this->controllerDirectories = $allDirectories;
     }
 
     /**
@@ -195,7 +195,7 @@ class NavigationService
 
     public function checkPermissions(User $user, string $modelClass): bool
     {
-        try {
+        try { 
             return Gate::forUser($user)->allows('viewAny', $modelClass);
         } catch (\Exception) {
             return config('raptor.navigation.default_permission', true);

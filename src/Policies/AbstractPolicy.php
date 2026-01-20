@@ -16,6 +16,8 @@ abstract class AbstractPolicy
 
     protected ?string $permission = null;
 
+    protected ?string $context = null;
+
     /**
      * Determine whether the user can view any models.
      */
@@ -24,7 +26,7 @@ abstract class AbstractPolicy
         if (is_null($this->permission)) {
             return false;
         }
-        return $user->can(sprintf('%s.%s.index', request()->getContext(), $this->permission));
+        return $user->can(sprintf('%s.%s.index', $this->context ?? request()->getContext(), $this->permission));
     }
 
     /**
@@ -35,7 +37,7 @@ abstract class AbstractPolicy
         if (is_null($this->permission)) {
             return false;
         }
-        return $user->can(sprintf('%s.%s.view', request()->getContext(), $this->permission));
+        return $user->can(sprintf('%s.%s.view', $this->context ?? request()->getContext(), $this->permission));
     }
 
     /**
@@ -46,7 +48,7 @@ abstract class AbstractPolicy
         if (is_null($this->permission)) {
             return false;
         }
-        return $user->can(sprintf('%s.%s.create', request()->getContext(), $this->permission));
+        return $user->can(sprintf('%s.%s.create', $this->context ??  request()->getContext(), $this->permission));
     }
 
     /**
@@ -58,8 +60,8 @@ abstract class AbstractPolicy
             return false;
         }
         return $user->can([
-            sprintf('%s.%s.edit', request()->getContext(), $this->permission),
-            sprintf('%s.%s.update', request()->getContext(), $this->permission)
+            sprintf('%s.%s.edit', $this->context ?? request()->getContext(), $this->permission),
+            sprintf('%s.%s.update', $this->context ?? request()->getContext(), $this->permission)
         ]);
     }
 
@@ -71,7 +73,7 @@ abstract class AbstractPolicy
         if (is_null($this->permission)) {
             return false;
         }
-        return $user->can(sprintf('%s.%s.delete', request()->getContext(), $this->permission));
+        return $user->can(sprintf('%s.%s.delete', $this->context ?? request()->getContext(), $this->permission));
     }
     /**
      * Determine whether the user can restore the model.
@@ -81,6 +83,6 @@ abstract class AbstractPolicy
         if (is_null($this->permission)) {
             return false;
         }
-        return $user->can(sprintf('%s.%s.restore', request()->getContext(), $this->permission));
+        return $user->can(sprintf('%s.%s.restore', $this->context ?? request()->getContext(), $this->permission));
     }
 }
