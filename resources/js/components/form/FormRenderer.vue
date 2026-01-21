@@ -5,7 +5,7 @@
  * dinamicamente usando o FieldRenderer com suporte a grid layout
  -->
 <template>
-  <Form @submit="handleSubmit" :class="formClasses">
+  <Form @submit.prevent="handleSubmit" :class="formClasses">
     <div
       v-for="(column, index) in columns"
       :key="column.name || index"
@@ -59,7 +59,7 @@ interface Props {
   gridColumns?: string; // Número de colunas do grid do formulário (padrão: 12)
   gap?: string; // Espaçamento entre campos (padrão: 4)
   action?: string; // URL para submit (se não fornecido, usa comportamento legacy com evento @submit)
-  method?: "get" | "post" | "put" | "patch" | "delete"; // Método HTTP
+  method?: "post" | "put" | "patch" | "delete"; // Método HTTP (GET não permitido em formulários)
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -71,7 +71,7 @@ const props = withDefaults(defineProps<Props>(), {
   action: undefined,
   method: "post",
 });
-
+ 
 const emit = defineEmits<{
   (e: "update:modelValue", value: any): void;
   (e: "submit"): void; // Legacy: emitido quando action não é fornecido
@@ -94,8 +94,7 @@ provide('formData', formData);
 
 // Handler para atualização de campos
 const handleFieldUpdate = (fieldName: string, value: any) => {
-  console.log('Updating field:', fieldName, 'to value:', value);
-  
+   
   if (props.modelValue && typeof props.modelValue === "object") {
     // Sempre atribui diretamente ao campo
     // eslint-disable-next-line vue/no-mutating-props
@@ -145,6 +144,7 @@ const hasFiles = (obj: any = formData.value): boolean => {
 
 // Handler de submit
 const handleSubmit = () => {
+  console.log('Form submit triggered', props.action, props.method);
   // Modo legacy: se não tiver action, apenas emite evento para o pai tratar
   if (!props.action) {
     emit("submit");
@@ -167,9 +167,23 @@ const handleSubmit = () => {
   const hasFileUploads = hasFiles();
   const method = props.method.toLowerCase();
 
-  // Sempre usa POST para métodos que não são GET
-  // Para PUT/PATCH/DELETE, usa method spoofing com _method
-  if (method !== "post" && method !== "get") {
+  // Para POST: usa o método HTTP nativo
+  if (method === "post") {
+    formData.value.post(props.action, {
+      preserveScroll: true,
+      preserveState: true,
+      ...(hasFileUploads ? { forceFormData: true } : {}),
+      onSuccess: (response: any) => {
+        emit("success", response);
+        console.log(response);
+      },
+      onError: (errors: Record<string, any>) => {
+        console.error(errors);
+        emit("error", errors);
+      },
+    });
+  } else {
+    // Para PUT/PATCH/DELETE: sempre usa POST com method spoofing via _method
     formData.value
       .transform((data: Record<string, any>) => {
         // Remove campos password vazios em edição (PUT/PATCH)
@@ -191,30 +205,13 @@ const handleSubmit = () => {
         ...(hasFileUploads ? { forceFormData: true } : {}),
         onSuccess: (response: any) => {
           emit("success", response);
-        console.log(response);
+          console.log(response);
         },
         onError: (errors: Record<string, any>) => {
           console.error(errors);
           emit("error", errors);
         },
       });
-  } else {
-    // POST ou GET: usa método HTTP nativo
-    const submitMethod = method as "get" | "post";
-
-    formData.value[submitMethod](props.action, {
-      preserveScroll: true,
-      preserveState: true,
-      ...(hasFileUploads ? { forceFormData: true } : {}),
-      onSuccess: (response: any) => {
-        emit("success", response);
-        console.log(response);
-      },
-      onError: (errors: Record<string, any>) => {
-        console.error(errors);
-        emit("error", errors);
-      },
-    });
   }
 };
 

@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import ResourceLayout from '~/layouts/ResourceLayout.vue'
 import FormRenderer from '~/components/form/FormRenderer.vue'
 import FormActions from '~/components/form/FormActions.vue'
-import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue' 
+import BreadcrumbRenderer from '~/components/breadcrumbs/BreadcrumbRenderer.vue'
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import { Card, CardContent } from '@/components/ui/card'
 import PageHeaderActions from '~/components/PageHeaderActions.vue'
@@ -27,7 +27,8 @@ interface Props {
     model?: Record<string, any>
     formActions?: any[]
   }
-  pageHeaderActions?: any[]
+  pageHeaderActions?: any[],
+  action?: string
 }
 
 const props = defineProps<Props>()
@@ -54,7 +55,17 @@ const initialData = computed(() => {
 const formData = useForm(initialData.value)
 
 // Calcula a URL de ação removendo /create do pathname
-const action = computed(() => window.location.pathname.replace('/create', ''))
+const action = computed(() => {
+  if (props.action) {
+    return props.action
+  }
+
+  const path = window.location.pathname
+  if (path.endsWith('/create')) {
+    return path.slice(0, -7) // Remove '/create'
+  }
+  return path
+}) 
 </script>
 
 <template>
@@ -63,14 +74,11 @@ const action = computed(() => window.location.pathname.replace('/create', ''))
       <!-- Breadcrumbs com Header Actions -->
       <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">
         <div class="w-full flex items-center pb-4">
-          <BreadcrumbRenderer
-            :items="breadcrumbs"
-            :config="{
-              component: 'breadcrumb-page-header',
-              resourceLabel: `Criar ${resourceLabel}`,
-              message: message,
-            }"
-          >
+          <BreadcrumbRenderer :items="breadcrumbs" :config="{
+            component: 'breadcrumb-page-header',
+            resourceLabel: `Criar ${resourceLabel}`,
+            message: message,
+          }">
             <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
             <PageHeaderActions :actions="pageHeaderActions" />
           </BreadcrumbRenderer>
@@ -81,20 +89,10 @@ const action = computed(() => window.location.pathname.replace('/create', ''))
       <div class="space-y-6">
         <Card>
           <CardContent>
-            <FormRenderer
-              v-if="form?.columns"
-              :columns="form.columns"
-              v-model="formData"
-              :errors="formData.errors"
-              :action="action"
-              :method="'post'"
-              @success="formData.reset()"
-            >
+            <FormRenderer v-if="form?.columns" :columns="form.columns" v-model="formData" :errors="formData.errors"
+              :action="action" :method="'post'" @success="formData.reset()">
               <template #actions>
-                <FormActions
-                  :actions="form?.formActions"
-                  :processing="formData.processing"
-                />
+                <FormActions :actions="form?.formActions" :processing="formData.processing" />
               </template>
             </FormRenderer>
           </CardContent>
