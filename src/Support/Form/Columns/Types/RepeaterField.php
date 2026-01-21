@@ -37,6 +37,8 @@ class RepeaterField extends Column
     {
         parent::__construct($name, $label);
         $this->component('form-field-repeater');
+        // RepeaterField deve sempre ter default como array vazio
+        $this->default([]);
         $this->setUp();
 
         $this->valueUsing(function ($data, $model) {

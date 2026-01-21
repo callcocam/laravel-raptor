@@ -82,7 +82,7 @@ abstract class AbstractController extends ResourceController
     }
 
     public function store(Request $request): BaseRedirectResponse
-    {
+    { 
         try {
             $model  = app($this->model());
 

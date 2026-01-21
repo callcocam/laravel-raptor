@@ -46,6 +46,9 @@ const initialData = computed(() => {
   props.form?.columns?.forEach(column => {
     if (column.default !== undefined && column.default !== null) {
       data[column.name] = column.default
+    } else if (column.component === 'form-field-repeater') {
+      // RepeaterField sempre deve iniciar como array vazio
+      data[column.name] = []
     }
   })
 

@@ -5,7 +5,7 @@
  * dinamicamente usando o FieldRenderer com suporte a grid layout
  -->
 <template>
-  <Form @submit.prevent="handleSubmit" :class="formClasses">
+  <form @submit.prevent="handleSubmit" :class="formClasses" :action="props.action" :method="props.method">
     <div
       v-for="(column, index) in columns"
       :key="column.name || index"
@@ -27,7 +27,7 @@
         <!-- Botões padrão (opcional) -->
       </slot>
     </div>
-  </Form>
+  </form>
 </template>
 
 <script setup lang="ts">

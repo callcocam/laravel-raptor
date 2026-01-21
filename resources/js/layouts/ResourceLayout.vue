@@ -17,6 +17,7 @@ interface Props {
     resourcePluralLabel?: string;
     maxWidth?: string;
     breadcrumbs?: BackendBreadcrumb[];
+    actionName?: string; // Prop opcional para nome da ação
 }
 
 const props = withDefaults(defineProps<Props>(), {
