@@ -73,8 +73,7 @@ class UserController extends LandlordController
     {
         $form->columns([
             ComboboxField::make('tenant_id', 'Tenant')
-                ->relationship('tenant', 'name')
-                ->required() 
+                ->relationship('tenant', 'name') 
                 ->placeholder('Selecione o tenant')
                 ->helpText('Atribua o usuário a um tenant'),
             TextField::make('name', 'Nome')
