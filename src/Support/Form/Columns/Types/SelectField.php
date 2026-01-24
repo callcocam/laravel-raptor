@@ -68,7 +68,7 @@ class SelectField extends Column
         $baseArray = array_merge(parent::toArray($model), [
             'searchable' => $this->searchable,
             'multiple' => $this->isMultiple(),
-            'options' => $this->getOptions(),
+            'options' => $this->getOptions($model),
             'dependsOn' => $this->getDependsOn(),
         ]);
         $baseArray['optionsData'] = $optionsData;

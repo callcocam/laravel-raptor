@@ -43,34 +43,12 @@ trait BelongsToOptions
         $this->rawOptions = $options;
 
         return $this;
-    }
-    // public function getOptions(): array
-    // {
-    //     if (method_exists($this, 'hasRelationship') && $this->hasRelationship()) {
-    //         $relationship = $this->getRelationship();
-
-    //         if ($relationship) {
-    //             $relatedModel = $this->processRelationshipOptions();
-    //             if ($relatedModel) {
-    //                 $labelColumn = $this->getOptionLabel() ?? 'name';
-    //                 $keyColumn = $this->getOptionKey() ?? 'id';
-
-    //                 $this->options = $relatedModel
-    //                     ->select([$keyColumn, $labelColumn])
-    //                     ->pluck($labelColumn, $keyColumn)
-    //                     ->toArray();
-    //                 return $this->normalizeOptions($this->options);
-    //             }
-    //         }
-    //     }
-    //     return $this->normalizeOptions($this->options);
-    // }
-
+    } 
     /**
      * Get the options for the filter.
      * Converte automaticamente para o formato [label, value]
      */
-    public function getOptions(): array
+    public function getOptions($model = null): array
     {
         if (method_exists($this, 'hasRelationship') && $this->hasRelationship()) {
             // 3. Pegar o model relacionado de forma segura
@@ -83,8 +61,8 @@ trait BelongsToOptions
                     ->pluck($labelColumn, $keyColumn)
                     ->toArray();
             }
-        }
-        $options = $this->evaluate($this->options);
+        } 
+        $options = $this->evaluate($this->options, ['model' => $model, 'column' => $this, 'record' => $model]);
 
         return $this->normalizeOptions($options);
     }
