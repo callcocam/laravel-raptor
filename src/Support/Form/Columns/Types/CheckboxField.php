@@ -123,7 +123,7 @@ class CheckboxField extends Column
         if ($this->isMultiple()) {
             $this->component('form-field-checkbox-group');
 
-            $options = $this->getOptions();
+            $options = $this->getOptions($model);
         }
 
         return array_merge($attributes, [

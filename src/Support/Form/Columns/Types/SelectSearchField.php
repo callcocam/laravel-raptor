@@ -108,7 +108,8 @@ class SelectSearchField extends Column
         if ($query instanceof Builder) {
             $this->baseQuery = $query;
         } elseif ($query instanceof Closure) {
-            $this->baseQuery = $this->evaluate($query);
+            $result = $this->evaluate($query);
+            $this->baseQuery = $result instanceof Builder ? $result : null;
         } elseif ($query instanceof Model) {
             $this->baseQuery = $query->newQuery()->select($select);
         } elseif (is_string($query)) {
@@ -198,9 +199,9 @@ class SelectSearchField extends Column
         return [];
     }
 
-    public function getOptions(): array
+    public function getOptions($model = null): array
     {
-        $options = $this->evaluate($this->options);
+        $options = $this->evaluate($this->options, ['model' => $model, 'column' => $this, 'record' => $model]) ?? [];
 
         return $this->normalizeOptions($options);
     }
@@ -235,7 +236,7 @@ class SelectSearchField extends Column
         $baseArray = array_merge(parent::toArray($model), [
             'searchable' => $this->searchable,
             'multiple' => $this->isMultiple(),
-            'options' => $this->getOptions(),
+            'options' => $this->getOptions($model),
             'dependsOn' => $this->getDependsOn(),
         ]);
         $baseArray['optionsData'] = $optionsData;

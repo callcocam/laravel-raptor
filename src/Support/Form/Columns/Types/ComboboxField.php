@@ -85,7 +85,7 @@ class ComboboxField extends Column
         }
 
         $baseArray = array_merge(parent::toArray($model), [
-            'options' => $this->getOptions(),
+            'options' => $this->getOptions($model),
             'searchPlaceholder' => $this->searchPlaceholder,
             'emptyText' => $this->emptyText,
         ]);
