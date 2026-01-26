@@ -30,37 +30,39 @@
         @end="emitValue"
       >
         <template #item="{ element: item, index }">
-          <RepeaterItemCompact
-            v-if="column.compact"
-            :item="item"
-            :itemId="item._id"
-            :index="index"
-            :isLast="index === items.length - 1"
-            :fields="fields"
-            :errors="itemErrors"
-            :orderable="column.orderable"
-            :canRemove="canRemoveItem"
-            @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
-            @remove="removeItem"
-          />
-          <RepeaterItem
-            v-else
-            :item="item"
-            :itemId="item._id"
-            :index="index"
-            :isLast="index === items.length - 1"
-            :fields="fields"
-            :errors="itemErrors"
-            :collapsible="column.collapsible"
-            :orderable="column.orderable"
-            :canRemove="canRemoveItem"
-            :canDuplicate="column.allowDuplication"
-            @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
-            @remove="removeItem"
-            @duplicate="duplicateItem"
-            @moveUp="moveItemUp"
-            @moveDown="moveItemDown"
-          />
+          <div>
+            <RepeaterItemCompact
+              v-if="column.compact"
+              :item="item"
+              :itemId="item._id"
+              :index="index"
+              :isLast="index === items.length - 1"
+              :fields="fields"
+              :errors="itemErrors"
+              :orderable="column.orderable"
+              :canRemove="canRemoveItem"
+              @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
+              @remove="removeItem"
+            />
+            <RepeaterItem
+              v-else
+              :item="item"
+              :itemId="item._id"
+              :index="index"
+              :isLast="index === items.length - 1"
+              :fields="fields"
+              :errors="itemErrors"
+              :collapsible="column.collapsible"
+              :orderable="column.orderable"
+              :canRemove="canRemoveItem"
+              :canDuplicate="column.allowDuplication"
+              @updateField="(fieldName, value) => updateItemField(index, fieldName, value)"
+              @remove="removeItem"
+              @duplicate="duplicateItem"
+              @moveUp="moveItemUp"
+              @moveDown="moveItemDown"
+            />
+          </div>
         </template>
       </Draggable>
 

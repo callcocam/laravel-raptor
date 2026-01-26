@@ -203,6 +203,9 @@ export function useGlobalNotifications() {
             }
 
             const data = await response.json()
+            if (!data.notifications || !Array.isArray(data.notifications)) {
+                return
+            }
             notifications.value = data.notifications.map((n: any) => ({
                 id: n.id,
                 type: n.type,
