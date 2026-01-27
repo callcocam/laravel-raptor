@@ -36,6 +36,8 @@ export interface TableAction {
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
   size?: 'default' | 'sm' | 'lg' | 'icon'
   processingLabel?: string
+  successMessage?: string
+  errorMessage?: string
 }
 
 /**

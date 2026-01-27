@@ -32,12 +32,4 @@ class LinkAction extends Action
         $this->policy('viewAny');
     }
 
-    /**
-     * Define o tipo de link a ou Link(inertia) ou Redirect (redirecionamento completo)
-     */
-    public function actionAlink(): static
-    {
-        $this->component('action-a-link');
-        return $this;
-    }
 }

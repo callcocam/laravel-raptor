@@ -11,8 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 use Callcocam\LaravelRaptor\Support\Actions\Action;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\HiddenField;
-use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
-use Illuminate\Support\Facades\Route;
+use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm; 
 
 abstract class ExecuteAction extends Action
 {
@@ -29,14 +28,7 @@ abstract class ExecuteAction extends Action
         $this->actionType('header')
             ->column(HiddenField::make('actionType', $this->actionType))
             ->column(HiddenField::make('actionName',  $name))
-            ->url(function () {
-                $name = preg_replace('/\..+$/', '.execute', $this->getName()); // Substitui o sufixo por '.execute'
-                $route = sprintf('%s.%s', $this->getRequest()->getContext(), $name);
-                if (Route::has($route)) {
-                    return route($route);
-                }
-                return null;
-            });
+            ->executeUrlCallback();
         $this->setUp();
     }
 

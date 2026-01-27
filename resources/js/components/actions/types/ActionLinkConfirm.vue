@@ -146,6 +146,7 @@ const isTypedWordCorrect = computed(() => {
 
 // Mapeia cor para variant do shadcn (botão principal)
 const variant = computed(() => {
+  if (props.action.variant) return props.action.variant;
   const colorMap: Record<string, any> = {
     green: "default",
     blue: "default",

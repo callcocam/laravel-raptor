@@ -5,7 +5,7 @@
  * Similar ao InfoRenderer.vue
  -->
 <template>
-  <component :is="component" :action="action" :record="record" />
+  <component :is="component" :action="action" :record="record" :column="column" @click="handleClick" />
 </template>
 
 <script lang="ts" setup>
@@ -16,8 +16,11 @@ import type { TableAction } from '~/types/table'
 const props = defineProps<{
   action: TableAction
   record?: Record<string, any>
+  column?: Record<string, any>
+}>() 
+const emit = defineEmits<{
+  (e: 'click', event: Event): void
 }>()
-
 /**
  * Obtém o componente a ser renderizado do ActionRegistry
  *
@@ -94,4 +97,9 @@ const component = computed(() => {
 
   return fallback
 })
+
+const handleClick = (event: Event) => {
+  // Re-emite o evento de clique para o pai 
+  emit('click', event)
+}
 </script>

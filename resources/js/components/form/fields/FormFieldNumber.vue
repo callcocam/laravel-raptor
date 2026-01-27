@@ -10,20 +10,14 @@
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <!-- Input with prepend/append addons -->
-    <div v-if="hasPrependOrAppend" class="flex rounded-md shadow-sm">
-      <div
-        v-if="column.prepend || column.prefix"
-        class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm"
-      >
-        <component
-          v-if="prependIcon"
-          :is="prependIcon"
-          class="h-4 w-4"
-        />
-        <span v-else>{{ column.prepend || column.prefix }}</span>
-      </div>
-
+    <!-- Input with conditional addons -->
+    <AddonsContext
+      :prepend="column.prepend"
+      :append="column.append"
+      :prefix="column.prefix"
+      :suffix="column.suffix"
+      v-slot="{ inputClass: addonClass }"
+    >
       <Input
         :id="column.name"
         :name="column.name"
@@ -38,40 +32,9 @@
         :modelValue="internalValue || undefined"
         @update:modelValue="updateValue"
         :aria-invalid="hasError"
-        :class="[hasError ? 'border-destructive' : '', inputClass]"
+        :class="[hasError ? 'border-destructive' : '', addonClass]"
       />
-
-      <div
-        v-if="column.append || column.suffix"
-        class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-input bg-muted text-muted-foreground text-sm"
-      >
-        <component
-          v-if="appendIcon"
-          :is="appendIcon"
-          class="h-4 w-4"
-        />
-        <span v-else>{{ column.append || column.suffix }}</span>
-      </div>
-    </div>
-
-    <!-- Input without addons -->
-    <Input
-      v-else
-      :id="column.name"
-      :name="column.name"
-      type="number"
-      :placeholder="column.placeholder || column.label"
-      :required="column.required"
-      :disabled="column.disabled"
-      :readonly="column.readonly"
-      :min="column.min"
-      :max="column.max"
-      :step="column.step || 1"
-      :modelValue="internalValue || undefined"
-      @update:modelValue="updateValue"
-      :aria-invalid="hasError"
-      :class="hasError ? 'border-destructive' : ''"
-    />
+    </AddonsContext>
 
     <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
       {{ column.helpText || column.hint || column.tooltip }}
@@ -82,10 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, inject, ref, watch } from 'vue'
+import { computed, onMounted, inject, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import * as LucideIcons from 'lucide-vue-next'
+import AddonsContext from '../AddonsContext.vue'
 import { useFieldCalculations, type FieldCalculation } from '~/composables/useFieldCalculations'
 
 interface FormColumn {
@@ -134,33 +97,6 @@ const calculatedValue = props.column.calculation
   : computed(() => null)
 
 const hasError = computed(() => !!props.error)
-
-const hasPrependOrAppend = computed(() => {
-  return !!(props.column.prepend || props.column.append || props.column.prefix || props.column.suffix)
-})
-
-const inputClass = computed(() => {
-  const classes = []
-  if (props.column.prepend || props.column.prefix) {
-    classes.push('rounded-l-none')
-  }
-  if (props.column.append || props.column.suffix) {
-    classes.push('rounded-r-none')
-  }
-  return classes.join(' ')
-})
-
-const prependIcon = computed(() => {
-  if (!props.column.prepend) return null
-  const IconComponent = (LucideIcons as any)[props.column.prepend]
-  return IconComponent ? h(IconComponent) : null
-})
-
-const appendIcon = computed(() => {
-  if (!props.column.append) return null
-  const IconComponent = (LucideIcons as any)[props.column.append]
-  return IconComponent ? h(IconComponent) : null
-})
 
 const errorArray = computed(() => {
   if (!props.error) return []

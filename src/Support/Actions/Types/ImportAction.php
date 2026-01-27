@@ -28,9 +28,7 @@ class ImportAction extends ExecuteAction
             ->tooltip('Importar registros')
             ->component('action-modal-form')
             ->policy('import')
-            ->callback(function ($request) {
-                return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
-            })
+            ->executeUrlCallback()
             ->columns([
                 UploadField::make($fileName, 'Arquivo')
                     ->acceptedFileTypes(['.csv', '.xlsx'])

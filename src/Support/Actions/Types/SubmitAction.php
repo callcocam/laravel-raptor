@@ -24,6 +24,7 @@ class SubmitAction extends Action
         $this->icon('Save');
         $this->variant('default');
         $this->size('default');
+        $this->component('action-submit');
         $this->url(false); // Submit não precisa de URL
     }
 }

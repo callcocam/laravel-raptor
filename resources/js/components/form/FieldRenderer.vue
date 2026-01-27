@@ -24,8 +24,7 @@ interface Props {
   index?: number
 }
 
-const props = defineProps<Props>()
-
+const props = defineProps<Props>() 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: any): void
 }>() 

@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns;
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Concerns\HasMak;
+use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithActions;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Illuminate\Database\Eloquent\Builder;
 use Closure;
@@ -20,6 +21,7 @@ abstract class Column extends AbstractColumn
     use BelongsToHelpers;
     use HasGridLayout;
     use HasMak;
+    use WithActions;
 
     protected string $type = 'text';
 
@@ -42,15 +44,13 @@ abstract class Column extends AbstractColumn
         $this->columnSpanFull();
         $this->index++;
         $this->valueUsing(function ($request, $model) {
-            if ($this->hasMak()) { 
+            if ($this->hasMak()) {
                 return [
                     $this->getName() => $this->clearMak(data_get($request, $this->getName())),
                 ];
             }
             return null;
         });
-
-
     }
 
 
@@ -122,6 +122,17 @@ abstract class Column extends AbstractColumn
         return $this->index;
     }
 
+
+    public function iconRight(string|Closure|null $icon): static
+    {
+        return $this->icon($icon, 'right');
+    }
+
+    public function iconLeft(string|Closure|null $icon): static
+    {
+        return $this->icon($icon, 'left');
+    }
+
     public function toArray($model = null): array
     {
         if ($model) {
@@ -145,6 +156,7 @@ abstract class Column extends AbstractColumn
             'disabled' => $this->isDisabled(),
             'index' => $this->getIndex(),
             'mask' => $this->getMask(),
+            'actions' => $this->getRenderedActions($model),
             'attributes' => array_filter([
                 'id' => $this->getId(),
                 'type' => $this->getType(),

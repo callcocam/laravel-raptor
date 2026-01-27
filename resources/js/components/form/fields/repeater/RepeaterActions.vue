@@ -56,6 +56,7 @@
         <Plus class="h-4 w-4 mr-2" />
         {{ addButtonLabel }}
       </Button>
+      <slot />
     </div>
   </div>
 </template>
@@ -82,5 +83,6 @@ defineEmits<{
   (e: 'clearAll'): void
   (e: 'collapseAll'): void
   (e: 'expandAll'): void
+  (e: 'click', event: Event): void
 }>()
 </script>

@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Support\Concerns\Shared;
 
+use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Closure;
 
 trait BelongsToHelpers
@@ -16,7 +17,7 @@ trait BelongsToHelpers
 
     protected string|Closure|null $helpText = null;
 
-    protected string|Closure|null $hint = null;
+    protected string|array|Closure|AbstractColumn|null $hint = null;
 
     protected string|array|Closure|null $prepend = null;
 
@@ -83,17 +84,36 @@ trait BelongsToHelpers
     }
 
     /**
-     * Define uma dica (similar ao helpText, mas pode ter estilo diferente)
+     * Define uma dica ou actions (exibidas abaixo do campo)
+     * Pode ser:
+     * - String simples: texto de ajuda
+     * - Array: lista de actions a serem renderizadas
+     * - Closure: função que retorna string ou array de actions
+     * 
+     * @param string|array|Closure|AbstractColumn $hint Texto ou array de actions
+     * @return static
      */
-    public function hint(string|Closure $hint): static
+    public function hint(string|array|Closure|AbstractColumn $hint): static
     {
-        $this->hint = $hint;
+        $this->hint[] = $hint;
 
         return $this;
     }
 
-    /**
-     * Adiciona conteúdo/ação antes do campo
+
+    /**     * Define actions como hint (alias mais semântico para hint com array)
+     * 
+     * @param array|Closure $actions Array de actions ou Closure que retorna array
+     * @return static
+     */
+    public function hintActions(array|Closure $actions): static
+    {
+        $this->hint = $actions;
+
+        return $this;
+    }
+
+    /**     * Adiciona conteúdo/ação antes do campo
      * Pode ser um texto, ícone ou action
      */
     public function prepend(string|array|Closure $content): static
@@ -161,10 +181,23 @@ trait BelongsToHelpers
     }
 
     /**
-     * Retorna a dica
+     * Retorna a dica (pode ser string ou array de actions)
+     * 
+     * @return string|array|null|AbstractColumn
      */
-    public function getHint(): ?string
+    public function getHint(): string|array|AbstractColumn|null
     {
+        $hints = [];
+        if (is_array($this->hint)) {
+            foreach ($this->hint as $hint) {
+                if ($hint instanceof AbstractColumn) {
+                    $hints[] = $hint->toArray($this->getModel());
+                } else {
+                    $hints[] = $this->evaluate($hint);
+                }
+            }
+            return $hints;
+        }
         return $this->evaluate($this->hint);
     }
 

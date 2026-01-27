@@ -38,6 +38,9 @@ Route::middleware(['web', 'auth', $context])
 
         Route::put('/tenant/update-theme', [\Callcocam\LaravelRaptor\Http\Controllers\TenantThemeController::class, 'update'])
             ->name('tenant.update-theme');
+
+        Route::post('/execute', [config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class), 'execute'])
+            ->name('execute');
     });
 
 

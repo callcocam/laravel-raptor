@@ -375,5 +375,8 @@ return [
             'store' => env('RAPTOR_MIGRATIONS_STORE_MODEL', 'App\\Models\\Store'),
         ],
     ],
+    'routes' => [
+        'default' => env('RAPTOR_ROUTES_DEFAULT', 'execute'),
+    ],
 
 ];

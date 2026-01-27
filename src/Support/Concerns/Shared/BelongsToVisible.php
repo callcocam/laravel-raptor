@@ -175,7 +175,7 @@ trait BelongsToVisible
             return $this->getContextVisibility($context);
         }
 
-        throw new \BadMethodCallException("Method {$method} does not exist.");
+        // throw new \BadMethodCallException("Method {$method} does not exist.");
     }
 
     /**

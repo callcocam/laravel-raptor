@@ -52,7 +52,7 @@ class FormAction extends ModalAction
             ->component('action-modal-form')
             ->method('POST')
             ->policy('modal') 
-            ->modalSize('md');
+            ->modalSize('md')->executeUrlCallback();
     }
 
     /**

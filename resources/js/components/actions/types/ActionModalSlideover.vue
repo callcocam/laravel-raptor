@@ -64,12 +64,12 @@
 <script setup lang="ts">
 import { ref, computed, h, watch } from "vue";
 import { Button } from "@/components/ui/button";
-import * as LucideIcons from "lucide-vue-next";
 import SlideoverBase from "../slideover/SlideoverBase.vue";
 import SlideoverForm from "../slideover/SlideoverForm.vue";
 import SlideoverTable from "../slideover/SlideoverTable.vue";
 import SlideoverInfo from "../slideover/SlideoverInfo.vue";
 import { useActionConfig } from "~/composables/useActionConfig";
+import { useActionUI } from "~/composables/useActionUI";
 import type { TableAction } from "~/types/table";
 
 interface FormColumn {
@@ -97,7 +97,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   size: "sm",
 });
- 
 
 const emit = defineEmits<{
   (e: "click", formData?: Record<string, any>): void;
@@ -135,25 +134,16 @@ const tableData = computed(() => {
 // Usa o composable para configurações comuns
 const {
   hasFormColumns,
-  variant,
 } = useActionConfig({
   action: props.action,
   columns: formColumns
 });
 
-// Componente do ícone dinâmico
-const iconComponent = computed(() => {
-  if (!props.action.icon) return null;
-
-  const IconComponent = (LucideIcons as any)[props.action.icon];
-
-  if (!IconComponent) {
-    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`);
-    return null;
-  }
-
-  return h(IconComponent);
-});
+// Usa composable para UI (variant, iconComponent, etc)
+const { variant, iconComponent } = useActionUI({
+  action: props.action,
+  defaultSize: 'sm'
+}); 
 
 // Abre o slideover
 const openSlideover = () => {

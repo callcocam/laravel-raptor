@@ -56,7 +56,7 @@ trait ManagesCollection
      * Adiciona um item à coleção
      */
     protected function addToCollection(mixed $item, string $key): static
-    {
+    { 
         if (! isset($this->collections[$key])) {
             $this->collections[$key] = [];
         }

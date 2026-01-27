@@ -7,7 +7,7 @@
  */
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
- 
+
 
 class ExportAction extends ExecuteAction
 {
@@ -32,7 +32,7 @@ class ExportAction extends ExecuteAction
                 'confirmButtonText' => 'Sim, Exportar',
                 'cancelButtonText' => 'Cancelar',
                 'successMessage' => 'Exportação realizada com sucesso!',
-            ]);
+            ]) ;
         $this->setUp();
     }
 }

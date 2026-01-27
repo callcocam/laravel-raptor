@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongToRequest;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 {
@@ -43,6 +44,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     protected string|null $variant = null;
 
     protected string|null $size = null;
+
+    protected bool $emptyRecordAllowed = true;
 
     public function __construct(?string $name)
     {
@@ -96,6 +99,13 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         return $this;
     }
 
+    public function emptyRecordAllowed(bool $allowed = true): self
+    {
+        $this->emptyRecordAllowed = $allowed;
+
+        return $this;
+    }
+
     public function getVariant(): string|null
     {
         return $this->variant;
@@ -113,6 +123,76 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         return $this->size;
     }
 
+    public function isEmptyRecordAllowed(): bool
+    {
+        return $this->emptyRecordAllowed;
+    }
+
+    public function button(): self
+    {
+        $this->component('action-button');
+
+        return $this;
+    }
+
+    public function submit(): self
+    {
+        $this->component('action-submit');
+
+        return $this;
+    }
+
+    public function link(): self
+    {
+        $this->component('action-link');
+
+        return $this;
+    }
+
+    public function modal(): self
+    {
+        $this->component('action-modal-form');
+
+        return $this;
+    }
+
+    /**
+     * Define o tipo de link a ou Link(inertia) ou Redirect (redirecionamento completo)
+     */
+    public function actionAlink(): static
+    {
+        $this->component('action-a-link');
+
+        return $this;
+    }
+
+    /**
+     * Define a url de execução automática da action baseado em rotas padrão
+     * 
+     * @param string $action
+     */
+    protected function executeUrlCallback($action = 'execute'): self
+    {
+        $this->url(function ($target = null, Request $request = null) use ($action) {
+            $route = sprintf('%s.%s.%s', $request->getContext(), $this->name, $action);
+            if (\Illuminate\Support\Facades\Route::has($route)) {
+                return $target instanceof \Illuminate\Database\Eloquent\Model
+                    ? route($route, ['record' => data_get($target, 'id')], false)
+                    : route($route, [], false);
+            } else {
+                $route = sprintf('%s.%s', $request->getContext(), $action);
+                if (\Illuminate\Support\Facades\Route::has($route)) {
+                    return $target instanceof \Illuminate\Database\Eloquent\Model
+                        ? route($route, ['record' => data_get($target, 'id')], false)
+                        : route($route, [], false);
+                }
+            }
+            return '#';
+        })->callback(function (Request $request, $model = null) {
+            return redirect()->back()->with('error', 'Ação executada com sucesso!');
+        });
+        return $this;
+    }
     public function toArray($model = null, $request = null): array
     {
         if ($model) :
@@ -134,7 +214,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'method' => $this->method,
             'variant' => $this->getVariant(),
             'size' => $this->getSize(),
-            'url' => $this->getUrl(null)
+            'url' => $this->getUrl($model, $request),
+            'emptyRecordAllowed' => $this->isEmptyRecordAllowed(),
         ];
     }
 
@@ -142,8 +223,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
      * Renderiza a action com suporte a Inertia.js
      */
     public function render($model, $request = null): array
-    { 
- 
+    {
+
         if ($model instanceof Model) :
             $this->record($model);
         endif;
@@ -161,8 +242,11 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'color' => $this->getColor(),
             'method' => $this->getMethod(),
             'component' => $this->getComponent(),
+            'variant' => $this->getVariant(),
+            'size' => $this->getSize(),
             'tooltip' => $this->getTooltip(),
             'visible' => $this->isVisible($model),
+            'emptyRecordAllowed' => $this->isEmptyRecordAllowed(),
         ];
 
         if (! empty($this->confirm)) {

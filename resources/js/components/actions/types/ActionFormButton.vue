@@ -20,11 +20,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import * as LucideIcons from 'lucide-vue-next'
+import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
 
 interface Props {
@@ -67,60 +67,29 @@ const displayLabel = computed(() => {
   return props.action.label || 'Ação'
 })
 
-// Variant computado - usa prop ou mapeia da cor/action.variant
+// Usa composable para variant, size, iconComponent, iconClasses
+const { variant: baseVariant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+  action: props.action,
+  defaultSize: 'default',
+  defaultVariant: props.variant
+})
+
+// Variant com overrides para submit/cancel
 const computedVariant = computed(() => {
+  // Se tem variant explícito, usa
   if (props.variant) return props.variant
   if (props.action.variant) return props.action.variant
   
-  const colorMap: Record<string, any> = {
-    'green': 'default',
-    'blue': 'default',
-    'red': 'destructive',
-    'yellow': 'outline',
-    'gray': 'secondary',
-    'default': 'default'
+  // Padrões por tipo de ação se não houver cor
+  if (!props.action.color) {
+    const actionTypeDefaults: Record<string, any> = {
+      'submit': 'default',
+      'cancel': 'outline'
+    }
+    return actionTypeDefaults[props.action.actionType || ''] || 'default'
   }
 
-  // Padrões por tipo de ação
-  const actionTypeDefaults: Record<string, string> = {
-    'submit': 'default',
-    'cancel': 'outline'
-  }
-
-  if (props.action.color) {
-    return colorMap[props.action.color] || 'default'
-  }
-
-  return actionTypeDefaults[props.action.actionType || ''] || 'default'
-})
-
-// Size computado
-const computedSize = computed(() => props.size)
-
-// Classes do ícone
-const iconClasses = computed(() => {
-  const sizeMap: Record<string, string> = {
-    'sm': 'h-3 w-3',
-    'default': 'h-4 w-4',
-    'lg': 'h-5 w-5',
-    'icon': 'h-4 w-4'
-  }
-  return sizeMap[props.size] || 'h-4 w-4'
-})
-
-// Componente do ícone dinâmico
-const iconComponent = computed(() => {
-  if (!props.action.icon) return null
-
-  // Tenta obter o ícone do Lucide
-  const IconComponent = (LucideIcons as any)[props.action.icon]
-
-  if (!IconComponent) {
-    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`)
-    return null
-  }
-
-  return h(IconComponent)
+  return baseVariant.value
 })
 
 // Handler de clique

@@ -17,9 +17,17 @@ trait BelongsToIcon
     /**
      * Define o ícone da ação
      */
-    public function icon(Closure|string|null $icon): static
+    public function icon(Closure|string|null $icon, string $position = 'left'): static
     {
         $this->icon = $icon;
+
+        if ($position === 'right' && method_exists($this, 'append')) {
+            $this->append($icon);
+        } else {
+            if (method_exists($this, 'prepend')) {
+                $this->prepend($icon);
+            }
+        }
 
         return $this;
     }

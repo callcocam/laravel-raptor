@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ChevronDown } from 'lucide-vue-next'
 import * as LucideIcons from 'lucide-vue-next'
+import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
 
 interface Props {
@@ -57,27 +58,10 @@ const items = computed(() => {
   return props.action.options || []
 })
 
-// Mapeia cor para variant do shadcn
-const variant = computed(() => {
-  const colorMap: Record<string, any> = {
-    'green': 'default',
-    'blue': 'default',
-    'red': 'destructive',
-    'gray': 'secondary',
-    'default': 'default'
-  }
-
-  return colorMap[props.action.color || 'default'] || 'default'
-})
-
-// Componente do ícone principal
-const iconComponent = computed(() => {
-  if (!props.action.icon) return null
-
-  const IconComponent = (LucideIcons as any)[props.action.icon]
-  if (!IconComponent) return null
-
-  return h(IconComponent)
+// Usa composable para variant e iconComponent
+const { variant, iconComponent } = useActionUI({
+  action: props.action,
+  defaultSize: 'default'
 })
 
 // Obtém ícone de um item

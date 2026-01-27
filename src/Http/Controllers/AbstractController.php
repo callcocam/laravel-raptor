@@ -82,7 +82,7 @@ abstract class AbstractController extends ResourceController
     }
 
     public function store(Request $request): BaseRedirectResponse
-    { 
+    {
         try {
             $model  = app($this->model());
 
@@ -356,20 +356,37 @@ abstract class AbstractController extends ResourceController
             $validated = $request->validate([
                 'actionType' => 'required|string',
                 'actionName' => 'required|string',
+                'fieldName' => 'nullable|string',
+                'record' => 'nullable|string', // Ajuste o modelo conforme necessário
             ]);
-
             $type = data_get($validated, 'actionType');
             $actionName = data_get($validated, 'actionName');
+            $recordId = data_get($validated, 'record');
+            $fieldName = data_get($validated, 'fieldName');
+            if (!$type || !$actionName) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Parâmetros inválidos para execução da ação.');
+            }
+
+            if ($recordId) {
+                $model = $this->model()::findOrFail($recordId);
+            } else {
+                $model = null;
+            }
+
 
             $actions = match ($type) {
                 'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
                 'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions()),
+                'form' => collect($this->form(Form::make($model))->getActions()),
+                'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn($column) => $column->getName() === $fieldName)->flatMap(function ($column) {
+                    return $column->getActions();
+                }),
                 default => collect([])
             };
-
             $callback = $actions->filter(fn($action) => $action->getName() === $actionName)->first();
-
             if (!$callback) {
                 return redirect()
                     ->back()
@@ -379,7 +396,7 @@ abstract class AbstractController extends ResourceController
             // Extrai as regras de validação dos campos da action
             $validationRules = $callback->getValidationRules();
             $validationMessages = $callback->getValidationMessages();
-
+ 
             // Valida os dados do formulário da action se houver regras
             if (!empty($validationRules)) {
                 $request->validate($validationRules, $validationMessages);

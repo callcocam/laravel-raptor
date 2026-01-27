@@ -9,7 +9,7 @@
 <template>
   <AlertDialog v-model:open="isOpen">
     <AlertDialogTrigger as-child>
-      <Button :variant="variant" :size="size" >
+      <Button :variant="variant" :size="size">
         <component v-if="iconComponent" :is="iconComponent" class="h-3 w-3" />
         <span class="text-xs">{{ action.label }}</span>
       </Button>
@@ -37,13 +37,9 @@
           <label class="block text-sm font-medium mb-2 text-center">
             Digite <strong>{{ typedConfirmationWord }}</strong> para confirmar:
           </label>
-          <input
-            v-model="typedWord"
-            type="text"
-            :placeholder="typedConfirmationWord"
+          <input v-model="typedWord" type="text" :placeholder="typedConfirmationWord"
             class="w-full px-3 py-2 border rounded-md text-center focus:outline-none focus:ring-2 focus:ring-primary"
-            @keyup.enter="isTypedWordCorrect && !isSubmitting && confirmAction()"
-          />
+            @keyup.enter="isTypedWordCorrect && !isSubmitting && confirmAction()" />
           <p v-if="showTypedError" class="text-sm text-destructive mt-2 text-center">
             A palavra digitada não corresponde
           </p>
@@ -55,17 +51,14 @@
           <AlertDialogCancel :disabled="isSubmitting">
             {{ confirmConfig.cancelText || confirmConfig.cancelButtonText || "Cancelar" }}
           </AlertDialogCancel>
-          <AlertDialogAction
-            :class="confirmVariantClass"
-            @click="confirmAction"
-            :disabled="isSubmitting || (requiresTypedConfirmation && !isTypedWordCorrect)"
-          >
+          <AlertDialogAction :class="confirmVariantClass" @click="confirmAction"
+            :disabled="isSubmitting || (requiresTypedConfirmation && !isTypedWordCorrect)">
             {{
               isSubmitting
                 ? "Processando..."
                 : confirmConfig.confirmText ||
-                  confirmConfig.confirmButtonText ||
-                  "Confirmar"
+                confirmConfig.confirmButtonText ||
+                "Confirmar"
             }}
           </AlertDialogAction>
         </div>
@@ -90,6 +83,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import * as LucideIcons from "lucide-vue-next";
+import { useActionUI } from "~/composables/useActionUI";
 import type { TableAction } from "~/types/table";
 
 interface Props {
@@ -126,7 +120,7 @@ const isSubmitting = computed(() => form.processing);
 // Configuração de confirmação
 const confirmConfig = computed(() => {
   const config = props.action.confirm || true;
-  
+
   // Se confirm for boolean true, retorna configuração padrão
   if (config === true || !config) {
     return {
@@ -143,7 +137,7 @@ const confirmConfig = computed(() => {
       typedConfirmationWord: "EXCLUIR",
     };
   }
-  
+
   // Se for array ou objeto, retorna com valores padrão
   return {
     title: config.title || "",
@@ -176,18 +170,10 @@ const isTypedWordCorrect = computed(() => {
   return typedWord.value.toUpperCase() === typedConfirmationWord.value.toUpperCase();
 });
 
-// Mapeia cor para variant do shadcn (botão principal)
-const variant = computed(() => {
-  const colorMap: Record<string, any> = {
-    green: "default",
-    blue: "default",
-    red: "destructive",
-    yellow: "warning",
-    gray: "secondary",
-    default: "default",
-  };
-
-  return colorMap[props.action.color || "default"] || "default";
+// Usa composable para UI
+const { variant, iconComponent } = useActionUI({
+  action: props.action,
+  defaultSize: 'sm'
 });
 
 // Classes para o botão de confirmação
@@ -202,20 +188,6 @@ const confirmVariantClass = computed(() => {
   };
 
   return variantMap[color] || "";
-});
-
-// Componente do ícone dinâmico
-const iconComponent = computed(() => {
-  if (!props.action.icon) return null;
-
-  const IconComponent = (LucideIcons as any)[props.action.icon];
-
-  if (!IconComponent) {
-    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`);
-    return null;
-  }
-
-  return h(IconComponent);
 });
 
 // Ícone padrão de question para o modal

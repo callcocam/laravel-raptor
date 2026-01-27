@@ -29,7 +29,8 @@ class DuplicateAction extends Action
                 'message' => 'Tem certeza que deseja duplicar este registro?',
                 'confirmText' => 'Sim, duplicar',
                 'cancelText' => 'Cancelar',
-            ]);
+            ])
+            ->executeUrlCallback();
         $this->setUp();
     }
 }

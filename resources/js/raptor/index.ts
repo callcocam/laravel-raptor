@@ -95,8 +95,7 @@ BreadcrumbRegistry.markAsInitialized()
  *
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
- */
-import TableRegistry from '~/utils/TableRegistry'
+ */ 
 
 TableRegistry.registerBulk({
     'table-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')),
@@ -109,11 +108,11 @@ TableRegistry.markAsInitialized()
  *
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
- */
-import ActionRegistry from '~/utils/ActionRegistry'
+ */ 
 
 ActionRegistry.registerBulk({
     'action-button': defineAsyncComponent(() => import('~/components/actions/types/ActionButton.vue')),
+    'action-submit': defineAsyncComponent(() => import('~/components/actions/types/ActionSubmit.vue')),
     'action-link': defineAsyncComponent(() => import('~/components/actions/types/ActionLink.vue')),
     'action-button-link': defineAsyncComponent(() => import('~/components/actions/types/ActionButtonLink.vue')),
     'action-link-confirm': defineAsyncComponent(() => import('~/components/actions/types/ActionLinkConfirm.vue')),
@@ -134,9 +133,7 @@ ActionRegistry.markAsInitialized()
  *
  * Estes componentes são registrados automaticamente e podem ser
  * sobrescritos pela aplicação se necessário.
- */
-import FilterRegistry from '~/utils/FilterRegistry'
-import { App, Component, defineAsyncComponent } from 'vue'
+ */ 
 
 FilterRegistry.registerBulk({
     'filter-text': defineAsyncComponent(() => import('~/components/filters/types/FilterText.vue')),
