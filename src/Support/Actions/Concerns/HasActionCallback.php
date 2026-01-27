@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Actions\Concerns;
 
 use Callcocam\LaravelRaptor\Support\Table\Confirm;
 use Closure;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 trait HasActionCallback
