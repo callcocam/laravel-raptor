@@ -31,19 +31,19 @@ trait HasActionCallback
     /**
      * Executa o callback da action
      */
-    public function executeCallback(Request $request): mixed
+    public function executeCallback(Request $request, ?Model $model = null): mixed
     {
         if (!$this->callback) {
             return null;
         }
 
         if ($this->callback instanceof Closure) {
-            return $this->evaluate($this->callback, ['request' => $request]);
+            return $this->evaluate($this->callback, ['request' => $request, 'model' => $model]);
         }
 
         // Se for string, assume que é um método do controller
         if (method_exists($this, $this->callback)) {
-            return $this->{$this->callback}($request);
+            return $this->{$this->callback}($request, $model);
         }
 
         return null;

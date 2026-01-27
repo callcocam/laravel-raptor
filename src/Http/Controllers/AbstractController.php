@@ -403,13 +403,13 @@ abstract class AbstractController extends ResourceController
             }
 
             // Hook: antes de executar action
-            $this->beforeExecute($request, $actionName);
+            $this->beforeExecute($request, $actionName, $model);
 
             // Executa o callback da action
-            $result = $callback->executeCallback($request);
+            $result = $callback->executeCallback($request, $model);
 
             // Hook: depois de executar action
-            $this->afterExecute($request, $actionName);
+            $this->afterExecute($request, $actionName, $model);
 
             return $result;
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -477,7 +477,7 @@ abstract class AbstractController extends ResourceController
         //
     }
 
-    protected function beforeExecute(Request $request, string $action)
+    protected function beforeExecute(Request $request, string $action, ?Model $model = null)
     {
         //
     }
