@@ -482,7 +482,7 @@ abstract class AbstractController extends ResourceController
         //
     }
 
-    protected function afterExecute(Request $request, string $action)
+    protected function afterExecute(Request $request, string $action, ?Model $model = null)
     {
         //
     }
