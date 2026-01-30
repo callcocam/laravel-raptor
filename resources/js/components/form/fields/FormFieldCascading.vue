@@ -42,6 +42,11 @@ interface FormCascadingColumn {
   required?: boolean;
   fields?: FormColumn[];
   fieldsUsing?: string | null; // Esse e o nome do campo que determina qual campo vai ser atualizado na tabela do banco de dados
+  inertia?: {
+    preserveScroll?: boolean;
+    preserveState?: boolean;
+    only?: string[];
+  };
 }
 
 interface Props {
@@ -53,8 +58,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   modelValue: () => ({}),
   error: undefined,
+  inertia: { preserveScroll: true, preserveState: false, only: [] },
 });
-
 const emit = defineEmits<{
   (e: "update:modelValue", value: Record<string, any>): void;
 }>();
@@ -63,6 +68,14 @@ const page = usePage();
 
 const fields = computed(() => {
   return props.column.fields || [];
+});
+
+const inertia = computed(() => {
+  return {
+    preserveScroll: props.column.inertia?.preserveScroll ?? true,
+    preserveState: props.column.inertia?.preserveState ?? false,
+    only: props.column.inertia?.only ?? [],
+  };
 });
 
 // Provide fields immediately so child components can access it
@@ -78,7 +91,7 @@ const cascadingValues = ref<Record<string, any>>({});
 const initializeFromQuery = () => {
   const url = new URL(page.url, window.location.origin);
   const params = Object.fromEntries(new URLSearchParams(url.search));
- 
+
 
   // Clear all cascading values first
   const newValues: Record<string, any> = {};
@@ -88,22 +101,22 @@ const initializeFromQuery = () => {
   fields.value.forEach((field) => {
     const queryValue = params[field.name];
     const propValue = props.modelValue?.[field.name];
- 
 
-    if (queryValue !== undefined && queryValue !== null && queryValue !== "") { 
+
+    if (queryValue !== undefined && queryValue !== null && queryValue !== "") {
       newValues[field.name] = queryValue;
-    } else if (propValue !== undefined && propValue !== null && propValue !== "") { 
+    } else if (propValue !== undefined && propValue !== null && propValue !== "") {
       newValues[field.name] = propValue;
     } else {
       // console.log(`  ⏭️ Skipping ${field.name} (no value)`);
     }
-  }); 
+  });
 
   // Verifica se os valores realmente mudaram antes de atualizar
   const currentValuesStr = JSON.stringify(cascadingValues.value);
   const newValuesStr = JSON.stringify(newValues);
 
-  if (currentValuesStr !== newValuesStr) { 
+  if (currentValuesStr !== newValuesStr) {
     // Replace the entire cascadingValues object
     cascadingValues.value = newValues;
 
@@ -123,7 +136,7 @@ initializeFromQuery();
  */
 watch(
   () => page.url,
-  () => { 
+  () => {
     initializeFromQuery();
   }
 );
@@ -140,20 +153,16 @@ const getCascadingValues = () => {
  * Update a specific cascading field value
  */
 const updateCascadingValue = (fieldName: string, value: any) => {
-  console.log(`[Cascading] Updating ${fieldName} = ${value}`);
-  
+
   if (value === null || value === undefined || value === "") {
     delete cascadingValues.value[fieldName];
   } else {
     cascadingValues.value[fieldName] = value;
   }
 
-  console.log('[Cascading] Current values:', cascadingValues.value);
-  console.log('[Cascading] column name:', props.column.name);
 
   // Emite o objeto completo com todos os valores selecionados
-  // O backend (CascadingField.php) vai processar e pegar o último valor válido
-  console.log('[Cascading] Emitting', props.column.name, '=', cascadingValues.value);
+  // O backend (CascadingField.php) vai processar e pegar o último valor válido 
   emit("update:modelValue", { ...cascadingValues.value });
 };
 
@@ -162,7 +171,7 @@ const updateCascadingValue = (fieldName: string, value: any) => {
  */
 const getFieldValue = (fieldName: string) => {
   const fullObject = cascadingValues.value;
-  const fieldValue = cascadingValues.value[fieldName]; 
+  const fieldValue = cascadingValues.value[fieldName];
 
   return fieldValue || null;
 };
@@ -176,14 +185,12 @@ provide("getCascadingValues", getCascadingValues);
     <FieldLegend>{{ column.label }}</FieldLegend>
     <FieldDescription v-if="column.helpText"> {{ column.helpText }} </FieldDescription>
     <FieldGroup class="grid grid-cols-12 gap-4">
-      <FormFieldCascadingItem
-        v-for="field in fields"
-        :key="field.name"
-        :column="field"
-        :modelValue="getFieldValue(field.name)"
-        :error="error"
-        @update:modelValue="(value: any) => updateCascadingValue(field.name, value)"
-      />
+      <FormFieldCascadingItem v-for="field in fields" :key="field.name" :column="field" :inertia="{
+        preserveScroll: inertia.preserveScroll,
+        preserveState: inertia.preserveState,
+        only: inertia.only,
+      }" :modelValue="getFieldValue(field.name)" :error="error"
+        @update:modelValue="(value: any) => updateCascadingValue(field.name, value)" />
     </FieldGroup>
   </FieldSet>
 </template>

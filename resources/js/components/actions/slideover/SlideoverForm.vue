@@ -9,13 +9,7 @@
  -->
 <template>
   <div class="flex-1 overflow-y-auto px-6 py-6">
-    <FormRenderer
-      :columns="columns"
-      :errors="form.errors"
-      v-model="formData"
-      ref="formRef"
-      @submit="handleSubmit"
-    />
+    <FormRenderer :columns="columns" :errors="form.errors" v-model="formData" ref="formRef" @submit="handleSubmit" />
   </div>
 
   <!-- Footer com botões -->
@@ -32,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { Button } from '@/components/ui/button'
 import FormRenderer from '../../form/FormRenderer.vue'
@@ -46,6 +40,11 @@ interface Props {
     confirm?: {
       confirmButtonText?: string
       closeModalOnSuccess?: boolean
+    },
+    inertia?: {
+      only?: string[]
+      preserveScroll?: boolean
+      preserveState?: boolean
     }
   }
   confirmText?: string
@@ -70,7 +69,16 @@ const formData = ref<Record<string, any>>(props.modelValue)
 
 // Form do Inertia - gerencia automaticamente processing, errors, success
 const form = useForm({})
+console.log(props.action);
+const inertiaConfig = computed(() =>
+  props.action.inertia ||
+  {
+    only: [],
+    preserveScroll: true,
+    preserveState: false
 
+  }
+);
 // Handler para submit do formulário
 const handleSubmit = () => {
   // Submit usando useForm do Inertia com transform para passar os dados atualizados
@@ -80,8 +88,8 @@ const handleSubmit = () => {
       props.action.method.toLowerCase() as 'post' | 'put' | 'patch' | 'delete',
       props.action.url,
       {
-        preserveScroll: true,
-        preserveState: true,
+        preserveScroll: inertiaConfig.value.preserveScroll,
+        preserveState: inertiaConfig.value.preserveState,
         onSuccess: (page) => {
           emit('success', page)
         },

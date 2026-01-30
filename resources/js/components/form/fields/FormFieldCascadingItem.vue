@@ -86,7 +86,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   error: undefined,
 })
-
+console.log('Props cascading item:', props)
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number | null): void
 }>()

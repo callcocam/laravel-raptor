@@ -8,15 +8,8 @@
  * - Botões de ação
  -->
 <template>
-  <FormRenderer
-    :columns="columns"
-    :errors="form.errors"
-    :gridColumns="gridColumns"
-    :gap="gap"
-    v-model="formData"
-    ref="formRef"
-    @submit="handleSubmit"
-  >
+  <FormRenderer :columns="columns" :errors="form.errors" :gridColumns="gridColumns" :gap="gap" v-model="formData"
+    ref="formRef" @submit="handleSubmit">
     <!-- Footer com botões -->
     <template #actions>
       <slot name="footer">
@@ -34,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
 import FormRenderer from "../../form/FormRenderer.vue";
@@ -48,6 +41,11 @@ interface Props {
     confirm?: {
       confirmButtonText?: string;
       closeModalOnSuccess?: boolean;
+    };
+    inertia?: {
+      only?: string[];
+      preserveScroll?: boolean;
+      preserveState?: boolean;
     };
   };
   confirmText?: string;
@@ -67,6 +65,7 @@ const emit = defineEmits<{
   (e: "error", errors: any): void;
   (e: "cancel"): void;
 }>();
+ 
 
 // Referência ao FormRenderer
 const formRef = ref<InstanceType<typeof FormRenderer> | null>(null);
@@ -77,6 +76,15 @@ const formData = ref<Record<string, any>>(props.modelValue);
 // Form do Inertia - gerencia automaticamente processing, errors, success
 const form = useForm({});
 
+const inertiaConfig = computed(() =>
+  props.action.inertia ||
+  {
+    only: [],
+    preserveScroll: true,
+    preserveState: false
+  }
+);
+
 // Handler para submit do formulário
 const handleSubmit = () => {
   // Submit usando useForm do Inertia com transform para passar os dados atualizados
@@ -86,8 +94,8 @@ const handleSubmit = () => {
       props.action.method.toLowerCase() as "post" | "put" | "patch" | "delete",
       props.action.url,
       {
-        preserveScroll: true,
-        preserveState: true,
+        preserveScroll: inertiaConfig.value.preserveScroll,
+        preserveState: inertiaConfig.value.preserveState,
         onSuccess: (page) => {
           emit("success", page);
         },

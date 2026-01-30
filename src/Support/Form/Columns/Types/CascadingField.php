@@ -25,6 +25,12 @@ class CascadingField extends Column
 
     protected ?Closure $queryUsingCallback = null;
 
+    protected bool $preserveScroll = true;
+
+    protected bool $preserveState = false;
+
+    protected array $onlyProps = [];
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
@@ -70,6 +76,28 @@ class CascadingField extends Column
     public function queryUsingCallback(?Closure $callback): self
     {
         $this->queryUsingCallback = $callback;
+
+        return $this;
+    }
+
+
+    public function preserveScroll(bool $preserve = true): self
+    {
+        $this->preserveScroll = $preserve;
+
+        return $this;
+    }
+
+    public function preserveState(bool $preserve = true): self
+    {
+        $this->preserveState = $preserve;
+
+        return $this;
+    }
+
+    public function only(array $props): self
+    {
+        $this->onlyProps = $props;
 
         return $this;
     }
@@ -169,6 +197,11 @@ class CascadingField extends Column
             'component' => $this->getComponent(),
             'fieldsUsing' => $this->getFieldsUsing(),
             'fields' => $fieldsArray,
+            'inertia' => [
+                'preserveScroll' => $this->preserveScroll,
+                'preserveState' => $this->preserveState,
+                'only' => $this->onlyProps,
+            ],
         ], $this->getGridLayoutConfig());
     }
 }
