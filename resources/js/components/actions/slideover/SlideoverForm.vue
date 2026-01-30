@@ -68,8 +68,7 @@ const formRef = ref<InstanceType<typeof FormRenderer> | null>(null)
 const formData = ref<Record<string, any>>(props.modelValue)
 
 // Form do Inertia - gerencia automaticamente processing, errors, success
-const form = useForm({})
-console.log(props.action);
+const form = useForm({}) 
 const inertiaConfig = computed(() =>
   props.action.inertia ||
   {
