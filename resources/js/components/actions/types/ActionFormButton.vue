@@ -15,7 +15,7 @@
     @click="handleClick"
   >
     <component v-if="iconComponent && !isProcessing" :is="iconComponent" :class="iconClasses" />
-    <span>{{ displayLabel }}</span>
+    <span class="text-xs">{{ displayLabel }}</span>
   </Button>
 </template>
 
@@ -36,7 +36,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'default',
+  size: 'sm',
   asChild: false
 })
 
@@ -70,7 +70,7 @@ const displayLabel = computed(() => {
 // Usa composable para variant, size, iconComponent, iconClasses
 const { variant: baseVariant, size: computedSize, iconComponent, iconClasses } = useActionUI({
   action: props.action,
-  defaultSize: 'default',
+  defaultSize: 'sm',
   defaultVariant: props.variant
 })
 

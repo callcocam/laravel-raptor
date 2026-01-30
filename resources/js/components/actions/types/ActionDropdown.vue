@@ -7,20 +7,21 @@
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <Button :variant="variant" :size="size">
-        <component v-if="iconComponent" :is="iconComponent" class="h-4 w-4 mr-2" />
-        <span>{{ action.label }}</span>
-        <ChevronDown class="h-4 w-4 ml-2" />
+      <Button :variant="variant" :size="computedSize" class="gap-1.5">
+        <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
+        <span class="text-xs">{{ action.label }}</span>
+        <ChevronDown class="h-3 w-3" />
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
       <DropdownMenuItem
         v-for="item in items"
         :key="item.name"
+        class="gap-1.5"
         @click="() => handleItemClick(item)"
       >
-        <component v-if="getItemIcon(item)" :is="getItemIcon(item)" class="h-4 w-4 mr-2" />
-        {{ item.label }}
+        <component v-if="getItemIcon(item)" :is="getItemIcon(item)" class="h-3 w-3" />
+        <span class="text-xs">{{ item.label }}</span>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
@@ -46,7 +47,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'default'
+  size: 'sm'
 })
 
 const emit = defineEmits<{
@@ -58,10 +59,10 @@ const items = computed(() => {
   return props.action.options || []
 })
 
-// Usa composable para variant e iconComponent
-const { variant, iconComponent } = useActionUI({
+// Usa composable para variant, iconComponent e iconClasses
+const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
   action: props.action,
-  defaultSize: 'default'
+  defaultSize: 'sm'
 })
 
 // Obtém ícone de um item

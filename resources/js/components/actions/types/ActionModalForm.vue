@@ -15,11 +15,11 @@
     <DialogTrigger as-child>
       <Button
         :variant="variant"
-        :size="size"
-        class="gap-1 h-7 px-2.5"
+        :size="computedSize"
+        class="gap-1.5"
         @click="handleTriggerClick"
       >
-        <component v-if="iconComponent" :is="iconComponent" class="h-3 w-3" />
+        <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
         <span class="text-xs">{{ action.label }}</span>
       </Button>
     </DialogTrigger>
@@ -104,6 +104,7 @@ import ModalForm from '../modal/ModalForm.vue'
 import ModalTable from '../modal/ModalTable.vue'
 import ModalInfo from '../modal/ModalInfo.vue'
 import { useActionConfig } from '~/composables/useActionConfig'
+import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
 
 interface FormColumn {
@@ -170,24 +171,15 @@ const {
   gap,
   dialogClasses,
   hasFormColumns,
-  variant,
 } = useActionConfig({
   action: props.action,
   columns: formColumns
 })
 
-// Componente do ícone dinâmico
-const iconComponent = computed(() => {
-  if (!props.action.icon) return null
-
-  const IconComponent = (LucideIcons as any)[props.action.icon]
-
-  if (!IconComponent) {
-    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`)
-    return null
-  }
-
-  return h(IconComponent)
+// Usa composable para UI padronizada (variant, iconComponent, iconClasses)
+const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+  action: props.action,
+  defaultSize: 'sm'
 })
 
 // Handler para click no trigger

@@ -11,11 +11,11 @@
     <!-- Botão trigger -->
     <Button
       :variant="variant"
-      :size="size"
-      class="gap-1 h-7 px-2.5"
+      :size="computedSize"
+      class="gap-1.5"
       @click="openSlideover"
     >
-      <component v-if="iconComponent" :is="iconComponent" class="h-3 w-3" />
+      <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
       <span class="text-xs">{{ action.label }}</span>
     </Button>
 
@@ -140,7 +140,7 @@ const {
 });
 
 // Usa composable para UI (variant, iconComponent, etc)
-const { variant, iconComponent } = useActionUI({
+const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 }); 

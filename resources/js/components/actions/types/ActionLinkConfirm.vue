@@ -9,9 +9,9 @@
 <template>
   <AlertDialog v-model:open="isOpen">
     <AlertDialogTrigger as-child>
-      <Button :variant="variant" :size="size">
-        <component v-if="iconComponent" :is="iconComponent" class="h-4 w-4 mr-2" />
-        <span>{{ action.label }}</span>
+      <Button :variant="variant" :size="computedSize" class="gap-1.5">
+        <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
+        <span class="text-xs">{{ action.label }}</span>
       </Button>
     </AlertDialogTrigger>
 
@@ -87,6 +87,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import * as LucideIcons from "lucide-vue-next";
+import { useActionUI } from "~/composables/useActionUI";
 import type { TableAction } from "~/types/table"; 
 import { Link, router } from '@inertiajs/vue3'
 
@@ -96,7 +97,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: "default",
+  size: "sm",
 });
 
 const emit = defineEmits<{
@@ -144,19 +145,10 @@ const isTypedWordCorrect = computed(() => {
   return typedWord.value.toUpperCase() === typedConfirmationWord.value.toUpperCase();
 });
 
-// Mapeia cor para variant do shadcn (botão principal)
-const variant = computed(() => {
-  if (props.action.variant) return props.action.variant;
-  const colorMap: Record<string, any> = {
-    green: "default",
-    blue: "default",
-    red: "destructive",
-    yellow: "warning",
-    gray: "secondary",
-    default: "default",
-  };
-
-  return colorMap[props.action.color || "default"] || "default";
+// Usa composable para UI padronizada
+const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+  action: props.action,
+  defaultSize: 'sm'
 });
 
 // Classes para o botão de confirmação
@@ -171,20 +163,6 @@ const confirmVariantClass = computed(() => {
   };
 
   return variantMap[color] || "";
-});
-
-// Componente do ícone dinâmico
-const iconComponent = computed(() => {
-  if (!props.action.icon) return null;
-
-  const IconComponent = (LucideIcons as any)[props.action.icon];
-
-  if (!IconComponent) {
-    console.warn(`Icon "${props.action.icon}" not found in lucide-vue-next`);
-    return null;
-  }
-
-  return h(IconComponent);
 });
 
 // Ícone padrão de question para o modal

@@ -11,12 +11,13 @@
     :class="linkClasses"
     @click="handleClick"
   >
-    <component v-if="iconComponent" :is="iconComponent" class="h-3.5 w-3.5" />
-    <span>{{ action.label }}</span>
+    <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
+    <span class="text-xs">{{ action.label }}</span>
   </Link>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { cn } from '@/lib/utils'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
@@ -37,17 +38,17 @@ const target = props.action.target === 'modal' ? '_self' : props.action.target
 
 const to = props.action.url || '#'
 
-const { iconComponent, colorClasses } = useActionUI({
+const { iconComponent, iconClasses, colorClasses } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 })
 
 // Classes do link
-const linkClasses = cn(
-  'inline-flex items-center gap-1 font-medium text-xs transition-colors rounded-md px-2 py-1',
+const linkClasses = computed(() => cn(
+  'inline-flex items-center gap-1.5 font-medium transition-colors rounded-md px-2 py-1',
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
   colorClasses.value
-)
+))
 
 // Handler de clique
 const handleClick = (event: MouseEvent) => {

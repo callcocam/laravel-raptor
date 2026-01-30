@@ -9,8 +9,8 @@
 <template>
   <AlertDialog v-model:open="isOpen">
     <AlertDialogTrigger as-child>
-      <Button :variant="variant" :size="size">
-        <component v-if="iconComponent" :is="iconComponent" class="h-3 w-3" />
+      <Button :variant="variant" :size="computedSize" class="gap-1.5">
+        <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
         <span class="text-xs">{{ action.label }}</span>
       </Button>
     </AlertDialogTrigger>
@@ -171,7 +171,7 @@ const isTypedWordCorrect = computed(() => {
 });
 
 // Usa composable para UI
-const { variant, iconComponent } = useActionUI({
+const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 });

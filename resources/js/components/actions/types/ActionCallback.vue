@@ -9,16 +9,17 @@
     type="button"
     :variant="variant"
     :size="size"
-    :class="className"
+    :class="cn('gap-1.5', className)"
     @click="handleClick"
   >
     <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-    <span>{{ action.label }}</span>
+    <span class="text-xs">{{ action.label }}</span>
   </Button>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { useAction } from '~/composables/useAction'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
@@ -31,7 +32,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: 'default'
+  size: 'sm'
 })
 
 const emit = defineEmits<{
@@ -40,9 +41,9 @@ const emit = defineEmits<{
 }>()
 
 const { executeCallback } = useAction()
-const { variant, iconComponent, iconClasses } = useActionUI({
+const { variant, size, iconComponent, iconClasses } = useActionUI({
   action: props.action,
-  defaultSize: 'default'
+  defaultSize: 'sm'
 })
 
 // Handler de clique - executa callback
