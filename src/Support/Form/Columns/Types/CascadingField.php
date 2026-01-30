@@ -23,6 +23,8 @@ class CascadingField extends Column
 
     protected bool $searchable = false;
 
+    protected ?Closure $queryUsingCallback = null;
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
@@ -65,11 +67,34 @@ class CascadingField extends Column
         return $this;
     }
 
+    public function queryUsingCallback(?Closure $callback): self
+    {
+        $this->queryUsingCallback = $callback;
+
+        return $this;
+    }
+
     protected function cascadingFields($model = null): array
     {
         $fields = $this->getFields();
-        $queryUsing = $this->getQueryUsing();
+
         $cascadingFields = [];
+        if ($this->queryUsingCallback instanceof Closure) {
+            $cascadingFields = (array) $this->evaluate($this->queryUsingCallback, [
+                'model' => $model,
+                'fields' => $fields,
+            ]) ?? [];
+
+            return $cascadingFields;
+        }
+        $queryUsing = $this->getQueryUsing();
+
+        if (!$queryUsing instanceof Builder) {
+            foreach ($fields as  $field) {
+                $cascadingFields[] = $field;
+            }
+            return $cascadingFields;
+        }
 
         // Pega os dados do cascading do modelo (se existir)
         $cascadingData = null;

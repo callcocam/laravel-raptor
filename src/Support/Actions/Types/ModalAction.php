@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\HiddenField;
 use Closure;
 
 /**
@@ -141,8 +142,8 @@ class ModalAction extends ExecuteAction
      */
     public function render($model, $request = null): array
     {
-        $this->request($request);
-
+        $this->request($request)->column(HiddenField::make('actionType', $this->getActionType()))
+            ->column(HiddenField::make('actionName',  $this->getName()));
         $result = [
             'type' => 'action',
             'actionType' => $this->getActionType(),

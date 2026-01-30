@@ -31,7 +31,7 @@ abstract class Column extends AbstractColumn
 
     protected ?Closure $defaultUsing = null;
 
-    protected Closure|string|Builder|null $queryUsing = null;
+    protected Closure|string|Builder|\Illuminate\Database\Query\Builder|null $queryUsing = null;
 
     protected int $index = 0;
 
@@ -91,7 +91,7 @@ abstract class Column extends AbstractColumn
         return !is_null($this->defaultUsing);
     }
 
-    public function queryUsing(Closure|string|Builder|null $queryUsing): self
+    public function queryUsing(Closure|string|Builder|\Illuminate\Database\Query\Builder|null $queryUsing): self
     {
         $this->queryUsing = $queryUsing;
 
@@ -99,12 +99,15 @@ abstract class Column extends AbstractColumn
     }
 
 
-    public function getQueryUsing(): Closure|string|Builder|null
+    public function getQueryUsing(): Closure|string|Builder|\Illuminate\Database\Query\Builder|null
     {
         if (is_string($this->queryUsing)) {
             return app($this->queryUsing);
         }
         if ($this->queryUsing instanceof Builder) {
+            return $this->queryUsing;
+        }
+        if ($this->queryUsing instanceof \Illuminate\Database\Query\Builder) {
             return $this->queryUsing;
         }
         return $this->evaluate($this->queryUsing);
