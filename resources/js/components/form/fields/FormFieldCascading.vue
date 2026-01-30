@@ -73,7 +73,7 @@ const fields = computed(() => {
 const inertia = computed(() => {
   return {
     preserveScroll: props.column.inertia?.preserveScroll ?? true,
-    preserveState: props.column.inertia?.preserveState ?? false,
+    preserveState: props.column.inertia?.preserveState ?? true,
     only: props.column.inertia?.only ?? [],
   };
 });

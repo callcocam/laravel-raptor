@@ -27,7 +27,7 @@ class CascadingField extends Column
 
     protected bool $preserveScroll = true;
 
-    protected bool $preserveState = false;
+    protected bool $preserveState = true;
 
     protected array $onlyProps = [];
 

@@ -80,6 +80,11 @@ interface Props {
   column: FormColumn
   modelValue?: string | number | null
   error?: string | string[]
+  inertia?: {
+    preserveScroll?: boolean
+    preserveState?: boolean
+    only?: string[]
+  }
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -202,10 +207,10 @@ const reloadWithCascadingValues = (newValue: string | number | null | undefined)
 
   // Reload page with Inertia, preserving state but excluding flash messages
   router.get(window.location.pathname, params, {
-    preserveState: true,
-    preserveScroll: true,
+    preserveState: props.inertia?.preserveState,
+    preserveScroll: props.inertia?.preserveScroll,
     replace: true,
-    only: ['form'], // Only reload form data
+    only: props.inertia?.only || [], // Only reload form data
     except: ['success', 'error', 'flash'] // Exclude flash messages
   })
 }
