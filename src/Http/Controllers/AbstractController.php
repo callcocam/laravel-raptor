@@ -396,7 +396,7 @@ abstract class AbstractController extends ResourceController
             // Extrai as regras de validação dos campos da action
             $validationRules = $callback->getValidationRules();
             $validationMessages = $callback->getValidationMessages();
- 
+
             // Valida os dados do formulário da action se houver regras
             if (!empty($validationRules)) {
                 $request->validate($validationRules, $validationMessages);
@@ -409,9 +409,16 @@ abstract class AbstractController extends ResourceController
             $result = $callback->executeCallback($request, $model);
 
             // Hook: depois de executar action
-            $this->afterExecute($request, $actionName, $model);
+            $this->afterExecute($request, $actionName, $model, $result instanceof BaseRedirectResponse ? null : $result);
 
-            return $result;
+            if (is_string($result)) {
+                return redirect()->to($result);
+            }
+            if ($result instanceof BaseRedirectResponse) {
+                return $result;
+            }
+            return redirect()->back()
+                ->with(data_get($result, 'type', 'success'), data_get($result, 'message', 'Ação executada com sucesso.'));
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
             throw $e;
@@ -482,7 +489,7 @@ abstract class AbstractController extends ResourceController
         //
     }
 
-    protected function afterExecute(Request $request, string $action, ?Model $model = null)
+    protected function afterExecute(Request $request, string $action, ?Model $model = null, $result = null)
     {
         //
     }
