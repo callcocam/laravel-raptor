@@ -43,11 +43,13 @@ class BuscaCepField extends Column
 
     protected  string $exuteOnChange = 'zip_code';
 
+    protected array $requiredFields = [];
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->component('form-field-busca-cep');
-        $this->setUp(); 
+        $this->setUp();
     }
 
     protected function setUp(): void
@@ -63,20 +65,20 @@ class BuscaCepField extends Column
         ];
 
         // Campos padrão
-        $this->fields([ 
-            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('zip_code') 
+        $this->fields([
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('zip_code')
                 ->label('CEP')
-                ->required()
+                ->required($this->isRequired())
                 ->placeholder('Digite o CEP')
                 ->columnSpan(4),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('street')
                 ->label('Rua')
-                ->required()
+                ->required($this->isRequired())
                 ->placeholder('Rua, avenida, etc.')
                 ->columnSpan(6),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('number')
                 ->label('Número')
-                ->required()
+                ->required($this->isRequired())
                 ->placeholder('Nº')
                 ->columnSpan(2),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('complement')
@@ -85,22 +87,30 @@ class BuscaCepField extends Column
                 ->columnSpan(6),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('district')
                 ->label('Bairro')
-                ->required()
+                ->required($this->isRequired())
                 ->placeholder('Bairro')
                 ->columnSpan(6),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('city')
                 ->label('Cidade')
-                ->required()
+                ->required($this->isRequired())
                 ->readonly()
                 ->placeholder('Cidade')
                 ->columnSpan(8),
             \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('state')
                 ->label('UF')
-                ->required()
+                ->required($this->isRequired())
                 ->readonly()
                 ->placeholder('UF')
                 ->columnSpan(4),
         ]);
+    }
+
+    /**
+     * Verifica se o campo é obrigatório
+     */
+    public function isRequired(): bool
+    {
+        return in_array($this->name, $this->requiredFields);
     }
 
     public function executeOnChange(string $fieldName): static
@@ -131,7 +141,7 @@ class BuscaCepField extends Column
     public function fieldMapping(array $mapping): static
     {
         $this->fieldMapping = array_merge($this->fieldMapping, $mapping);
-        
+
         return $this;
     }
 
@@ -148,7 +158,7 @@ class BuscaCepField extends Column
     public function toArray($model = null): array
     {
         $baseArray = parent::toArray($model);
-          // Converte cada field para array
+        // Converte cada field para array
         $fieldsArray = array_map(function ($field) use ($model) {
             return $field->toArray($model);
         }, $this->getFields());
@@ -156,7 +166,7 @@ class BuscaCepField extends Column
         $baseArray['fieldMapping'] = $this->getFieldMapping();
         $baseArray['fields'] = $fieldsArray;
         $baseArray['executeOnChange'] = $this->getExecuteOnChange();
-        
+
         return $baseArray;
     }
 }
