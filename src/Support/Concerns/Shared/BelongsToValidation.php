@@ -101,7 +101,8 @@ trait BelongsToValidation
     public function getRules($record = null): array|string
     {
         return $this->evaluate($this->rules, [
-            'record' => $record
+            'record' => $record,
+            'attribute' => $this->getName(),
         ]);
     }
 
