@@ -13,25 +13,36 @@ use Illuminate\Http\Request;
 
 class ExecuteController extends Controller
 {
-    /**
-     * Executa ações genéricas do sistema.
-     *
-     * Esta é a rota padrão para execução de ações quando não há
-     * uma rota personalizada definida no controller.
-     *
-     * O Action.php pode gerar URLs personalizadas ou usar esta rota genérica.
-     */
-    public function execute(Request $request)
+    public function __invoke(Request $request)
     {
         // Valida os dados básicos
         $validated = $request->validate([
-            'action' => 'sometimes|string',
-            'record_id' => 'sometimes|integer|exists:users,id', // Ajuste o modelo conforme necessário
+            'action' => 'required|string',
+            'model' => 'required|string',
+            'record_id' => 'nullable',
         ]);
 
-        // Aqui você pode implementar a lógica de execução
-        // Por exemplo, despachar um job, executar uma ação, etc.
+        $modelClass = $validated['model'];
+        $actionName = $validated['action'];
+        $recordId = $validated['record_id'];
 
-        return back()->with('success', 'Ação executada com sucesso!');
+        if (!class_exists($modelClass)) {
+            return response()->json(['error' => 'Model not found'], 404);
+        }
+
+        $record = $recordId ? $modelClass::find($recordId) : null;
+        $controller = $record ? $record->getController() : app($modelClass)->getController();
+
+        if (!$controller) {
+            return response()->json(['error' => 'Controller not found for the model'], 404);
+        }
+
+        $action = $controller->getAction($actionName);
+
+        if (!$action) {
+            return response()->json(['error' => 'Action not found'], 404);
+        }
+
+        return $action->execute($request, $record);
     }
 }

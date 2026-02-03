@@ -41,6 +41,18 @@ Route::middleware(['web', 'auth', $context])
 
         Route::post('/execute', [config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class), 'execute'])
             ->name('execute');
+
+        // Rotas de notificações
+        Route::get('/notifications', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::post('/notifications/{id}/read', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'markAsRead'])
+            ->name('notifications.read');
+        Route::post('/notifications/read-all', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'markAllAsRead'])
+            ->name('notifications.read-all');
+        Route::delete('/notifications/{id}', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'destroy'])
+            ->name('notifications.destroy');
+        Route::delete('/notifications', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'destroyAll'])
+            ->name('notifications.destroy-all');
     });
 
 

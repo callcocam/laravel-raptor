@@ -13,9 +13,11 @@ use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 abstract class AbstractController extends ResourceController
 {
@@ -353,7 +355,7 @@ abstract class AbstractController extends ResourceController
      * Executa uma ação personalizada (header ou bulk)
      * Busca a action pelo nome e executa seu callback
      */
-    public function execute(Request $request): BaseRedirectResponse
+    public function execute(Request $request): BaseRedirectResponse|JsonResponse|BinaryFileResponse
     {
         try {
             // Valida os campos básicos da action
@@ -396,7 +398,7 @@ abstract class AbstractController extends ResourceController
                     ->back()
                     ->with('error', 'Ação não encontrada.');
             }
-
+ 
             // Extrai as regras de validação dos campos da action
             $validationRules = $callback->getValidationRules();
             $validationMessages = $callback->getValidationMessages();
@@ -411,18 +413,28 @@ abstract class AbstractController extends ResourceController
 
             // Executa o callback da action
             $result = $callback->executeCallback($request, $model);
-
+         
             // Hook: depois de executar action
             $this->afterExecute($request, $actionName, $model, $result instanceof BaseRedirectResponse ? null : $result);
 
+            if ($result instanceof BinaryFileResponse) {
+                return $result;
+            }
             if (is_string($result)) {
                 return redirect()->to($result);
             }
             if ($result instanceof BaseRedirectResponse) {
                 return $result;
             }
+            if (is_array($result)) {
+                $notification = data_get($result, 'notification', []);
+                $type = data_get($notification, 'type', 'success');
+                $message = data_get($notification, 'text') ?? data_get($notification, 'message', 'Ação executada com sucesso.');
+                
+                return redirect()->back()->with($type, $message);
+            }
             return redirect()->back()
-                ->with(data_get($result, 'type', 'success'), data_get($result, 'message', 'Ação executada com sucesso.'));
+                ->with('success', 'Ação executada com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Re-lança exceção de validação para o Laravel tratar
             throw $e;

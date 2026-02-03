@@ -8,42 +8,55 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use Callcocam\LaravelRaptor\Support\Pages\Execute;
 use Callcocam\LaravelRaptor\Support\Pages\Page;
 use Callcocam\LaravelRaptor\Support\Pages\Show;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Routing\Router;
 use ReflectionClass;
+use Illuminate\Support\Str;
 
+/**
+ * Injeta rotas dinamicamente baseadas em controllers que seguem um padrão específico.
+ *
+ * Esta classe escaneia diretórios de controllers em busca de classes que implementam
+ * o método `getPages()`. A partir das páginas retornadas, ela registra as rotas
+ * correspondentes e adiciona rotas complementares (store, update, destroy, etc.).
+ */
 class TenantRouteInjector
 {
     /**
-     * Configuração de diretórios de controllers para scan
+     * Configuração de diretórios de controllers para scan.
      * Formato: ['namespace' => 'path']
+     * @var array<string, string>
      */
     protected array $controllerDirectories = [];
 
+    protected Filesystem $filesystem;
+    protected Router $router;
+
+    /**
+     * @param array<string, string> $defaultDirectories Diretórios padrão para escanear.
+     */
     public function __construct(array $defaultDirectories = [])
     {
+        $this->filesystem = new Filesystem();
+        $this->router = app('router');
         $this->loadDefaultDirectories($defaultDirectories);
     }
 
     /**
-     * Carrega diretórios padrão a partir do config
+     * Carrega os diretórios padrão a partir da configuração do pacote.
+     * @param array<string, string> $defaultDirectories
      */
-    protected function loadDefaultDirectories($defaultDirectories = []): void
+    protected function loadDefaultDirectories(array $defaultDirectories = []): void
     {
-        // Carrega configuração do arquivo config/raptor.php
-        $configuredDirs = []; // config('raptor.route_injector.directories', []); 
-        // Diretórios padrão se não houver configuração
-        // $defaultDirectories = [
-        //     'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-        //     // 'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant', 
-        // ];
+        $configuredDirs = config('raptor.route_injector.directories', []);
         $this->controllerDirectories = array_merge($configuredDirs, $defaultDirectories);
     }
 
     /**
-     * Adiciona um diretório customizado para scan
+     * Adiciona um diretório customizado para o scan de controllers.
      */
     public function addDirectory(string $namespace, string $path): self
     {
@@ -52,7 +65,8 @@ class TenantRouteInjector
     }
 
     /**
-     * Define diretórios (substitui todos)
+     * Define um conjunto de diretórios, substituindo os existentes.
+     * @param array<string, string> $directories
      */
     public function setDirectories(array $directories): self
     {
@@ -60,10 +74,13 @@ class TenantRouteInjector
         return $this;
     }
 
+    /**
+     * Registra todas as rotas encontradas nos diretórios configurados.
+     */
     public function registerRoutes(): void
     {
         foreach ($this->controllerDirectories as $namespace => $path) {
-            if (!File::isDirectory($path)) {
+            if (!$this->filesystem->isDirectory($path)) {
                 continue;
             }
 
@@ -75,10 +92,14 @@ class TenantRouteInjector
         }
     }
 
+    /**
+     * Escaneia um diretório em busca de controllers válidos.
+     * @return array<int, class-string>
+     */
     protected function scanControllers(string $namespace, string $path): array
     {
         $controllers = [];
-        $files = File::allFiles($path);
+        $files = $this->filesystem->allFiles($path);
 
         foreach ($files as $file) {
             $className = $this->getClassNameFromFile($file, $namespace, $path);
@@ -91,10 +112,15 @@ class TenantRouteInjector
         return $controllers;
     }
 
-    protected function getClassNameFromFile($file, string $namespace, string $basePath): ?string
+    /**
+     * Extrai o nome completo da classe a partir de um arquivo.
+     * @param \SplFileInfo $file
+     * @return class-string|null
+     */
+    protected function getClassNameFromFile(\SplFileInfo $file, string $namespace, string $basePath): ?string
     {
-        $relativePath = str_replace($basePath . '/', '', $file->getPathname());
-        $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
+        $relativePath = Str::replaceFirst($basePath . '/', '', $file->getPathname());
+        $className = Str::of($relativePath)->replace(['/', '.php'], ['\\', ''])->toString();
         $fullClassName = $namespace . '\\' . $className;
 
         if (class_exists($fullClassName)) {
@@ -104,17 +130,24 @@ class TenantRouteInjector
         return null;
     }
 
+    /**
+     * Verifica se uma classe possui o método público `getPages`.
+     * @param class-string $className
+     */
     protected function hasGetPagesMethod(string $className): bool
     {
         try {
             $reflection = new ReflectionClass($className);
-            return $reflection->hasMethod('getPages') &&
-                $reflection->getMethod('getPages')->isPublic();
+            return $reflection->hasMethod('getPages') && $reflection->getMethod('getPages')->isPublic();
         } catch (\Exception) {
             return false;
         }
     }
 
+    /**
+     * Registra as rotas para um controller específico.
+     * @param class-string $controllerClass
+     */
     protected function registerControllerRoutes(string $controllerClass): void
     {
         try {
@@ -139,108 +172,110 @@ class TenantRouteInjector
         }
     }
 
+    /**
+     * Adiciona rotas complementares (store, update, destroy, etc.) com base nas páginas existentes.
+     * @param array<string, Page> $pages
+     * @return array<string, Page>
+     */
     protected function addComplementaryRoutes(array $pages): array
     {
         $complementary = [];
+        $pageKeys = array_keys($pages);
 
-        if (isset($pages['create']) && !isset($pages['store'])) {
-            $createPage = $pages['create'];
-            $storePath = str_replace('/create', '', $createPage->getPath());
-
-            $complementary['store'] = clone $createPage;
-            $complementary['store']->path = $storePath;
-            $complementary['store']->method = 'POST';
-            $complementary['store']->action = 'store';
-            $complementary['store']->label = $createPage->getLabel() ? str_replace('Criar', 'Salvar', $createPage->getLabel()) : '';
-            $complementary['store']->name = $createPage->getName() ? str_replace('.create', '.store', $createPage->getName()) : '';
+        // Adiciona 'store' se 'create' existir e 'store' não estiver definido
+        if (in_array('create', $pageKeys) && !in_array('store', $pageKeys)) {
+            $complementary['store'] = $this->createComplementaryRoute($pages['create'], 'store', 'POST', '/create', 'Criar', 'Salvar');
         }
 
-        if (isset($pages['edit'])) {
-            $editPage = $pages['edit'];
-            $updatePath = $editPage->getPath();
-
-            if (!isset($pages['update'])) {
-                $updatePath = $editPage->getPath();
-                $complementary['update'] = clone $editPage;
-                $complementary['update']->path = str($updatePath)
-                    ->replace('/edit', '')
-                    ->toString();
-                $complementary['update']->method = 'PUT';
-                $complementary['update']->action = 'update';
-                $complementary['update']->label = $editPage->getLabel() ? str_replace('Editar', 'Atualizar', $editPage->getLabel()) : '';
-                $complementary['update']->name = $editPage->getName() ? str_replace('.edit', '.update', $editPage->getName()) : '';
-            }
+        // Adiciona 'update' se 'edit' existir e 'update' não estiver definido
+        if (in_array('edit', $pageKeys) && !in_array('update', $pageKeys)) {
+            $complementary['update'] = $this->createComplementaryRoute($pages['edit'], 'update', 'PUT', '/edit', 'Editar', 'Atualizar');
         }
 
-        if (isset($pages['index'])) {
+        // Adiciona rotas de resource se 'index' existir
+        if (in_array('index', $pageKeys)) {
             $indexPage = $pages['index'];
             $basePath = $indexPage->getPath();
 
-            if (!isset($pages['show'])) {
+            if (!in_array('show', $pageKeys)) {
                 $showPage = Show::route($basePath . '/{record}');
-                $showPage->label = $indexPage->getLabel() ? str_replace('Lista', 'Visualizar', $indexPage->getLabel()) : '';
-                $showPage->name = $indexPage->getName() ? str_replace('.index', '.show', $indexPage->getName()) : '';
+                $showPage->label = Str::replace('Lista', 'Visualizar', $indexPage->getLabel() ?? '');
+                $showPage->name = Str::replace('.index', '.show', $indexPage->getName() ?? '');
                 $showPage->middlewares = $indexPage->getMiddlewares();
                 $complementary['show'] = $showPage;
             }
 
-            if (!isset($pages['destroy'])) {
-                $complementary['destroy'] = clone $indexPage;
-                $complementary['destroy']->path = $basePath . '/{record}';
-                $complementary['destroy']->method = 'DELETE';
-                $complementary['destroy']->action = 'destroy';
-                $complementary['destroy']->label = $indexPage->getLabel() ? str_replace('Lista', 'Excluir', $indexPage->getLabel()) : '';
-                $complementary['destroy']->name = $indexPage->getName() ? str_replace('.index', '.destroy', $indexPage->getName()) : '';
-
-
-                //Restore route for soft deletes 
-                $complementary['restore'] = clone $indexPage;
-                $complementary['restore']->path = $basePath . '/{record}/restore';
-                $complementary['restore']->method = 'POST';
-                $complementary['restore']->action = 'restore';
-                $complementary['restore']->label = $indexPage->getLabel() ? str_replace('Lista', 'Restaurar', $indexPage->getLabel()) : '';
-                $complementary['restore']->name = $indexPage->getName() ? str_replace('.index', '.restore', $indexPage->getName()) : '';
-
-                // Force delete route for soft deletes
-                $complementary['forceDelete'] = clone $indexPage;
-                $complementary['forceDelete']->path = $basePath . '/{record}/force-delete';
-                $complementary['forceDelete']->method = 'DELETE';
-                $complementary['forceDelete']->action = 'forceDelete';
-                $complementary['forceDelete']->label = $indexPage->getLabel() ? str_replace('Lista', 'Excluir Definitivamente', $indexPage->getLabel()) : '';
-                $complementary['forceDelete']->name = $indexPage->getName() ? str_replace('.index', '.force-delete', $indexPage->getName()) : '';
+            if (!in_array('destroy', $pageKeys)) {
+                $complementary['destroy'] = $this->createComplementaryRoute($indexPage, 'destroy', 'DELETE', '', 'Lista', 'Excluir', '/{record}');
+            }
+            if (!in_array('restore', $pageKeys)) {
+                $complementary['restore'] = $this->createComplementaryRoute($indexPage, 'restore', 'POST', '', 'Lista', 'Restaurar', '/{record}/restore');
+            }
+            if (!in_array('forceDelete', $pageKeys)) {
+                $complementary['forceDelete'] = $this->createComplementaryRoute($indexPage, 'forceDelete', 'DELETE', '', 'Lista', 'Excluir Definitivamente', '/{record}/force-delete');
+            }
+            // Adiciona 'execute' se 'index' existir e 'execute' não estiver definido
+            if (!in_array('execute', $pageKeys)) {
+                $executePage = Execute::route(sprintf('%s/execute/actions', $basePath));
+                $executePage->label = sprintf('Executar %s', $indexPage->getLabel() ?? '');
+                $executePage->name = Str::replace('.index', '.execute', $indexPage->getName() ?? '');
+                $executePage->middlewares = $indexPage->getMiddlewares();
+                $executePage->method = 'POST';
+                $complementary['execute'] = $executePage;
             }
         }
 
         return array_merge($pages, $complementary);
     }
 
+    /**
+     * Cria uma rota complementar baseada em uma página existente.
+     */
+    private function createComplementaryRoute(Page $originalPage, string $action, string $method, string $pathToRemove, string $labelToReplace, string $newLabel, string $pathSuffix = ''): Page
+    {
+        $newPage = clone $originalPage;
+        $newPage->path = Str::replace($pathToRemove, '', $originalPage->getPath()) . $pathSuffix;
+        $newPage->method = $method;
+        $newPage->action = $action;
+        $newPage->label = Str::replace($labelToReplace, $newLabel, $originalPage->getLabel() ?? '');
+        $newPage->name = Str::replace(Str::beforeLast($originalPage->getName() ?? '', '.'), Str::beforeLast($originalPage->getName() ?? '', '.') . '.' . $action, $originalPage->getName() ?? '');
+
+        return $newPage;
+    }
+
+
+    /**
+     * Registra uma única rota no Laravel.
+     * @param class-string $controllerClass
+     */
     protected function registerRoute(string $controllerClass, string $key, Page $page): void
     {
+        if (!$page->isVisible()) {
+            return;
+        }
+
         $path = $page->getPath();
         $method = $page->getMethod() ?: 'GET';
         $action = $page->getAction() ?: $key;
         $name = $page->getName() ?: $this->generateRouteName($controllerClass, $key);
         $middlewares = $page->getMiddlewares();
 
-        if (!$page->isVisible()) {
-            return;
-        }
-        $route = Route::match(
-            [$method],
-            $path,
-            [$controllerClass, $action]
-        )->name($name);
+        $route = $this->router->match([$method], $path, [$controllerClass, $action])->name($name);
 
         if (!empty($middlewares)) {
             $route->middleware($middlewares);
         }
     }
 
+    /**
+     * Gera um nome de rota padrão com base no nome do controller e na ação.
+     * Ex: UserController, 'index' -> 'user.index'
+     * @param class-string $controllerClass
+     */
     protected function generateRouteName(string $controllerClass, string $key): string
     {
         $className = class_basename($controllerClass);
-        $resourceName = str_replace('Controller', '', $className);
-        $resourceName = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $resourceName));
+        $resourceName = Str::kebab(str_replace('Controller', '', $className));
 
         return "{$resourceName}.{$key}";
     }

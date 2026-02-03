@@ -1,5 +1,5 @@
 import { ref, computed, onMounted } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 import { useEcho } from '@laravel/echo-vue'
 import { toast } from 'vue-sonner'
 
@@ -87,24 +87,19 @@ export function useGlobalNotifications() {
     const markAsRead = async (notificationId: string) => {
         const notification = notifications.value.find(n => n.id === notificationId)
         if (notification && !notification.read_at) {
+            const previousReadAt = notification.read_at
             notification.read_at = new Date().toISOString()
             
-            try {
-                await fetch(`/notifications/${notificationId}/read`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    },
-                    credentials: 'include',
-                })
-            } catch (error) {
-                console.error('[Global Notifications] Erro ao marcar como lida:', error)
-                // Reverte se falhar
-                notification.read_at = null
-            }
+            router.post(`/notifications/${notificationId}/read`, {}, {
+                preserveScroll: true,
+                preserveState: true,
+                only: [],
+                onError: () => {
+                    // Reverte se falhar
+                    notification.read_at = previousReadAt
+                    console.error('[Global Notifications] Erro ao marcar como lida')
+                }
+            })
         }
     }
 
@@ -117,27 +112,21 @@ export function useGlobalNotifications() {
             n.read_at = new Date().toISOString()
         })
         
-        try {
-            await fetch('/notifications/read-all', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                credentials: 'include',
-            })
-        } catch (error) {
-            console.error('[Global Notifications] Erro ao marcar todas como lidas:', error)
-            // Reverte se falhar
-            previousState.forEach(state => {
-                const notification = notifications.value.find(n => n.id === state.id)
-                if (notification) {
-                    notification.read_at = state.read_at
-                }
-            })
-        }
+        router.post('/notifications/read-all', {}, {
+            preserveScroll: true,
+            preserveState: true,
+            only: [],
+            onError: () => {
+                // Reverte se falhar
+                previousState.forEach(state => {
+                    const notification = notifications.value.find(n => n.id === state.id)
+                    if (notification) {
+                        notification.read_at = state.read_at
+                    }
+                })
+                console.error('[Global Notifications] Erro ao marcar todas como lidas')
+            }
+        })
     }
 
     // Remove notificação
@@ -148,21 +137,16 @@ export function useGlobalNotifications() {
         // Remove otimisticamente
         notifications.value = notifications.value.filter(n => n.id !== notificationId)
 
-        try {
-            await fetch(`/notifications/${notificationId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                credentials: 'include',
-            })
-        } catch (error) {
-            console.error('[Global Notifications] Erro ao remover notificação:', error)
-            // Adiciona de volta se falhar
-            notifications.value.unshift(notification)
-        }
+        router.delete(`/notifications/${notificationId}`, {
+            preserveScroll: true,
+            preserveState: true,
+            only: [],
+            onError: () => {
+                // Adiciona de volta se falhar
+                notifications.value.unshift(notification)
+                console.error('[Global Notifications] Erro ao remover notificação')
+            }
+        })
     }
 
     // Limpa todas as notificações
@@ -170,21 +154,16 @@ export function useGlobalNotifications() {
         const previousNotifications = [...notifications.value]
         notifications.value = []
 
-        try {
-            await fetch('/notifications', {
-                method: 'DELETE',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-                credentials: 'include',
-            })
-        } catch (error) {
-            console.error('[Global Notifications] Erro ao limpar notificações:', error)
-            // Restaura se falhar
-            notifications.value = previousNotifications
-        }
+        router.delete('/notifications', {
+            preserveScroll: true,
+            preserveState: true,
+            only: [],
+            onError: () => {
+                // Restaura se falhar
+                notifications.value = previousNotifications
+                console.error('[Global Notifications] Erro ao limpar notificações')
+            }
+        })
     }
 
     // Carrega notificações do backend

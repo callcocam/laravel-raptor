@@ -143,6 +143,15 @@ const getTypeIcon = (type: string) => {
                                 >
                                     {{ notification.message }}
                                 </p>
+                                <!-- Link de download para exportações -->
+                                <a
+                                    v-if="notification.data?.download"
+                                    :href="notification.data.download"
+                                    class="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:underline"
+                                    @click.stop
+                                >
+                                    📥 Baixar arquivo
+                                </a>
                                 <!-- Passos de resolução para erros de banco de dados -->
                                 <div
                                     v-if="notification.data?.resolution_steps && notification.data.resolution_steps.length > 0"

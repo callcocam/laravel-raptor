@@ -39,7 +39,7 @@ trait HasActionCallback
         }
 
         if ($this->callback instanceof Closure) {
-            return $this->evaluate($this->callback, ['request' => $request, 'model' => $model]);
+            return $this->evaluate($this->callback, ['request' => $request, 'model' => $model ?? $this->getModel()]);
         }
 
         // Se for string, assume que é um método do controller

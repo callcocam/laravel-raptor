@@ -174,8 +174,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     protected function executeUrlCallback($action = 'execute'): self
     {
         $this->url(function ($target = null, Request $request = null) use ($action) {
-            $route = sprintf('%s.%s.%s', $request->getContext(), $this->name, $action);
-            if (\Illuminate\Support\Facades\Route::has($route)) {
+            $route = sprintf('%s.%s', $request->getContext(),  $action);
+            if (\Illuminate\Support\Facades\Route::has($route)) { 
                 return $target instanceof \Illuminate\Database\Eloquent\Model
                     ? route($route, ['record' => data_get($target, 'id')], false)
                     : route($route, [], false);
@@ -188,8 +188,8 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
                 }
             }
             return '#';
-        })->callback(function (Request $request, $model = null) {
-            return redirect()->back()->with('error', 'Ação executada com sucesso!');
+        })->callback(function (Request $request, Model $model = null) {
+            return redirect()->back()->with('error', 'Ação padrão não implementada. usando callback padrão.');
         });
         return $this;
     }
