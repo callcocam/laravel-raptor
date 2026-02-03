@@ -31,8 +31,8 @@ class DeleteAction extends Action
                 'cancelText' => 'Cancelar',
                 'requiresTypedConfirmation' => false, // Desabilitado por padrão
                 'typedConfirmationWord' => 'EXCLUIR', // Palavra padrão
-            ])
-            ->requiresTypedConfirmation() ;
+            ])->hidden(fn($record) => !empty($record->deleted_at))
+            ->requiresTypedConfirmation();
         $this->setUp();
     }
 
@@ -66,5 +66,23 @@ class DeleteAction extends Action
         $currentConfirm['requiresTypedConfirmation'] = false;
 
         return $this->confirm($currentConfirm);
+    }
+
+     /**
+     * Verifica visibilidade geral (todas as camadas)
+     *
+     * ORDEM DE VALIDAÇÃO:
+     * 1. Callback customizado (visibilityCallback)
+     * 2. Laravel Policy (se definida via ->policy())
+     * 3. Visibilidade geral ($visible)
+     */
+    public function isVisible($item = null): bool
+    {
+        // Se o registro não estiver excluído, a ação de restaurar não deve ser visível
+        if (empty($this->getUrl($item))) {
+            return false;
+        }
+
+        return parent::isVisible($item);
     }
 }

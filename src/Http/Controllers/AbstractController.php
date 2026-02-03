@@ -298,7 +298,7 @@ abstract class AbstractController extends ResourceController
             // Hook: depois de deletar permanentemente
             $this->afterForceDelete($record, $model);
 
-            $route = str(request()->route()->getAction('as'))->replaceLast('.forceDelete', '.index')->toString();
+            $route = str(request()->route()->getAction('as'))->replaceLast('.force-delete', '.index')->toString();
             $route = $this->getRedirectRouteAfterForceDelete($route);
 
             return redirect()->route($route)

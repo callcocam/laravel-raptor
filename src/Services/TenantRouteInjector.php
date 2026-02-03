@@ -33,7 +33,7 @@ class TenantRouteInjector
     protected function loadDefaultDirectories($defaultDirectories = []): void
     {
         // Carrega configuração do arquivo config/raptor.php
-        $configuredDirs =[];// config('raptor.route_injector.directories', []); 
+        $configuredDirs = []; // config('raptor.route_injector.directories', []); 
         // Diretórios padrão se não houver configuração
         // $defaultDirectories = [
         //     'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
@@ -191,6 +191,23 @@ class TenantRouteInjector
                 $complementary['destroy']->action = 'destroy';
                 $complementary['destroy']->label = $indexPage->getLabel() ? str_replace('Lista', 'Excluir', $indexPage->getLabel()) : '';
                 $complementary['destroy']->name = $indexPage->getName() ? str_replace('.index', '.destroy', $indexPage->getName()) : '';
+
+
+                //Restore route for soft deletes 
+                $complementary['restore'] = clone $indexPage;
+                $complementary['restore']->path = $basePath . '/{record}/restore';
+                $complementary['restore']->method = 'POST';
+                $complementary['restore']->action = 'restore';
+                $complementary['restore']->label = $indexPage->getLabel() ? str_replace('Lista', 'Restaurar', $indexPage->getLabel()) : '';
+                $complementary['restore']->name = $indexPage->getName() ? str_replace('.index', '.restore', $indexPage->getName()) : '';
+
+                // Force delete route for soft deletes
+                $complementary['forceDelete'] = clone $indexPage;
+                $complementary['forceDelete']->path = $basePath . '/{record}/force-delete';
+                $complementary['forceDelete']->method = 'DELETE';
+                $complementary['forceDelete']->action = 'forceDelete';
+                $complementary['forceDelete']->label = $indexPage->getLabel() ? str_replace('Lista', 'Excluir Definitivamente', $indexPage->getLabel()) : '';
+                $complementary['forceDelete']->name = $indexPage->getName() ? str_replace('.index', '.force-delete', $indexPage->getName()) : '';
             }
         }
 
@@ -205,7 +222,7 @@ class TenantRouteInjector
         $name = $page->getName() ?: $this->generateRouteName($controllerClass, $key);
         $middlewares = $page->getMiddlewares();
 
-        if (!$page->isVisible()){
+        if (!$page->isVisible()) {
             return;
         }
         $route = Route::match(
