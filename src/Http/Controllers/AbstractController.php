@@ -117,8 +117,8 @@ abstract class AbstractController extends ResourceController
             // Hook: depois de criar
             $this->afterCreate($request, $record);
 
-            $route = str($request->route()->getAction('as'))->replace('.store', '.edit')->toString();
-
+            $route = str($request->route()->getAction('as'))->replaceLast('.store', '.edit')->toString();
+            $route = $this->getRedirectRouteAfterStore($route, $record);
             return redirect()->route($route, [
                 'record' => $record->getKey(),
             ])
@@ -216,8 +216,8 @@ abstract class AbstractController extends ResourceController
             // Hook: depois de atualizar
             $this->afterUpdate($request, $model);
 
-            $route = str($request->route()->getAction('as'))->replace('.update', '.edit')->toString();
-
+            $route = str($request->route()->getAction('as'))->replaceLast('.update', '.edit')->toString();
+            $route = $this->getRedirectRouteAfterUpdate($route, $model);
 
             return redirect()->route(
                 $route,
@@ -246,7 +246,8 @@ abstract class AbstractController extends ResourceController
             // Hook: depois de deletar
             $this->afterDelete($record, $model);
 
-            $route = str(request()->route()->getAction('as'))->replace('destroy', 'index')->toString();
+            $route = str(request()->route()->getAction('as'))->replaceLast('.destroy', '.index')->toString();
+            $route = $this->getRedirectRouteAfterDestroy($route);
 
             return redirect()->route($route)
                 ->with('success', 'Item deletado com sucesso.');
@@ -271,7 +272,8 @@ abstract class AbstractController extends ResourceController
             // Hook: depois de restaurar
             $this->afterRestore($record, $model);
 
-            $route = str(request()->route()->getAction('as'))->replace('restore', 'index')->toString();
+            $route = str(request()->route()->getAction('as'))->replaceLast('.restore', '.index')->toString();
+            $route = $this->getRedirectRouteAfterRestore($route);
 
             return redirect()->route($route)
                 ->with('success', 'Item restaurado com sucesso.');
@@ -296,7 +298,9 @@ abstract class AbstractController extends ResourceController
             // Hook: depois de deletar permanentemente
             $this->afterForceDelete($record, $model);
 
-            $route = str(request()->route()->getAction('as'))->replace('forceDelete', 'index')->toString();
+            $route = str(request()->route()->getAction('as'))->replaceLast('.forceDelete', '.index')->toString();
+            $route = $this->getRedirectRouteAfterForceDelete($route);
+
             return redirect()->route($route)
                 ->with('success', 'Item excluído permanentemente.');
         } catch (\Exception $e) {
@@ -571,6 +575,51 @@ abstract class AbstractController extends ResourceController
             ->toString();
 
         return $this->getFormUrlAction($routeName, $id);
+    }
+
+    /**
+     * Retorna a rota de redirecionamento após o store (para edit)
+     * Pode ser sobrescrito para customizar o redirecionamento
+     */
+    protected function getRedirectRouteAfterStore(string $routeName, Model $record): string
+    {
+        return $routeName;
+    }
+
+    /**
+     * Retorna a rota de redirecionamento após o update
+     * Pode ser sobrescrito para customizar o redirecionamento
+     */
+    protected function getRedirectRouteAfterUpdate(string $routeName, Model $record): string
+    {
+        return $routeName;
+    }
+
+    /**
+     * Retorna a rota de redirecionamento após o destroy
+     * Pode ser sobrescrito para customizar o redirecionamento
+     */
+    protected function getRedirectRouteAfterDestroy(string $routeName): string
+    {
+        return $routeName;
+    }
+
+    /**
+     * Retorna a rota de redirecionamento após o restore
+     * Pode ser sobrescrito para customizar o redirecionamento
+     */
+    protected function getRedirectRouteAfterRestore(string $routeName): string
+    {
+        return $routeName;
+    }
+
+    /**
+     * Retorna a rota de redirecionamento após o forceDelete
+     * Pode ser sobrescrito para customizar o redirecionamento
+     */
+    protected function getRedirectRouteAfterForceDelete(string $routeName): string
+    {
+        return $routeName;
     }
 
     /**
