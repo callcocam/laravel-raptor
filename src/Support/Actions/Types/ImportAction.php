@@ -87,6 +87,9 @@ class ImportAction extends ExecuteAction
                 $file->storeAs('', $fileName, 'local');
 
                 if ($this->shouldUseJob()) {
+                    // Obtém a conexão do modelo
+                    $connection = app($this->getModelClass())->getConnectionName();
+                    
                     // Envia para fila
                     ProcessImport::dispatch(
                         $fileName,
@@ -94,7 +97,8 @@ class ImportAction extends ExecuteAction
                         $this->columnMapping,
                         $this->getImportClass(),
                         $resourceName,
-                        $user->id
+                        $user->id,
+                        $connection
                     );
 
                     return [
@@ -109,7 +113,8 @@ class ImportAction extends ExecuteAction
                 try {
                     // Importação síncrona
                     $importClass = $this->getImportClass();
-                    $import = new $importClass($this->getModelClass(), $this->columnMapping);
+                    $connection = app($this->getModelClass())->getConnectionName();
+                    $import = new $importClass($this->getModelClass(), $this->columnMapping, $connection);
                     
                     Excel::import($import, $fileName, 'local');
 

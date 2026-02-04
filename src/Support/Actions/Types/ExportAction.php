@@ -61,6 +61,9 @@ class ExportAction extends ExecuteAction
                     // Extrai os filtros da request para passar ao job
                     $filters = $request->query('filters', []);
                     
+                    // Obtém a conexão do modelo
+                    $connection = app($this->getModelClass())->getConnectionName();
+                    
                     // Envia para fila
                     ProcessExport::dispatch(
                         $this->getModelClass(),
@@ -69,7 +72,8 @@ class ExportAction extends ExecuteAction
                         $fileName,
                         $filePath,
                         $resourceName,
-                        $user->id
+                        $user->id,
+                        $connection
                     );
 
                     return [

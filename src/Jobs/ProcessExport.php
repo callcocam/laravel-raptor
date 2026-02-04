@@ -29,13 +29,18 @@ class ProcessExport implements ShouldQueue
         protected string $fileName,
         protected string $filePath,
         protected string $resourceName,
-        protected int|string $userId
+        protected int|string $userId,
+        protected ?string $connection = null
     ) {}
 
     public function handle(): void
     {
-        // Reconstrói a query a partir do model class
-        $query = app($this->modelClass)->newQuery();
+        // Reconstrói a query a partir do model class com a conexão correta
+        $model = app($this->modelClass);
+        if ($this->connection) {
+            $model->setConnection($this->connection);
+        }
+        $query = $model->newQuery();
 
         // Aplica os filtros
         if (!empty($this->filters)) {

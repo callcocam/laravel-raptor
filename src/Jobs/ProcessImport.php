@@ -22,13 +22,14 @@ class ProcessImport implements ShouldQueue
         protected ?array $columnMapping,
         protected string $importClass,
         protected string $resourceName,
-        protected int|string $userId
+        protected int|string $userId,
+        protected ?string $connection = null
     ) {}
 
     public function handle(): void
     {
-        // Cria a instância do import
-        $import = new $this->importClass($this->modelClass, $this->columnMapping);
+        // Cria a instância do import com a conexão correta
+        $import = new $this->importClass($this->modelClass, $this->columnMapping, $this->connection);
 
         // Processa a importação
         Excel::import($import, $this->filePath, 'local');

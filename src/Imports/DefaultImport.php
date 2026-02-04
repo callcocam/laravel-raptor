@@ -19,6 +19,7 @@ class DefaultImport implements ToCollection, WithHeadingRow, WithBatchInserts, W
     public function __construct(
         protected string $modelClass,
         protected ?array $columnMapping = null,
+        protected ?string $connection = null,
         protected ?string $fileName = null
     ) {}
 
@@ -33,8 +34,14 @@ class DefaultImport implements ToCollection, WithHeadingRow, WithBatchInserts, W
             try {
                 $data = $this->mapRow($row);
                 
+                // Cria instância do modelo com a conexão correta
+                $model = app($this->modelClass);
+                if ($this->connection) {
+                    $model->setConnection($this->connection);
+                }
+                
                 // Cria ou atualiza o registro
-                $this->modelClass::updateOrCreate(
+                $model::on($this->connection)->updateOrCreate(
                     $this->getUniqueKeys($data),
                     $data
                 );
