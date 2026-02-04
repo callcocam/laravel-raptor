@@ -137,6 +137,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         // Registra as rotas de API
         $this->registerApiRoutes();
 
+        // Registra os canais de broadcast
+        $this->registerBroadcastChannels();
+
         // Registra as rotas dinamicas dos tenants
         $this->registerTenantRoutes();
 
@@ -154,6 +157,16 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->group(function () {
                 $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
             });
+    }
+
+    /**
+     * Registra os canais de broadcast do pacote
+     */
+    protected function registerBroadcastChannels(): void
+    {
+        if (file_exists($channelsPath = __DIR__ . '/../routes/channels.php')) {
+            require $channelsPath;
+        }
     }
 
     /**
