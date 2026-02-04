@@ -14,7 +14,7 @@ $domain = parse_url(config('app.url'), PHP_URL_HOST);
 
 // Rota de download de exportações
 Route::get('download-export/{filename}', function ($filename) {
-    $path = Storage::disk(config('raptor.export.disk', 'local'))->path('exports/' . $filename);
+    $path = Storage::disk(config('filesystems.default'))->path('exports/' . $filename);
 
     if (!file_exists($path)) {
         abort(404);
