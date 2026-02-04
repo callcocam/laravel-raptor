@@ -12,6 +12,7 @@ use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Jobs\ProcessExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
 use Callcocam\LaravelRaptor\Events\ExportCompleted;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -28,8 +29,11 @@ class ExportAction extends ExecuteAction
     protected bool $useJob = false;
     protected ?string $exportClass = null;
     protected ?string $fileName = null;
-    protected $callbackFilter = null;
-    protected ?string $parameterFiltersName = null;
+    protected ?Closure $callbackFilter = null;
+    protected ?string $parameterFiltersName = 'filters';
+    protected array $defaultFilters = [];
+    protected array $allowedFilters = [];
+    protected array $excludedFilters = ['page', 'per_page', 'actionType', 'actionName'];
 
     public function __construct(?string $name)
     {
@@ -61,8 +65,8 @@ class ExportAction extends ExecuteAction
 
                 if ($this->shouldUseJob()) {
                     // Extrai e processa os filtros da request
-                    $rawFilters = $request->query($this->getFiltersParameterName());
-                    $filters = $this->processFilters($rawFilters);
+                    $rawFilters = $request->query($this->getFiltersParameterName(), []);
+                    $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
                     
                     // Obtém a conexão do modelo
                     $model = app($this->getModelClass());
@@ -141,14 +145,18 @@ class ExportAction extends ExecuteAction
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function applyFiltersFromRequest(\Illuminate\Database\Eloquent\Builder $query, Request $request): \Illuminate\Database\Eloquent\Builder
-    {
+    protected function applyFiltersFromRequest(\Illuminate\Database\Eloquent\Builder $query, Request $request)
+    { 
         $rawFilters = $request->query($this->getFiltersParameterName(), []);
-        $filters = $this->processFilters($rawFilters);
+        $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
 
         // Aplica o callback customizado se existir
         if ($this->callbackFilter && is_callable($this->callbackFilter)) {
-            return call_user_func($this->callbackFilter, $query, $filters, $request);
+            return $this->evaluate($this->callbackFilter, [
+                'query' => $query,
+                'filters' => $filters,
+                'request' => $request,
+            ]) ;
         }
 
         return $this->applyFilters($query, $filters);
@@ -165,14 +173,29 @@ class ExportAction extends ExecuteAction
         $filters = [];
 
         foreach ($rawFilters as $key => $value) {
-            // Remove page e per_page
-            if (in_array($key, ['page', 'per_page'])) {
+            // Remove filtros excluídos
+            if (in_array($key, $this->excludedFilters)) {
+                continue;
+            }
+
+            // Se houver lista de permitidos, verifica se está nela
+            if (!empty($this->allowedFilters) && !in_array($key, $this->allowedFilters)) {
                 continue;
             }
 
             // Se for um array, extrai os valores
             if (is_array($value)) {
                 foreach ($value as $subKey => $subValue) {
+                    // Verifica filtros excluídos no subnível
+                    if (in_array($subKey, $this->excludedFilters)) {
+                        continue;
+                    }
+
+                    // Se houver lista de permitidos, verifica se está nela
+                    if (!empty($this->allowedFilters) && !in_array($subKey, $this->allowedFilters)) {
+                        continue;
+                    }
+
                     if (!empty($subValue)) {
                         $filters[$subKey] = $subValue;
                     }
@@ -205,9 +228,9 @@ class ExportAction extends ExecuteAction
         return $query;
     }
 
-    protected function getFiltersParameterName(): ?string
+    protected function getFiltersParameterName(): string
     {
-        return $this->parameterFiltersName ?? null;
+        return $this->parameterFiltersName;
     }
 
     public function parameterFiltersName(string $name): self
@@ -223,6 +246,35 @@ class ExportAction extends ExecuteAction
         return $this;
     }
  
+    public function defaultFilters(array $filters): self
+    { 
+        $this->defaultFilters = $filters;
+        return $this;
+    }
+
+    public function allowedFilters(array $filters): self
+    {
+        $this->allowedFilters = $filters;
+        return $this;
+    }
+
+    public function excludedFilters(array $filters): self
+    {
+        $this->excludedFilters = array_merge($this->excludedFilters, $filters);
+        return $this;
+    }
+
+    public function onlyFilters(array $filters): self
+    {
+        $this->allowedFilters = $filters;
+        return $this;
+    }
+
+    public function exceptFilters(array $filters): self
+    {
+        $this->excludedFilters = array_merge($this->excludedFilters, $filters);
+        return $this;
+    }
 
     public function query(Builder $query): self
     {

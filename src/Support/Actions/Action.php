@@ -50,16 +50,15 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     public function __construct(?string $name)
     {
         $this->name($name);
-        $this->url(function ($target,?Request $request) {
+        $this->url(function ($target, ?Request $request) {
             $name = sprintf('%s.%s', $request->getContext(), $this->name);
             if (\Illuminate\Support\Facades\Route::has($name)) {
                 $parameters = $request->query();
-                $parameters = array_filter($parameters, function ($key) {
-                    return $key !== 'record';
-                }, ARRAY_FILTER_USE_KEY);
-                return $target instanceof Model
-                    ? route($name, $parameters, false)
-                    : route($name, $parameters, false);
+                if ($target instanceof Model) {
+                    $parameters['record'] = data_get($target, 'id');
+                }
+                $parameters = array_filter($parameters, fn($value) => $value !== null && $value !== '');
+                return route($name, $parameters, false);
             }
             return null;
         });
@@ -178,24 +177,19 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     protected function executeUrlCallback($action = 'execute'): self
     {
         $this->url(function ($target = null, Request $request = null) use ($action) {
-            $route = sprintf('%s.%s', $request->getContext(),  $action);
-            $parameters = $request->query();
-            $parameters = array_filter($parameters, function ($key) {
-                return $key !== 'record';
-            }, ARRAY_FILTER_USE_KEY);
-            if (\Illuminate\Support\Facades\Route::has($route)) { 
-                return $target instanceof \Illuminate\Database\Eloquent\Model
-                    ? route($route, $parameters, false)
-                    : route($route, $parameters, false);
-            } else {
-                $route = sprintf('%s.%s', $request->getContext(), $action);
-                if (\Illuminate\Support\Facades\Route::has($route)) {
-                    return $target instanceof \Illuminate\Database\Eloquent\Model
-                        ? route($route, $parameters, false)
-                        : route($route, $parameters, false);
-                }
+            $route = sprintf('%s.%s', $request->getContext(), $action);
+            
+            if (!\Illuminate\Support\Facades\Route::has($route)) {
+                return '#';
             }
-            return '#';
+            
+            $parameters = $request->query();
+            if ($target instanceof Model) {
+                $parameters['record'] = data_get($target, 'id');
+            }
+            $parameters = array_filter($parameters, fn($value) => $value !== null && $value !== '');
+            
+            return route($route, $parameters, false);
         })->callback(function (Request $request, Model $model = null) {
             return redirect()->back()->with('error', 'Ação padrão não implementada. usando callback padrão.');
         });
