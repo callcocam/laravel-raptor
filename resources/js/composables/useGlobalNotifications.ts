@@ -204,6 +204,8 @@ export function useGlobalNotifications() {
     // Obtém userId do page props
     const userId = (page.props as any).auth?.user?.id
 
+    console.log('[Global Notifications] Inicializando com userId:', userId)
+
     // Conecta ao canal privado do usuário para notificações globais
     // O Laravel usa o evento 'Illuminate\\Notifications\\Events\\BroadcastNotificationCreated'
     // que é broadcastado como '.notification.created' quando uma notificação implementa ShouldBroadcast
@@ -211,6 +213,7 @@ export function useGlobalNotifications() {
     let listenNotification: (() => void) | null = null
     
     if (userId) {
+        console.log('[Global Notifications] Configurando listeners para userId:', userId)
         // O Laravel usa 'App.Models.User.{id}' como canal padrão para notificações
         // Não 'user.{id}' como usamos para eventos customizados
         const channelName = `App.Models.User.${userId}`
@@ -227,11 +230,15 @@ export function useGlobalNotifications() {
         // Cria listeners para todos os eventos possíveis
         const listeners: (() => void)[] = []
 
+        console.log('[Global Notifications] Criando listeners para canal:', channelName)
+        console.log('[Global Notifications] Eventos possíveis:', possibleEventNames)
+
         possibleEventNames.forEach(eventName => {
             const echoResult = useEcho<GlobalNotification>(
                 channelName,
                 eventName,
                 (data: any) => {
+                    console.log('[Global Notifications] 🔔 Evento recebido no canal', channelName, 'evento:', eventName, 'dados:', data)
                     isConnected.value = true
                     
                     // O Laravel envia a notificação através do BroadcastMessage
@@ -260,13 +267,132 @@ export function useGlobalNotifications() {
         })
 
         // Inicia todos os listeners
-        listeners.forEach(listen => {
+        console.log('[Global Notifications] Iniciando', listeners.length, 'listeners para notificações gerais')
+        listeners.forEach((listen, index) => {
             try {
                 listen()
+                console.log('[Global Notifications] ✅ Listener', index + 1, 'iniciado')
             } catch (error) {
-                // Silenciosamente ignora erros de listener
+                console.error('[Global Notifications] ❌ Erro ao iniciar listener', index + 1, ':', error)
             }
         })
+
+        // Escuta eventos de Import/Export no canal users.{userId}
+        const importExportChannel = `users.${userId}`
+        console.log('[Global Notifications] Configurando listeners Import/Export no canal:', importExportChannel)
+        
+        // Import completed
+        const importEchoResult = useEcho<{
+            type: 'import'
+            model: string
+            total: number
+            successful: number
+            failed: number
+            fileName: string | null
+            message: string
+            timestamp: string
+        }>(
+            importExportChannel,
+            '.import.completed',
+            (data: any) => {
+                console.log('[Global Notifications] 📥 IMPORT COMPLETED recebido! Dados:', data)
+                isConnected.value = true
+                
+                const notification: GlobalNotification = {
+                    id: `import-${Date.now()}-${Math.random()}`,
+                    type: data.failed > 0 ? 'warning' : 'success',
+                    title: data.message || 'Importação concluída',
+                    message: data.fileName ? `Arquivo: ${data.fileName}` : undefined,
+                    data: {
+                        type: 'import',
+                        model: data.model,
+                        total: data.total,
+                        successful: data.successful,
+                        failed: data.failed,
+                    },
+                    read_at: null,
+                    created_at: data.timestamp || new Date().toISOString(),
+                }
+                
+                addNotification(notification)
+            },
+            [userId],
+            'private'
+        )
+        
+        if (importEchoResult.listen) {
+            try {
+                importEchoResult.listen()
+                console.log('[Global Notifications] ✅ Listener IMPORT configurado no canal:', importExportChannel)
+            } catch (error) {
+                console.error('[Global Notifications] ❌ Erro ao escutar import.completed:', error)
+            }
+        } else {
+            console.warn('[Global Notifications] ⚠️ importEchoResult.listen não disponível')
+        }
+        
+        // Export completed
+        const exportEchoResult = useEcho<{
+            type: 'export'
+            model: string
+            total: number
+            filePath: string
+            fileName: string | null
+            downloadUrl: string
+            message: string
+            timestamp: string
+        }>(
+            importExportChannel,
+            '.export.completed',
+            (data: any) => {
+                console.log('[Global Notifications] 📤 EXPORT COMPLETED recebido! Dados:', data)
+                isConnected.value = true
+                
+                const notification: GlobalNotification = {
+                    id: `export-${Date.now()}-${Math.random()}`,
+                    type: 'success',
+                    title: data.message || 'Exportação concluída',
+                    message: 'Clique para fazer o download',
+                    data: {
+                        type: 'export',
+                        model: data.model,
+                        total: data.total,
+                        downloadUrl: data.downloadUrl,
+                        fileName: data.fileName,
+                        action: 'download',
+                    },
+                    read_at: null,
+                    created_at: data.timestamp || new Date().toISOString(),
+                }
+                
+                addNotification(notification)
+                
+                // Mostra toast com ação de download
+                toast.success(data.message || 'Exportação concluída', {
+                    description: 'Clique para fazer o download',
+                    duration: 10000,
+                    action: {
+                        label: 'Download',
+                        onClick: () => {
+                            window.location.href = data.downloadUrl
+                        },
+                    },
+                })
+            },
+            [userId],
+            'private'
+        )
+        
+        if (exportEchoResult.listen) {
+            try {
+                exportEchoResult.listen()
+                console.log('[Global Notifications] ✅ Listener EXPORT configurado no canal:', importExportChannel)
+            } catch (error) {
+                console.error('[Global Notifications] ❌ Erro ao escutar export.completed:', error)
+            }
+        } else {
+            console.warn('[Global Notifications] ⚠️ exportEchoResult.listen não disponível')
+        }
 
         // Escuta eventos de atualização de notificações (marcar como lida, deletar, etc.)
         // Isso sincroniza as mudanças entre diferentes abas
@@ -444,9 +570,11 @@ export function useGlobalNotifications() {
 
     // Carrega notificações existentes ao montar
     onMounted(() => {
+        console.log('[Global Notifications] Componente montado, carregando notificações...')
         loadNotifications()
         // Registra o handler global para uso em qualquer lugar
         setGlobalNotificationHandler(addNotification)
+        console.log('[Global Notifications] Conexão WebSocket status:', isConnected.value)
     })
 
     return {

@@ -5,19 +5,15 @@ namespace Callcocam\LaravelRaptor\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class ExportCompletedNotification extends Notification
+class ImportCompletedNotification extends Notification
 {
     use Queueable;
 
-    protected string $fileName;
-    protected string $downloadUrl;
     protected string $resourceName;
     protected bool $wasQueued;
 
-    public function __construct(string $fileName, string $downloadUrl, string $resourceName = 'registros', bool $wasQueued = false)
+    public function __construct(string $resourceName = 'registros', bool $wasQueued = false)
     {
-        $this->fileName = $fileName;
-        $this->downloadUrl = $downloadUrl;
         $this->resourceName = $resourceName;
         $this->wasQueued = $wasQueued;
     }
@@ -36,19 +32,17 @@ class ExportCompletedNotification extends Notification
     public function toDatabase($notifiable): array
     {
         $title = $this->wasQueued 
-            ? 'Exportação Concluída' 
-            : 'Arquivo Pronto';
+            ? 'Importação Concluída' 
+            : 'Registros Importados';
             
         $message = $this->wasQueued
-            ? "Sua exportação de {$this->resourceName} foi processada e está pronta para download."
-            : "Sua exportação de {$this->resourceName} está pronta para download.";
+            ? "Sua importação de {$this->resourceName} foi processada com sucesso."
+            : "Os {$this->resourceName} foram importados com sucesso.";
 
         return [
             'title' => $title,
             'message' => $message,
             'type' => 'success',
-            'download' => $this->downloadUrl,
-            'fileName' => $this->fileName,
             'icon' => '📥',
         ];
     }

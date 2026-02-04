@@ -8,14 +8,25 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
+use Callcocam\LaravelRaptor\Imports\DefaultImport;
+use Callcocam\LaravelRaptor\Jobs\ProcessImport;
+use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField;
 use Callcocam\LaravelRaptor\Support\Table\Confirm;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ImportAction extends ExecuteAction
 {
 
     protected string $method = 'POST';
+    protected ?string $modelClass = null;
+    protected ?array $columnMapping = null;
+    protected bool $useJob = false;
+    protected ?string $importClass = null;
 
     public function __construct(?string $name)
     {
@@ -51,9 +62,137 @@ class ImportAction extends ExecuteAction
                 cancelButtonText: 'Cancelar',
                 successMessage: 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!',
                 closeModalOnSuccess: false, // Não fecha o modal automaticamente
-            ));
+            ))
+            ->callback(function (Request $request, ?Model $model) {
+                $user = $request->user();
+                $resourceName = $this->getResourceName();
+                
+                // Obtém o arquivo enviado
+                $fileFieldName = str($this->getName())->replace('import', 'file')->slug()->toString();
+                $file = $request->file($fileFieldName);
+                
+                if (!$file) {
+                    return [
+                        'notification' => [
+                            'title' => 'Erro na Importação',
+                            'text' => 'Nenhum arquivo foi enviado.',
+                            'type' => 'error',
+                        ],
+                    ];
+                }
+
+                // Salva o arquivo temporariamente
+                $fileName = 'imports/' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('', $fileName, 'local');
+
+                if ($this->shouldUseJob()) {
+                    // Envia para fila
+                    ProcessImport::dispatch(
+                        $fileName,
+                        $this->getModelClass(),
+                        $this->columnMapping,
+                        $this->getImportClass(),
+                        $resourceName,
+                        $user->id
+                    );
+
+                    return [
+                        'notification' => [
+                            'title' => 'Importação Iniciada',
+                            'text' => 'Sua importação está sendo processada. Você receberá uma notificação quando estiver concluída.',
+                            'type' => 'info',
+                        ],
+                    ];
+                }
+
+                try {
+                    // Importação síncrona
+                    $importClass = $this->getImportClass();
+                    $import = new $importClass($this->getModelClass(), $this->columnMapping);
+                    
+                    Excel::import($import, $fileName, 'local');
+
+                    // Remove o arquivo temporário
+                    if (file_exists(storage_path('app/' . $fileName))) {
+                        unlink(storage_path('app/' . $fileName));
+                    }
+
+                    // Cria notificação no banco
+                    $user->notify(new ImportCompletedNotification($resourceName));
+
+                    return [
+                        'notification' => [
+                            'title' => 'Importação Concluída',
+                            'text' => 'Os registros foram importados com sucesso. Verifique suas notificações.',
+                            'type' => 'success',
+                        ],
+                    ];
+                } catch (\Exception $e) {
+                    report($e);
+                    
+                    // Remove o arquivo em caso de erro
+                    if (file_exists(storage_path('app/' . $fileName))) {
+                        unlink(storage_path('app/' . $fileName));
+                    }
+
+                    return [
+                        'notification' => [
+                            'title' => 'Erro na Importação',
+                            'text' => app()->environment('local') ? $e->getMessage() : 'Ocorreu um erro ao importar os registros.',
+                            'type' => 'error',
+                        ],
+                    ];
+                }
+            });
         $this->setUp();
     }
 
-    
+    public function model(string $modelClass): self
+    {
+        $this->modelClass = $modelClass;
+        return $this;
+    }
+
+    public function getModelClass(): string
+    {
+        if (!$this->modelClass) {
+            throw new \Exception('Model class não foi definido para a importação.');
+        }
+
+        return $this->modelClass;
+    }
+
+    public function columnMapping(array $mapping): self
+    {
+        $this->columnMapping = $mapping;
+        return $this;
+    }
+
+    public function useJob(bool $useJob = true): self
+    {
+        $this->useJob = $useJob;
+        return $this;
+    }
+
+    public function shouldUseJob(): bool
+    {
+        return $this->useJob;
+    }
+
+    public function import(string $importClass): self
+    {
+        $this->importClass = $importClass;
+        return $this;
+    }
+
+    public function getImportClass(): string
+    {
+        return $this->importClass ?? DefaultImport::class;
+    }
+
+    protected function getResourceName(): string
+    {
+        $modelName = class_basename($this->getModelClass());
+        return Str::plural(Str::lower(str_replace('_', ' ', Str::snake($modelName))));
+    }
 }

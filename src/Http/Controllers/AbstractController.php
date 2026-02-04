@@ -386,6 +386,7 @@ abstract class AbstractController extends ResourceController
                 'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
                 'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions()),
+                'column' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getColumns())->filter(fn($column) => $column->getName() === $fieldName),
                 'form' => collect($this->form(Form::make($model))->getActions()),
                 'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn($column) => $column->getName() === $fieldName)->flatMap(function ($column) {
                     return $column->getActions();
@@ -397,8 +398,7 @@ abstract class AbstractController extends ResourceController
                 return redirect()
                     ->back()
                     ->with('error', 'Ação não encontrada.');
-            }
- 
+            } 
             // Extrai as regras de validação dos campos da action
             $validationRules = $callback->getValidationRules();
             $validationMessages = $callback->getValidationMessages();
@@ -411,9 +411,20 @@ abstract class AbstractController extends ResourceController
             // Hook: antes de executar action
             $this->beforeExecute($request, $actionName, $model);
 
+            if (!method_exists($callback, 'executeCallback')) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Ação não possui um callback definido.');
+            }
             // Executa o callback da action
             $result = $callback->executeCallback($request, $model);
-         
+           
+            if (!$result) { 
+                return redirect()
+                    ->back()
+                    ->with('error', 'Ação não retornou nenhum resultado.'); 
+            }
+          
             // Hook: depois de executar action
             $this->afterExecute($request, $actionName, $model, $result instanceof BaseRedirectResponse ? null : $result);
 

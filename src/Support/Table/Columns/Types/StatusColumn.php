@@ -13,7 +13,11 @@ class StatusColumn extends Column
     protected ?string $component = "table-column-status";
     protected array $statusConfig = [];
     protected ?string $defaultColor = 'secondary';
-    protected ?string $defaultIcon = null;
+    protected ?string $defaultIcon = 'CheckCircleIcon';
+    protected bool $editable = false;
+    protected ?string $executeUrl = null;
+    protected ?string $statusKey = null; 
+    protected array $activeValues = ['active', 'published', '1', 'true', 'ativo']; 
 
     public function status(string $value, string $label, ?string $color = null, ?string $icon = null): self
     {
@@ -54,6 +58,32 @@ class StatusColumn extends Column
         return $this;
     }
 
+    public function editable(bool $editable = true): self
+    {
+        $this->editable = $editable;
+        return $this;
+    }
+
+    public function executeUrl(string $url): self
+    {
+        $this->executeUrl = $url;
+        return $this;
+    }
+
+    public function statusKey(string $key): self
+    {
+        $this->statusKey = $key;
+        return $this;
+    } 
+
+    public function activeValues(array $values): self
+    {
+        $this->activeValues = $values;
+        return $this;
+    }
+ 
+ 
+
     public function render(mixed $value, $row = null): mixed
     {
         return $value;
@@ -65,6 +95,11 @@ class StatusColumn extends Column
             'statusConfig' => $this->statusConfig,
             'defaultColor' => $this->defaultColor,
             'defaultIcon' => $this->defaultIcon,
+            'editable' => $this->editable,
+            'executeUrl' => $this->executeUrl,
+            'statusKey' => $this->statusKey ?? $this->name,
+            'hasCallback' => $this->callback !== null,
+            'activeValues' => $this->activeValues,
         ]);
     }
 }

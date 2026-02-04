@@ -180,7 +180,7 @@ class TenantRouteInjector
     protected function addComplementaryRoutes(array $pages): array
     {
         $complementary = [];
-        $pageKeys = array_keys($pages);
+        $pageKeys = array_keys($pages); 
 
         // Adiciona 'store' se 'create' existir e 'store' não estiver definido
         if (in_array('create', $pageKeys) && !in_array('store', $pageKeys)) {
@@ -189,9 +189,9 @@ class TenantRouteInjector
 
         // Adiciona 'update' se 'edit' existir e 'update' não estiver definido
         if (in_array('edit', $pageKeys) && !in_array('update', $pageKeys)) {
-            $complementary['update'] = $this->createComplementaryRoute($pages['edit'], 'update', 'PUT', '/edit', 'Editar', 'Atualizar');
+            $complementary['update'] = $this->createComplementaryRoute($pages['edit'], 'update', 'PUT', '/edit', 'Editar', 'Atualizar', '');
         }
-
+ 
         // Adiciona rotas de resource se 'index' existir
         if (in_array('index', $pageKeys)) {
             $indexPage = $pages['index'];
@@ -234,11 +234,16 @@ class TenantRouteInjector
     private function createComplementaryRoute(Page $originalPage, string $action, string $method, string $pathToRemove, string $labelToReplace, string $newLabel, string $pathSuffix = ''): Page
     {
         $newPage = clone $originalPage;
-        $newPage->path = Str::replace($pathToRemove, '', $originalPage->getPath()) . $pathSuffix;
+        $basePath = Str::replace($pathToRemove, '', $originalPage->getPath());
+        $newPage->path = $basePath . $pathSuffix;
         $newPage->method = $method;
         $newPage->action = $action;
         $newPage->label = Str::replace($labelToReplace, $newLabel, $originalPage->getLabel() ?? '');
-        $newPage->name = Str::replace(Str::beforeLast($originalPage->getName() ?? '', '.'), Str::beforeLast($originalPage->getName() ?? '', '.') . '.' . $action, $originalPage->getName() ?? '');
+        
+        // Gera o nome da rota corretamente
+        $originalName = $originalPage->getName() ?? '';
+        $baseRouteName = Str::beforeLast($originalName, '.');
+        $newPage->name = $baseRouteName . '.' . $action;
 
         return $newPage;
     }

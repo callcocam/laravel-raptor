@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
+use Callcocam\LaravelRaptor\Jobs\ProcessExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -55,31 +56,38 @@ class ExportAction extends ExecuteAction
                 $filePath = 'exports/' . $fileName;
                 $resourceName = $this->getResourceName();
 
-                $export = new $exportClass($query, $this->getExportColumns());
-
                 if ($this->shouldUseJob()) {
-                    // Envia para fila e depois notifica o usuário quando concluir
-                    Excel::queue($export, $filePath)->chain([
-                        function () use ($user, $fileName, $resourceName) {
-                            $downloadUrl = route('download.export', ['filename' => $fileName]);
-                            $user->notify(new ExportCompletedNotification($fileName, $downloadUrl, $resourceName));
-                        }
-                    ]);
+                    // Extrai os filtros da request para passar ao job
+                    $filters = $request->query('filters', []);
+                    
+                    // Envia para fila
+                    ProcessExport::dispatch(
+                        $this->getModelClass(),
+                        $filters,
+                        $this->getExportColumns(),
+                        $fileName,
+                        $filePath,
+                        $resourceName,
+                        $user->id
+                    );
 
                     return [
                         'notification' => [
-                            'title' => 'Exportação em Fila',
-                            'text' => 'Sua exportação foi iniciada. Você será notificado quando estiver pronta.',
-                            'type' => 'success',
+                            'title' => 'Exportação Iniciada',
+                            'text' => 'Sua exportação está sendo processada. Você receberá uma notificação quando estiver pronta para download.',
+                            'type' => 'info',
                         ],
                     ];
                 }
 
                 try {
+                    $export = new $exportClass($query, $this->getExportColumns());
                     Excel::store($export, $filePath);
 
-                    // Envia notificação imediata para exportação síncrona
+                    // Gera URL de download
                     $downloadUrl = route('download.export', ['filename' => $fileName]);
+                    
+                    // Para exportação síncrona, cria notificação no banco com link de download
                     $user->notify(new ExportCompletedNotification($fileName, $downloadUrl, $resourceName));
 
                     return [
@@ -133,14 +141,7 @@ class ExportAction extends ExecuteAction
         $this->query = null; // Reset query if model is set
         return $this;
     }
-
-    public function getModelClass(): ?string
-    {
-        if ($this->query) {
-            return get_class($this->query->getModel());
-        }
-        return $this->modelClass;
-    }
+ 
 
     public function query(Builder $query): self
     {
@@ -152,6 +153,19 @@ class ExportAction extends ExecuteAction
     public function getQuery(): Builder
     {
         return $this->query ?? $this->modelClass::query();
+    }
+
+    public function getModelClass(): string
+    {
+        if ($this->modelClass) {
+            return $this->modelClass;
+        }
+
+        if ($this->query) {
+            return get_class($this->query->getModel());
+        }
+
+        throw new \Exception('Model class ou query não foi definido para a exportação.');
     }
 
     public function exportColumns(array $columns): self

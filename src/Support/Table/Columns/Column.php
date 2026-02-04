@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Table\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Actions\Concerns\HasActionCallback;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearchable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSortable; 
@@ -18,6 +19,7 @@ abstract class Column extends AbstractColumn
     use BelongsToHelpers;
     use HasSearchable;
     use HasSortable;
+    use HasActionCallback;
     
     protected ?string $component = "table-column-text";
 
