@@ -56,27 +56,23 @@ class ExportAction extends ExecuteAction
             ->executeUrlCallback(str($this->name)->replace('export', 'execute')->toString())
             ->callback(function (Request $request, ?Model $model) {
                 $user = $request->user();
-                $query = $this->getQuery();
-                $query = $this->applyFiltersFromRequest($query, $request); // Apply filters
-
-                $exportClass = $this->getExportClass();
                 $fileName = $this->getFileName();
                 $filePath = 'exports/' . $fileName;
                 $resourceName = $this->getResourceName();
 
+                $rawFilters = $this->getRawFilters($request);
+                $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
                 if ($this->shouldUseJob()) {
                     // Extrai e processa os filtros da request
-                    $rawFilters = $this->getRawFilters($request);
-                    $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
-                    
+
                     // Obtém a conexão do modelo
                     $model = app($this->getModelClass());
                     $connectionName = $model->getConnectionName();
                     $connectionConfig = config("database.connections.{$connectionName}");
-                    
+
                     // Usa a classe de job customizada ou a padrão
                     $jobClass = $this->getJobClass();
-                    
+
                     // Envia para fila
                     $jobClass::dispatch(
                         $this->getModelClass(),
@@ -98,8 +94,12 @@ class ExportAction extends ExecuteAction
                         ],
                     ];
                 }
+                // Exportação síncrona - aplica callback se existir 
+
+                $query = $this->applyFiltersFromRequest($this->getQuery(), $request, $filters);
 
                 try {
+                    $exportClass = $this->getExportClass();
                     $export = new $exportClass($query, $this->getExportColumns());
                     Excel::store($export, $filePath);
 
@@ -108,7 +108,7 @@ class ExportAction extends ExecuteAction
 
                     // Gera URL de download
                     $downloadUrl = route('download.export', ['filename' => $fileName]);
-                    
+
                     // Para exportação síncrona, cria notificação no banco com link de download
                     $user->notify(new ExportCompletedNotification($fileName, $downloadUrl, $resourceName));
 
@@ -149,10 +149,8 @@ class ExportAction extends ExecuteAction
      * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    protected function applyFiltersFromRequest(\Illuminate\Database\Eloquent\Builder $query, Request $request)
-    { 
-        $rawFilters = $this->getRawFilters($request);
-        $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
+    protected function applyFiltersFromRequest(\Illuminate\Database\Eloquent\Builder $query, Request $request, $filters = [])
+    {
 
         // Aplica o callback customizado se existir
         if ($this->callbackFilter && is_callable($this->callbackFilter)) {
@@ -160,10 +158,10 @@ class ExportAction extends ExecuteAction
                 'query' => $query,
                 'filters' => $filters,
                 'request' => $request,
-            ]) ;
+            ]);
         }
 
-        return $this->applyFilters($query, $filters);
+        return $query;
     }
 
     /**
@@ -175,7 +173,7 @@ class ExportAction extends ExecuteAction
         if ($this->parameterFiltersName) {
             return $request->query($this->parameterFiltersName, []);
         }
-        
+
         // Caso contrário, pega todos os parâmetros da query string
         return $request->query();
     }
@@ -226,25 +224,6 @@ class ExportAction extends ExecuteAction
         return $filters;
     }
 
-    /**
-     * Aplica os filtros processados na query
-     *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param array $filters
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    protected function applyFilters(\Illuminate\Database\Eloquent\Builder $query, array $filters): \Illuminate\Database\Eloquent\Builder
-    {
-        foreach ($filters as $column => $value) {
-            if (is_array($value)) {
-                $query->whereIn($column, $value);
-            } elseif (!empty($value)) {
-                $query->where($column, 'like', "%{$value}%");
-            }
-        }
-
-        return $query;
-    }
 
     public function parameterFiltersName(string $name): self
     {
@@ -258,9 +237,9 @@ class ExportAction extends ExecuteAction
         $this->query = null; // Reset query if model is set
         return $this;
     }
- 
+
     public function defaultFilters(array $filters): self
-    { 
+    {
         $this->defaultFilters = $filters;
         return $this;
     }
