@@ -142,6 +142,7 @@ FilterRegistry.registerBulk({
     'filter-date': defineAsyncComponent(() => import('~/components/filters/types/FilterDate.vue')),
     'filter-date-range': defineAsyncComponent(() => import('~/components/filters/types/FilterDateRange.vue')),
     'filter-trashed': defineAsyncComponent(() => import('~/components/filters/types/FilterTrashed.vue')),
+    'filter-nullable': defineAsyncComponent(() => import('~/components/filters/types/FilterNullable.vue')),
 })
 
 FilterRegistry.markAsInitialized()
