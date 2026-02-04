@@ -28,6 +28,7 @@ class ExportAction extends ExecuteAction
     protected array $exportColumns = [];
     protected bool $useJob = false;
     protected ?string $exportClass = null;
+    protected ?string $jobClass = null;
     protected ?string $fileName = null;
     protected ?Closure $callbackFilter = null;
     protected ?string $parameterFiltersName = null;
@@ -73,8 +74,11 @@ class ExportAction extends ExecuteAction
                     $connectionName = $model->getConnectionName();
                     $connectionConfig = config("database.connections.{$connectionName}");
                     
+                    // Usa a classe de job customizada ou a padrão
+                    $jobClass = $this->getJobClass();
+                    
                     // Envia para fila
-                    ProcessExport::dispatch(
+                    $jobClass::dispatch(
                         $this->getModelClass(),
                         $filters,
                         $this->getExportColumns(),
@@ -348,6 +352,17 @@ class ExportAction extends ExecuteAction
     public function getExportClass(): string
     {
         return $this->exportClass ?? DefaultExport::class;
+    }
+
+    public function job(string $jobClass): self
+    {
+        $this->jobClass = $jobClass;
+        return $this;
+    }
+
+    public function getJobClass(): string
+    {
+        return $this->jobClass ?? ProcessExport::class;
     }
 
     public function fileName(string $fileName): self

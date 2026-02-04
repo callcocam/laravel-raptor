@@ -16,6 +16,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProcessExport implements ShouldQueue
@@ -48,14 +49,18 @@ class ProcessExport implements ShouldQueue
             $model->setConnection($this->connectionName);
         }
         $query = $model->newQuery();
-
+        Log::info('ProcessExport - Iniciando exportação para ', [
+            'model' => $this->modelClass,
+            'fileName' => $this->fileName,
+            'filters' => $this->filters,
+        ]);
         // Aplica os filtros processados (já sem page, per_page e com filtros extraídos)
         if (!empty($this->filters)) {
             foreach ($this->filters as $column => $value) {
                 if (is_array($value)) {
                     $query->whereIn($column, $value);
                 } elseif (!empty($value)) {
-                    $query->where($column, 'like', "%{$value}%");
+                    $query->where($column, $value);
                 }
             }
         }
