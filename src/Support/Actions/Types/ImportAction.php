@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 use Callcocam\LaravelRaptor\Imports\DefaultImport;
 use Callcocam\LaravelRaptor\Jobs\ProcessImport;
 use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
+use Callcocam\LaravelRaptor\Events\ImportCompleted;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField;
 use Callcocam\LaravelRaptor\Support\Table\Confirm;
@@ -112,6 +113,11 @@ class ImportAction extends ExecuteAction
                     
                     Excel::import($import, $fileName, 'local');
 
+                    // Obtém estatísticas da importação (se disponível)
+                    $totalRows = $import->getRowCount() ?? 0;
+                    $successfulRows = $import->getSuccessfulCount() ?? $totalRows;
+                    $failedRows = $import->getFailedCount() ?? 0;
+
                     // Remove o arquivo temporário
                     if (file_exists(storage_path('app/' . $fileName))) {
                         unlink(storage_path('app/' . $fileName));
@@ -119,6 +125,16 @@ class ImportAction extends ExecuteAction
 
                     // Cria notificação no banco
                     $user->notify(new ImportCompletedNotification($resourceName));
+
+                    // Dispara evento de broadcast para atualização em tempo real
+                    event(new ImportCompleted(
+                        userId: $user->id,
+                        modelName: class_basename($this->getModelClass()),
+                        totalRows: $totalRows,
+                        successfulRows: $successfulRows,
+                        failedRows: $failedRows,
+                        fileName: $file->getClientOriginalName()
+                    ));
 
                     return [
                         'notification' => [

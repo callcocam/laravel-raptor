@@ -4,6 +4,7 @@ namespace Callcocam\LaravelRaptor\Jobs;
 
 use Callcocam\LaravelRaptor\Imports\DefaultImport;
 use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
+use Callcocam\LaravelRaptor\Events\ImportCompleted;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -37,6 +38,11 @@ class ProcessImport implements ShouldQueue
             unlink(storage_path('app/' . $this->filePath));
         }
 
+        // Obtém estatísticas da importação (se disponível)
+        $totalRows = $import->getRowCount() ?? 0;
+        $successfulRows = $import->getSuccessfulCount() ?? $totalRows;
+        $failedRows = $import->getFailedCount() ?? 0;
+
         // Envia notificação ao usuário
         $user = \App\Models\User::find($this->userId);
         if ($user) {
@@ -45,5 +51,15 @@ class ProcessImport implements ShouldQueue
                 true // Indica que foi processado via job
             ));
         }
+
+        // Dispara evento de broadcast para atualização em tempo real
+        event(new ImportCompleted(
+            userId: $this->userId,
+            modelName: class_basename($this->modelClass),
+            totalRows: $totalRows,
+            successfulRows: $successfulRows,
+            failedRows: $failedRows,
+            fileName: basename($this->filePath)
+        ));
     }
 }

@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Jobs;
 
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
+use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -53,6 +54,9 @@ class ProcessExport implements ShouldQueue
         // Gera o arquivo
         Excel::store($export, $this->filePath, 'local');
 
+        // Obtém o total de linhas exportadas
+        $totalRows = $query->count();
+
         // Gera a URL de download
         $downloadUrl = route('download.export', ['filename' => $this->fileName]);
 
@@ -66,5 +70,14 @@ class ProcessExport implements ShouldQueue
                 true // Indica que foi processado via job
             ));
         }
+
+        // Dispara evento de broadcast para atualização em tempo real
+        event(new ExportCompleted(
+            userId: $this->userId,
+            modelName: class_basename($this->modelClass),
+            totalRows: $totalRows,
+            filePath: $this->filePath,
+            fileName: $this->fileName
+        ));
     }
 }

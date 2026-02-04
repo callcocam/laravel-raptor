@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Jobs\ProcessExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
+use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -84,11 +85,23 @@ class ExportAction extends ExecuteAction
                     $export = new $exportClass($query, $this->getExportColumns());
                     Excel::store($export, $filePath);
 
+                    // Obtém o total de linhas exportadas
+                    $totalRows = $query->count();
+
                     // Gera URL de download
                     $downloadUrl = route('download.export', ['filename' => $fileName]);
                     
                     // Para exportação síncrona, cria notificação no banco com link de download
                     $user->notify(new ExportCompletedNotification($fileName, $downloadUrl, $resourceName));
+
+                    // Dispara evento de broadcast para atualização em tempo real
+                    event(new ExportCompleted(
+                        userId: $user->id,
+                        modelName: class_basename($this->getModelClass()),
+                        totalRows: $totalRows,
+                        filePath: $filePath,
+                        fileName: $fileName
+                    ));
 
                     return [
                         'notification' => [

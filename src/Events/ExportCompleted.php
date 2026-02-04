@@ -30,6 +30,7 @@ class ExportCompleted implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
+        
         return [
             new PrivateChannel('users.' . $this->userId),
         ];
@@ -40,13 +41,15 @@ class ExportCompleted implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        $filename = basename($this->filePath);
+        
         return [
             'type' => 'export',
             'model' => $this->modelName,
             'total' => $this->totalRows,
             'filePath' => $this->filePath,
             'fileName' => $this->fileName,
-            'downloadUrl' => route('download.export', ['path' => basename($this->filePath)]),
+            'downloadUrl' => route('download.export', ['filename' => $filename]),
             'message' => sprintf(
                 'Exportação concluída: %d registros exportados',
                 $this->totalRows
