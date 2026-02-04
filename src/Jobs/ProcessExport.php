@@ -49,7 +49,7 @@ class ProcessExport implements ShouldQueue
         }
         $query = $model->newQuery();
 
-        // Aplica os filtros
+        // Aplica os filtros processados (já sem page, per_page e com filtros extraídos)
         if (!empty($this->filters)) {
             foreach ($this->filters as $column => $value) {
                 if (is_array($value)) {
