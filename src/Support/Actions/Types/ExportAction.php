@@ -30,7 +30,7 @@ class ExportAction extends ExecuteAction
     protected ?string $exportClass = null;
     protected ?string $fileName = null;
     protected ?Closure $callbackFilter = null;
-    protected ?string $parameterFiltersName = 'filters';
+    protected ?string $parameterFiltersName = null;
     protected array $defaultFilters = [];
     protected array $allowedFilters = [];
     protected array $excludedFilters = ['page', 'per_page', 'actionType', 'actionName'];
@@ -65,7 +65,7 @@ class ExportAction extends ExecuteAction
 
                 if ($this->shouldUseJob()) {
                     // Extrai e processa os filtros da request
-                    $rawFilters = $request->query($this->getFiltersParameterName(), []);
+                    $rawFilters = $this->getRawFilters($request);
                     $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
                     
                     // Obtém a conexão do modelo
@@ -147,7 +147,7 @@ class ExportAction extends ExecuteAction
      */
     protected function applyFiltersFromRequest(\Illuminate\Database\Eloquent\Builder $query, Request $request)
     { 
-        $rawFilters = $request->query($this->getFiltersParameterName(), []);
+        $rawFilters = $this->getRawFilters($request);
         $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
 
         // Aplica o callback customizado se existir
@@ -160,6 +160,20 @@ class ExportAction extends ExecuteAction
         }
 
         return $this->applyFilters($query, $filters);
+    }
+
+    /**
+     * Obtém os filtros brutos da request
+     */
+    protected function getRawFilters(Request $request): array
+    {
+        // Se parameterFiltersName for definido, busca dentro desse parâmetro
+        if ($this->parameterFiltersName) {
+            return $request->query($this->parameterFiltersName, []);
+        }
+        
+        // Caso contrário, pega todos os parâmetros da query string
+        return $request->query();
     }
 
     /**
@@ -226,11 +240,6 @@ class ExportAction extends ExecuteAction
         }
 
         return $query;
-    }
-
-    protected function getFiltersParameterName(): string
-    {
-        return $this->parameterFiltersName;
     }
 
     public function parameterFiltersName(string $name): self

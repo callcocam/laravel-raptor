@@ -38,7 +38,7 @@ class NotificationController extends Controller
     /**
      * Marca uma notificação como lida.
      */
-    public function markAsRead(Request $request, string $id): RedirectResponse
+    public function markAsRead(Request $request, string $id)
     {
         $notification = $request->user()->notifications()->find($id);
         
@@ -46,23 +46,23 @@ class NotificationController extends Controller
             $notification->markAsRead();
         }
 
-        return back();
+        return back()->with('success', 'Notificação marcada como lida.');
     }
 
     /**
      * Marca todas as notificações como lidas.
      */
-    public function markAllAsRead(Request $request): RedirectResponse
+    public function markAllAsRead(Request $request)
     {
         $request->user()->unreadNotifications->markAsRead();
 
-        return back();
+        return back()->with('success', 'Todas as notificações foram marcadas como lidas.');
     }
 
     /**
      * Remove uma notificação.
      */
-    public function destroy(Request $request, string $id): RedirectResponse
+    public function destroy(Request $request, string $id)
     {
         $notification = $request->user()->notifications()->find($id);
         
@@ -70,16 +70,16 @@ class NotificationController extends Controller
             $notification->delete();
         }
 
-        return back();
+        return back()->with('success', 'Notificação removida.');
     }
 
     /**
      * Remove todas as notificações do usuário.
      */
-    public function destroyAll(Request $request): RedirectResponse
+    public function destroyAll(Request $request)
     {
         $request->user()->notifications()->delete();
 
-        return back();
+        return back()->with('success', 'Todas as notificações foram removidas.');
     }
 }
