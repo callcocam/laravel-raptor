@@ -101,7 +101,7 @@ class ExportAction extends ExecuteAction
                 try {
                     $exportClass = $this->getExportClass();
                     $export = new $exportClass($query, $this->getExportColumns());
-                    Excel::store($export, $filePath);
+                    Excel::store($export, $filePath, config('raptor.export.disk', 'local'));
 
                     // Obtém o total de linhas exportadas
                     $totalRows = $query->count();
