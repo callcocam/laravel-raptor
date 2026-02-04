@@ -8,8 +8,20 @@
 
 use Illuminate\Support\Facades\Route;
 use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
+use Illuminate\Support\Facades\Storage;
 
 $domain = parse_url(config('app.url'), PHP_URL_HOST);
+
+// Rota de download de exportações
+Route::get('download-export/{filename}', function ($filename) {
+    $path = Storage::disk('local')->path('exports/' . $filename);
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->download($path)->deleteFileAfterSend(true);
+})->name('download.export');
 
 if (!function_exists('getDirectoriesPath')) {
     function getDirectoriesPath(string $context): array
