@@ -7,19 +7,24 @@
  * - null/undefined: Não aplica filtro (todos registros)
  -->
 <template>
-  <div class="flex items-center gap-3">
-    <Checkbox :id="filter.name"
-      :modelValue="modelValue === true ? true : modelValue === false ? false : 'indeterminate'"
-      @update:modelValue="handleToggle" />
-    <Label :for="filter.name" class="text-sm font-medium cursor-pointer select-none">
-      {{ getCurrentLabel() }}
-    </Label>
+  <div class="flex items-center flex-col gap-3">
+    <div class="flex items-center gap-3">
+      <Checkbox :id="filter.name" v-model:model-value="checkboxState" @update:modelValue="handleToggle" />
+      <Label :for="filter.name" class="text-sm font-medium cursor-pointer select-none">
+        {{ getCurrentLabel() }}
+      </Label>
+    </div>
+    <FieldDescription v-if="filter.placeholder">
+      {{ filter.placeholder }}
+    </FieldDescription>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
+import { FieldDescription } from '@/components/ui/field'
 
 interface Props {
   filter: {
@@ -29,25 +34,40 @@ interface Props {
     falseLabel?: string
     [key: string]: any
   }
-  modelValue?: boolean | null
+  modelValue?: boolean | null | string
 }
 
 const props = defineProps<Props>()
-
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean | null): void
 }>()
 
-const handleToggle = (checked: boolean | 'indeterminate') => {
-  if (checked === 'indeterminate') {
-    // Clica novamente no indeterminate = false
-    emit('update:modelValue', false)
-  } else if (checked === false) {
-    // false = whereNull (apenas registros nulos)
+// Normalize the modelValue to handle string inputs from URL query
+const normalizedModelValue = computed(() => {
+  if (props.modelValue === 'true') return true
+  if (props.modelValue === 'false') return false
+  if (props.modelValue === null || props.modelValue === undefined) return null
+  return props.modelValue as boolean
+})
+
+const checkboxState = computed(() => {
+  if (normalizedModelValue.value === true) return true
+  if (normalizedModelValue.value === false) return false
+  return 'indeterminate'
+})
+
+const handleToggle = () => {
+  const currentValue = normalizedModelValue.value
+
+  if (currentValue === null) {
+    // From indeterminate (all) to true (not null)
+    emit('update:modelValue', true)
+  } else if (currentValue === true) {
+    // From true (not null) to false (null)
     emit('update:modelValue', false)
   } else {
-    // true = whereNotNull (apenas registros não nulos)
-    emit('update:modelValue', true)
+    // From false (null) to indeterminate (all)
+    emit('update:modelValue', null)
   }
 }
 
@@ -55,8 +75,8 @@ const getCurrentLabel = () => {
   const trueLabel = props.filter.trueLabel || 'Not Null'
   const falseLabel = props.filter.falseLabel || 'Null'
 
-  if (props.modelValue === true) return trueLabel
-  if (props.modelValue === false) return falseLabel
+  if (normalizedModelValue.value === true) return trueLabel
+  if (normalizedModelValue.value === false) return falseLabel
   return props.filter.label
 }
 </script>
