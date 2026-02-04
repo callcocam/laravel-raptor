@@ -8,30 +8,29 @@
 
 namespace Callcocam\LaravelRaptor\Support\Table\Filters;
 
-use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToOptions;
 use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Filtro avançado para valores null, vazios, zeros e valores especiais
+ * Filtro toggle para valores null/not null
  * 
- * Permite controlar:
- * - Valores null/not null
- * - Valores vazios ('')/não vazios
- * - Zero (0)/maior que zero
- * - Customizações via callback
+ * Comportamento:
+ * - false: Filtra apenas registros NULL (whereNull)
+ * - true: Filtra apenas registros NOT NULL (whereNotNull)
+ * - null/undefined: Não aplica filtro (todos registros)
+ * 
+ * Uso:
+ * NullableFilter::make('status')
+ * NullableFilter::make('deleted_at')->labels('Ativo', 'Deletado')
+ * NullableFilter::make('amount')->query(fn($q, $value, $column) => ...)
  */
 class NullableFilter extends FilterBuilder
 {
-    use BelongsToOptions;
-
     protected string $component = 'filter-nullable';
 
-    protected bool $includeZero = true;
-    protected bool $includeEmpty = true;
-    protected bool $includeNull = true;
-    protected bool $treatZeroAsEmpty = false;
-    protected bool $treatEmptyAsNull = false;
+    protected string $trueLabel = 'Not Null';
+    protected string $falseLabel = 'Null';
 
     protected ?Closure $customQuery = null;
 
@@ -41,205 +40,69 @@ class NullableFilter extends FilterBuilder
     }
 
     /**
-     * Configura se deve incluir zero (0) como valor válido
+     * Define labels customizados para true/false
+     * 
+     * @param string $trueLabel Label quando true (whereNotNull)
+     * @param string $falseLabel Label quando false (whereNull)
      */
-    public function includeZero(bool $include = true): static
+    public function labels(string $trueLabel, string $falseLabel): static
     {
-        $this->includeZero = $include;
+        $this->trueLabel = $trueLabel;
+        $this->falseLabel = $falseLabel;
         return $this;
     }
 
     /**
-     * Configura se deve incluir strings vazias ('') como valor válido
-     */
-    public function includeEmpty(bool $include = true): static
-    {
-        $this->includeEmpty = $include;
-        return $this;
-    }
-
-    /**
-     * Configura se deve incluir null como valor válido
-     */
-    public function includeNull(bool $include = true): static
-    {
-        $this->includeNull = $include;
-        return $this;
-    }
-
-    /**
-     * Trata zero como valor vazio
-     */
-    public function treatZeroAsEmpty(bool $treat = true): static
-    {
-        $this->treatZeroAsEmpty = $treat;
-        return $this;
-    }
-
-    /**
-     * Trata string vazia como null
-     */
-    public function treatEmptyAsNull(bool $treat = true): static
-    {
-        $this->treatEmptyAsNull = $treat;
-        return $this;
-    }
-
-    /**
-     * Preset: Filtro para valores null/not null
-     */
-    public function nullToggle(
-        string $nullLabel = 'Apenas Null',
-        string $notNullLabel = 'Apenas Preenchidos',
-        string $allLabel = 'Todos'
-    ): static {
-        $this->options = [
-            ['value' => 'all', 'label' => $allLabel],
-            ['value' => 'null', 'label' => $nullLabel],
-            ['value' => 'not_null', 'label' => $notNullLabel],
-        ];
-
-        $this->queryUsing(function ($query, $value) {
-            if ($value === 'null') {
-                return $query->whereNull($this->getName());
-            }
-            if ($value === 'not_null') {
-                return $query->whereNotNull($this->getName());
-            }
-            return $query;
-        });
-
-        return $this;
-    }
-
-    /**
-     * Preset: Filtro para valores vazios/não vazios (inclui null)
-     */
-    public function emptyToggle(
-        string $emptyLabel = 'Apenas Vazios',
-        string $notEmptyLabel = 'Apenas Preenchidos',
-        string $allLabel = 'Todos'
-    ): static {
-        $this->options = [
-            ['value' => 'all', 'label' => $allLabel],
-            ['value' => 'empty', 'label' => $emptyLabel],
-            ['value' => 'not_empty', 'label' => $notEmptyLabel],
-        ];
-
-        $this->queryUsing(function ($query, $value) {
-            $column = $this->getName();
-            
-            if ($value === 'empty') {
-                return $query->where(function ($q) use ($column) {
-                    $q->whereNull($column)
-                      ->orWhere($column, '')
-                      ->orWhere($column, 0);
-                });
-            }
-            
-            if ($value === 'not_empty') {
-                return $query->whereNotNull($column)
-                    ->where($column, '!=', '')
-                    ->where($column, '!=', 0);
-            }
-            
-            return $query;
-        });
-
-        return $this;
-    }
-
-    /**
-     * Preset: Filtro para valores zero/maior que zero
-     */
-    public function zeroToggle(
-        string $zeroLabel = 'Apenas Zero',
-        string $positiveLabel = 'Maior que Zero',
-        string $allLabel = 'Todos'
-    ): static {
-        $this->options = [
-            ['value' => 'all', 'label' => $allLabel],
-            ['value' => 'zero', 'label' => $zeroLabel],
-            ['value' => 'positive', 'label' => $positiveLabel],
-        ];
-
-        $this->queryUsing(function ($query, $value) {
-            $column = $this->getName();
-            
-            if ($value === 'zero') {
-                return $query->where($column, 0);
-            }
-            
-            if ($value === 'positive') {
-                return $query->where($column, '>', 0);
-            }
-            
-            return $query;
-        });
-
-        return $this;
-    }
-
-    /**
-     * Preset: Filtro completo com todas as opções
-     */
-    public function fullToggle(
-        string $nullLabel = 'Null',
-        string $emptyLabel = 'Vazio',
-        string $zeroLabel = 'Zero',
-        string $filledLabel = 'Preenchido',
-        string $allLabel = 'Todos'
-    ): static {
-        $this->options = [
-            ['value' => 'all', 'label' => $allLabel],
-            ['value' => 'null', 'label' => $nullLabel],
-            ['value' => 'empty', 'label' => $emptyLabel],
-            ['value' => 'zero', 'label' => $zeroLabel],
-            ['value' => 'filled', 'label' => $filledLabel],
-        ];
-
-        $this->queryUsing(function ($query, $value) {
-            $column = $this->getName();
-            
-            if ($value === 'null') {
-                return $query->whereNull($column);
-            }
-            
-            if ($value === 'empty') {
-                return $query->where($column, '');
-            }
-            
-            if ($value === 'zero') {
-                return $query->where($column, 0);
-            }
-            
-            if ($value === 'filled') {
-                return $query->whereNotNull($column)
-                    ->where($column, '!=', '')
-                    ->where($column, '!=', 0);
-            }
-            
-            return $query;
-        });
-
-        return $this;
-    }
-
-    /**
-     * Query customizada usando callback
+     * Define uma query customizada
+     * 
+     * @param Closure $callback Callback (Builder $query, bool $value, string $column)
      */
     public function query(Closure $callback): static
     {
         $this->customQuery = $callback;
-        $this->queryUsing($callback);
         return $this;
     }
 
-    protected function setUp(): void
+    /**
+     * Aplica o filtro na query
+     */
+    public function apply(&$query, $value): static
     {
-        // Se não tiver options definidas, usa o preset padrão
-        if (empty($this->options)) {
-            $this->nullToggle();
+        // Se valor for null ou string vazia, não aplica filtro
+        if ($value === null || $value === '') {
+            return $query;
         }
+
+        // Converte string para boolean se necessário
+        $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+        if ($boolValue === null) {
+            return $query;
+        }
+
+        $column = $this->getName();
+
+        // Se tem query customizada, usa ela
+        if ($this->customQuery) {
+            return call_user_func($this->customQuery, $query, $boolValue, $column);
+        }
+
+        // Query padrão:
+        // false = whereNull (apenas registros nulos)
+        // true = whereNotNull (apenas registros não nulos)
+        return $boolValue
+            ? $query->whereNotNull($column)
+            : $query->whereNull($column);
+    }
+
+    /**
+     * Serializa o filtro para array
+     */
+    public function toArray(): array
+    {
+        $array = parent::toArray();
+        $array['trueLabel'] = $this->trueLabel;
+        $array['falseLabel'] = $this->falseLabel;
+        return $array;
     }
 }

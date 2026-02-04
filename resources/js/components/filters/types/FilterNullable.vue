@@ -1,73 +1,62 @@
 <!--
- * FilterNullable - Filtro para valores null, vazios, zero e especiais
+ * FilterNullable - Toggle filter para valores null/not null
  * 
- * Permite filtrar por:
- * - Valores null/not null
- * - Valores vazios/não vazios
- * - Zero/maior que zero
- * - Combinações customizadas
+ * Comportamento:
+ * - false: Filtra apenas registros NULL (whereNull)
+ * - true: Filtra apenas registros NOT NULL (whereNotNull)
+ * - null/undefined: Não aplica filtro (todos registros)
  -->
 <template>
-  <Select 
-    class="h-9"
-    :modelValue="modelValue ? String(modelValue) : 'all'"
-    @update:modelValue="handleSelect"
-  >
-    <SelectTrigger :id="filter.name" class="w-full">
-      <SelectValue :placeholder="filter.placeholder || filter.label" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem
-        v-for="option in filter.options"
-        :key="option.value"
-        :value="String(option.value)"
-      >
-        {{ option.label }}
-      </SelectItem>
-    </SelectContent>
-  </Select>
+  <div class="flex items-center gap-3">
+    <Checkbox :id="filter.name"
+      :modelValue="modelValue === true ? true : modelValue === false ? false : 'indeterminate'"
+      @update:modelValue="handleToggle" />
+    <Label :for="filter.name" class="text-sm font-medium cursor-pointer select-none">
+      {{ getCurrentLabel() }}
+    </Label>
+  </div>
 </template>
 
 <script setup lang="ts">
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-
-interface FilterOption {
-  value: string | number
-  label: string
-}
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 
 interface Props {
   filter: {
     name: string
     label: string
-    placeholder?: string
-    options: FilterOption[]
+    trueLabel?: string
+    falseLabel?: string
     [key: string]: any
   }
-  modelValue?: string | number
+  modelValue?: boolean | null
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number | null): void
+  (e: 'update:modelValue', value: boolean | null): void
 }>()
 
-const handleSelect = (value: string) => {
-  // Se for 'all', limpa o filtro
-  if (value === 'all') {
-    emit('update:modelValue', null)
-    return
+const handleToggle = (checked: boolean | 'indeterminate') => {
+  if (checked === 'indeterminate') {
+    // Clica novamente no indeterminate = false
+    emit('update:modelValue', false)
+  } else if (checked === false) {
+    // false = whereNull (apenas registros nulos)
+    emit('update:modelValue', false)
+  } else {
+    // true = whereNotNull (apenas registros não nulos)
+    emit('update:modelValue', true)
   }
+}
 
-  // Se o valor original era número, converte de volta
-  const originalValue = props.filter.options?.find(opt => String(opt.value) === value)?.value
-  emit('update:modelValue', originalValue || value)
+const getCurrentLabel = () => {
+  const trueLabel = props.filter.trueLabel || 'Not Null'
+  const falseLabel = props.filter.falseLabel || 'Null'
+
+  if (props.modelValue === true) return trueLabel
+  if (props.modelValue === false) return falseLabel
+  return props.filter.label
 }
 </script>
