@@ -50,6 +50,9 @@ class BuscaCepField extends Column
         parent::__construct($name, $label);
         $this->component('form-field-busca-cep');
         $this->setUp();
+        $this->defaultUsing(function ($model, $data=[]) {
+            return data_get($model, $this->name, null);
+        });
     }
 
     protected function setUp(): void

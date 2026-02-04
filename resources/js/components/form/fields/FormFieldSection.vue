@@ -123,7 +123,7 @@ interface FormColumn {
 
 interface Props {
   column: FormColumn;
-  modelValue?: Record<string, any>;
+  modelValue?: Record<string, any> | string | null;
   error?: Record<string, string | string[]>;
 }
 
@@ -148,16 +148,17 @@ const sectionFields = computed(() => props.column.fields || []);
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue) {
-      sectionFields.value.forEach((field) => {
-        // Se o campo usa dot notation, busca o valor aninhado
-        if (field.name.includes(".")) {
-          fieldValues.value[field.name] = getNestedValue(newValue, field.name) || "";
-        } else {
-          fieldValues.value[field.name] = newValue[field.name] || "";
-        }
-      });
-    }
+    // Normaliza o modelValue para sempre ser um objeto
+    const normalizedValue = typeof newValue === 'object' && newValue !== null ? newValue : {};
+    
+    sectionFields.value.forEach((field) => {
+      // Se o campo usa dot notation, busca o valor aninhado
+      if (field.name.includes(".")) {
+        fieldValues.value[field.name] = getNestedValue(normalizedValue, field.name) || "";
+      } else {
+        fieldValues.value[field.name] = normalizedValue[field.name] || "";
+      }
+    });
   },
   { immediate: true }
 );

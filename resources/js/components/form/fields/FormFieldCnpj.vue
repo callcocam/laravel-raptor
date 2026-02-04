@@ -21,7 +21,7 @@
           :required="column.required"
           :disabled="column.disabled || isLoading"
           :readonly="column.readonly"
-          :modelValue="internalValue || undefined"
+          :modelValue="internalCnpjValue || undefined"
           @update:modelValue="updateValue"
           @blur="handleBlur"
           :aria-invalid="hasError"
@@ -74,7 +74,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
@@ -111,6 +111,7 @@ const emit = defineEmits<{
 
 const isLoading = ref(false)
 const searchError = ref('')
+const internalCnpjValue = ref<string>('')
 
 const hasError = computed(() => !!props.error)
 
@@ -124,10 +125,27 @@ function formatCnpj(value: string): string {
   return `${cleaned.slice(0, 2)}.${cleaned.slice(2, 5)}.${cleaned.slice(5, 8)}/${cleaned.slice(8, 12)}-${cleaned.slice(12, 14)}`
 }
 
+// Inicializa o valor interno do CNPJ
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    // Normaliza o modelValue para sempre ser um objeto ou string
+    if (newValue && typeof newValue === 'object') {
+      const cnpjValue = newValue[props.column.name]
+      internalCnpjValue.value = cnpjValue ? formatCnpj(String(cnpjValue)) : ''
+    } else if (newValue !== null && newValue !== undefined) {
+      internalCnpjValue.value = formatCnpj(String(newValue))
+    } else {
+      internalCnpjValue.value = props.column.default ? formatCnpj(String(props.column.default)) : ''
+    }
+  },
+  { immediate: true }
+)
+
 // Pode buscar se tiver 14 dígitos
 const canSearch = computed(() => {
-  if (!internalValue.value) return false
-  const cleaned = String(internalValue.value).replace(/\D/g, '')
+  if (!internalCnpjValue.value) return false
+  const cleaned = String(internalCnpjValue.value).replace(/\D/g, '')
   return cleaned.length === 14
 })
 
@@ -139,37 +157,34 @@ const errorArray = computed(() => {
   return [{ message: props.error }]
 })
 
-const internalValue = computed({
-  get: () => {
-    // Se modelValue for um objeto, pega o valor do campo CNPJ
-    if (props.modelValue && typeof props.modelValue === 'object') {
-      const cnpjValue = (props.modelValue as Record<string, any>)[props.column.name]
-      return cnpjValue ? formatCnpj(String(cnpjValue)) : null
-    }
-    // Se for string/number, formata diretamente
-    if (props.modelValue !== null && props.modelValue !== undefined) {
-      return formatCnpj(String(props.modelValue))
-    }
-    return props.column.default ? formatCnpj(String(props.column.default)) : null
-  },
-  set: (value) => {
-    if (value) {
-      const cleaned = String(value).replace(/\D/g, '')
-      // Emite apenas o valor do campo CNPJ
-      emit('update:modelValue', cleaned)
-    } else {
-      emit('update:modelValue', null)
-    }
-  }
-})
-
 const updateValue = (value: string | number | null) => {
   if (value) {
     const formatted = formatCnpj(String(value))
     const cleaned = formatted.replace(/\D/g, '')
-    emit('update:modelValue', cleaned)
+    
+    // Atualiza o valor interno
+    internalCnpjValue.value = formatted
+    
+    // Normaliza o modelValue para sempre ser um objeto
+    const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {}
+    
+    const updatedValues = {
+      ...currentValue,
+      [props.column.name]: cleaned
+    }
+    
+    emit('update:modelValue', updatedValues)
   } else {
-    emit('update:modelValue', null)
+    internalCnpjValue.value = ''
+    
+    const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {}
+    
+    const updatedValues = {
+      ...currentValue,
+      [props.column.name]: null
+    }
+    
+    emit('update:modelValue', updatedValues)
   }
 }
 
@@ -188,7 +203,7 @@ const searchCnpj = async () => {
   searchError.value = ''
 
   try {
-    const plainCnpj = String(internalValue.value).replace(/\D/g, '')
+    const plainCnpj = String(internalCnpjValue.value).replace(/\D/g, '')
     const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${plainCnpj}`)
 
     if (!response.ok) {
@@ -196,8 +211,7 @@ const searchCnpj = async () => {
       throw new Error(errorData.message || 'Erro ao buscar o CNPJ.')
     }
 
-    const data = await response.json()
-    console.log('BrasilAPI response:', data)
+    const data = await response.json() 
 
     // Usa o mapeamento definido no backend (obrigatório)
     const fieldMapping = props.column.fieldMapping
@@ -206,37 +220,26 @@ const searchCnpj = async () => {
       console.warn('Field mapping não definido no backend!')
       return
     }
-
-    console.log('Field mapping:', fieldMapping)
+ 
 
     const mappedData: Record<string, any> = {}
 
     // Mapeia os dados da API para os campos do formulário
     Object.entries(fieldMapping).forEach(([apiField, formField]) => {
       const value = data[apiField] || ''
-      console.log(`Mapping ${apiField} (${value}) -> ${formField}`)
-      
-      // Suporta campos aninhados (ex: address.street)
-      if (String(formField).includes('.')) {
-        const parts = String(formField).split('.')
-        const [parent, child] = parts
-        
-        if (!mappedData[parent]) {
-          mappedData[parent] = {}
-        }
-        mappedData[parent][child] = value
-      } else {
-        // Campo simples
-        mappedData[formField as string] = value
-      }
+      mappedData[formField as string] = value
     })
 
-    // Emite todos os valores mapeados de uma vez
+    // Normaliza o modelValue para sempre ser um objeto
+    const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {}
+    
+    // Emite todos os valores mapeados de uma vez, mantendo o CNPJ
     const updatedValues = {
-      ...(typeof props.modelValue === 'object' ? props.modelValue : {}),
+      ...currentValue,
+      [props.column.name]: plainCnpj,
       ...mappedData,
     }
-    console.log('Emitting all CNPJ values:', updatedValues)
+    
     emit('update:modelValue', updatedValues)
 
   } catch (e: any) {

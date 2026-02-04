@@ -119,7 +119,7 @@ interface FormColumn {
 
 interface Props {
   column: FormColumn;
-  modelValue?: Record<string, any>;
+  modelValue?: Record<string, any> | string | null;
   error?: Record<string, string | string[]>;
 }
 
@@ -166,11 +166,12 @@ const getCepFieldClass = (field: AddressField) => {
 watch(
   () => props.modelValue,
   (newValue) => {
-    if (newValue) {
-      addressFields.value.forEach((field) => {
-        fieldValues.value[field.name] = newValue[field.name] || "";
-      });
-    }
+    // Normaliza o modelValue para sempre ser um objeto
+    const normalizedValue = typeof newValue === 'object' && newValue !== null ? newValue : {};
+    
+    addressFields.value.forEach((field) => {
+      fieldValues.value[field.name] = normalizedValue[field.name] || "";
+    });
   },
   { immediate: true }
 );
@@ -225,8 +226,10 @@ async function searchCep(cep: string) {
     });
 
     // Emite todos os valores de uma vez
+    const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {};
+    
     const updatedValues = {
-      ...props.modelValue,
+      ...currentValue,
       ...fieldValues.value,
     }; 
     emit("update:modelValue", updatedValues);
@@ -240,8 +243,11 @@ async function searchCep(cep: string) {
 
 // Emite valor atualizado
 function emitValue(fieldName: string, value: any) {
+  // Normaliza o modelValue para sempre ser um objeto
+  const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {};
+  
   const updatedValues = {
-    ...props.modelValue,
+    ...currentValue,
     [fieldName]: value,
   }; 
   emit("update:modelValue", updatedValues);
