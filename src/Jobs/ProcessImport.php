@@ -23,11 +23,18 @@ class ProcessImport implements ShouldQueue
         protected string $importClass,
         protected string $resourceName,
         protected int|string $userId,
-        protected ?string $connectionName = null
+        protected ?string $connectionName = null,
+        protected ?array $connectionConfig = null
     ) {}
 
     public function handle(): void
     {
+        // Se temos a configuração da conexão, registra ela dinamicamente
+        if ($this->connectionName && $this->connectionConfig) {
+            config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
+            \DB::purge($this->connectionName);
+        }
+
         // Cria a instância do import com a conexão correta
         $import = new $this->importClass($this->modelClass, $this->columnMapping, $this->connectionName);
 

@@ -62,7 +62,9 @@ class ExportAction extends ExecuteAction
                     $filters = $request->query('filters', []);
                     
                     // Obtém a conexão do modelo
-                    $connection = app($this->getModelClass())->getConnectionName();
+                    $model = app($this->getModelClass());
+                    $connectionName = $model->getConnectionName();
+                    $connectionConfig = config("database.connections.{$connectionName}");
                     
                     // Envia para fila
                     ProcessExport::dispatch(
@@ -73,7 +75,8 @@ class ExportAction extends ExecuteAction
                         $filePath,
                         $resourceName,
                         $user->id,
-                        $connection
+                        $connectionName,
+                        $connectionConfig
                     );
 
                     return [

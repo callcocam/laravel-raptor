@@ -88,7 +88,9 @@ class ImportAction extends ExecuteAction
 
                 if ($this->shouldUseJob()) {
                     // Obtém a conexão do modelo
-                    $connection = app($this->getModelClass())->getConnectionName();
+                    $model = app($this->getModelClass());
+                    $connectionName = $model->getConnectionName();
+                    $connectionConfig = config("database.connections.{$connectionName}");
                     
                     // Envia para fila
                     ProcessImport::dispatch(
@@ -98,7 +100,8 @@ class ImportAction extends ExecuteAction
                         $this->getImportClass(),
                         $resourceName,
                         $user->id,
-                        $connection
+                        $connectionName,
+                        $connectionConfig
                     );
 
                     return [
