@@ -48,17 +48,18 @@ class ProcessExport implements ShouldQueue
         if ($this->connectionName) {
             $model->setConnection($this->connectionName);
         }
-        $query = $model->newQuery();
-        Log::info('ProcessExport - Iniciando exportação para ', [
-            'model' => $this->modelClass,
-            'fileName' => $this->fileName,
-            'filters' => $this->filters,
-        ]);
+        $query = $model->newQuery(); 
         // Aplica os filtros processados (já sem page, per_page e com filtros extraídos)
         if (!empty($this->filters)) {
             foreach ($this->filters as $column => $value) {
                 if (is_array($value)) {
                     $query->whereIn($column, $value);
+                } elseif ($value === "true" || $value === "false") {
+                    if ($value === "true") {
+                        $query->whereNotNull($column);
+                    } else {
+                        $query->whereNull($column);
+                    }
                 } elseif (!empty($value)) {
                     $query->where($column, $value);
                 }

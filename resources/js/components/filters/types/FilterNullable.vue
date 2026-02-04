@@ -7,7 +7,7 @@
  * - null/undefined: Não aplica filtro (todos registros)
  -->
 <template>
-  <div class="flex items-center flex-col gap-3">
+  <div class="flex justify-center flex-col gap-y-2">
     <div class="flex items-center gap-3">
       <Checkbox :id="filter.name" v-model:model-value="checkboxState" @update:modelValue="handleToggle" />
       <Label :for="filter.name" class="text-sm font-medium cursor-pointer select-none">
