@@ -9,8 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Table\Filters;
 
 use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
-use Closure;
-use Illuminate\Database\Eloquent\Builder;
+ 
 
 /**
  * Filtro toggle para valores null/not null
@@ -32,13 +31,33 @@ class NullableFilter extends FilterBuilder
     protected string $trueLabel = 'Not Null';
     protected string $falseLabel = 'Null';
 
-    protected ?Closure $customQuery = null;
-
-    public function __construct(string $name, ?string $label = null)
+    protected function setUp(): void
     {
-        parent::__construct($name, $label);
-    }
+        $this->queryUsing(function ($query, $value) {
 
+            // Se valor for null ou string vazia, não aplica filtro
+            if ($value === null || $value === '') {
+                return $query;
+            }
+
+            // Converte string para boolean se necessário
+            $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+            if ($boolValue === null) {
+                return $query;
+            }
+
+            $column = $this->getName();
+
+            // Query padrão:
+            // false = whereNull (apenas registros nulos)
+            // true = whereNotNull (apenas registros não nulos)
+
+            return $boolValue
+                ? $query->whereNotNull($column)
+                : $query->whereNull($column);
+        });
+    }
     /**
      * Define labels customizados para true/false
      * 
@@ -53,56 +72,13 @@ class NullableFilter extends FilterBuilder
     }
 
     /**
-     * Define uma query customizada
-     * 
-     * @param Closure $callback Callback (Builder $query, bool $value, string $column)
-     */
-    public function query(Closure $callback): static
-    {
-        $this->customQuery = $callback;
-        return $this;
-    }
-
-    /**
-     * Aplica o filtro na query
-     */
-    public function apply(&$query, $value): static
-    {
-        // Se valor for null ou string vazia, não aplica filtro
-        if ($value === null || $value === '') {
-            return $query;
-        }
-
-        // Converte string para boolean se necessário
-        $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
-        if ($boolValue === null) {
-            return $query;
-        }
-
-        $column = $this->getName();
-
-        // Se tem query customizada, usa ela
-        if ($this->customQuery) {
-            return call_user_func($this->customQuery, $query, $boolValue, $column);
-        }
-
-        // Query padrão:
-        // false = whereNull (apenas registros nulos)
-        // true = whereNotNull (apenas registros não nulos)
-        return $boolValue
-            ? $query->whereNotNull($column)
-            : $query->whereNull($column);
-    }
-
-    /**
      * Serializa o filtro para array
      */
     public function toArray(): array
     {
         $array = parent::toArray();
         $array['trueLabel'] = $this->trueLabel;
-        $array['falseLabel'] = $this->falseLabel;
+        $array['falseLabel'] = $this->falseLabel; 
         return $array;
     }
 }

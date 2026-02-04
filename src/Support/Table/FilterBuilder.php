@@ -181,6 +181,7 @@ class FilterBuilder
             'context' => $this->getContext(),
             'strategy' => $this->filterStrategy?->getName(),
             'visible' => $this->isVisible(),
+            'placeholder' => $this->getPlaceholder()
         ];
     }
 }
