@@ -22,6 +22,7 @@ class CheckPermissions extends Command
     protected $signature = 'permissions:check 
                             {--missing : Show only missing permissions}
                             {--create : Create missing permissions in database}
+                            {--update-names : Update names and descriptions of existing permissions}
                             {--only-raptor : Show only Raptor permissions (index, edit, create, execute)}
                             {--context= : Filter by context (tenant or landlord)}';
 
@@ -31,6 +32,75 @@ class CheckPermissions extends Command
      * @var string
      */
     protected $description = 'Verifica todas as permissões necessárias baseado nos controllers';
+
+    /**
+     * Mapeamento de ações técnicas para nomes amigáveis em português.
+     * 
+     * @var array<string, array{name: string, description: string}>
+     */
+    protected array $actionLabels = [
+        'index' => [
+            'name' => 'Listar',
+            'description' => 'Permite visualizar a listagem de',
+        ],
+        'edit' => [
+            'name' => 'Editar',
+            'description' => 'Permite editar os dados de',
+        ],
+        'execute' => [
+            'name' => 'Executar Ações',
+            'description' => 'Permite executar ações especiais em',
+        ],
+        'viewAny' => [
+            'name' => 'Ver Todos',
+            'description' => 'Permite visualizar todos os registros de',
+        ],
+        'view' => [
+            'name' => 'Visualizar',
+            'description' => 'Permite visualizar os detalhes de',
+        ],
+        'create' => [
+            'name' => 'Criar',
+            'description' => 'Permite criar novos registros de',
+        ],
+        'update' => [
+            'name' => 'Atualizar',
+            'description' => 'Permite atualizar os dados de',
+        ],
+        'delete' => [
+            'name' => 'Excluir',
+            'description' => 'Permite excluir (mover para lixeira)',
+        ],
+        'restore' => [
+            'name' => 'Restaurar',
+            'description' => 'Permite restaurar registros excluídos de',
+        ],
+        'forceDelete' => [
+            'name' => 'Excluir Permanentemente',
+            'description' => 'Permite excluir permanentemente (sem possibilidade de recuperação)',
+        ],
+    ];
+
+    /**
+     * Mapeamento de recursos para nomes amigáveis em português.
+     * 
+     * @var array<string, string>
+     */
+    protected array $resourceLabels = [
+        'categories' => 'Categorias',
+        'clients' => 'Clientes',
+        'clusters' => 'Clusters',
+        'orders' => 'Pedidos',
+        'planograms' => 'Planogramas',
+        'products' => 'Produtos',
+        'stores' => 'Lojas',
+        'users' => 'Usuários',
+        'roles' => 'Perfis',
+        'permissions' => 'Permissões',
+        'tenants' => 'Empresas',
+        'inspirations' => 'Inspirações',
+        'addresses' => 'Endereços',
+    ];
 
     /**
      * Execute the console command.
@@ -83,6 +153,11 @@ class CheckPermissions extends Command
         // Criar permissões faltantes se solicitado
         if ($this->option('create') && $missing->isNotEmpty()) {
             $this->createMissingPermissions($missing);
+        }
+        
+        // Atualizar nomes e descrições se solicitado
+        if ($this->option('update-names')) {
+            $this->updatePermissionNames($expectedPermissions);
         }
 
         return self::SUCCESS;
@@ -181,7 +256,8 @@ class CheckPermissions extends Command
                 if (!$permissions->contains('slug', $slug)) {
                     $permissions->push([
                         'slug' => $slug,
-                        'name' => ucfirst($action) . ' ' . Str::title(str_replace('-', ' ', $resourceName)),
+                        'name' => $this->getFriendlyName($action, $resourceName),
+                        'description' => $this->getFriendlyDescription($action, $resourceName),
                         'resource' => $resourceName,
                         'action' => $action,
                         'context' => $context,
@@ -192,6 +268,42 @@ class CheckPermissions extends Command
         }
 
         return $permissions;
+    }
+
+    /**
+     * Retorna um nome amigável para a permissão.
+     */
+    protected function getFriendlyName(string $action, string $resource): string
+    {
+        $actionLabel = $this->actionLabels[$action]['name'] ?? Str::title($action);
+        $resourceLabel = $this->getResourceLabel($resource);
+        
+        return "{$actionLabel} {$resourceLabel}";
+    }
+
+    /**
+     * Retorna uma descrição amigável para a permissão.
+     */
+    protected function getFriendlyDescription(string $action, string $resource): string
+    {
+        $actionDescription = $this->actionLabels[$action]['description'] ?? "Permite {$action} em";
+        $resourceLabel = $this->getResourceLabel($resource);
+        
+        return "{$actionDescription} {$resourceLabel}";
+    }
+
+    /**
+     * Retorna o label amigável do recurso ou formata automaticamente.
+     */
+    protected function getResourceLabel(string $resource): string
+    {
+        // Se temos um label definido, usa ele
+        if (isset($this->resourceLabels[$resource])) {
+            return $this->resourceLabels[$resource];
+        }
+        
+        // Caso contrário, formata automaticamente: kebab-case -> Title Case
+        return Str::title(str_replace('-', ' ', $resource));
     }
 
     protected function getResourceName(string $controllerName): ?string
@@ -294,7 +406,7 @@ class CheckPermissions extends Command
                 app($permissionModel)->create([
                     'name' => $permission['name'],
                     'slug' => $permission['slug'],
-                    'description' => "Permissão para {$permission['action']} em {$permission['resource']}",
+                    'description' => $permission['description'],
                 ]);
                 $created++;
             } catch (\Exception $e) {
@@ -303,5 +415,52 @@ class CheckPermissions extends Command
         }
 
         $this->info("✅ {$created} permissões criadas com sucesso!");
+    }
+
+    /**
+     * Atualiza os nomes e descrições das permissões existentes.
+     * 
+     * IMPORTANTE: Usa query builder direto para evitar que o HasSlug trait
+     * sobrescreva a slug ao atualizar o name.
+     */
+    protected function updatePermissionNames(\Illuminate\Support\Collection $expectedPermissions): void
+    {
+        $permissionModel = config('raptor.shinobi.models.permission');
+        $table = app($permissionModel)->getTable();
+        $updated = 0;
+
+        $this->info('🔄 Atualizando nomes e descrições das permissões...');
+        $this->newLine();
+
+        foreach ($expectedPermissions as $permission) {
+            $existing = app($permissionModel)->where('slug', $permission['slug'])->first();
+            
+            if (!$existing) {
+                continue;
+            }
+            
+            // Só atualiza se o nome ou descrição forem diferentes
+            if ($existing->name !== $permission['name'] || $existing->description !== $permission['description']) {
+                // Usa query builder direto para evitar que o HasSlug trait sobrescreva a slug
+                \DB::table($table)
+                    ->where('id', $existing->id)
+                    ->update([
+                        'name' => $permission['name'],
+                        'description' => $permission['description'],
+                        'updated_at' => now(),
+                    ]);
+                
+                $this->line("  ✓ <fg=green>{$permission['slug']}</> → {$permission['name']}");
+                $updated++;
+            }
+        }
+
+        $this->newLine();
+        
+        if ($updated > 0) {
+            $this->info("✅ {$updated} permissões atualizadas com sucesso!");
+        } else {
+            $this->info('ℹ️  Nenhuma permissão precisou ser atualizada.');
+        }
     }
 }

@@ -237,14 +237,38 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
      * 
      * Detecta o contexto atual e carrega APENAS o arquivo de rotas correspondente.
      * Isso evita conflitos de rotas com mesma URI em contextos diferentes.
+     * 
+     * Em ambiente CLI (artisan), carrega AMBOS os contextos para que comandos
+     * como route:list e permissions:check funcionem corretamente.
      */
     protected function registerContextRoutes(): void
     {
-        $context = request()->getContext();
-
+        // Em ambiente CLI, carrega ambos os contextos
+        if (app()->runningInConsole()) {
+            $this->registerRoutesForContext('tenant');
+            $this->registerRoutesForContext('landlord');
+            return;
+        }
+        
+        // Em ambiente web, carrega apenas o contexto detectado
+        $context = request()->getContext() ?? 'tenant';
+        $this->registerRoutesForContext($context);
+    }
+    
+    /**
+     * Registra as rotas para um contexto específico.
+     */
+    protected function registerRoutesForContext(string $context): void
+    {
+        $routeFile = sprintf('%s/../routes/%s.php', __DIR__, $context);
+        
+        if (!file_exists($routeFile)) {
+            return;
+        }
+        
         Route::middleware(['web', 'auth', $context])
             ->name(sprintf('%s.', $context))
-            ->group(sprintf('%s/../routes/%s.php', __DIR__, $context));
+            ->group($routeFile);
     }
 
     /**
