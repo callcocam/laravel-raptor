@@ -33,7 +33,9 @@ use Callcocam\LaravelRaptor\Policies\PermissionPolicy;
 use Callcocam\LaravelRaptor\Policies\RolePolicy;
 use Callcocam\LaravelRaptor\Policies\TenantPolicy;
 use Callcocam\LaravelRaptor\Policies\UserPolicy;
+use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
 use Callcocam\LaravelRaptor\Services\DomainDetectionService;
+use Callcocam\LaravelRaptor\Services\TenantResolver;
 use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
 use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
 use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
@@ -121,8 +123,21 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         $this->app->register(LandlordServiceProvider::class);
         $this->app->register(ShinobiServiceProvider::class);
+        
         // Registra o serviço de detecção de domínio como singleton para performance
         $this->app->singleton(DomainDetectionService::class);
+        
+        // Registra o TenantResolver baseado na configuração
+        // Permite que a aplicação use uma implementação customizada
+        $this->app->singleton(TenantResolverInterface::class, function ($app) {
+            $resolverClass = config('raptor.services.tenant_resolver', TenantResolver::class);
+            return new $resolverClass();
+        });
+        
+        // Alias para facilitar o uso
+        $this->app->alias(TenantResolverInterface::class, TenantResolver::class);
+        $this->app->alias(TenantResolverInterface::class, 'tenant.resolver');
+        
         $this->registerRequestMacros();
     }
 

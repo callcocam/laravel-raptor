@@ -379,4 +379,44 @@ return [
         'default' => env('RAPTOR_ROUTES_DEFAULT', 'execute'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Services Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Classes de serviços que podem ser customizadas pela aplicação.
+    | Configure sua própria implementação para sobrescrever o comportamento padrão.
+    |
+    | Exemplo de uso:
+    | Para criar um TenantResolver customizado que resolve por Client/Store:
+    |
+    | 1. Crie sua classe implementando TenantResolverInterface:
+    |    ```php
+    |    namespace App\Services;
+    |    
+    |    use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
+    |    use Callcocam\LaravelRaptor\Services\TenantResolver;
+    |    
+    |    class MyTenantResolver extends TenantResolver
+    |    {
+    |        protected function detectAndConfigureTenant(Request $request): mixed
+    |        {
+    |            // Sua lógica customizada aqui
+    |            // Pode resolver por Client, Store, ou outra entidade
+    |        }
+    |    }
+    |    ```
+    |
+    | 2. Configure neste arquivo:
+    |    'services' => [
+    |        'tenant_resolver' => \App\Services\MyTenantResolver::class,
+    |    ]
+    |
+    */
+    'services' => [
+        // Classe responsável por resolver o tenant baseado no domínio
+        // Implemente TenantResolverInterface para customizar
+        'tenant_resolver' => \Callcocam\LaravelRaptor\Services\TenantResolver::class,
+    ],
+
 ];

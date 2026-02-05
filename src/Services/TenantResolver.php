@@ -8,23 +8,32 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 /**
- * Service centralizado para resolver e configurar tenant
- * Evita duplicação de código e melhora performance com cache por request
+ * Service padrão para resolver tenant baseado no domínio
+ * 
+ * Esta implementação é simples e focada apenas na tabela de tenants.
+ * Para lógicas mais complexas (Client, Store, banco separado, etc),
+ * crie sua própria classe implementando TenantResolverInterface.
+ * 
+ * @example Configurar resolver customizado em config/raptor.php:
+ * ```php
+ * 'services' => [
+ *     'tenant_resolver' => \App\Services\MyTenantResolver::class,
+ * ]
+ * ```
  */
-class TenantResolver
+class TenantResolver implements TenantResolverInterface
 {
     protected bool $resolved = false;
     protected mixed $tenant = null;
 
     /**
-     * Resolve e configura tenant baseado no request
-     * Usa cache interno para evitar múltiplas queries na mesma requisição
+     * {@inheritdoc}
      */
     public function resolve(Request $request): mixed
     {
@@ -33,79 +42,46 @@ class TenantResolver
             return $this->tenant;
         }
 
-        $this->tenant = $this->detectAndConfigureTenant($request);
+        $this->tenant = $this->detectTenant($request);
         $this->resolved = true;
+
+        if ($this->tenant) {
+            $this->storeTenantContext($this->tenant);
+        }
 
         return $this->tenant;
     }
 
     /**
-     * Detecta e configura tenant baseado no domínio
+     * Detecta tenant baseado no domínio
      */
-    protected function detectAndConfigureTenant(Request $request): mixed
+    protected function detectTenant(Request $request): mixed
     {
         $host = $request->getHost();
         $domain = str($host)->replace('www.', '')->toString();
 
-        $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
-
         // Verifica se é contexto landlord (não precisa tenant)
-        if (str_contains($host, 'landlord.')) {
+        $landlordSubdomain = config('raptor.landlord.subdomain', 'landlord');
+        if (str_contains($host, "{$landlordSubdomain}.")) {
             config(['app.context' => 'landlord']);
             return null;
         }
 
-        // Busca domínio com tenant e domainable em query otimizada
-        $domainData = DB::table('tenant_domains')
-            ->join('tenants', 'tenants.id', '=', 'tenant_domains.tenant_id')
-            ->where('tenant_domains.domain', $domain)
-            ->where('tenants.status', TenantStatus::Published->value)
-            ->whereNull('tenants.deleted_at')
-            ->select(
-                'tenants.*',
-                'tenant_domains.domainable_type',
-                'tenant_domains.domainable_id',
-                'tenant_domains.is_primary'
-            )
+        $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
+        $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
+
+        // Busca tenant pelo domínio
+        $tenant = $tenantModel::where($domainColumn, $domain)
+            ->where('status', TenantStatus::Published->value)
             ->first();
-
-        // Fallback: busca por coluna 'domain' (retrocompatibilidade)
-        if (!$domainData) {
-            $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
-            $tenant = $tenantModel::where($domainColumn, $domain)->first();
-
-            if (!$tenant) {
-                return null; // Não é tenant
-            }
-
-            $domainData = (object) [
-                'id' => $tenant->id,
-                'domainable_type' => null,
-                'domainable_id' => null,
-                'is_primary' => true,
-            ];
-        }
-
-        // Converte para model instance
-        $tenant = $tenantModel::find($domainData->id);
-
-        if (!$tenant || $tenant->status !== TenantStatus::Published) {
-            return null;
-        }
-
-        // Armazena contexto no container
-        $this->storeTenantContext($tenant, $domainData);
-
-        // Configura banco de dados do tenant
-        $this->configureTenantDatabase($tenant, $domainData);
 
         return $tenant;
     }
 
     /**
-     * Armazena contexto do tenant no container
+     * {@inheritdoc}
      */
-    protected function storeTenantContext($tenant, $domainData): void
+    public function storeTenantContext(mixed $tenant, ?object $domainData = null): void
     {
         app()->instance('tenant.context', true);
         app()->instance('current.tenant', $tenant);
@@ -114,47 +90,20 @@ class TenantResolver
         config(['app.context' => 'tenant']);
         config(['app.current_tenant_id' => $tenant->id]);
 
-        // Configura domainable (Client, Store, etc)
-        if ($domainData->domainable_type && $domainData->domainable_id) {
-            $dominableClass = $domainData->domainable_type;
-            $domainable = $dominableClass::find($domainData->domainable_id);
-
-            if ($domainable) {
-                app()->instance('current.domainable', $domainable);
-                app()->instance('current.domainable_type', $domainData->domainable_type);
-                app()->instance('current.domainable_id', $domainData->domainable_id);
-
-                config(['app.current_domainable_type' => $domainData->domainable_type]);
-                config(['app.current_domainable_id' => $domainData->domainable_id]);
-
-                // Shortcuts úteis por tipo
-                if ($domainData->domainable_type === 'App\\Models\\Client') {
-                    config(['app.current_client_id' => $domainData->domainable_id]);
-                    app()->instance('current.client', $domainable);
-                }
-
-                if ($domainData->domainable_type === 'App\\Models\\Store') {
-                    config(['app.current_store_id' => $domainData->domainable_id]);
-                    app()->instance('current.store', $domainable);
-                }
-            }
-        }
-
         Landlord::addTenant($tenant);
     }
 
     /**
-     * Configura banco de dados do tenant
+     * {@inheritdoc}
      */
-    protected function configureTenantDatabase($tenant, $domainData): void
+    public function configureTenantDatabase(mixed $tenant, ?object $domainData = null): void
     {
-        if (class_exists(TenantConnectionService::class)) {
-            app(TenantConnectionService::class)->configureTenantDatabase($tenant, $domainData);
-        }
+        // Implementação padrão não faz nada
+        // Override em subclasses para banco separado por tenant
     }
 
     /**
-     * Retorna tenant já resolvido (ou null)
+     * {@inheritdoc}
      */
     public function getTenant(): mixed
     {
@@ -162,7 +111,7 @@ class TenantResolver
     }
 
     /**
-     * Verifica se já foi resolvido
+     * {@inheritdoc}
      */
     public function isResolved(): bool
     {
