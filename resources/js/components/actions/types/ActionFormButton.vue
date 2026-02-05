@@ -11,7 +11,7 @@
     :size="computedSize"
     :as-child="asChild"
     :disabled="isDisabled"
-    :class="cn('gap-1.5', className)"
+    :class="cn('gap-1.5 btn-gradient', className)"
     @click="handleClick"
   >
     <component v-if="iconComponent && !isProcessing" :is="iconComponent" :class="iconClasses" />

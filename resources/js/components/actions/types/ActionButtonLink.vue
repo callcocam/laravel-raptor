@@ -7,7 +7,7 @@
 <template>
   <Link
     :href="getUrl()"
-    :class="cn(buttonVariants({ variant: computedVariant, size: computedSize }), 'gap-1.5', className)"
+    :class="cn(buttonVariants({ variant: computedVariant, size: computedSize }), 'gap-1.5 btn-gradient', className)"
     :preserve-state="action.inertia?.preserveState ?? true"
     :preserve-scroll="action.inertia?.preserveScroll ?? true"
     :only="action.inertia?.only ?? []"

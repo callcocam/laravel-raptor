@@ -46,7 +46,7 @@ const { iconComponent, iconClasses, colorClasses } = useActionUI({
 // Classes do link
 const linkClasses = computed(() => {
   return cn(
-    'inline-flex items-center gap-1.5 font-medium transition-colors rounded-md px-2 py-1',
+    'inline-flex items-center gap-1.5 font-medium transition-colors rounded-md px-2 py-1 btn-gradient',
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
     colorClasses.value
   )

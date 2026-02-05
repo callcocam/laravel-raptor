@@ -16,7 +16,7 @@
       <Button
         :variant="variant"
         :size="computedSize"
-        class="gap-1.5"
+        class="gap-1.5 btn-gradient"
         @click="handleTriggerClick"
       >
         <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />

@@ -7,7 +7,7 @@
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <Button :variant="variant" :size="computedSize" class="gap-1.5">
+      <Button :variant="variant" :size="computedSize" class="gap-1.5 btn-gradient">
         <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
         <span class="text-xs">{{ action.label }}</span>
         <ChevronDown class="h-3 w-3" />

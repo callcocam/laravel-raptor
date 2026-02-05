@@ -9,7 +9,7 @@
     type="button"
     :variant="variant"
     :size="size"
-    :class="cn('gap-1.5', className)"
+    :class="cn('gap-1.5 btn-gradient', className)"
     @click="handleClick"
   >
     <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />

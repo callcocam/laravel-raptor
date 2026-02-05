@@ -5,7 +5,7 @@
  * Suporta diferentes variantes e cores
  -->
 <template>
-    <Button :variant="computedVariant" :size="computedSize" :as-child="asChild" :class="cn('gap-1.5', className)"
+    <Button :variant="computedVariant" :size="computedSize" :as-child="asChild" :class="cn('gap-1.5 btn-gradient', className)"
         @click="handleClick">
         <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
         <span class="text-xs">{{ action.label }}</span>

@@ -10,7 +10,7 @@
     :variant="computedVariant" 
     :size="computedSize" 
     :as-child="asChild" 
-    :class="cn('gap-1.5', className)"
+    :class="cn('gap-1.5 btn-gradient', className)"
     :disabled="isExecuting"
     @click="handleClick"
   >

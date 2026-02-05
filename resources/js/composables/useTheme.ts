@@ -7,6 +7,12 @@
  * @example
  * const { theme, setTheme, availableThemes } = useTheme()
  * setTheme({ color: 'blue', font: 'inter', rounded: 'medium' })
+ *
+ * // Adicionar novo tema
+ * addTheme({ name: 'custom', label: 'Personalizado', color: 'custom' })
+ *
+ * // Remover tema
+ * removeTheme('custom')
  */
 
 import { ref, computed, watch } from 'vue'
@@ -24,8 +30,13 @@ export interface Theme extends ThemeConfig {
   label: string
 }
 
-// Temas disponíveis
-const AVAILABLE_THEMES: Theme[] = [
+export interface ThemeOption {
+  value: string
+  label: string
+}
+
+// Temas disponíveis (reativo para permitir alterações dinâmicas)
+const availableThemes = ref<Theme[]>([
   { name: 'default', label: 'Padrão', color: 'default' },
   { name: 'blue', label: 'Azul', color: 'blue' },
   { name: 'green', label: 'Verde', color: 'green' },
@@ -37,29 +48,240 @@ const AVAILABLE_THEMES: Theme[] = [
   { name: 'red', label: 'Vermelho', color: 'red' },
   { name: 'yellow', label: 'Amarelo', color: 'yellow' },
   { name: 'violet', label: 'Violeta', color: 'violet' },
-]
+  { name: 'plannerate', label: 'Plannerate', color: 'plannerate' },
+])
 
-const AVAILABLE_FONTS = [
+const availableFonts = ref<ThemeOption[]>([
   { value: 'default', label: 'Padrão (Geist)' },
   { value: 'inter', label: 'Inter' },
   { value: 'noto-sans', label: 'Noto Sans' },
   { value: 'nunito-sans', label: 'Nunito Sans' },
   { value: 'figtree', label: 'Figtree' },
-]
+])
 
-const AVAILABLE_ROUNDED = [
+const availableRounded = ref<ThemeOption[]>([
   { value: 'none', label: 'Nenhum' },
   { value: 'small', label: 'Pequeno' },
   { value: 'medium', label: 'Médio' },
   { value: 'large', label: 'Grande' },
   { value: 'full', label: 'Completo' },
-]
+])
 
-const AVAILABLE_VARIANTS = [
+const availableVariants = ref<ThemeOption[]>([
   { value: 'default', label: 'Padrão' },
   { value: 'mono', label: 'Monoespaçado' },
   { value: 'scaled', label: 'Escalado' },
-]
+])
+
+// ==================== Funções para gerenciar TEMAS ====================
+
+/**
+ * Adiciona um novo tema à lista de temas disponíveis
+ */
+export function addTheme(theme: Theme): boolean {
+  const exists = availableThemes.value.some(t => t.name === theme.name)
+  if (exists) {
+    console.warn(`Tema "${theme.name}" já existe.`)
+    return false
+  }
+  availableThemes.value.push(theme)
+  return true
+}
+
+/**
+ * Remove um tema da lista de temas disponíveis
+ */
+export function removeTheme(name: string): boolean {
+  if (name === 'default') {
+    console.warn('Não é possível remover o tema padrão.')
+    return false
+  }
+  const index = availableThemes.value.findIndex(t => t.name === name)
+  if (index === -1) {
+    console.warn(`Tema "${name}" não encontrado.`)
+    return false
+  }
+  availableThemes.value.splice(index, 1)
+  return true
+}
+
+/**
+ * Atualiza um tema existente
+ */
+export function updateTheme(name: string, updates: Partial<Theme>): boolean {
+  const theme = availableThemes.value.find(t => t.name === name)
+  if (!theme) {
+    console.warn(`Tema "${name}" não encontrado.`)
+    return false
+  }
+  Object.assign(theme, updates)
+  return true
+}
+
+// ==================== Funções para gerenciar FONTES ====================
+
+/**
+ * Adiciona uma nova fonte à lista de fontes disponíveis
+ */
+export function addFont(font: ThemeOption): boolean {
+  const exists = availableFonts.value.some(f => f.value === font.value)
+  if (exists) {
+    console.warn(`Fonte "${font.value}" já existe.`)
+    return false
+  }
+  availableFonts.value.push(font)
+  return true
+}
+
+/**
+ * Remove uma fonte da lista de fontes disponíveis
+ */
+export function removeFont(value: string): boolean {
+  if (value === 'default') {
+    console.warn('Não é possível remover a fonte padrão.')
+    return false
+  }
+  const index = availableFonts.value.findIndex(f => f.value === value)
+  if (index === -1) {
+    console.warn(`Fonte "${value}" não encontrada.`)
+    return false
+  }
+  availableFonts.value.splice(index, 1)
+  return true
+}
+
+/**
+ * Atualiza uma fonte existente
+ */
+export function updateFont(value: string, updates: Partial<ThemeOption>): boolean {
+  const font = availableFonts.value.find(f => f.value === value)
+  if (!font) {
+    console.warn(`Fonte "${value}" não encontrada.`)
+    return false
+  }
+  Object.assign(font, updates)
+  return true
+}
+
+// ==================== Funções para gerenciar ARREDONDAMENTOS ====================
+
+/**
+ * Adiciona um novo arredondamento à lista de arredondamentos disponíveis
+ */
+export function addRounded(rounded: ThemeOption): boolean {
+  const exists = availableRounded.value.some(r => r.value === rounded.value)
+  if (exists) {
+    console.warn(`Arredondamento "${rounded.value}" já existe.`)
+    return false
+  }
+  availableRounded.value.push(rounded)
+  return true
+}
+
+/**
+ * Remove um arredondamento da lista de arredondamentos disponíveis
+ */
+export function removeRounded(value: string): boolean {
+  if (value === 'medium') {
+    console.warn('Não é possível remover o arredondamento padrão (medium).')
+    return false
+  }
+  const index = availableRounded.value.findIndex(r => r.value === value)
+  if (index === -1) {
+    console.warn(`Arredondamento "${value}" não encontrado.`)
+    return false
+  }
+  availableRounded.value.splice(index, 1)
+  return true
+}
+
+/**
+ * Atualiza um arredondamento existente
+ */
+export function updateRounded(value: string, updates: Partial<ThemeOption>): boolean {
+  const rounded = availableRounded.value.find(r => r.value === value)
+  if (!rounded) {
+    console.warn(`Arredondamento "${value}" não encontrado.`)
+    return false
+  }
+  Object.assign(rounded, updates)
+  return true
+}
+
+// ==================== Funções para gerenciar VARIANTES ====================
+
+/**
+ * Adiciona uma nova variante à lista de variantes disponíveis
+ */
+export function addVariant(variant: ThemeOption): boolean {
+  const exists = availableVariants.value.some(v => v.value === variant.value)
+  if (exists) {
+    console.warn(`Variante "${variant.value}" já existe.`)
+    return false
+  }
+  availableVariants.value.push(variant)
+  return true
+}
+
+/**
+ * Remove uma variante da lista de variantes disponíveis
+ */
+export function removeVariant(value: string): boolean {
+  if (value === 'default') {
+    console.warn('Não é possível remover a variante padrão.')
+    return false
+  }
+  const index = availableVariants.value.findIndex(v => v.value === value)
+  if (index === -1) {
+    console.warn(`Variante "${value}" não encontrada.`)
+    return false
+  }
+  availableVariants.value.splice(index, 1)
+  return true
+}
+
+/**
+ * Atualiza uma variante existente
+ */
+export function updateVariant(value: string, updates: Partial<ThemeOption>): boolean {
+  const variant = availableVariants.value.find(v => v.value === value)
+  if (!variant) {
+    console.warn(`Variante "${value}" não encontrada.`)
+    return false
+  }
+  Object.assign(variant, updates)
+  return true
+}
+
+// ==================== Funções para definir listas completas ====================
+
+/**
+ * Define a lista completa de temas disponíveis
+ */
+export function setAvailableThemes(themes: Theme[]): void {
+  availableThemes.value = themes
+}
+
+/**
+ * Define a lista completa de fontes disponíveis
+ */
+export function setAvailableFonts(fonts: ThemeOption[]): void {
+  availableFonts.value = fonts
+}
+
+/**
+ * Define a lista completa de arredondamentos disponíveis
+ */
+export function setAvailableRounded(rounded: ThemeOption[]): void {
+  availableRounded.value = rounded
+}
+
+/**
+ * Define a lista completa de variantes disponíveis
+ */
+export function setAvailableVariants(variants: ThemeOption[]): void {
+  availableVariants.value = variants
+}
 
 // Estado global do tema
 const currentTheme = ref<ThemeConfig>({
@@ -237,16 +459,45 @@ export function useTheme() {
   const theme = computed(() => currentTheme.value)
 
   return {
+    // Estado atual
     theme,
+    
+    // Setters do tema atual
     setTheme,
     setColor,
     setFont,
     setRounded,
     setVariant,
     resetTheme,
-    availableThemes: AVAILABLE_THEMES,
-    availableFonts: AVAILABLE_FONTS,
-    availableRounded: AVAILABLE_ROUNDED,
-    availableVariants: AVAILABLE_VARIANTS,
+    
+    // Listas disponíveis (reativas)
+    availableThemes: computed(() => availableThemes.value),
+    availableFonts: computed(() => availableFonts.value),
+    availableRounded: computed(() => availableRounded.value),
+    availableVariants: computed(() => availableVariants.value),
+    
+    // Gerenciamento de Temas
+    addTheme,
+    removeTheme,
+    updateTheme,
+    setAvailableThemes,
+    
+    // Gerenciamento de Fontes
+    addFont,
+    removeFont,
+    updateFont,
+    setAvailableFonts,
+    
+    // Gerenciamento de Arredondamentos
+    addRounded,
+    removeRounded,
+    updateRounded,
+    setAvailableRounded,
+    
+    // Gerenciamento de Variantes
+    addVariant,
+    removeVariant,
+    updateVariant,
+    setAvailableVariants,
   }
 }
