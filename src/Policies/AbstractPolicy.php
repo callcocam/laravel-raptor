@@ -85,4 +85,15 @@ abstract class AbstractPolicy
         }
         return $user->can(sprintf('%s.%s.restore', $this->context ?? request()->getContext(), $this->permission));
     }
+    
+    /**
+     * Determine whether the user can permanently delete the model.
+     */
+    public function forceDelete(User $user, AbstractModel $model): bool
+    {
+        if (is_null($this->permission)) {
+            return false;
+        }
+        return $user->can(sprintf('%s.%s.forceDelete', $this->context ?? request()->getContext(), $this->permission));
+    }
 }

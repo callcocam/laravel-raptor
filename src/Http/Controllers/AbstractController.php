@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Info\InfoList;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 abstract class AbstractController extends ResourceController
 {
+    use AuthorizesRequests;
 
 
     abstract protected function table(TableBuilder $table): TableBuilder;
@@ -41,6 +43,9 @@ abstract class AbstractController extends ResourceController
 
     public function index(Request $request)
     {
+        // Verifica autorização via Policy (viewAny)
+        $this->authorize('viewAny', $this->model());
+        
         $data = $this->table(TableBuilder::make($this->queryBuilder(), 'model'))
             ->request($request)
             ->toArray();
@@ -61,6 +66,8 @@ abstract class AbstractController extends ResourceController
 
     public function create(Request $request)
     {
+        // Verifica autorização via Policy (create)
+        $this->authorize('create', $this->model());
 
         $model  = app($this->model());
 
@@ -87,6 +94,9 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model  = app($this->model());
+            
+            // Verifica autorização via Policy (create)
+            $this->authorize('create', $model);
 
             // Hook: antes de criar
             $this->beforeCreate($request);
@@ -136,6 +146,9 @@ abstract class AbstractController extends ResourceController
     public function show(Request $request, string $record)
     {
         $model = $this->model()::findOrFail($record);
+        
+        // Verifica autorização via Policy (view)
+        $this->authorize('view', $model);
 
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'message' => $this->getSubtitle(),
@@ -159,7 +172,10 @@ abstract class AbstractController extends ResourceController
     public function edit(Request $request, string $record)
     {
         $model = $this->model()::findOrFail($record);
-        // dd($model->toArray());
+        
+        // Verifica autorização via Policy (update)
+        $this->authorize('update', $model);
+        
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
             'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),
@@ -185,6 +201,9 @@ abstract class AbstractController extends ResourceController
 
         try {
             $model = $this->model()::findOrFail($record);
+            
+            // Verifica autorização via Policy (update)
+            $this->authorize('update', $model);
 
             // Hook: antes de atualizar
             $this->beforeUpdate($request, $record);
@@ -239,6 +258,9 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::findOrFail($record);
+            
+            // Verifica autorização via Policy (delete)
+            $this->authorize('delete', $model);
 
             // Hook: antes de deletar
             $this->beforeDelete($record);
@@ -265,6 +287,9 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
+            
+            // Verifica autorização via Policy (restore)
+            $this->authorize('restore', $model);
 
             // Hook: antes de restaurar
             $this->beforeRestore($record);
@@ -291,6 +316,9 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
+            
+            // Verifica autorização via Policy (forceDelete)
+            $this->authorize('forceDelete', $model);
 
             // Hook: antes de deletar permanentemente
             $this->beforeForceDelete($record);
