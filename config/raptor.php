@@ -416,7 +416,8 @@ return [
     'services' => [
         // Classe responsável por resolver o tenant baseado no domínio
         // Implemente TenantResolverInterface para customizar
-        'tenant_resolver' => \Callcocam\LaravelRaptor\Services\TenantResolver::class,
+        // 'tenant_resolver' => \Callcocam\LaravelRaptor\Services\TenantResolver::class,
+        'tenant_resolver' => \App\Services\AdvancedTenantResolver::class,
     ],
 
 ];

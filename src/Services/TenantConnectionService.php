@@ -19,10 +19,10 @@ class TenantConnectionService
      * Store (maior prioridade) > Client > Tenant > Default
      * 
      * @param mixed $tenant Instância do modelo Tenant
-     * @param object $domainData Dados do domínio (domainable_type, domainable_id, etc)
+     * @param object|null $domainData Dados do domínio (domainable_type, domainable_id, etc)
      * @return bool True se a conexão foi configurada com sucesso, false caso contrário
      */
-    public function configureTenantDatabase($tenant, $domainData): bool
+    public function configureTenantDatabase($tenant, ?object $domainData = null): bool
     {
         $database = $this->resolveDatabase($tenant, $domainData);
         
@@ -62,15 +62,20 @@ class TenantConnectionService
      * Store > Client > Tenant
      * 
      * @param mixed $tenant Instância do modelo Tenant
-     * @param object $domainData Dados do domínio
+     * @param object|null $domainData Dados do domínio (pode ser null)
      * @return string|null Nome do database ou null se não encontrado
      */
-    public function resolveDatabase($tenant, $domainData): ?string
+    public function resolveDatabase($tenant, ?object $domainData): ?string
     {
         $database = null;
 
+        // Se não tem domainData, pula direto para tenant
+        if ($domainData === null) {
+            return !empty($tenant->database) ? $tenant->database : null;
+        }
+
         // Prioridade 1: Store (mais alta)
-        if ($domainData->domainable_type === 'App\\Models\\Store' && $domainData->domainable_id) {
+        if (($domainData->domainable_type ?? null) === 'App\\Models\\Store' && ($domainData->domainable_id ?? null)) {
             $store = \App\Models\Store::find($domainData->domainable_id);
             if ($store) {
                 if (!empty($store->database)) {
@@ -86,7 +91,7 @@ class TenantConnectionService
         }
 
         // Prioridade 2: Client (quando domainable é Client diretamente)
-        if (!$database && $domainData->domainable_type === 'App\\Models\\Client' && $domainData->domainable_id) {
+        if (!$database && ($domainData->domainable_type ?? null) === 'App\\Models\\Client' && ($domainData->domainable_id ?? null)) {
             $client = \App\Models\Client::find($domainData->domainable_id);
             if ($client && !empty($client->database)) {
                 $database = $client->database;
