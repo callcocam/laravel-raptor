@@ -394,3 +394,87 @@
     --sidebar-ring: var(--color-violet-900);
   }
 }
+
+.theme-plannerate .theme-container,
+.theme-plannerate [data-reka-popper-content-wrapper] {
+  /* Cores do gradiente Plannerate */
+  --plannerate-dark: rgb(30, 41, 59);
+  --plannerate-lime: rgb(168, 255, 62);
+  
+  --primary: oklch(0.723 0.191 149.579);
+  --primary-foreground: oklch(0.985 0 0);
+  /* Accent discreto - cinza neutro para hovers suaves */
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --ring: oklch(0.723 0.191 149.579);
+  --chart-1: oklch(0.723 0.191 149.579);
+  --chart-2: oklch(0.841 0.238 116.023);
+  --chart-3: oklch(0.648 0.2 131.684);
+  --chart-4: oklch(0.527 0.154 150.069);
+  --chart-5: oklch(0.448 0.119 151.328);
+  --sidebar-primary: oklch(0.723 0.191 149.579);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-ring: oklch(0.723 0.191 149.579);
+
+  @variant dark {
+    --primary: oklch(0.723 0.191 149.579);
+    --primary-foreground: oklch(0.985 0 0);
+    /* Accent discreto - cinza escuro para hovers suaves no dark */
+    --accent: oklch(0.274 0.006 286.033);
+    --accent-foreground: oklch(0.985 0 0);
+    --ring: oklch(0.723 0.191 149.579);
+    --sidebar-primary: oklch(0.723 0.191 149.579);
+    --sidebar-primary-foreground: oklch(0.985 0 0);
+    --sidebar-accent: oklch(0.274 0.006 286.033);
+    --sidebar-accent-foreground: oklch(0.985 0 0);
+    --sidebar-ring: oklch(0.723 0.191 149.579);
+  }
+}
+
+/* Botão com gradiente Plannerate - do escuro para o verde */
+.theme-plannerate .btn-gradient,
+.theme-plannerate [data-slot="button"].btn-gradient,
+.btn-plannerate {
+  background: linear-gradient(to right, rgb(30, 41, 59), rgb(168, 255, 62));
+  color: white;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgb(30 41 59 / 30%);
+}
+
+.theme-plannerate .btn-gradient:hover,
+.theme-plannerate [data-slot="button"].btn-gradient:hover,
+.btn-plannerate:hover {
+  background: linear-gradient(to right, rgb(40, 51, 69), rgb(178, 255, 82));
+  box-shadow: 0 4px 12px rgb(30 41 59 / 40%);
+}
+
+.theme-plannerate .btn-gradient:active,
+.theme-plannerate [data-slot="button"].btn-gradient:active,
+.btn-plannerate:active {
+  box-shadow: 0 2px 6px rgb(30 41 59 / 25%);
+}
+
+/* Variante primary com gradiente automático no tema Plannerate */
+.theme-plannerate [data-slot="button"][data-variant="default"],
+.theme-plannerate .btn-primary {
+  background: linear-gradient(to right, rgb(30, 41, 59), rgb(168, 255, 62));
+  color: white;
+  border: none;
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgb(30 41 59 / 30%);
+}
+
+.theme-plannerate [data-slot="button"][data-variant="default"]:hover,
+.theme-plannerate .btn-primary:hover {
+  opacity: 0.95;
+  box-shadow: 0 4px 12px rgb(30 41 59 / 35%);
+}
+
+.theme-plannerate [data-slot="button"][data-variant="default"]:active,
+.theme-plannerate .btn-primary:active {
+  opacity: 0.95;
+  box-shadow: 0 2px 6px rgb(30 41 59 / 25%);
+}
