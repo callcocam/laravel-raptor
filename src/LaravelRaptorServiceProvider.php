@@ -257,18 +257,27 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     
     /**
      * Registra as rotas para um contexto específico.
+     * Carrega tanto as rotas autenticadas quanto as guest (públicas).
      */
     protected function registerRoutesForContext(string $context): void
     {
+        // Rotas autenticadas (requerem auth)
         $routeFile = sprintf('%s/../routes/%s.php', __DIR__, $context);
         
-        if (!file_exists($routeFile)) {
-            return;
+        if (file_exists($routeFile)) {
+            Route::middleware(['web', 'auth', $context])
+                ->name(sprintf('%s.', $context))
+                ->group($routeFile);
         }
         
-        Route::middleware(['web', 'auth', $context])
-            ->name(sprintf('%s.', $context))
-            ->group($routeFile);
+        // Rotas guest/públicas (sem auth) - ex: login-as
+        $guestRouteFile = sprintf('%s/../routes/%s-guest.php', __DIR__, $context);
+        
+        if (file_exists($guestRouteFile)) {
+            Route::middleware(['web', $context])
+                ->name(sprintf('%s.', $context))
+                ->group($guestRouteFile);
+        }
     }
 
     /**

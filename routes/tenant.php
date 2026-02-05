@@ -52,7 +52,3 @@ Route::prefix('notifications')->name('notifications.')->group(function () {
     Route::delete('/', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'destroyAll'])
         ->name('destroy-all');
 });
-
-// Rota de login como outro usuário (para admins)
-Route::middleware('guest')->get('login-as', [\Callcocam\LaravelRaptor\Http\Controllers\LoginAsController::class, 'loginAs'])
-    ->name('loginAs');
