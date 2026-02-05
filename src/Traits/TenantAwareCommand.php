@@ -221,9 +221,11 @@ trait TenantAwareCommand
     {
         // Se a estratégia for banco separado, configura a conexão
         if (config('raptor.database.strategy') === 'separate') {
-            if (class_exists(\Callcocam\LaravelRaptor\Services\TenantConnectionService::class)) {
-                $connectionService = app(\Callcocam\LaravelRaptor\Services\TenantConnectionService::class);
-                $connectionService->configureTenantDatabase($tenant);
+            $resolverClass = config('raptor.services.tenant_resolver', \Callcocam\LaravelRaptor\Services\TenantResolver::class);
+            
+            if (class_exists($resolverClass)) {
+                $resolver = app($resolverClass);
+                $resolver->configureTenantDatabase($tenant, null);
             }
         }
     }
