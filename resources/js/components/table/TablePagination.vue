@@ -96,14 +96,15 @@
           :key="index"
           :href="link.url || '#'"
           :class="[
-            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
+            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors truncate',
             'h-7 px-2 min-w-[36px]',
             'hover:bg-accent hover:text-accent-foreground',
             'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
             {
               'bg-primary text-primary-foreground hover:bg-primary/90': link.active,
               'pointer-events-none opacity-50': !link.url,
-              'text-muted-foreground': !link.active && link.label === '...'
+              'text-muted-foreground': !link.active && link.label === '...',
+              ' btn-gradient': link.url && !link.active
             }
           ]"
           :preserve-state="true"
