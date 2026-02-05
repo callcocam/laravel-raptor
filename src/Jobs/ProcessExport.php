@@ -70,7 +70,7 @@ class ProcessExport implements ShouldQueue
         $export = new DefaultExport($query, $this->columns);
 
         // Gera o arquivo
-        Excel::store($export, $this->filePath, 'local');
+         Excel::store($export, $this->filePath, config('raptor.export.disk', 'public'));
 
         // Obtém o total de linhas exportadas
         $totalRows = $query->count();
