@@ -11,6 +11,8 @@ namespace Callcocam\LaravelRaptor\Jobs;
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
 use Callcocam\LaravelRaptor\Events\ExportCompleted;
+use Callcocam\LaravelRaptor\Traits\TenantAwareJob;
+use Callcocam\LaravelRaptor\Support\TenantContext;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -22,6 +24,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ProcessExport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use TenantAwareJob;
 
     public function __construct(
         protected string $modelClass,
@@ -33,25 +36,47 @@ class ProcessExport implements ShouldQueue
         protected int|string $userId,
         protected ?string $connectionName = null,
         protected ?array $connectionConfig = null
-    ) {}
+    ) {
+        // Captura o contexto do tenant no momento do dispatch
+        $this->captureTenantContext();
+    }
 
     public function handle(): void
     {
+        // Restaura o contexto do tenant no worker
+        $this->restoreTenantContext();
+
+        // Log detalhado do contexto do tenant
+        Log::info("🚀 ProcessExport iniciado", [
+            '=== TENANT CONTEXT ===' => '---',
+            'tenantId (job)' => $this->tenantId,
+            'domainableId (job)' => $this->domainableId,
+            'domainableType (job)' => $this->domainableType,
+            '=== TENANT CONTEXT HELPER ===' => '---',
+            'TenantContext::id()' => TenantContext::id(),
+            'TenantContext::current()' => TenantContext::current(),
+            '=== CONFIG VALUES ===' => '---',
+            'config(app.current_client_id)' => config("app.current_client_id"),
+            'config(app.current_tenant_id)' => config("app.current_tenant_id"),
+            '=== JOB DATA ===' => '---',
+            'modelClass' => $this->modelClass,
+            'fileName' => $this->fileName,
+            'userId' => $this->userId,
+            'connectionName' => $this->connectionName,
+        ]);
+
         // Se temos a configuração da conexão, registra ela dinamicamente
         if ($this->connectionName && $this->connectionConfig) {
             config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
             \DB::purge($this->connectionName);
+            Log::info("📦 Conexão dinâmica configurada", ['connection' => $this->connectionName]);
         }
-Log::info("Verificar se pegar dados da config: ",[
-    'clientID' => config("app.current_client_id"),
-    'tenantID' => config("app.current_tenant_id"),
-]);
         // Reconstrói a query a partir do model class com a conexão correta
         $model = app($this->modelClass);
         if ($this->connectionName) {
             $model->setConnection($this->connectionName);
         }
-        $query = $model->newQuery(); 
+        $query = $model->newQuery();
         // Aplica os filtros processados (já sem page, per_page e com filtros extraídos)
         if (!empty($this->filters)) {
             foreach ($this->filters as $column => $value) {
@@ -73,7 +98,7 @@ Log::info("Verificar se pegar dados da config: ",[
         $export = new DefaultExport($query, $this->columns);
 
         // Gera o arquivo
-         Excel::store($export, $this->filePath, config('raptor.export.disk', 'public'));
+        Excel::store($export, $this->filePath, config('raptor.export.disk', 'public'));
 
         // Obtém o total de linhas exportadas
         $totalRows = $query->count();
@@ -100,5 +125,12 @@ Log::info("Verificar se pegar dados da config: ",[
             filePath: $this->filePath,
             fileName: $this->fileName
         ));
+
+        Log::info("✅ ProcessExport concluído com sucesso", [
+            'fileName' => $this->fileName,
+            'totalRows' => $totalRows,
+            'tenantId' => $this->tenantId,
+            'downloadUrl' => $downloadUrl,
+        ]);
     }
 }
