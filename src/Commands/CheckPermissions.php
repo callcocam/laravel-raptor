@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Commands;
 
+use Callcocam\LaravelRaptor\Concerns\GeneratesPermissionIds;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -15,6 +16,8 @@ use Illuminate\Support\Str;
 
 class CheckPermissions extends Command
 {
+    use GeneratesPermissionIds;
+
     /**
      * The name and signature of the console command.
      *
@@ -317,17 +320,6 @@ class CheckPermissions extends Command
         $kebab = Str::kebab($plural);
         
         return $kebab;
-    }
-
-    /**
-     * Gera um ID determinístico baseado no slug da permissão.
-     * Isso garante que a mesma permissão sempre terá o mesmo ID.
-     */
-    protected function generateDeterministicId(string $slug): int
-    {
-        // Usa crc32 para gerar um hash numérico do slug
-        // Como crc32 pode retornar valores negativos, usamos abs() e limitamos
-        return abs(crc32($slug));
     }
 
     protected function getExistingPermissions(): \Illuminate\Support\Collection

@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use Callcocam\LaravelRaptor\Concerns\GeneratesPermissionIds;
 use Callcocam\LaravelRaptor\Enums\PermissionStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -15,6 +16,7 @@ use ReflectionClass;
 
 class PermissionGenerator
 {
+    use GeneratesPermissionIds;
     /**
      * Configuração de diretórios de controllers para scan
      * Formato: ['namespace' => 'path']
@@ -119,8 +121,8 @@ class PermissionGenerator
                 // Exemplo: Permission::firstOrCreate(['name' => $page['name'], 'route' => $page['route']]);
                 $name = sprintf('%s - (%s)', $page->getLabel(), $page->getAction());
                 $route = sprintf('%s.%s', $context, $page->getName());
-                // Gera um ID único baseado no nome da rota (sempre o mesmo para a mesma rota)
-                $id = substr(hash('sha256', $route), 0, 26);
+                // Gera um ID determinístico baseado no slug (mesma lógica do CheckPermissions)
+                $id = $this->generateDeterministicId($route);
                 $data[] = [
                     'id' => $id,
                     'name' => $name,
@@ -132,7 +134,7 @@ class PermissionGenerator
                 ];
             }
 
-            DB::table('permissions')->upsert($data, ['id'], ['name', 'slug', 'updated_at']);
+            DB::table('permissions')->upsert($data, ['id'], ['name', 'slug', 'description', 'updated_at']);
         } catch (\Exception $e) {
             dd($e);
             if (app()->hasDebugModeEnabled()) {
@@ -140,6 +142,7 @@ class PermissionGenerator
             }
         }
     }
+
     /**
      * Carrega diretórios padrão a partir do config
      */
