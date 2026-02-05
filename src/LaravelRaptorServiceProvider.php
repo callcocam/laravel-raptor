@@ -64,8 +64,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
             ->name('laravel-raptor')
             ->hasConfigFile()
             ->hasViews()
-            // Rotas devem ser carregadas manualmente na aplicação
-            ->hasRoute('web')
+            // Rotas são carregadas condicionalmente por contexto em registerContextRoutes()
             ->hasMigrations([
                 // Tabelas principais (ordem de dependência)
                 'create_tenants_table',
@@ -153,6 +152,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
         // Registra as rotas de API
         $this->registerApiRoutes();
+        
+        // Registra rotas separadas por contexto (tenant/landlord)
+        $this->registerContextRoutes();
 
         // Registra os canais de broadcast
         $this->registerBroadcastChannels();
@@ -160,7 +162,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         // Registra o canal de notificação customizado
         $this->registerNotificationChannels();
 
-        // Registra as rotas dinamicas dos tenants
+        // Registra as rotas dinamicas dos tenants (legado - mantido para retrocompatibilidade)
         $this->registerTenantRoutes();
 
         // Registra as policies
@@ -228,6 +230,29 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         //         $injector = new TenantRouteInjector();
         //         $injector->registerRoutes();
         //     });
+    }
+    
+    /**
+     * Registra as rotas baseadas no contexto (tenant ou landlord).
+     * 
+     * Detecta o contexto atual e carrega APENAS o arquivo de rotas correspondente.
+     * Isso evita conflitos de rotas com mesma URI em contextos diferentes.
+     */
+    protected function registerContextRoutes(): void
+    {
+        $context = request()->getContext();
+        
+        if ($context === 'landlord') {
+            // Rotas do contexto LANDLORD
+            Route::middleware(['web', 'auth', 'landlord'])
+                ->name('landlord.')
+                ->group(__DIR__ . '/../routes/landlord.php');
+        } else {
+            // Rotas do contexto TENANT (default)
+            Route::middleware(['web', 'auth', 'tenant'])
+                ->name('tenant.')
+                ->group(__DIR__ . '/../routes/tenant.php');
+        }
     }
 
     /**

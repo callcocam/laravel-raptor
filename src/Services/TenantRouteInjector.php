@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Pages\Page;
 use Callcocam\LaravelRaptor\Support\Pages\Show;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Cache;
 use ReflectionClass;
 use Illuminate\Support\Str;
 
@@ -22,6 +23,11 @@ use Illuminate\Support\Str;
  * Esta classe escaneia diretórios de controllers em busca de classes que implementam
  * o método `getPages()`. A partir das páginas retornadas, ela registra as rotas
  * correspondentes e adiciona rotas complementares (store, update, destroy, etc.).
+ * 
+ * MELHORIAS v2:
+ * - Suporte a contextos separados (tenant, landlord)
+ * - Cache de controllers descobertos para melhor performance
+ * - Configuração separada por contexto
  */
 class TenantRouteInjector
 {
@@ -34,33 +40,65 @@ class TenantRouteInjector
 
     protected Filesystem $filesystem;
     protected Router $router;
+    
+    /**
+     * Contexto atual (tenant, landlord)
+     */
+    protected ?string $context = null;
 
     /**
-     * @param array<string, string> $defaultDirectories Diretórios padrão para escanear.
+     * @param array<string, string> $directories Diretórios para escanear.
+     * @param string|null $context Contexto (tenant, landlord) para carregar da config.
      */
-    public function __construct(array $defaultDirectories = [])
+    public function __construct(array $directories = [], ?string $context = null)
     {
         $this->filesystem = new Filesystem();
         $this->router = app('router');
-        $this->loadDefaultDirectories($defaultDirectories);
+        $this->context = $context;
+        $this->loadDirectories($directories, $context);
+    }
+    
+    /**
+     * Cria uma instância para um contexto específico usando a configuração.
+     */
+    public static function forContext(string $context): self
+    {
+        return new self([], $context);
     }
 
     /**
-     * Carrega os diretórios padrão a partir da configuração do pacote.
-     * Se diretórios são passados explicitamente, eles têm prioridade sobre a configuração.
-     * @param array<string, string> $defaultDirectories
+     * Carrega os diretórios baseado nos parâmetros passados ou na configuração.
      */
-    protected function loadDefaultDirectories(array $defaultDirectories = []): void
+    protected function loadDirectories(array $directories = [], ?string $context = null): void
     {
         // Se diretórios foram passados explicitamente, usa APENAS eles
-        // Isso garante isolamento de contexto (tenant vs landlord)
-        if (!empty($defaultDirectories)) {
-            $this->controllerDirectories = $defaultDirectories;
+        if (!empty($directories)) {
+            $this->controllerDirectories = $directories;
             return;
         }
         
-        // Caso contrário, usa a configuração global
+        // Se um contexto foi especificado, carrega da nova configuração
+        if ($context) {
+            $this->controllerDirectories = $this->getDirectoriesForContext($context);
+            return;
+        }
+        
+        // Fallback para configuração legada (retrocompatibilidade)
         $this->controllerDirectories = config('raptor.route_injector.directories', []);
+    }
+    
+    /**
+     * Obtém os diretórios para um contexto específico da configuração.
+     */
+    protected function getDirectoriesForContext(string $context): array
+    {
+        // Diretórios da aplicação (customizáveis pelo usuário)
+        $appDirectories = config("raptor.route_injector.contexts.{$context}", []);
+        
+        // Diretórios do pacote (internos)
+        $packageDirectories = config("raptor.route_injector.package_directories.{$context}", []);
+        
+        return array_merge($appDirectories, $packageDirectories);
     }
 
     /**
@@ -87,17 +125,60 @@ class TenantRouteInjector
      */
     public function registerRoutes(): void
     {
+        $controllers = $this->discoverControllers();
+
+        foreach ($controllers as $controllerClass) {
+            $this->registerControllerRoutes($controllerClass);
+        }
+    }
+    
+    /**
+     * Descobre todos os controllers válidos, usando cache se habilitado.
+     * @return array<int, class-string>
+     */
+    protected function discoverControllers(): array
+    {
+        $cacheEnabled = config('raptor.route_injector.cache_enabled', false);
+        
+        if (!$cacheEnabled) {
+            return $this->scanAllDirectories();
+        }
+        
+        $cacheKey = $this->getCacheKey();
+        $cacheTtl = config('raptor.route_injector.cache_ttl', 3600);
+        
+        return Cache::remember($cacheKey, $cacheTtl, fn() => $this->scanAllDirectories());
+    }
+    
+    /**
+     * Gera a chave de cache baseada nos diretórios e contexto.
+     */
+    protected function getCacheKey(): string
+    {
+        $directoriesHash = md5(serialize(array_keys($this->controllerDirectories)));
+        $context = $this->context ?? 'global';
+        
+        return "raptor.route_injector.controllers.{$context}.{$directoriesHash}";
+    }
+    
+    /**
+     * Escaneia todos os diretórios configurados.
+     * @return array<int, class-string>
+     */
+    protected function scanAllDirectories(): array
+    {
+        $allControllers = [];
+        
         foreach ($this->controllerDirectories as $namespace => $path) {
             if (!$this->filesystem->isDirectory($path)) {
                 continue;
             }
 
             $controllers = $this->scanControllers($namespace, $path);
-
-            foreach ($controllers as $controllerClass) {
-                $this->registerControllerRoutes($controllerClass);
-            }
+            $allControllers = array_merge($allControllers, $controllers);
         }
+        
+        return array_unique($allControllers);
     }
 
     /**

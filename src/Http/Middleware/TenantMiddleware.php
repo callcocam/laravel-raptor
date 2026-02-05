@@ -33,12 +33,16 @@ class TenantMiddleware
         if (!$tenant) {
             abort(404, 'Tenant não encontrado.');
         }
+        
         // Verifica se usuário autenticado pertence ao tenant
         if ($request->user() && $request->user()->tenant_id !== $tenant->id) {
-            // dd($request->user()->tenant_id, $tenant->id);
             auth()->logout();
             abort(403, 'Acesso negado. Você não tem permissão para acessar este tenant.');
         }
+        
+        // Define o contexto como tenant
+        app()->instance('tenant.context', true);
+        config(['app.context' => 'tenant']);
 
         return $next($request);
     }

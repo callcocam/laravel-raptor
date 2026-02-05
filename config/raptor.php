@@ -251,24 +251,55 @@ return [
     |
     | Configurações para o TenantRouteInjector
     | Define quais diretórios de controllers serão escaneados para
-    | registrar rotas automaticamente
+    | registrar rotas automaticamente, SEPARADOS POR CONTEXTO.
     |
     */
     'route_injector' => [
-        // Diretórios de controllers para scan automático
-        // Formato: 'Namespace' => 'path/to/controllers'
-        'directories' => [
-            // Controllers da aplicação
-            'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-            'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
-
-            // Controllers do package Raptor
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Admin' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Admin'),
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Tenant'),
-            'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
-
-            // Adicione mais diretórios conforme necessário:
-            // 'Seu\\Namespace\\Controllers' => base_path('caminho/para/controllers'),
+        /*
+        |----------------------------------------------------------------------
+        | Habilitar cache de rotas descobertas
+        |----------------------------------------------------------------------
+        | Se true, as rotas descobertas são cacheadas para melhor performance.
+        | Em desenvolvimento, pode ser false para refletir mudanças imediatamente.
+        */
+        'cache_enabled' => env('RAPTOR_ROUTE_CACHE', false),
+        'cache_ttl' => 3600, // segundos
+        
+        /*
+        |----------------------------------------------------------------------
+        | Diretórios por Contexto
+        |----------------------------------------------------------------------
+        | Cada contexto (tenant, landlord) tem seus próprios diretórios.
+        | Controllers da aplicação são escaneados dinamicamente.
+        | Controllers do pacote são fixos.
+        */
+        'contexts' => [
+            'tenant' => [
+                // Controllers da aplicação (dinâmico - escaneia automaticamente)
+                'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
+                // Adicione mais diretórios de tenant conforme necessário:
+                // 'Seu\\Namespace\\Tenant\\Controllers' => base_path('caminho/para/controllers'),
+            ],
+            'landlord' => [
+                // Controllers da aplicação (dinâmico - escaneia automaticamente)
+                'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
+                // Adicione mais diretórios de landlord conforme necessário:
+                // 'Seu\\Namespace\\Landlord\\Controllers' => base_path('caminho/para/controllers'),
+            ],
+        ],
+        
+        /*
+        |----------------------------------------------------------------------
+        | Diretórios do Pacote (internos - não modificar)
+        |----------------------------------------------------------------------
+        */
+        'package_directories' => [
+            'tenant' => [
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Tenant'),
+            ],
+            'landlord' => [
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
+            ],
         ],
     ],
 

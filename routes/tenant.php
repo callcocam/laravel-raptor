@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * Created by Claudio Campos.
+ * User: callcocam@gmail.com, contato@sigasmart.com.br
+ * https://www.sigasmart.com.br
+ * 
+ * Rotas exclusivas do contexto TENANT
+ * 
+ * Este arquivo é carregado apenas quando o contexto é tenant.
+ * O TenantRouteInjector escaneia dinamicamente os controllers em:
+ * - app/Http/Controllers/Tenant (aplicação - dinâmico)
+ * - package/src/Http/Controllers/Tenant (pacote)
+ */
+
+use Illuminate\Support\Facades\Route;
+use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
+use Illuminate\Support\Facades\Storage;
+
+// Registra rotas dinâmicas dos controllers Tenant usando a configuração
+TenantRouteInjector::forContext('tenant')->registerRoutes();
+
+// Rota de download de exportações
+Route::get('download-export/{filename}', function ($filename) {
+    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('exports/' . $filename);
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->download($path)->deleteFileAfterSend(true);
+})->name('download.export');
+
+// Rota de atualização de tema
+Route::put('/tenant/update-theme', [\Callcocam\LaravelRaptor\Http\Controllers\TenantThemeController::class, 'update'])
+    ->name('tenant.update-theme');
+
+// Rota de execução genérica
+Route::post('/execute', [config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class), 'execute'])
+    ->name('execute');
+
+// Rotas de notificações
+Route::prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'index'])
+        ->name('index');
+    Route::post('{id}/read', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'markAsRead'])
+        ->name('read');
+    Route::post('read-all', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'markAllAsRead'])
+        ->name('read-all');
+    Route::delete('{id}', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'destroy'])
+        ->name('destroy');
+    Route::delete('/', [\Callcocam\LaravelRaptor\Http\Controllers\NotificationController::class, 'destroyAll'])
+        ->name('destroy-all');
+});
+
+// Rota de login como outro usuário (para admins)
+Route::middleware('guest')->get('login-as', [\Callcocam\LaravelRaptor\Http\Controllers\LoginAsController::class, 'loginAs'])
+    ->name('loginAs');
