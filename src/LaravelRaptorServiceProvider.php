@@ -52,7 +52,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 class LaravelRaptorServiceProvider extends PackageServiceProvider
 {
     use RequestMacrosTrait;
-    
+
     public function configurePackage(Package $package): void
     {
         /*
@@ -124,21 +124,21 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         $this->app->register(LandlordServiceProvider::class);
         $this->app->register(ShinobiServiceProvider::class);
-        
+
         // Registra o serviço de detecção de domínio como singleton para performance
         $this->app->singleton(DomainDetectionService::class);
-        
+
         // Registra o TenantResolver baseado na configuração
         // Permite que a aplicação use uma implementação customizada
         $this->app->singleton(TenantResolverInterface::class, function ($app) {
             $resolverClass = config('raptor.services.tenant_resolver', TenantResolver::class);
             return new $resolverClass();
         });
-        
+
         // Alias para facilitar o uso
         $this->app->alias(TenantResolverInterface::class, TenantResolver::class);
         $this->app->alias(TenantResolverInterface::class, 'tenant.resolver');
-        
+
         $this->registerRequestMacros();
     }
 
@@ -152,7 +152,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
         // Registra as rotas de API
         $this->registerApiRoutes();
-        
+
         // Registra rotas separadas por contexto (tenant/landlord)
         $this->registerContextRoutes();
 
@@ -214,7 +214,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         $router->aliasMiddleware('tenant', TenantMiddleware::class);
         $router->aliasMiddleware('tenant.custom.domain', TenantCustomDomainMiddleware::class);
         $router->aliasMiddleware('raptor.share', ShareRaptorData::class);
-        
+
         // Adiciona o middleware ao grupo 'web' para compartilhar dados automaticamente
         $router->pushMiddlewareToGroup('web', ShareRaptorData::class);
     }
@@ -231,7 +231,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         //         $injector->registerRoutes();
         //     });
     }
-    
+
     /**
      * Registra as rotas baseadas no contexto (tenant ou landlord).
      * 
@@ -241,18 +241,10 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     protected function registerContextRoutes(): void
     {
         $context = request()->getContext();
-        
-        if ($context === 'landlord') {
-            // Rotas do contexto LANDLORD
-            Route::middleware(['web', 'auth', 'landlord'])
-                ->name('landlord.')
-                ->group(__DIR__ . '/../routes/landlord.php');
-        } else {
-            // Rotas do contexto TENANT (default)
-            Route::middleware(['web', 'auth', 'tenant'])
-                ->name('tenant.')
-                ->group(__DIR__ . '/../routes/tenant.php');
-        }
+
+        Route::middleware(['web', 'auth', $context])
+            ->name(sprintf('%s.', $context))
+            ->group(sprintf('%s/../routes/%s.php', __DIR__, $context));
     }
 
     /**
