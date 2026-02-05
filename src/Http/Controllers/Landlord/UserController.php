@@ -73,7 +73,7 @@ class UserController extends LandlordController
     {
         $form->columns([
             ComboboxField::make('tenant_id', 'Tenant')
-                ->relationship('tenant', 'name') 
+                ->relationship('tenant', 'name')
                 ->placeholder('Selecione o tenant')
                 ->helpText('Atribua o usuário a um tenant'),
             TextField::make('name', 'Nome')
@@ -112,24 +112,6 @@ class UserController extends LandlordController
                 ->multiple()
                 ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
                 ->helpText('Atribua papéis ao usuário'),
-            RepeaterField::make('addresses', 'Endereços')
-                ->orderable()
-                ->relationship('addresses')
-                ->helpText('Adicione múltiplos endereços para o usuário')
-                ->fields([
-                    TextField::make('street', 'Rua')
-                        ->required()
-                        ->columnSpan('4'),
-                    TextField::make('city', 'Cidade')
-                        ->required()
-                        ->columnSpan('4'),
-                    TextField::make('state', 'Estado')
-                        ->required()
-                        ->columnSpan('2'),
-                    TextField::make('zip_code', 'CEP')
-                        ->required()
-                        ->columnSpan('2'),
-                ])
         ]);
 
         return $form;
@@ -176,15 +158,6 @@ class UserController extends LandlordController
                 \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('users.restore'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('users.forceDelete'),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('users.destroy'),
-                \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('users.view')
-                    ->visible(fn($record) => auth()->user()->isAdmin() && auth()->user()->id !== $record->id)
-                    ->actionAlink()
-                    ->label('Login como')
-                    ->url(route('landlord.loginAs',[
-                        'token' => auth()->user()->id
-                    ]))
-                    ->targetBlank()
-                    ->icon('Login'),
             ])->headerActions([
                 \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('users.create'),
             ]);

@@ -42,7 +42,10 @@ class ProcessExport implements ShouldQueue
             config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
             \DB::purge($this->connectionName);
         }
-
+Log::info("Verificar se pegar dados da config: ",[
+    'clientID' => config("app.current_client_id"),
+    'tenantID' => config("app.current_tenant_id"),
+]);
         // Reconstrói a query a partir do model class com a conexão correta
         $model = app($this->modelClass);
         if ($this->connectionName) {

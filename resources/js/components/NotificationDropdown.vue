@@ -10,12 +10,14 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Bell, CheckCheck, Trash2 } from 'lucide-vue-next'
+import { Bell, CheckCheck, Trash2, Wifi, WifiOff } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 
 const {
     notifications,
     unreadCount,
+    connectionStatus,
+    isConnected,
     markAsRead,
     markAllAsRead,
     removeNotification,
@@ -57,42 +59,42 @@ const getTypeIcon = (type: string) => {
 <template>
     <DropdownMenu>
         <DropdownMenuTrigger as-child>
-            <Button
-                variant="ghost"
-                size="icon"
-                class="relative"
-            >
+            <Button variant="ghost" size="icon" class="relative">
                 <Bell class="h-5 w-5" />
-                <Badge
-                    v-if="hasUnread"
-                    variant="destructive"
-                    class="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                >
+                <Badge v-if="hasUnread" variant="destructive"
+                    class="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs">
                     {{ unreadCount > 99 ? '99+' : unreadCount }}
                 </Badge>
+                <!-- Indicador de conexão -->
+                <span :class="cn(
+                    'absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-background animate-pulse',
+                    isConnected ? 'bg-green-500' : 'bg-gray-400',
+                    connectionStatus === 'connecting' || connectionStatus === 'reconnecting' ? 'animate-pulse bg-yellow-500' : '',
+                    connectionStatus === 'failed' ? 'bg-red-500' : ''
+                )" />
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="w-80">
             <div class="flex items-center justify-between p-4">
-                <h3 class="font-semibold text-sm">Notificações</h3>
                 <div class="flex items-center gap-2">
-                    <Button
-                        v-if="hasUnread"
-                        variant="ghost"
-                        size="sm"
-                        class="h-7 text-xs"
-                        @click="markAllAsRead"
-                    >
+                    <h3 class="font-semibold text-sm">Notificações</h3>
+                    <!-- Status da conexão -->
+                    <span :class="cn(
+                        'text-xs flex items-center gap-1',
+                        isConnected ? 'text-green-600' : 'text-muted-foreground',
+                        connectionStatus === 'failed' ? 'text-red-500' : ''
+                    )" :title="`Status: ${connectionStatus}`">
+                        <Wifi v-if="isConnected" class="h-3 w-3" />
+                        <WifiOff v-else class="h-3 w-3" />
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <Button v-if="hasUnread" variant="ghost" size="sm" class="h-7 text-xs" @click="markAllAsRead">
                         <CheckCheck class="h-3 w-3 mr-1" />
                         Marcar todas como lidas
                     </Button>
-                    <Button
-                        v-if="hasNotifications"
-                        variant="ghost"
-                        size="sm"
-                        class="h-7 text-xs text-destructive"
-                        @click="clearAll"
-                    >
+                    <Button v-if="hasNotifications" variant="ghost" size="sm" class="h-7 text-xs text-destructive"
+                        @click="clearAll">
                         <Trash2 class="h-3 w-3 mr-1" />
                         Limpar
                     </Button>
@@ -108,62 +110,41 @@ const getTypeIcon = (type: string) => {
                 </div>
 
                 <div v-else class="divide-y">
-                    <div
-                        v-for="notification in notifications"
-                        :key="notification.id"
-                        :class="cn(
-                            'p-4 hover:bg-accent transition-colors cursor-pointer',
-                            !notification.read_at && 'bg-accent/50'
-                        )"
-                        @click="markAsRead(notification.id)"
-                    >
+                    <div v-for="notification in notifications" :key="notification.id" :class="cn(
+                        'p-4 hover:bg-accent transition-colors cursor-pointer',
+                        !notification.read_at && 'bg-accent/50'
+                    )" @click="markAsRead(notification.id)">
                         <div class="flex items-start gap-3">
                             <span class="text-lg mt-0.5">
                                 {{ getTypeIcon(notification.type) }}
                             </span>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-start justify-between gap-2">
-                                    <p
-                                        :class="cn(
-                                            'text-sm font-medium',
-                                            !notification.read_at && 'font-semibold'
-                                        )"
-                                    >
+                                    <p :class="cn(
+                                        'text-sm font-medium',
+                                        !notification.read_at && 'font-semibold'
+                                    )">
                                         {{ notification.title }}
                                     </p>
-                                    <Badge
-                                        v-if="!notification.read_at"
-                                        variant="secondary"
-                                        class="h-4 w-4 p-0 flex-shrink-0"
-                                    />
+                                    <Badge v-if="!notification.read_at" variant="secondary"
+                                        class="h-4 w-4 p-0 flex-shrink-0" />
                                 </div>
-                                <p
-                                    v-if="notification.message"
-                                    class="text-xs text-muted-foreground mt-1 line-clamp-2"
-                                >
+                                <p v-if="notification.message" class="text-xs text-muted-foreground mt-1 line-clamp-2">
                                     {{ notification.message }}
                                 </p>
                                 <!-- Link de download para exportações -->
-                                <a
-                                    v-if="notification.data?.download"
-                                    :href="notification.data.download"
+                                <a v-if="notification.data?.download" :href="notification.data.download"
                                     class="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:underline"
-                                    @click.stop
-                                >
+                                    @click.stop>
                                     📥 Baixar arquivo
                                 </a>
                                 <!-- Passos de resolução para erros de banco de dados -->
-                                <div
-                                    v-if="notification.data?.resolution_steps && notification.data.resolution_steps.length > 0"
-                                    class="mt-2 space-y-1"
-                                >
+                                <div v-if="notification.data?.resolution_steps && notification.data.resolution_steps.length > 0"
+                                    class="mt-2 space-y-1">
                                     <p class="text-xs font-medium text-muted-foreground">Como resolver:</p>
                                     <ul class="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                                        <li
-                                            v-for="(step, index) in notification.data.resolution_steps"
-                                            :key="index"
-                                            class="line-clamp-1"
-                                        >
+                                        <li v-for="(step, index) in notification.data.resolution_steps" :key="index"
+                                            class="line-clamp-1">
                                             {{ step }}
                                         </li>
                                     </ul>
@@ -172,12 +153,8 @@ const getTypeIcon = (type: string) => {
                                     {{ formatTime(notification.created_at) }}
                                 </p>
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                class="h-6 w-6 flex-shrink-0"
-                                @click.stop="removeNotification(notification.id)"
-                            >
+                            <Button variant="ghost" size="icon" class="h-6 w-6 flex-shrink-0"
+                                @click.stop="removeNotification(notification.id)">
                                 <Trash2 class="h-3 w-3" />
                             </Button>
                         </div>
@@ -187,4 +164,3 @@ const getTypeIcon = (type: string) => {
         </DropdownMenuContent>
     </DropdownMenu>
 </template>
-

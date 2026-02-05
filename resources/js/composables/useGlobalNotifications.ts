@@ -1,7 +1,11 @@
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
-import { useEcho } from '@laravel/echo-vue'
+import { useEcho, useConnectionStatus } from '@laravel/echo-vue'
 import { toast } from 'vue-sonner'
+
+// ============================================================================
+// Types & Interfaces
+// ============================================================================
 
 export interface GlobalNotification {
     id: string
@@ -11,14 +15,254 @@ export interface GlobalNotification {
     data?: Record<string, any>
     read_at?: string | null
     created_at: string
-    // Dados específicos do Laravel Notification
     notification_id?: string
     notification_type?: string
+    /** Nome do evento que originou a notificação */
+    event_name?: string
+}
+
+export interface EventPayload {
+    [key: string]: any
 }
 
 /**
- * Helper para criar notificações de qualquer lugar do código
- * Útil para eventos customizados ou notificações manuais
+ * Handler customizado para processar eventos específicos
+ * Retorna uma GlobalNotification ou null para ignorar o evento
+ */
+export type EventHandler = (
+    eventName: string,
+    payload: EventPayload
+) => GlobalNotification | null
+
+/**
+ * Configuração de toast customizado para tipos específicos
+ */
+export interface ToastConfig {
+    duration?: number
+    action?: {
+        label: string
+        onClick: (notification: GlobalNotification) => void
+    }
+}
+
+export type ToastHandler = (notification: GlobalNotification) => ToastConfig | void
+
+// ============================================================================
+// Event Handler Registry (Sistema Plugável)
+// ============================================================================
+
+const eventHandlers = new Map<string | RegExp, EventHandler>()
+const toastHandlers = new Map<string, ToastHandler>()
+
+/**
+ * Registra um handler para um evento específico ou padrão regex
+ * 
+ * @example
+ * ```ts
+ * // Handler para evento específico
+ * registerEventHandler('import.completed', (event, payload) => ({
+ *     id: `import-${Date.now()}`,
+ *     type: payload.failed > 0 ? 'warning' : 'success',
+ *     title: payload.message || 'Importação concluída',
+ *     message: `${payload.successful} de ${payload.total} registros`,
+ *     data: payload,
+ *     read_at: null,
+ *     created_at: new Date().toISOString(),
+ * }))
+ * 
+ * // Handler com regex para múltiplos eventos
+ * registerEventHandler(/^order\.(created|updated|deleted)$/, (event, payload) => ({
+ *     id: `order-${payload.order?.id}-${Date.now()}`,
+ *     type: 'info',
+ *     title: `Pedido ${event.split('.')[1]}`,
+ *     message: `Pedido #${payload.order?.id}`,
+ *     data: payload,
+ *     read_at: null,
+ *     created_at: new Date().toISOString(),
+ * }))
+ * ```
+ */
+export function registerEventHandler(
+    eventPattern: string | RegExp,
+    handler: EventHandler
+): () => void {
+    eventHandlers.set(eventPattern, handler)
+    return () => eventHandlers.delete(eventPattern)
+}
+
+/**
+ * Registra configuração de toast customizada para um tipo de notificação
+ * 
+ * @example
+ * ```ts
+ * registerToastHandler('export', (notification) => ({
+ *     duration: 10000,
+ *     action: {
+ *         label: 'Download',
+ *         onClick: () => window.location.href = notification.data?.downloadUrl
+ *     }
+ * }))
+ * ```
+ */
+export function registerToastHandler(
+    notificationType: string,
+    handler: ToastHandler
+): () => void {
+    toastHandlers.set(notificationType, handler)
+    return () => toastHandlers.delete(notificationType)
+}
+
+/**
+ * Remove todos os handlers registrados
+ */
+export function clearAllHandlers(): void {
+    eventHandlers.clear()
+    toastHandlers.clear()
+}
+
+// ============================================================================
+// Built-in Event Handlers (Handlers padrão)
+// ============================================================================
+
+function registerBuiltInHandlers() {
+    // Handler para eventos de importação
+    registerEventHandler(/^\.?import\.completed$/, (event, payload) => ({
+        id: `import-${Date.now()}-${Math.random()}`,
+        type: payload.failed > 0 ? 'warning' : 'success',
+        title: payload.message || 'Importação concluída',
+        message: payload.fileName ? `Arquivo: ${payload.fileName}` : undefined,
+        data: {
+            type: 'import',
+            model: payload.model,
+            total: payload.total,
+            successful: payload.successful,
+            failed: payload.failed,
+        },
+        read_at: null,
+        created_at: payload.timestamp || new Date().toISOString(),
+        event_name: event,
+    }))
+
+    // Handler para eventos de exportação
+    registerEventHandler(/^\.?export\.completed$/, (event, payload) => ({
+        id: `export-${Date.now()}-${Math.random()}`,
+        type: 'success',
+        title: payload.message || 'Exportação concluída',
+        message: 'Clique para fazer o download',
+        data: {
+            type: 'export',
+            model: payload.model,
+            total: payload.total,
+            downloadUrl: payload.downloadUrl,
+            download: payload.downloadUrl,
+            fileName: payload.fileName,
+            action: 'download',
+        },
+        read_at: null,
+        created_at: payload.timestamp || new Date().toISOString(),
+        event_name: event,
+    }))
+
+    // Toast customizado para exportação
+    registerToastHandler('export', (notification) => ({
+        duration: 10000,
+        action: {
+            label: 'Download',
+            onClick: () => {
+                if (notification.data?.downloadUrl) {
+                    window.location.href = notification.data.downloadUrl
+                }
+            },
+        },
+    }))
+
+    // Handler para erros de banco de dados
+    registerEventHandler(/^\.?database\.connection\.failed$/, (event, payload) => ({
+        id: `db-error-${Date.now()}-${Math.random()}`,
+        type: 'error',
+        title: 'Erro de Conexão com Banco de Dados',
+        message: payload.message || `Não foi possível conectar ao banco de dados '${payload.database}'.`,
+        data: {
+            database: payload.database,
+            is_database_not_found: payload.is_database_not_found,
+            resolution_steps: payload.resolution_steps || [],
+            timestamp: payload.timestamp,
+        },
+        read_at: null,
+        created_at: payload.timestamp || new Date().toISOString(),
+        event_name: event,
+    }))
+}
+
+// Registra handlers built-in na inicialização
+registerBuiltInHandlers()
+
+// ============================================================================
+// Event Normalization (Normalização inteligente de eventos)
+// ============================================================================
+
+/**
+ * Normaliza o nome do evento removendo prefixos
+ */
+function normalizeEventName(eventName: string): string {
+    return eventName.replace(/^\./, '').replace(/^\\/, '')
+}
+
+/**
+ * Encontra o handler apropriado para um evento
+ */
+function findHandler(eventName: string): EventHandler | null {
+    const normalized = normalizeEventName(eventName)
+
+    // Busca handler exato primeiro
+    if (eventHandlers.has(eventName)) {
+        return eventHandlers.get(eventName)!
+    }
+    if (eventHandlers.has(normalized)) {
+        return eventHandlers.get(normalized)!
+    }
+
+    // Busca por regex
+    for (const [pattern, handler] of eventHandlers) {
+        if (pattern instanceof RegExp && pattern.test(normalized)) {
+            return handler
+        }
+    }
+
+    return null
+}
+
+/**
+ * Normaliza qualquer payload em uma GlobalNotification
+ * Usado quando não há handler específico registrado
+ */
+function normalizeToNotification(
+    eventName: string,
+    payload: EventPayload
+): GlobalNotification {
+    // Tenta extrair dados de diferentes estruturas possíveis
+    const data = payload.notification || payload.data || payload
+    
+    return {
+        id: data.id || payload.id || `notification-${Date.now()}-${Math.random()}`,
+        type: data.type || payload.type || 'info',
+        title: data.title || payload.title || data.message || payload.message || 'Nova notificação',
+        message: data.message || payload.message || data.description || payload.description || data.body || payload.body,
+        data: data.data || payload.data || data.metadata || payload.metadata || {},
+        read_at: null,
+        created_at: data.created_at || payload.created_at || data.timestamp || payload.timestamp || new Date().toISOString(),
+        notification_id: data.id || payload.id,
+        notification_type: data.notification_type || payload.notification_type || data.type || payload.type,
+        event_name: eventName,
+    }
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Cria uma notificação manualmente
  */
 export function createNotification(
     type: 'info' | 'success' | 'warning' | 'error',
@@ -37,37 +281,55 @@ export function createNotification(
     }
 }
 
+// ============================================================================
+// Main Composable
+// ============================================================================
+
 export function useGlobalNotifications() {
     const page = usePage()
     const notifications = ref<GlobalNotification[]>([])
     const unreadCount = computed(() => notifications.value.filter(n => !n.read_at).length)
-    const isConnected = ref(false)
+    
+    // Usa o composable nativo do @laravel/echo-vue para status da conexão
+    const connectionStatus = useConnectionStatus()
+    const isConnected = computed(() => connectionStatus.value === 'connected')
 
-    // Adiciona notificação à lista
+    // ========================================================================
+    // Core Methods
+    // ========================================================================
+
     const addNotification = (notification: GlobalNotification) => {
-        // Verifica se já existe (evita duplicatas)
-        const exists = notifications.value.find(n => n.id === notification.id)
-        if (exists) {
+        // Evita duplicatas
+        if (notifications.value.find(n => n.id === notification.id)) {
             return
         }
 
-        // Adiciona no início da lista
         notifications.value.unshift(notification)
 
-        // Mantém apenas as últimas 100 notificações
+        // Mantém apenas as últimas 100
         if (notifications.value.length > 100) {
             notifications.value = notifications.value.slice(0, 100)
         }
 
-        // Mostra toast automaticamente
         showToast(notification)
     }
 
-    // Mostra toast para a notificação
     const showToast = (notification: GlobalNotification) => {
-        const toastOptions = {
-            description: notification.message || notification.title,
-            duration: notification.type === 'error' ? 8000 : 5000,
+        // Busca handler de toast customizado
+        const dataType = notification.data?.type as string
+        const customHandler = dataType ? toastHandlers.get(dataType) : null
+        const customConfig = customHandler?.(notification)
+
+        const toastOptions: any = {
+            description: notification.message,
+            duration: customConfig?.duration ?? (notification.type === 'error' ? 8000 : 5000),
+        }
+
+        if (customConfig?.action) {
+            toastOptions.action = {
+                label: customConfig.action.label,
+                onClick: () => customConfig.action!.onClick(notification),
+            }
         }
 
         switch (notification.type) {
@@ -85,7 +347,6 @@ export function useGlobalNotifications() {
         }
     }
 
-    // Marca notificação como lida
     const markAsRead = async (notificationId: string) => {
         const notification = notifications.value.find(n => n.id === notificationId)
         if (notification && !notification.read_at) {
@@ -97,15 +358,13 @@ export function useGlobalNotifications() {
                 preserveState: true,
                 only: [],
                 onError: () => {
-                    // Reverte se falhar
                     notification.read_at = previousReadAt
-                    console.error('[Global Notifications] Erro ao marcar como lida')
-                }
+                    console.error('[Notifications] Erro ao marcar como lida')
+                },
             })
         }
     }
 
-    // Marca todas como lidas
     const markAllAsRead = async () => {
         const unread = notifications.value.filter(n => !n.read_at)
         const previousState = unread.map(n => ({ id: n.id, read_at: n.read_at }))
@@ -119,24 +378,21 @@ export function useGlobalNotifications() {
             preserveState: true,
             only: [],
             onError: () => {
-                // Reverte se falhar
                 previousState.forEach(state => {
                     const notification = notifications.value.find(n => n.id === state.id)
                     if (notification) {
                         notification.read_at = state.read_at
                     }
                 })
-                console.error('[Global Notifications] Erro ao marcar todas como lidas')
-            }
+                console.error('[Notifications] Erro ao marcar todas como lidas')
+            },
         })
     }
 
-    // Remove notificação
     const removeNotification = async (notificationId: string) => {
         const notification = notifications.value.find(n => n.id === notificationId)
         if (!notification) return
 
-        // Remove otimisticamente
         notifications.value = notifications.value.filter(n => n.id !== notificationId)
 
         router.delete(`/notifications/${notificationId}`, {
@@ -144,14 +400,12 @@ export function useGlobalNotifications() {
             preserveState: true,
             only: [],
             onError: () => {
-                // Adiciona de volta se falhar
                 notifications.value.unshift(notification)
-                console.error('[Global Notifications] Erro ao remover notificação')
-            }
+                console.error('[Notifications] Erro ao remover notificação')
+            },
         })
     }
 
-    // Limpa todas as notificações
     const clearAll = async () => {
         const previousNotifications = [...notifications.value]
         notifications.value = []
@@ -161,14 +415,12 @@ export function useGlobalNotifications() {
             preserveState: true,
             only: [],
             onError: () => {
-                // Restaura se falhar
                 notifications.value = previousNotifications
-                console.error('[Global Notifications] Erro ao limpar notificações')
-            }
+                console.error('[Notifications] Erro ao limpar notificações')
+            },
         })
     }
 
-    // Carrega notificações do backend
     const loadNotifications = async () => {
         try {
             const response = await fetch('/notifications', {
@@ -179,14 +431,11 @@ export function useGlobalNotifications() {
                 credentials: 'include',
             })
 
-            if (!response.ok) {
-                return
-            }
+            if (!response.ok) return
 
             const data = await response.json()
-            if (!data.notifications || !Array.isArray(data.notifications)) {
-                return
-            }
+            if (!data.notifications || !Array.isArray(data.notifications)) return
+
             notifications.value = data.notifications.map((n: any) => ({
                 id: n.id,
                 type: n.type,
@@ -199,378 +448,197 @@ export function useGlobalNotifications() {
                 notification_type: n.notification_type,
             }))
         } catch (error) {
-            console.error('[Global Notifications] Erro ao carregar notificações:', error)
+            console.error('[Notifications] Erro ao carregar:', error)
         }
     }
 
-    // Obtém userId do page props
+    // ========================================================================
+    // Event Processing
+    // ========================================================================
+
+    /**
+     * Processa qualquer evento recebido
+     */
+    const processEvent = (eventName: string, payload: EventPayload) => {
+        // Busca handler específico
+        const handler = findHandler(eventName)
+
+        let notification: GlobalNotification | null
+
+        if (handler) {
+            notification = handler(eventName, payload)
+        } else {
+            // Usa normalização genérica
+            notification = normalizeToNotification(eventName, payload)
+        }
+
+        if (notification) {
+            addNotification(notification)
+        }
+    }
+
+    /**
+     * Processa atualizações de sync (entre abas)
+     */
+    const processSyncEvent = (payload: { action: string; notification_id?: string; unread_count?: number }) => {
+        switch (payload.action) {
+            case 'read':
+                if (payload.notification_id) {
+                    const notification = notifications.value.find(n => n.id === payload.notification_id)
+                    if (notification && !notification.read_at) {
+                        notification.read_at = new Date().toISOString()
+                    }
+                }
+                break
+
+            case 'read_all':
+                notifications.value.forEach(n => {
+                    if (!n.read_at) {
+                        n.read_at = new Date().toISOString()
+                    }
+                })
+                break
+
+            case 'deleted':
+                if (payload.notification_id) {
+                    notifications.value = notifications.value.filter(n => n.id !== payload.notification_id)
+                }
+                break
+
+            case 'cleared':
+                notifications.value = []
+                break
+        }
+    }
+
+    // ========================================================================
+    // Echo Listeners Setup
+    // ========================================================================
+
     const userId = (page.props as any).auth?.user?.id
- 
-    // Conecta ao canal privado do usuário para notificações globais
-    // O Laravel usa o evento 'Illuminate\\Notifications\\Events\\BroadcastNotificationCreated'
-    // que é broadcastado como '.notification.created' quando uma notificação implementa ShouldBroadcast
-    // O broadcastType() na notification permite customizar o nome do evento
-    let listenNotification: (() => void) | null = null
+    const cleanupFunctions: (() => void)[] = []
 
     if (userId) {
-        // O Laravel usa 'App.Models.User.{id}' como canal padrão para notificações
-        const channelName = `App.Models.User.${userId}`
+        // Canal padrão do Laravel para notificações de model
+        const modelChannel = `App.Models.User.${userId}`
+        
+        // Canal do usuário para eventos customizados
+        const userChannel = `user.${userId}`
+        const usersChannel = `users.${userId}`
 
-        // Tenta múltiplos nomes de eventos possíveis
-        const possibleEventNames = [
-            '.notification.created',
+        // Lista de eventos para escutar (genérico - captura tudo)
+        const allEventPatterns = [
+            // Laravel Notifications
             '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
-            'notification.created',
+            '.notification.created',
             '.notification',
+            // Eventos customizados comuns
+            '.import.completed',
+            '.export.completed',
+            '.notification.updated',
+            '.database.connection.failed',
         ]
 
-        const listeners: (() => void)[] = []
-
-        possibleEventNames.forEach((eventName, index) => {
-            const echoResult = useEcho<GlobalNotification>(
-                channelName,
+        // Setup listeners para canal de model (App.Models.User.{id})
+        allEventPatterns.forEach(eventName => {
+            const { leaveChannel, listen } = useEcho(
+                modelChannel,
                 eventName,
-                (data: any) => {
-                    isConnected.value = true
-
-                    const notification: GlobalNotification = {
-                        id: data.id || data.notification?.id || `notification-${Date.now()}-${Math.random()}`,
-                        type: data.type || data.notification?.type || 'info',
-                        title: data.title || data.notification?.title || data.message || data.notification?.message || 'Nova notificação',
-                        message: data.message || data.notification?.message,
-                        data: data.data || data.notification?.data || {},
-                        read_at: null,
-                        created_at: data.created_at || data.notification?.created_at || new Date().toISOString(),
-                        notification_id: data.id || data.notification?.id,
-                        notification_type: data.notification_type || data.notification?.type,
-                    }
-
-                    addNotification(notification)
-                },
-                [userId],
-                'private'
+                (payload: EventPayload) => processEvent(eventName, payload),
             )
-
-            if (echoResult.listen) {
-                listeners.push(echoResult.listen)
-            }
+            // Inicia o listener
+            listen()
+            cleanupFunctions.push(leaveChannel)
         })
 
-        // Inicia todos os listeners
-        listeners.forEach((listen, index) => {
-            try {
-                listen()
-            } catch (error) {
-                console.error('[Global Notifications] Erro ao iniciar listener:', error)
-            }
-        })
-
-        // Eventos de importação
-        const importExportChannel = `users.${userId}`
-        const importEventNames = ['.import.completed', 'import.completed']
-        const importListeners: (() => void)[] = []
-
-        importEventNames.forEach((eventName) => {
-            const importEchoResult = useEcho<{
-                type: 'import'
-                model: string
-                total: number
-                successful: number
-                failed: number
-                fileName: string | null
-                message: string
-                timestamp: string
-            }>(
-                importExportChannel,
+        // Setup listeners para canal do usuário (user.{id})
+        allEventPatterns.forEach(eventName => {
+            const { leaveChannel, listen } = useEcho(
+                userChannel,
                 eventName,
-                (data: any) => {
-                    isConnected.value = true
-
-                    const notification: GlobalNotification = {
-                        id: `import-${Date.now()}-${Math.random()}`,
-                        type: data.failed > 0 ? 'warning' : 'success',
-                        title: data.message || 'Importação concluída',
-                        message: data.fileName ? `Arquivo: ${data.fileName}` : undefined,
-                        data: {
-                            type: 'import',
-                            model: data.model,
-                            total: data.total,
-                            successful: data.successful,
-                            failed: data.failed,
-                        },
-                        read_at: null,
-                        created_at: data.timestamp || new Date().toISOString(),
-                    }
-
-                    addNotification(notification)
-                },
-                [userId],
-                'private'
+                (payload: EventPayload) => processEvent(eventName, payload),
             )
-
-            if (importEchoResult.listen) {
-                importListeners.push(importEchoResult.listen)
-            }
+            // Inicia o listener
+            listen()
+            cleanupFunctions.push(leaveChannel)
         })
 
-        importListeners.forEach((listen) => {
-            try {
-                listen()
-            } catch (error) {
-                console.error('[Global Notifications] Erro ao iniciar import listener:', error)
-            }
-        })
-
-        // Eventos de exportação
-        const exportEventNames = ['.export.completed', 'export.completed']
-        const exportListeners: (() => void)[] = []
-
-        exportEventNames.forEach((eventName) => {
-            const exportEchoResult = useEcho<{
-                type: 'export'
-                model: string
-                total: number
-                filePath: string
-                fileName: string | null
-                downloadUrl: string
-                message: string
-                timestamp: string
-            }>(
-                importExportChannel,
+        // Setup listeners para canal users.{id} (import/export)
+        allEventPatterns.forEach(eventName => {
+            const { leaveChannel, listen } = useEcho(
+                usersChannel,
                 eventName,
-                (data: any) => {
-                    isConnected.value = true
-
-                    const notification: GlobalNotification = {
-                        id: `export-${Date.now()}-${Math.random()}`,
-                        type: 'success',
-                        title: data.message || 'Exportação concluída',
-                        message: 'Clique para fazer o download',
-                        data: {
-                            type: 'export',
-                            model: data.model,
-                            total: data.total,
-                            downloadUrl: data.downloadUrl,
-                            fileName: data.fileName,
-                            action: 'download',
-                        },
-                        read_at: null,
-                        created_at: data.timestamp || new Date().toISOString(),
-                    }
-
-                    addNotification(notification)
-
-                    toast.success(data.message || 'Exportação concluída', {
-                        description: 'Clique para fazer o download',
-                        duration: 10000,
-                        action: {
-                            label: 'Download',
-                            onClick: () => {
-                                window.location.href = data.downloadUrl
-                            },
-                        },
-                    })
-                },
-                [userId],
-                'private'
+                (payload: EventPayload) => processEvent(eventName, payload),
             )
-
-            if (exportEchoResult.listen) {
-                exportListeners.push(exportEchoResult.listen)
-            }
+            // Inicia o listener
+            listen()
+            cleanupFunctions.push(leaveChannel)
         })
 
-        exportListeners.forEach((listen) => {
-            try {
-                listen()
-            } catch (error) {
-                console.error('[Global Notifications] Erro ao iniciar export listener:', error)
-            }
-        })
-
-        // Eventos de atualização de notificações (sincroniza entre abas)
-        const updateChannelName = `user.${userId}`
-        
-        const updateEchoResult = useEcho<{ action: string; notification_id?: string; unread_count: number }>(
-            updateChannelName,
+        // Listener especial para sync entre abas
+        const { leaveChannel: leaveSyncChannel, listen: listenSync } = useEcho(
+            userChannel,
             '.notification.updated',
-            (data: any) => {
-                switch (data.action) {
-                    case 'read':
-                        if (data.notification_id) {
-                            const notification = notifications.value.find(n => n.id === data.notification_id)
-                            if (notification && !notification.read_at) {
-                                notification.read_at = new Date().toISOString()
-                            }
-                        }
-                        break
-
-                    case 'read_all':
-                        notifications.value.forEach(n => {
-                            if (!n.read_at) {
-                                n.read_at = new Date().toISOString()
-                            }
-                        })
-                        break
-
-                    case 'deleted':
-                        if (data.notification_id) {
-                            notifications.value = notifications.value.filter(n => n.id !== data.notification_id)
-                        }
-                        break
-
-                    case 'cleared':
-                        notifications.value = []
-                        break
-                }
-            },
-            [userId],
-            'private'
+            (payload: any) => processSyncEvent(payload),
         )
-
-        if (updateEchoResult.listen) {
-            updateEchoResult.listen()
-        }
-
-        // Eventos de erro de conexão de banco de dados
-        const dbErrorChannelName = `user.${userId}`
-        const dbErrorEventNames = ['database.connection.failed', '.database.connection.failed']
-        const dbErrorListeners: (() => void)[] = []
-
-        dbErrorEventNames.forEach((eventName) => {
-            const dbErrorEchoResult = useEcho<{
-                database: string
-                message: string
-                is_database_not_found: boolean
-                resolution_steps: string[]
-                timestamp: string
-            }>(
-                dbErrorChannelName,
-                eventName,
-                (data: any) => {
-                    isConnected.value = true
-
-                    const notification: GlobalNotification = {
-                        id: `db-error-${Date.now()}-${Math.random()}`,
-                        type: 'error',
-                        title: 'Erro de Conexão com Banco de Dados',
-                        message: data.message || `Não foi possível conectar ao banco de dados '${data.database}'.`,
-                        data: {
-                            database: data.database,
-                            is_database_not_found: data.is_database_not_found,
-                            resolution_steps: data.resolution_steps || [],
-                            timestamp: data.timestamp,
-                        },
-                        read_at: null,
-                        created_at: data.timestamp || new Date().toISOString(),
-                    }
-
-                    addNotification(notification)
-                },
-                [userId],
-                'private'
-            )
-
-            if (dbErrorEchoResult.listen) {
-                dbErrorListeners.push(dbErrorEchoResult.listen)
-            }
-        })
-
-        dbErrorListeners.forEach((listen) => {
-            try {
-                listen()
-            } catch (error) {
-                console.error('[Global Notifications] Erro ao iniciar database error listener:', error)
-            }
-        })
-
-        // Listener genérico para eventos não tratados especificamente
-        const genericChannelName = `user.${userId}`
-        const genericEventNames = ['.notification', 'notification', '.notification.*', '*.notification']
-        const genericListeners: (() => void)[] = []
-
-        genericEventNames.forEach((eventName) => {
-            const genericEchoResult = useEcho<any>(
-                genericChannelName,
-                eventName,
-                (data: any) => {
-                    if (data && (data.type || data.title || data.message || data.notification)) {
-                        isConnected.value = true
-
-                        const normalizedData = data.notification || data
-
-                        const notification: GlobalNotification = {
-                            id: normalizedData.id || data.id || `notification-${Date.now()}-${Math.random()}`,
-                            type: normalizedData.type || data.type || 'info',
-                            title: normalizedData.title || data.title || normalizedData.message || data.message || 'Nova notificação',
-                            message: normalizedData.message || data.message || normalizedData.description || data.description || normalizedData.body || data.body,
-                            data: normalizedData.data || data.data || normalizedData.metadata || data.metadata || {},
-                            read_at: null,
-                            created_at: normalizedData.created_at || data.created_at || normalizedData.timestamp || data.timestamp || new Date().toISOString(),
-                            notification_id: normalizedData.id || data.id,
-                            notification_type: normalizedData.notification_type || data.notification_type || normalizedData.type || data.type,
-                        }
-
-                        addNotification(notification)
-                    }
-                },
-                [userId],
-                'private'
-            )
-
-            if (genericEchoResult.listen) {
-                genericListeners.push(genericEchoResult.listen)
-            }
-        })
-
-        genericListeners.forEach((listen) => {
-            try {
-                listen()
-            } catch (error) {
-                console.error('[Global Notifications] Erro ao iniciar generic listener:', error)
-            }
-        })
+        listenSync()
+        cleanupFunctions.push(leaveSyncChannel)
     }
 
-    // Carrega notificações existentes ao montar
+    // ========================================================================
+    // Lifecycle
+    // ========================================================================
+
     onMounted(() => {
         loadNotifications()
         setGlobalNotificationHandler(addNotification)
     })
 
+    onUnmounted(() => {
+        cleanupFunctions.forEach(cleanup => cleanup())
+    })
+
     return {
+        // State
         notifications,
         unreadCount,
         isConnected,
+        connectionStatus,
+        
+        // Actions
         addNotification,
         markAsRead,
         markAllAsRead,
         removeNotification,
         clearAll,
         loadNotifications,
+        
+        // Event processing (exposed for manual use)
+        processEvent,
     }
 }
 
-/**
- * Função helper para adicionar notificações de qualquer lugar do código
- * 
- * @example
- * ```ts
- * import { notify } from '@/composables/useGlobalNotifications'
- * 
- * // Notificação simples
- * notify('success', 'Sucesso!', 'Operação concluída com sucesso')
- * 
- * // Notificação com dados extras
- * notify('error', 'Erro', 'Algo deu errado', { error_code: 500 })
- * ```
- */
+// ============================================================================
+// Global Notification Helper
+// ============================================================================
+
 let globalAddNotification: ((notification: GlobalNotification) => void) | null = null
 
 export function setGlobalNotificationHandler(handler: (notification: GlobalNotification) => void) {
     globalAddNotification = handler
 }
 
+/**
+ * Adiciona uma notificação de qualquer lugar do código
+ * 
+ * @example
+ * ```ts
+ * import { notify } from '@/composables/useGlobalNotifications'
+ * 
+ * notify('success', 'Sucesso!', 'Operação concluída')
+ * notify('error', 'Erro', 'Algo deu errado', { error_code: 500 })
+ * ```
+ */
 export function notify(
     type: 'info' | 'success' | 'warning' | 'error',
     title: string,
@@ -585,4 +653,3 @@ export function notify(
     const notification = createNotification(type, title, message, data)
     globalAddNotification(notification)
 }
-

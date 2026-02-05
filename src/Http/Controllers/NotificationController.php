@@ -3,9 +3,9 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Log;
 
 class NotificationController extends Controller
 {
@@ -14,25 +14,37 @@ class NotificationController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $notifications = $request->user()->notifications()
-            ->latest()
-            ->take(50)
-            ->get()
-            ->map(function ($notification) {
-                return [
-                    'id' => $notification->id,
-                    'type' => $notification->data['type'] ?? 'info',
-                    'title' => $notification->data['title'] ?? 'Notificação',
-                    'message' => $notification->data['message'] ?? null,
-                    'data' => $notification->data,
-                    'read_at' => $notification->read_at,
-                    'created_at' => $notification->created_at->toISOString(),
-                ];
-            });
+        try {
+            $notifications = $request->user()->notifications()
+                ->latest()
+                ->take(50)
+                ->get()
+                ->map(function ($notification) {
+                    return [
+                        'id' => $notification->id,
+                        'type' => $notification->data['type'] ?? 'info',
+                        'title' => $notification->data['title'] ?? 'Notificação',
+                        'message' => $notification->data['message'] ?? null,
+                        'data' => $notification->data,
+                        'read_at' => $notification->read_at,
+                        'created_at' => $notification->created_at->toISOString(),
+                    ];
+                });
 
-        return response()->json([
-            'notifications' => $notifications,
-        ]);
+            return response()->json([
+                'notifications' => $notifications,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao carregar notificações', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'notifications' => [],
+                'error' => 'Não foi possível carregar as notificações.',
+            ], 500);
+        }
     }
 
     /**
@@ -40,13 +52,25 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, string $id)
     {
-        $notification = $request->user()->notifications()->find($id);
-        
-        if ($notification) {
-            $notification->markAsRead();
-        }
+        try {
+            $notification = $request->user()->notifications()->find($id);
+            
+            if (!$notification) {
+                return back()->with('error', 'Notificação não encontrada.');
+            }
 
-        return back()->with('success', 'Notificação marcada como lida.');
+            $notification->markAsRead();
+
+            return back()->with('success', 'Notificação marcada como lida.');
+        } catch (\Exception $e) {
+            Log::error('Erro ao marcar notificação como lida', [
+                'user_id' => $request->user()?->id,
+                'notification_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Não foi possível marcar a notificação como lida.');
+        }
     }
 
     /**
@@ -54,9 +78,18 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request)
     {
-        $request->user()->unreadNotifications->markAsRead();
+        try {
+            $request->user()->unreadNotifications->markAsRead();
 
-        return back()->with('success', 'Todas as notificações foram marcadas como lidas.');
+            return back()->with('success', 'Todas as notificações foram marcadas como lidas.');
+        } catch (\Exception $e) {
+            Log::error('Erro ao marcar todas notificações como lidas', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Não foi possível marcar as notificações como lidas.');
+        }
     }
 
     /**
@@ -64,13 +97,25 @@ class NotificationController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
-        $notification = $request->user()->notifications()->find($id);
-        
-        if ($notification) {
-            $notification->delete();
-        }
+        try {
+            $notification = $request->user()->notifications()->find($id);
+            
+            if (!$notification) {
+                return back()->with('error', 'Notificação não encontrada.');
+            }
 
-        return back()->with('success', 'Notificação removida.');
+            $notification->delete();
+
+            return back()->with('success', 'Notificação removida.');
+        } catch (\Exception $e) {
+            Log::error('Erro ao remover notificação', [
+                'user_id' => $request->user()?->id,
+                'notification_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Não foi possível remover a notificação.');
+        }
     }
 
     /**
@@ -78,8 +123,17 @@ class NotificationController extends Controller
      */
     public function destroyAll(Request $request)
     {
-        $request->user()->notifications()->delete();
+        try {
+            $request->user()->notifications()->delete();
 
-        return back()->with('success', 'Todas as notificações foram removidas.');
+            return back()->with('success', 'Todas as notificações foram removidas.');
+        } catch (\Exception $e) {
+            Log::error('Erro ao remover todas notificações', [
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->with('error', 'Não foi possível remover as notificações.');
+        }
     }
 }
