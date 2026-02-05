@@ -40,8 +40,10 @@ use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
 use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
 use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
 use Callcocam\LaravelRaptor\Traits\RequestMacrosTrait;
+use Callcocam\LaravelRaptor\Notifications\Channels\TenantAwareDatabaseChannel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -155,6 +157,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         // Registra os canais de broadcast
         $this->registerBroadcastChannels();
 
+        // Registra o canal de notificação customizado
+        $this->registerNotificationChannels();
+
         // Registra as rotas dinamicas dos tenants
         $this->registerTenantRoutes();
 
@@ -182,6 +187,17 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         if (file_exists($channelsPath = __DIR__ . '/../routes/channels.php')) {
             require $channelsPath;
         }
+    }
+
+    /**
+     * Registra o canal de notificação customizado que salva tenant_id e client_id
+     */
+    protected function registerNotificationChannels(): void
+    {
+        // Substitui o canal 'database' padrão pelo nosso que inclui tenant_id e client_id
+        Notification::extend('database', function ($app) {
+            return new TenantAwareDatabaseChannel();
+        });
     }
 
     /**
