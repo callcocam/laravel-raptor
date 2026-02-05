@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -318,6 +319,17 @@ class CheckPermissions extends Command
         return $kebab;
     }
 
+    /**
+     * Gera um ID determinístico baseado no slug da permissão.
+     * Isso garante que a mesma permissão sempre terá o mesmo ID.
+     */
+    protected function generateDeterministicId(string $slug): int
+    {
+        // Usa crc32 para gerar um hash numérico do slug
+        // Como crc32 pode retornar valores negativos, usamos abs() e limitamos
+        return abs(crc32($slug));
+    }
+
     protected function getExistingPermissions(): \Illuminate\Support\Collection
     {
         $permissionModel = config('raptor.shinobi.models.permission');
@@ -399,14 +411,21 @@ class CheckPermissions extends Command
         }
 
         $permissionModel = config('raptor.shinobi.models.permission');
+        $table = app($permissionModel)->getTable();
         $created = 0;
 
         foreach ($missing as $permission) {
             try {
-                app($permissionModel)->create([
+                $id = $this->generateDeterministicId($permission['slug']);
+                
+                // Usa DB::table() para inserir com ID específico
+                DB::table($table)->insert([
+                    'id' => $id,
                     'name' => $permission['name'],
                     'slug' => $permission['slug'],
                     'description' => $permission['description'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
                 $created++;
             } catch (\Exception $e) {
@@ -442,7 +461,7 @@ class CheckPermissions extends Command
             // Só atualiza se o nome ou descrição forem diferentes
             if ($existing->name !== $permission['name'] || $existing->description !== $permission['description']) {
                 // Usa query builder direto para evitar que o HasSlug trait sobrescreva a slug
-                \DB::table($table)
+                DB::table($table)
                     ->where('id', $existing->id)
                     ->update([
                         'name' => $permission['name'],
