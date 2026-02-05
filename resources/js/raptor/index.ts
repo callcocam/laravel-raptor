@@ -39,6 +39,7 @@ ComponentRegistry.registerBulk({
     'table-column-phone': defineAsyncComponent(() => import('~/components/table/columns/TablePhone.vue')),
     'table-column-status': defineAsyncComponent(() => import('~/components/table/columns/TableStatus.vue')),
     'table-column-boolean': defineAsyncComponent(() => import('~/components/table/columns/TableBoolean.vue')),
+    'table-column-image': defineAsyncComponent(() => import('~/components/table/columns/TableImage.vue')),
 })
 
 /**
