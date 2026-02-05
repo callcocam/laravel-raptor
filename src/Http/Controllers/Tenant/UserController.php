@@ -149,7 +149,7 @@ class UserController extends TenantController
                 ->format('d/m/Y H:i')
                 ->sortable(),
 
-            DateColumn::make('updated_at', 'Atualizado')
+            DateColumn::make('updated_at', 'Atualizado em')
                 ->relative()
                 ->sortable(),
         ])

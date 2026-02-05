@@ -47,12 +47,20 @@ class TenantRouteInjector
 
     /**
      * Carrega os diretórios padrão a partir da configuração do pacote.
+     * Se diretórios são passados explicitamente, eles têm prioridade sobre a configuração.
      * @param array<string, string> $defaultDirectories
      */
     protected function loadDefaultDirectories(array $defaultDirectories = []): void
     {
-        $configuredDirs = config('raptor.route_injector.directories', []);
-        $this->controllerDirectories = array_merge($configuredDirs, $defaultDirectories);
+        // Se diretórios foram passados explicitamente, usa APENAS eles
+        // Isso garante isolamento de contexto (tenant vs landlord)
+        if (!empty($defaultDirectories)) {
+            $this->controllerDirectories = $defaultDirectories;
+            return;
+        }
+        
+        // Caso contrário, usa a configuração global
+        $this->controllerDirectories = config('raptor.route_injector.directories', []);
     }
 
     /**

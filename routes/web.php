@@ -11,9 +11,10 @@ use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
 use Illuminate\Support\Facades\Storage;
 
 $domain = parse_url(config('app.url'), PHP_URL_HOST);
+$context = request()->getContext();
 
 // Rota de download de exportações
-Route::get('download-export/{filename}', function ($filename) {
+Route::middleware(['web', 'auth', $context])->get('download-export/{filename}', function ($filename) {
    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('exports/' . $filename);
 
     if (!file_exists($path)) {
@@ -40,11 +41,10 @@ if (!function_exists('getDirectoriesPath')) {
     }
 }
 
-$context = request()->getContext();
 Route::middleware(['web', 'auth', $context])
     ->name($context . '.')
     ->group(function () use ($context) {
-        // Suas rotas de tenant aqui
+        // Suas rotas de tenant aqui 
         $injector = new TenantRouteInjector(getDirectoriesPath($context));
         $injector->registerRoutes();
 
@@ -67,9 +67,7 @@ Route::middleware(['web', 'auth', $context])
             ->name('notifications.destroy-all');
     });
 
-
-
-$context = request()->getContext();
+ 
 Route::middleware(['web', $context])
     ->group(function () use ($context) {
         Route::middleware('guest')->get('login-as', [\Callcocam\LaravelRaptor\Http\Controllers\LoginAsController::class, 'loginAs'])
