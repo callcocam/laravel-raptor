@@ -98,10 +98,13 @@ const handleSubmit = () => {
         preserveState: inertiaConfig.value.preserveState,
         onSuccess: (page) => {
           emit("success", page);
+          console.log("Submit successful:", page); // Log para debug
+          
         },
         onError: (errors) => {
           // form.errors já foi populado automaticamente pelo Inertia
           emit("error", errors);
+          console.log("Submit error:", errors); // Log para debug
         },
       }
     );

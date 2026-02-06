@@ -34,6 +34,7 @@ trait HasActionCallback
      */
     public function executeCallback(Request $request, ?Model $model = null): mixed
     {
+       
         if (!$this->callback) {
             return null;
         }

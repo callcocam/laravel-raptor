@@ -335,7 +335,6 @@ const removeFile = (index: number) => {
 }
 
 const emitValue = () => {
-  console.log('Emitting value:', selectedFiles.value)
   if (selectedFiles.value.length === 0) {
     emit('update:modelValue', null)
   } else if (props.column.multiple) {

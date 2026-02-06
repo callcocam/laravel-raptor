@@ -27,7 +27,7 @@ abstract class ExecuteAction extends Action
         parent::__construct($name ?? 'execute');
         $this->actionType('header')
             ->column(HiddenField::make('actionType', $this->actionType))
-            ->column(HiddenField::make('actionName',  $name));
+            ->column(HiddenField::make('actionName',  $name)) ;
         $this->setUp();
     }
 

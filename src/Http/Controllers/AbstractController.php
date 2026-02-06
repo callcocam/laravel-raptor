@@ -385,7 +385,7 @@ abstract class AbstractController extends ResourceController
      */
     public function execute(Request $request): BaseRedirectResponse|JsonResponse|BinaryFileResponse
     {
-        try {
+        try { 
             // Valida os campos básicos da action
             $validated = $request->validate([
                 'actionType' => 'required|string',

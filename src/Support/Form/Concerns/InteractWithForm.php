@@ -41,11 +41,14 @@ trait InteractWithForm
             if (method_exists($column, 'isVisible') && !$column->isVisible()) {
                 continue;
             }
+            if (method_exists($column, 'isSheet') &&  $column->isSheet()) {
+                continue;
+            }
 
             $columnRules = $column->getRules($record);
 
             if (!empty($columnRules)) {
-                if(method_exists($column, 'getFieldsUsing')){ 
+                if (method_exists($column, 'getFieldsUsing')) {
                     // Para campos que possuem fieldsUsing (ex: CascadingField), aplica regras em ambos os campos 
                     $rules[$column->getFieldsUsing()] = $columnRules;
                 }
@@ -184,16 +187,16 @@ trait InteractWithForm
     public function saveRelatedData(array $data, $model, $request): void
     {
         foreach ($this->getColumns() as $column) {
-            $columnName = $column->getName(); 
+            $columnName = $column->getName();
             $valueUsing = data_get($column->getValueUsing($data, $model), $columnName, data_get($data, $columnName));
- 
+
             // Verifica se há dados para este campo
             if (!$valueUsing) {
                 continue;
             }
             // Se o campo tem relacionamento definido explicitamente
             if ($column->hasRelationship()) {
-                $relationship = $column->getRelationship(); 
+                $relationship = $column->getRelationship();
                 $this->handleExplicitRelationship($model, $relationship, $columnName, $valueUsing);
                 continue;
             }
@@ -249,7 +252,7 @@ trait InteractWithForm
             $model->$relationship()->sync($value);
         }
         // HasMany - Um para muitos
-        elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) { 
+        elseif ($relationInstance instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
             if (is_array($value)) {
                 $this->syncHasManyRelation($model, $relationship, $value);
             }

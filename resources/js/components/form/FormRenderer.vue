@@ -95,8 +95,13 @@ provide('formData', formData);
 // Handler para atualização de campos
 const handleFieldUpdate = (fieldName: string, value: any) => {
   if (props.modelValue && typeof props.modelValue === "object") {
+    // Se o valor for um File, Blob, FileList ou Array, atribui diretamente
+    if (value instanceof File || value instanceof Blob || value instanceof FileList || Array.isArray(value)) {
+      // eslint-disable-next-line vue/no-mutating-props
+      props.modelValue[fieldName] = value;
+    }
     // Se o valor for um objeto com múltiplos campos (como CNPJ que mapeia para outros campos)
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    else if (typeof value === 'object' && value !== null) {
       // Mescla todos os campos do objeto no formData
       Object.keys(value).forEach(key => {
         props.modelValue[key] = value[key];
