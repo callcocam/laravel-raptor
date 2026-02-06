@@ -44,11 +44,13 @@ class AdvancedImport implements WithMultipleSheets
     public function sheets(): array
     {
         $importSheets = [];
-        $processOrder = $this->getProcessOrder();
 
-        foreach ($processOrder as $sheetIndex) {
-            $sheet = $this->sheets[$sheetIndex];
+        $addSheetImport = function (Sheet $sheet) use (&$importSheets) {
             $sheetName = $sheet->getName();
+
+            if (isset($importSheets[$sheetName])) {
+                return;
+            }
 
             $importSheets[$sheetName] = new SheetImport(
                 $sheet,
@@ -63,57 +65,19 @@ class AdvancedImport implements WithMultipleSheets
                 },
                 $this->sheetServices
             );
-        }
+        };
 
-        return $importSheets;
-    }
-
-    /**
-     * Determina a ordem de processamento das sheets
-     * Sheets relacionadas devem ser processadas antes da principal
-     */
-    protected function getProcessOrder(): array
-    {
-        $order = [];
-        $processed = [];
-
-        foreach ($this->sheets as $index => $sheet) {
-            if (in_array($index, $processed)) {
-                continue;
-            }
-
-            // Se tem sheets relacionadas, processa elas primeiro
+        foreach ($this->sheets as $sheet) {
             if ($sheet->hasRelatedSheets()) {
-                // Adiciona as sheets relacionadas primeiro
                 foreach ($sheet->getRelatedSheets() as $relatedSheet) {
-                    $relatedIndex = $this->findSheetIndex($relatedSheet->getName());
-                    if ($relatedIndex !== null && ! in_array($relatedIndex, $processed)) {
-                        $order[] = $relatedIndex;
-                        $processed[] = $relatedIndex;
-                    }
+                    $addSheetImport($relatedSheet);
                 }
             }
 
-            // Depois adiciona a sheet principal
-            $order[] = $index;
-            $processed[] = $index;
+            $addSheetImport($sheet);
         }
 
-        return $order;
-    }
-
-    /**
-     * Encontra o índice de uma sheet pelo nome
-     */
-    protected function findSheetIndex(string $sheetName): ?int
-    {
-        foreach ($this->sheets as $index => $sheet) {
-            if ($sheet->getName() === $sheetName) {
-                return $index;
-            }
-        }
-
-        return null;
+        return $importSheets;
     }
 
     public function getSuccessfulRows(): int
@@ -188,8 +152,26 @@ class SheetImport implements ToCollection, WithBatchInserts, WithChunkReading, W
 
         foreach ($rows as $row) {
             $this->currentRow++;
+
+            // Log a cada 100 linhas
+            if ($this->currentRow % 100 === 0) {
+                \Log::info('[AdvancedImport] Processando', [
+                    'sheet' => $this->sheet->getName(),
+                    'row' => $this->currentRow,
+                    'successful' => $service->getSuccessfulRows(),
+                    'failed' => $service->getFailedRows(),
+                ]);
+            }
+
             $service->processRow($row->toArray(), $this->currentRow);
         }
+
+        \Log::info('[AdvancedImport] Sheet concluída', [
+            'sheet' => $this->sheet->getName(),
+            'total_rows' => $this->currentRow - 1,
+            'successful' => $service->getSuccessfulRows(),
+            'failed' => $service->getFailedRows(),
+        ]);
 
         // Callback para atualizar estatísticas no parent
         if ($this->statsCallback) {
@@ -207,7 +189,7 @@ class SheetImport implements ToCollection, WithBatchInserts, WithChunkReading, W
      */
     public function batchSize(): int
     {
-        return 500;
+        return 100;
     }
 
     /**
@@ -215,6 +197,6 @@ class SheetImport implements ToCollection, WithBatchInserts, WithChunkReading, W
      */
     public function chunkSize(): int
     {
-        return 1000;
+        return 100;
     }
 }

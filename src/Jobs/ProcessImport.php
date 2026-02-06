@@ -2,9 +2,8 @@
 
 namespace Callcocam\LaravelRaptor\Jobs;
 
-use Callcocam\LaravelRaptor\Imports\DefaultImport;
-use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
 use Callcocam\LaravelRaptor\Events\ImportCompleted;
+use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -42,8 +41,8 @@ class ProcessImport implements ShouldQueue
         Excel::import($import, $this->filePath, 'local');
 
         // Remove o arquivo temporário
-        if (file_exists(storage_path('app/' . $this->filePath))) {
-            unlink(storage_path('app/' . $this->filePath));
+        if (file_exists(storage_path('app/'.$this->filePath))) {
+            unlink(storage_path('app/'.$this->filePath));
         }
 
         // Obtém estatísticas da importação (se disponível)

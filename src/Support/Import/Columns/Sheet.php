@@ -154,9 +154,9 @@ class Sheet extends AbstractColumn
      *
      * @param  string  $sheetName  Nome da sheet relacionada
      * @param  string  $lookupKey  Campo usado para relacionar os dados (ex: 'ean', 'code')
-     * @return Sheet Nova instância da sheet relacionada
+     * @return self Retorna a própria sheet (fluent interface)
      */
-    public function addSheet(string $sheetName, string $lookupKey = 'id'): Sheet
+    public function addSheet(string $sheetName, string $lookupKey = 'id'): self
     {
         $relatedSheet = new self($sheetName);
         $relatedSheet->parentSheet = $this;
@@ -175,9 +175,12 @@ class Sheet extends AbstractColumn
             $relatedSheet->connection($this->connection);
         }
 
+        // Herda as colunas da sheet pai (as relacionadas usam as mesmas definições)
+        $relatedSheet->columns($this->getColumns());
+
         $this->relatedSheets[] = $relatedSheet;
 
-        return $relatedSheet;
+        return $this;
     }
 
     /**

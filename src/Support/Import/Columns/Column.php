@@ -15,6 +15,10 @@ abstract class Column extends AbstractColumn
 {
     protected Closure|string|int|float|null $defaultValue = null;
 
+    protected bool $hidden = false;
+
+    protected ?string $sheetName = null;
+
     protected Closure|string|null $format = null;
 
     protected Closure|string|null $cast = null;
@@ -30,6 +34,42 @@ abstract class Column extends AbstractColumn
 
     abstract public function render(mixed $value, $row = null): mixed;
 
+    /**
+     * Sobrescreve o label para normalizar da mesma forma que o Laravel Excel faz
+     */
+    public function label(Closure|string|null $label): static
+    {
+        if (is_string($label)) {
+            $label = $this->normalizeLabel($label);
+        }
+
+        return parent::label($label);
+    }
+
+    /**
+     * Normaliza o label da mesma forma que o Laravel Excel normaliza os cabeçalhos
+     * - Converte para lowercase
+     * - Remove acentos
+     * - Substitui espaços por underscore
+     * - Remove caracteres especiais
+     */
+    protected function normalizeLabel(string $label): string
+    {
+        // Remove acentos
+        $label = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $label);
+
+        // Lowercase
+        $label = mb_strtolower($label, 'UTF-8');
+
+        // Substitui espaços e caracteres especiais por underscore
+        $label = preg_replace('/[^a-z0-9]+/', '_', $label);
+
+        // Remove underscores no início e no fim
+        $label = trim($label, '_');
+
+        return $label;
+    }
+
     public function toArray(): array
     {
         return [
@@ -42,6 +82,8 @@ abstract class Column extends AbstractColumn
             'default' => $this->getDefaultValue(), // Valor padrão do campo
             'format' => $this->getFormat(), // Formato de exibição (ex: 'd/m/Y')
             'cast' => $this->getCast(), // Classe de cast ou tipo primitivo
+            'hidden' => $this->isHidden(), // Campo invisível (não vem do Excel)
+            'sheet' => $this->getSheetName(), // Nome da sheet de origem
         ];
     }
 
@@ -112,18 +154,38 @@ abstract class Column extends AbstractColumn
         return $this;
     }
 
+    public function isHidden(): bool
+    {
+        return $this->hidden;
+    }
+
+    /**
+     * Define a sheet de origem para a coluna
+     */
+    public function sheet(string $sheetName): static
+    {
+        $this->sheetName = $sheetName;
+
+        return $this;
+    }
+
+    public function getSheetName(): ?string
+    {
+        return $this->sheetName;
+    }
+
     /**
      * Processa e formata o valor de acordo com format e cast definidos
      */
     public function processValue(mixed $value, $row = null): mixed
     {
-        // Se valor está vazio e tem default, usa o default
-        if (empty($value) && $this->getDefaultValue() !== null) {
-            $value = $this->getDefaultValue();
-        }
-
         // Renderiza o valor (implementação específica de cada tipo)
         $value = $this->render($value, $row);
+
+        // Se valor está vazio/null após render e tem default, usa o default
+        if (($value === null || $value === '') && $this->getDefaultValue() !== null) {
+            $value = $this->getDefaultValue();
+        }
 
         // Aplica cast se definido
         if ($cast = $this->getCast()) {

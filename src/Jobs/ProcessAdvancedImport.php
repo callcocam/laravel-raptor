@@ -17,6 +17,16 @@ class ProcessAdvancedImport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /**
+     * Timeout do job em segundos (10 minutos)
+     */
+    public int $timeout = 600;
+
+    /**
+     * Número de tentativas
+     */
+    public int $tries = 3;
+
     public function __construct(
         protected string $filePath,
         protected array $sheetsData, // Array serializado das sheets
@@ -29,53 +39,91 @@ class ProcessAdvancedImport implements ShouldQueue
 
     public function handle(): void
     {
-        // Se temos a configuração da conexão, registra ela dinamicamente
-        if ($this->connectionName && $this->connectionConfig) {
-            config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
-            \DB::purge($this->connectionName);
-        }
+        try {
+            \Log::info('[ProcessAdvancedImport] Iniciando importação', [
+                'file' => $this->filePath,
+                'sheets_count' => count($this->sheetsData),
+            ]);
 
-        // Reconstrói as sheets a partir dos dados serializados
-        $sheets = $this->reconstructSheets($this->sheetsData);
+            // Se temos a configuração da conexão, registra ela dinamicamente
+            if ($this->connectionName && $this->connectionConfig) {
+                config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
+                \DB::purge($this->connectionName);
+            }
 
-        // Cria a instância do import avançado
-        $import = new AdvancedImport(
-            $sheets,
-            $this->connectionName,
-            $this->originalFileName
-        );
+            // Reconstrói as sheets a partir dos dados serializados
+            \Log::info('[ProcessAdvancedImport] Reconstruindo sheets');
+            $sheets = $this->reconstructSheets($this->sheetsData);
+            \Log::info('[ProcessAdvancedImport] Sheets reconstruídas', [
+                'count' => count($sheets),
+                'names' => array_map(fn ($s) => $s->getName(), $sheets),
+            ]);
 
-        // Processa a importação
-        Excel::import($import, $this->filePath, 'local');
+            // Cria a instância do import avançado
+            $import = new AdvancedImport(
+                $sheets,
+                $this->connectionName,
+                $this->originalFileName
+            );
 
-        // Remove o arquivo temporário
-        if (file_exists(storage_path('app/'.$this->filePath))) {
-            unlink(storage_path('app/'.$this->filePath));
-        }
+            // Processa a importação usando chunks (500 linhas por job)
+            \Log::info('[ProcessAdvancedImport] Iniciando Excel::import com chunking');
 
-        // Obtém estatísticas da importação
-        $totalRows = $import->getTotalRows();
-        $successfulRows = $import->getSuccessfulRows();
-        $failedRows = $import->getFailedRows();
+            $totalRows = 0;
+            $successfulRows = 0;
+            $failedRows = 0;
 
-        // Envia notificação ao usuário
-        $user = \App\Models\User::find($this->userId);
-        if ($user) {
-            $user->notify(new ImportCompletedNotification(
-                $this->resourceName,
-                true // Indica que foi processado via job
+            // Lê o Excel e processa em chunks menores
+            Excel::import($import, $this->filePath, 'local');
+
+            // Obtém estatísticas da importação
+            $totalRows = $import->getTotalRows();
+            $successfulRows = $import->getSuccessfulRows();
+            $failedRows = $import->getFailedRows();
+
+            \Log::info('[ProcessAdvancedImport] Excel::import concluído');
+
+            // Remove o arquivo temporário
+            if (file_exists(storage_path('app/'.$this->filePath))) {
+                unlink(storage_path('app/'.$this->filePath));
+            }
+
+            \Log::info('[ProcessAdvancedImport] Estatísticas', [
+                'total' => $totalRows,
+                'success' => $successfulRows,
+                'failed' => $failedRows,
+            ]);
+
+            // Envia notificação ao usuário
+            $user = \App\Models\User::find($this->userId);
+            if ($user) {
+                $user->notify(new ImportCompletedNotification(
+                    $this->resourceName,
+                    true // Indica que foi processado via job
+                ));
+            }
+
+            // Dispara evento de broadcast para atualização em tempo real
+            event(new ImportCompleted(
+                userId: $this->userId,
+                modelName: $this->resourceName,
+                totalRows: $totalRows,
+                successfulRows: $successfulRows,
+                failedRows: $failedRows,
+                fileName: $this->originalFileName ?? basename($this->filePath)
             ));
-        }
 
-        // Dispara evento de broadcast para atualização em tempo real
-        event(new ImportCompleted(
-            userId: $this->userId,
-            modelName: $this->resourceName,
-            totalRows: $totalRows,
-            successfulRows: $successfulRows,
-            failedRows: $failedRows,
-            fileName: $this->originalFileName ?? basename($this->filePath)
-        ));
+            \Log::info('[ProcessAdvancedImport] Importação concluída com sucesso');
+        } catch (\Exception $e) {
+            \Log::error('[ProcessAdvancedImport] Erro na importação', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            throw $e;
+        }
     }
 
     /**
@@ -139,6 +187,14 @@ class ProcessAdvancedImport implements ShouldQueue
                             $column->cast($columnData['cast']);
                         }
 
+                        if (isset($columnData['hidden'])) {
+                            $column->hidden((bool) $columnData['hidden']);
+                        }
+
+                        if (isset($columnData['sheet'])) {
+                            $column->sheet($columnData['sheet']);
+                        }
+
                         if (isset($columnData['index'])) {
                             $column->index($columnData['index']);
                         }
@@ -161,7 +217,8 @@ class ProcessAdvancedImport implements ShouldQueue
                         $sheet->addSheet($relatedSheet->getName(), $lookupKey);
 
                         // Copia as configurações da sheet relacionada
-                        $lastRelatedSheet = end($sheet->getRelatedSheets());
+                        $relatedSheets = $sheet->getRelatedSheets();
+                        $lastRelatedSheet = end($relatedSheets);
                         if ($lastRelatedSheet) {
                             if ($relatedSheet->getModelClass()) {
                                 $lastRelatedSheet->modelClass($relatedSheet->getModelClass());
@@ -241,6 +298,10 @@ class ProcessAdvancedImport implements ShouldQueue
 
                     if (isset($columnData['cast'])) {
                         $column->cast($columnData['cast']);
+                    }
+
+                    if (isset($columnData['hidden'])) {
+                        $column->hidden((bool) $columnData['hidden']);
                     }
 
                     if (isset($columnData['index'])) {

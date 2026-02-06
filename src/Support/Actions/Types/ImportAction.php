@@ -27,6 +27,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ImportAction extends ExecuteAction
 {
     use WithSheets;
+
     protected string $method = 'POST';
 
     protected ?string $modelClass = null;
@@ -76,8 +77,7 @@ class ImportAction extends ExecuteAction
             ))
             ->callback(function (Request $request, ?Model $model) {
                 $user = $request->user();
-                $resourceName = $this->getResourceName();
-                dd($resourceName);
+
                 // Obtém o arquivo enviado
                 $fileFieldName = str($this->getName())->replace('import', 'file')->slug()->toString();
                 $file = $request->file($fileFieldName);
@@ -95,6 +95,11 @@ class ImportAction extends ExecuteAction
                 // Salva o arquivo temporariamente
                 $fileName = 'imports/'.Str::uuid().'.'.$file->getClientOriginalExtension();
                 $file->storeAs('', $fileName, 'local');
+
+                // Obtém o nome do recurso baseado no modo de importação
+                $resourceName = $this->useAdvancedImport
+                    ? $this->getResourceNameFromSheets()
+                    : $this->getResourceName();
 
                 if ($this->shouldUseJob()) {
                     // Verifica se é importação avançada ou simples
@@ -197,9 +202,10 @@ class ImportAction extends ExecuteAction
         return $this;
     }
 
-    public function getModelClass(): string
+    public function getModelClass(): ?string
     {
-        if (! $this->modelClass) {
+        // Se é importação avançada, não é obrigatório ter modelClass
+        if (! $this->modelClass && ! $this->useAdvancedImport) {
             throw new \Exception('Model class não foi definido para a importação.');
         }
 
@@ -261,7 +267,11 @@ class ImportAction extends ExecuteAction
 
     protected function getResourceName(): string
     {
-        $modelName = class_basename($this->getModelClass());
+        if (! $this->modelClass) {
+            return $this->getResourceNameFromSheets();
+        }
+
+        $modelName = class_basename($this->modelClass);
 
         return Str::plural(Str::lower(str_replace('_', ' ', Str::snake($modelName))));
     }
@@ -419,6 +429,7 @@ class ImportAction extends ExecuteAction
                 'connection' => $sheet->getConnection(),
                 'serviceClass' => $sheet->getServiceClass(),
                 'columns' => [],
+                'relatedSheets' => [],
             ];
 
             // Serializa as colunas
@@ -433,9 +444,48 @@ class ImportAction extends ExecuteAction
                     'default' => $column->getDefaultValue(),
                     'format' => $column->getFormat(),
                     'cast' => $column->getCast(),
+                    'hidden' => $column->isHidden(),
+                    'sheet' => $column->getSheetName(),
                 ];
 
                 $sheetData['columns'][] = $columnData;
+            }
+
+            // Serializa as sheets relacionadas
+            if ($sheet->hasRelatedSheets()) {
+                foreach ($sheet->getRelatedSheets() as $relatedSheet) {
+                    $relatedSheetData = [
+                        'name' => $relatedSheet->getName(),
+                        'modelClass' => $relatedSheet->getModelClass(),
+                        'tableName' => $relatedSheet->getTableName(),
+                        'database' => $relatedSheet->getDatabase(),
+                        'connection' => $relatedSheet->getConnection(),
+                        'serviceClass' => $relatedSheet->getServiceClass(),
+                        'lookupKey' => $relatedSheet->getLookupKey(),
+                        'columns' => [],
+                    ];
+
+                    // Serializa as colunas da sheet relacionada
+                    foreach ($relatedSheet->getColumns() as $column) {
+                        $columnData = [
+                            'class' => get_class($column),
+                            'name' => $column->getName(),
+                            'label' => $column->getLabel(),
+                            'index' => $column->getIndex(),
+                            'rules' => $column->getRules(),
+                            'messages' => $column->getMessages(),
+                            'default' => $column->getDefaultValue(),
+                            'format' => $column->getFormat(),
+                            'cast' => $column->getCast(),
+                            'hidden' => $column->isHidden(),
+                            'sheet' => $column->getSheetName(),
+                        ];
+
+                        $relatedSheetData['columns'][] = $columnData;
+                    }
+
+                    $sheetData['relatedSheets'][] = $relatedSheetData;
+                }
             }
 
             $serialized[] = $sheetData;

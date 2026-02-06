@@ -99,6 +99,26 @@ class DefaultImportService
             $label = $column->getLabel();
             $index = $column->getIndex();
 
+            $columnSheet = $column->getSheetName();
+
+            if ($columnSheet && $columnSheet !== $this->sheet->getName()) {
+                continue;
+            }
+
+            if (! $columnSheet && $this->sheet->isRelatedSheet()) {
+                $lookupKey = $this->sheet->getLookupKey();
+
+                if (! $lookupKey || $name !== $lookupKey) {
+                    continue;
+                }
+            }
+
+            if ($column->isHidden()) {
+                $data[$name] = $column->processValue(null, $row);
+
+                continue;
+            }
+
             // Determina qual chave usar para buscar o valor
             $key = $index ?? $label ?? $name;
 
@@ -333,8 +353,14 @@ class DefaultImportService
                 // Remove a lookup key dos dados relacionados para evitar sobrescrever
                 unset($relatedRowData[$lookupKey]);
 
+                // Remove valores vazios para não sobrescrever dados da sheet principal
+                $relatedRowData = array_filter(
+                    $relatedRowData,
+                    fn ($value) => ! ($value === null || $value === '')
+                );
+
                 // Mescla os dados (dados relacionados têm prioridade)
-                $data = array_merge($data, $relatedRowData);
+                $data = array_replace($data, $relatedRowData);
             }
         }
 

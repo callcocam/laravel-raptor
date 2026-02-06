@@ -8,11 +8,11 @@
 
 namespace Callcocam\LaravelRaptor\Jobs;
 
+use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
-use Callcocam\LaravelRaptor\Events\ExportCompleted;
-use Callcocam\LaravelRaptor\Traits\TenantAwareJob;
 use Callcocam\LaravelRaptor\Support\TenantContext;
+use Callcocam\LaravelRaptor\Traits\TenantAwareJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -47,7 +47,7 @@ class ProcessExport implements ShouldQueue
         $this->restoreTenantContext();
 
         // Log detalhado do contexto do tenant
-        Log::info("🚀 ProcessExport iniciado", [
+        Log::info('🚀 ProcessExport iniciado', [
             '=== TENANT CONTEXT ===' => '---',
             'tenantId (job)' => $this->tenantId,
             'domainableId (job)' => $this->domainableId,
@@ -56,8 +56,8 @@ class ProcessExport implements ShouldQueue
             'TenantContext::id()' => TenantContext::id(),
             'TenantContext::current()' => TenantContext::current(),
             '=== CONFIG VALUES ===' => '---',
-            'config(app.current_client_id)' => config("app.current_client_id"),
-            'config(app.current_tenant_id)' => config("app.current_tenant_id"),
+            'config(app.current_client_id)' => config('app.current_client_id'),
+            'config(app.current_tenant_id)' => config('app.current_tenant_id'),
             '=== JOB DATA ===' => '---',
             'modelClass' => $this->modelClass,
             'fileName' => $this->fileName,
@@ -69,7 +69,7 @@ class ProcessExport implements ShouldQueue
         if ($this->connectionName && $this->connectionConfig) {
             config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
             \DB::purge($this->connectionName);
-            Log::info("📦 Conexão dinâmica configurada", ['connection' => $this->connectionName]);
+            Log::info('📦 Conexão dinâmica configurada', ['connection' => $this->connectionName]);
         }
         // Reconstrói a query a partir do model class com a conexão correta
         $model = app($this->modelClass);
@@ -78,17 +78,17 @@ class ProcessExport implements ShouldQueue
         }
         $query = $model->newQuery();
         // Aplica os filtros processados (já sem page, per_page e com filtros extraídos)
-        if (!empty($this->filters)) {
+        if (! empty($this->filters)) {
             foreach ($this->filters as $column => $value) {
                 if (is_array($value)) {
                     $query->whereIn($column, $value);
-                } elseif ($value === "true" || $value === "false") {
-                    if ($value === "true") {
+                } elseif ($value === 'true' || $value === 'false') {
+                    if ($value === 'true') {
                         $query->whereNotNull($column);
                     } else {
                         $query->whereNull($column);
                     }
-                } elseif (!empty($value)) {
+                } elseif (! empty($value)) {
                     $query->where($column, $value);
                 }
             }
@@ -126,7 +126,7 @@ class ProcessExport implements ShouldQueue
             fileName: $this->fileName
         ));
 
-        Log::info("✅ ProcessExport concluído com sucesso", [
+        Log::info('✅ ProcessExport concluído com sucesso', [
             'fileName' => $this->fileName,
             'totalRows' => $totalRows,
             'tenantId' => $this->tenantId,

@@ -5,6 +5,7 @@
  * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Jobs;
 
 use Callcocam\LaravelRaptor\Events\FileUploadProcessed;
@@ -57,7 +58,7 @@ class ProcessFileUpload implements ShouldQueue
             $this->fileUpload->updateProgress(0, FileUpload::STATUS_PROCESSING);
 
             // Verifica se o arquivo temporário existe
-            if (!Storage::disk($this->disk)->exists($this->fileUpload->temp_path)) {
+            if (! Storage::disk($this->disk)->exists($this->fileUpload->temp_path)) {
                 throw new \Exception("Temporary file not found: {$this->fileUpload->temp_path}");
             }
 
@@ -109,7 +110,7 @@ class ProcessFileUpload implements ShouldQueue
     protected function moveTempToFinal(): string
     {
         $extension = pathinfo($this->fileUpload->original_name, PATHINFO_EXTENSION);
-        $filename = Str::ulid() . '.' . $extension;
+        $filename = Str::ulid().'.'.$extension;
 
         // Define o path final baseado no campo e modelo
         $directory = 'uploads';
@@ -153,7 +154,7 @@ class ProcessFileUpload implements ShouldQueue
         ];
 
         // Cria o ImageManager com driver GD
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new Driver);
 
         // Lê a imagem original
         $originalImage = $manager->read(Storage::disk($this->disk)->get($imagePath));
@@ -174,6 +175,7 @@ class ProcessFileUpload implements ShouldQueue
 
             } catch (\Exception $e) {
                 Log::warning("Failed to generate {$sizeName} thumbnail for {$this->fileUpload->id}: {$e->getMessage()}");
+
                 continue;
             }
         }
@@ -203,7 +205,7 @@ class ProcessFileUpload implements ShouldQueue
 
         try {
             if ($this->isImage()) {
-                $manager = new ImageManager(new Driver());
+                $manager = new ImageManager(new Driver);
                 $image = $manager->read(Storage::disk($this->disk)->get($filePath));
 
                 $metadata['width'] = $image->width();
