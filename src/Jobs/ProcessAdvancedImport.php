@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Exports\FailedImportRowsExport;
 use Callcocam\LaravelRaptor\Imports\AdvancedImport;
 use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
+use Callcocam\LaravelRaptor\Traits\NotifiesUserOnCompletion;
 use Callcocam\LaravelRaptor\Traits\TenantAwareJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -35,6 +36,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ProcessAdvancedImport implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use NotifiesUserOnCompletion;
     use TenantAwareJob;
 
     public int $timeout = 600;
@@ -83,15 +85,7 @@ class ProcessAdvancedImport implements ShouldQueue
         $totalRows = $import->getTotalRows();
         $successfulRows = $import->getSuccessfulRows();
         $failedRows = $import->getFailedRows();
-        $errors = $import->getErrors();
-
-        Log::info('ProcessAdvancedImport: processamento concluído', [
-            'filePath' => $this->filePath,
-            'totalRows' => $totalRows,
-            'successfulRows' => $successfulRows,
-            'failedRows' => $failedRows,
-            'errors_sample' => array_slice($errors, 0, 5),
-        ]);
+        $errors = $import->getErrors(); 
 
         if (file_exists($fullPath)) {
             unlink($fullPath);
@@ -105,18 +99,15 @@ class ProcessAdvancedImport implements ShouldQueue
             Excel::store($export, $failedReportPath, 'local');
         }
 
-        $user = \App\Models\User::find($this->userId);
-        if ($user) {
-            $user->notify(new ImportCompletedNotification(
-                $this->resourceName,
-                true,
-                null,
-                null,
-                null,
-                null,
-                $failedReportPath
-            ));
-        }
+        $this->notifyUser(new ImportCompletedNotification(
+            $this->resourceName,
+            true,
+            null,
+            null,
+            null,
+            null,
+            $failedReportPath
+        ));
 
         event(new ImportCompleted(
             userId: $this->userId,

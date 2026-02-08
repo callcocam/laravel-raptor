@@ -7,6 +7,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Route;
 
 class ExportCompleted implements ShouldBroadcastNow
 {
@@ -54,6 +55,18 @@ class ExportCompleted implements ShouldBroadcastNow
         return null;
     }
 
+    /** Resolve URL de download da exportação sem depender de rota nomeada (funciona no queue worker). */
+    public static function resolveDownloadExportUrl(string $filename): string
+    {
+        foreach (['tenant.download.export', 'landlord.download.export', 'download.export'] as $name) {
+            if (Route::has($name)) {
+                return route($name, ['filename' => $filename]);
+            }
+        }
+
+        return url('download-export/' . $filename);
+    }
+
     /**
      * Get the channels the event should broadcast on.
      *
@@ -61,7 +74,6 @@ class ExportCompleted implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        
         return [
             new PrivateChannel('users.' . $this->userId),
         ];
@@ -80,7 +92,7 @@ class ExportCompleted implements ShouldBroadcastNow
             'total' => $this->totalRows,
             'filePath' => $this->filePath,
             'fileName' => $this->fileName,
-            'downloadUrl' => route('download.export', ['filename' => $filename]),
+            'downloadUrl' => self::resolveDownloadExportUrl($filename),
             'message' => sprintf(
                 'Exportação concluída: %d registros exportados',
                 $this->totalRows

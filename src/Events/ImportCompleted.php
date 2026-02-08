@@ -7,6 +7,8 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 
 class ImportCompleted implements ShouldBroadcastNow
 {
@@ -60,6 +62,18 @@ class ImportCompleted implements ShouldBroadcastNow
         return null;
     }
 
+    /** Resolve URL do relatório de falhas sem depender de rota nomeada (funciona no queue worker). */
+    public static function resolveDownloadImportFailedUrl(string $filename): string
+    {
+        foreach (['tenant.download.import.failed', 'landlord.download.import.failed', 'download.import.failed'] as $name) {
+            if (Route::has($name)) {
+                return route($name, ['filename' => $filename]);
+            }
+        }
+
+        return url('download-import-failed/' . $filename);
+    }
+
     /**
      * Get the channels the event should broadcast on.
      *
@@ -67,7 +81,7 @@ class ImportCompleted implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        \Log::info('[ImportCompleted] Broadcasting to channel', [
+        Log::info('[ImportCompleted] Broadcasting to channel', [
             'userId' => $this->userId,
             'channel' => 'users.' . $this->userId,
             'event' => 'import.completed',
@@ -83,7 +97,7 @@ class ImportCompleted implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
-        return [
+        $payload = [
             'type' => 'import',
             'model' => $this->modelName,
             'total' => $this->totalRows,
@@ -104,6 +118,12 @@ class ImportCompleted implements ShouldBroadcastNow
             'client_id' => $this->clientId,
             'client_name' => $this->clientName,
         ];
+
+        if ($this->failedReportPath !== null) {
+            $payload['failed_report_download'] = self::resolveDownloadImportFailedUrl(basename($this->failedReportPath));
+        }
+
+        return $payload;
     }
 
     /**

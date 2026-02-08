@@ -64,11 +64,11 @@ class DefaultExport implements FromQuery, WithHeadings, WithMapping, WithEvents
             $totalRows = $event->sheet->getHighestDataRow() - 1; // Remove header
 
             ExportCompleted::dispatch(
-                userId: $userId,
-                modelName: class_basename($this->query->getModel()),
-                totalRows: $totalRows,
-                filePath: $this->filePath ?? 'exports/export.xlsx',
-                fileName: $this->fileName
+                $userId,
+                class_basename($this->query->getModel()),
+                $totalRows,
+                $this->filePath ?? 'exports/export.xlsx',
+                $this->fileName
             );
         }
     }

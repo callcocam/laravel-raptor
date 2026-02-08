@@ -4,6 +4,7 @@ namespace Callcocam\LaravelRaptor\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Route;
 
 class ImportCompletedNotification extends Notification
 {
@@ -56,6 +57,20 @@ class ImportCompletedNotification extends Notification
     }
 
     /**
+     * Resolve URL do relatório de falhas sem depender de rota nomeada (funciona no queue worker).
+     */
+    protected function resolveDownloadImportFailedUrl(string $filename): string
+    {
+        foreach (['tenant.download.import.failed', 'landlord.download.import.failed', 'download.import.failed'] as $name) {
+            if (Route::has($name)) {
+                return route($name, ['filename' => $filename]);
+            }
+        }
+
+        return url('download-import-failed/' . $filename);
+    }
+
+    /**
      * Canais de notificação que serão usados.
      */
     public function via($notifiable): array
@@ -68,15 +83,15 @@ class ImportCompletedNotification extends Notification
      */
     public function toDatabase($notifiable): array
     {
-        $title = $this->wasQueued 
-            ? 'Importação Concluída' 
+        $title = $this->wasQueued
+            ? 'Importação Concluída'
             : 'Registros Importados';
-            
+
         $message = $this->wasQueued
             ? "Sua importação de {$this->resourceName} foi processada com sucesso."
             : "Os {$this->resourceName} foram importados com sucesso.";
 
-        return [
+        $data = [
             'title' => $title,
             'message' => $message,
             'type' => 'success',
@@ -88,6 +103,14 @@ class ImportCompletedNotification extends Notification
             'client_id' => $this->clientId,
             'client_name' => $this->clientName,
         ];
+
+        // URL de download do relatório de erros (evita RouteNotFoundException no queue worker)
+        if ($this->failedReportPath !== null) {
+            $filename = basename($this->failedReportPath);
+            $data['failed_report_download'] = $this->resolveDownloadImportFailedUrl($filename);
+        }
+
+        return $data;
     }
 
     /**

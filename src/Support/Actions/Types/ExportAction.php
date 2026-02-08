@@ -106,8 +106,8 @@ class ExportAction extends ExecuteAction
                     // Obtém o total de linhas exportadas
                     $totalRows = $query->count();
 
-                    // Gera URL de download
-                    $downloadUrl = route('download.export', ['filename' => $fileName]);
+                    // Gera URL de download (evita RouteNotFoundException no queue worker)
+                    $downloadUrl = \Callcocam\LaravelRaptor\Events\ExportCompleted::resolveDownloadExportUrl($fileName);
 
                     // Para exportação síncrona, cria notificação no banco com link de download
                     $user->notify(new ExportCompletedNotification($fileName, $downloadUrl, $resourceName));

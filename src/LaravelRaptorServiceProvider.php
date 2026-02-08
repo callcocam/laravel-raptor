@@ -278,6 +278,13 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 ->name(sprintf('%s.', $context))
                 ->group($guestRouteFile);
         }
+
+        $webRouteFile = sprintf('%s/../routes/web.php', __DIR__);
+        
+        if (file_exists($webRouteFile)) {
+            Route::middleware(['web', $context]) 
+                ->group($webRouteFile);
+        }
     }
 
     /**

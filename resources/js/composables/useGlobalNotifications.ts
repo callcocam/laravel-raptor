@@ -137,6 +137,8 @@ function registerBuiltInHandlers() {
             total: payload.total,
             successful: payload.successful,
             failed: payload.failed,
+            failed_report_path: payload.failed_report_path,
+            failed_report_download: payload.failed_report_download,
         },
         read_at: null,
         created_at: payload.timestamp || new Date().toISOString(),
@@ -175,6 +177,21 @@ function registerBuiltInHandlers() {
             },
         },
     }))
+
+    // Toast para importação: botão "Baixar erros" quando houver relatório de falhas
+    registerToastHandler('import', (notification) =>
+        notification.data?.failed_report_download
+            ? {
+                  duration: 10000,
+                  action: {
+                      label: 'Baixar erros',
+                      onClick: () => {
+                          window.location.href = notification.data.failed_report_download
+                      },
+                  },
+              }
+            : undefined
+    )
 
     // Handler para erros de banco de dados
     registerEventHandler(/^\.?database\.connection\.failed$/, (event, payload) => ({

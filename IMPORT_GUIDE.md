@@ -43,23 +43,9 @@ As abas **relacionadas** (relatedSheets) são lidas primeiro e mantidas em memó
 
 Quando há linhas com erro, o Job gera um Excel com os **registros que falharam**: mesmas colunas do arquivo original + **Linha** (número da linha) + **Erro** (mensagem). O arquivo é salvo no disco `local` em `imports/failed-{uuid}.xlsx`.
 
-O evento `ImportCompleted` e a notificação `ImportCompletedNotification` incluem `failed_report_path` (caminho relativo) quando esse arquivo existe. A aplicação pode expor uma rota de download, por exemplo:
+O evento `ImportCompleted` e a notificação `ImportCompletedNotification` incluem `failed_report_path` (caminho relativo) e **`failed_report_download`** (URL pronta) quando esse arquivo existe.
 
-```php
-// Exemplo: rota para download do relatório de erros (proteger com auth e validação do path)
-Route::get('/imports/failed-report', function (Request $request) {
-    $path = $request->query('path');
-    if (!$path || !str_starts_with($path, 'imports/failed-')) {
-        abort(404);
-    }
-    if (!Storage::disk('local')->exists($path)) {
-        abort(404);
-    }
-    return Storage::disk('local')->download($path, 'importacao-erros.xlsx');
-})->middleware('auth')->name('imports.failed-report');
-```
-
-No frontend, ao receber o evento `import.completed` (ou a notificação), se `failed_report_path` estiver presente, exiba um link "Baixar erros" apontando para essa rota com `?path={failed_report_path}`.
+O pacote já registra a rota nomeada **`download.import.failed`** (GET `download-import-failed/{filename}`, ex.: `download-import-failed/failed-{uuid}.xlsx`), com validação do nome do arquivo. A notificação e o broadcast incluem a URL em `failed_report_download`; no dropdown de notificações e no toast de importação é exibido o link **"Baixar erros"** quando houver relatório de falhas.
 
 ## Atualizar existentes (updateBy)
 

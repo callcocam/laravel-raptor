@@ -138,6 +138,12 @@ const getTypeIcon = (type: string) => {
                                     @click.stop>
                                     📥 Baixar arquivo
                                 </a>
+                                <!-- Link para relatório de erros da importação -->
+                                <a v-if="notification.data?.failed_report_download" :href="notification.data.failed_report_download"
+                                    class="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary hover:underline"
+                                    @click.stop>
+                                    📋 Baixar erros
+                                </a>
                                 <!-- Passos de resolução para erros de banco de dados -->
                                 <div v-if="notification.data?.resolution_steps && notification.data.resolution_steps.length > 0"
                                     class="mt-2 space-y-1">

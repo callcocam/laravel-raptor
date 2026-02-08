@@ -31,6 +31,19 @@ Route::get('download-export/{filename}', function ($filename) {
     return response()->download($path)->deleteFileAfterSend(true);
 })->name('download.export');
 
+// Rota de download do relatório de linhas que falharam na importação (mesmo padrão do tenant)
+Route::get('download-import-failed/{filename}', function (string $filename) {
+    if (! str_starts_with($filename, 'failed-') || ! str_ends_with($filename, '.xlsx')) {
+        abort(404);
+    }
+    $path = Storage::disk('local')->path('imports/' . $filename);
+    if (! file_exists($path)) {
+        abort(404);
+    }
+
+    return response()->download($path, 'importacao-erros.xlsx')->deleteFileAfterSend(true);
+})->name('download.import.failed');
+
 // Rota de atualização de tema
 Route::put('/tenant/update-theme', [\Callcocam\LaravelRaptor\Http\Controllers\TenantThemeController::class, 'update'])
     ->name('tenant.update-theme');
