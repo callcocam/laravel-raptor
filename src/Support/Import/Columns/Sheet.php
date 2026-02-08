@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Import\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns;
+use Callcocam\LaravelRaptor\Support\Import\Generators\DefaultUlidGenerator;
 
 class Sheet extends AbstractColumn
 {
@@ -31,6 +32,12 @@ class Sheet extends AbstractColumn
 
     protected ?string $lookupKey = null;
 
+    protected bool $generateId = false;
+
+    protected $generateIdCallback = null;
+
+    protected ?string $generateIdClass = null;
+
     public function __construct(string $name)
     {
         $this->name($name);
@@ -50,6 +57,8 @@ class Sheet extends AbstractColumn
             'connection' => $this->getConnection(),
             'relatedSheets' => array_map(fn ($sheet) => $sheet->toArray(), $this->relatedSheets),
             'lookupKey' => $this->getLookupKey(),
+            'generateId' => $this->shouldGenerateId(),
+            'generateIdClass' => $this->getGenerateIdClass(),
             'type' => $this->getType(),
         ];
     }
@@ -231,6 +240,41 @@ class Sheet extends AbstractColumn
         $this->lookupKey = $key;
 
         return $this;
+    }
+
+    public function generateId(?callable $callback = null): self
+    {
+        $this->generateId = true;
+        $this->generateIdCallback = $callback;
+
+        if (! $this->generateIdClass && $callback === null) {
+            $this->generateIdClass = DefaultUlidGenerator::class;
+        }
+
+        return $this;
+    }
+
+    public function generateIdUsing(string $generatorClass): self
+    {
+        $this->generateId = true;
+        $this->generateIdClass = $generatorClass;
+
+        return $this;
+    }
+
+    public function shouldGenerateId(): bool
+    {
+        return $this->generateId;
+    }
+
+    public function getGenerateIdCallback(): ?callable
+    {
+        return $this->generateIdCallback;
+    }
+
+    public function getGenerateIdClass(): ?string
+    {
+        return $this->generateIdClass;
     }
 
     public function isSheet(): bool

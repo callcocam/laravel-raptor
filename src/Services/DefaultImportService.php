@@ -8,9 +8,11 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use Callcocam\LaravelRaptor\Support\Import\Contracts\GeneratesImportId;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class DefaultImportService
 {
@@ -67,7 +69,7 @@ class DefaultImportService
             }
 
             // Salva no banco de dados
-            $this->saveData($data);
+            $this->saveData($data, $row);
 
             $this->successfulRows++;
 
@@ -202,7 +204,7 @@ class DefaultImportService
     /**
      * Salva os dados no banco
      */
-    protected function saveData(array $data): void
+    protected function saveData(array $data, array $row): void
     {
         $tableName = $this->sheet->getTableName();
         $connection = $this->connection ?? $this->sheet->getConnection();
@@ -222,6 +224,16 @@ class DefaultImportService
             // Tenta usar updateOrCreate se houver chaves únicas
             $uniqueKeys = $this->getUniqueKeys($data);
 
+            $existingRecord = null;
+
+            if (! empty($uniqueKeys)) {
+                $existingRecord = $model::on($connection)->where($uniqueKeys)->first();
+            }
+
+            if ($this->shouldGenerateId($data) && ! $existingRecord) {
+                $data['id'] = $this->generateId($row);
+            }
+
             if (! empty($uniqueKeys)) {
                 $model::on($connection)->updateOrCreate($uniqueKeys, $data);
             } else {
@@ -235,10 +247,17 @@ class DefaultImportService
 
             // Tenta usar updateOrCreate se houver chaves únicas
             $uniqueKeys = $this->getUniqueKeys($data);
+            $existingRecord = null;
 
             if (! empty($uniqueKeys)) {
                 $existingRecord = $query->where($uniqueKeys)->first();
+            }
 
+            if ($this->shouldGenerateId($data) && ! $existingRecord) {
+                $data['id'] = $this->generateId($row);
+            }
+
+            if (! empty($uniqueKeys)) {
                 if ($existingRecord) {
                     $query->where($uniqueKeys)->update($data);
                 } else {
@@ -257,6 +276,10 @@ class DefaultImportService
     {
         $columns = $this->sheet->getColumns();
         $uniqueKeys = [];
+
+        if (isset($data['id']) && $data['id'] !== '') {
+            return ['id' => $data['id']];
+        }
 
         foreach ($columns as $column) {
             $rules = $column->getRules();
@@ -277,6 +300,41 @@ class DefaultImportService
         }
 
         return $uniqueKeys;
+    }
+
+    protected function shouldGenerateId(array $data): bool
+    {
+        if (! $this->sheet->shouldGenerateId()) {
+            return false;
+        }
+
+        return ! isset($data['id']) || $data['id'] === '';
+    }
+
+    protected function generateId(array $row): string
+    {
+        if ($generatorClass = $this->sheet->getGenerateIdClass()) {
+            if (class_exists($generatorClass)) {
+                $generator = app($generatorClass);
+
+                if ($generator instanceof GeneratesImportId) {
+                    return (string) $generator->generate($row);
+                }
+
+                throw new \InvalidArgumentException(sprintf(
+                    'O gerador de ID deve implementar %s.',
+                    GeneratesImportId::class
+                ));
+            }
+        }
+
+        $callback = $this->sheet->getGenerateIdCallback();
+
+        if (is_callable($callback)) {
+            return (string) $callback($row);
+        }
+
+        return (string) Str::ulid();
     }
 
     public function getSuccessfulRows(): int
