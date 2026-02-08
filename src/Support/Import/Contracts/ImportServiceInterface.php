@@ -51,6 +51,13 @@ interface ImportServiceInterface
     public function getFailedRowsData(): array;
 
     /**
+     * Linhas persistidas com sucesso (para o hook afterProcess: row + data com id e campos exclude).
+     *
+     * @return array<int, array{row: int, data: array<string, mixed>}>
+     */
+    public function getCompletedRows(): array;
+
+    /**
      * Define contexto para colunas hidden (tenant_id, user_id, etc.).
      * Valores são aplicados às colunas com defaultValue antes de persistir.
      *

@@ -55,6 +55,29 @@ class Sheet extends AbstractColumn
      */
     protected ?array $updateByKeys = null;
 
+    /**
+     * Ordem das colunas hierárquicas (primeira = raiz, demais = filha da anterior).
+     * Ex.: ['segmento_varejista', 'departamento', 'subdepartamento', 'categoria', ...]
+     *
+     * @var array<int, string>|null
+     */
+    protected ?array $hierarchicalColumns = null;
+
+    /** Nome da coluna FK do pai na tabela (ex.: category_id, parent_id). */
+    protected string $parentColumnName = 'category_id';
+
+    /** Nome da coluna da tabela que recebe o valor do nível (ex.: name). */
+    protected string $hierarchicalValueColumn = 'name';
+
+    /** Classe do hook executada antes de persistir cada linha (implemente BeforePersistHookInterface). */
+    protected ?string $beforePersistClass = null;
+
+    /** Classe do hook executada após persistir cada linha (implemente AfterPersistHookInterface). */
+    protected ?string $afterPersistClass = null;
+
+    /** Classe do hook executada ao final da sheet (implemente AfterProcessHookInterface). */
+    protected ?string $afterProcessClass = null;
+
     public function __construct(string $name)
     {
         $this->name($name);
@@ -91,8 +114,94 @@ class Sheet extends AbstractColumn
             'generateIdClass' => $this->getGenerateIdClass(),
             'chunkSize' => $this->getChunkSize(),
             'updateByKeys' => $this->getUpdateByKeys(),
+            'hierarchicalColumns' => $this->getHierarchicalColumns(),
+            'parentColumnName' => $this->getParentColumnName(),
+            'hierarchicalValueColumn' => $this->getHierarchicalValueColumn(),
+            'beforePersistClass' => $this->getBeforePersistClass(),
+            'afterPersistClass' => $this->getAfterPersistClass(),
+            'afterProcessClass' => $this->getAfterProcessClass(),
             'type' => $this->getType(),
         ];
+    }
+
+    public function beforePersistClass(?string $class): self
+    {
+        $this->beforePersistClass = $class;
+
+        return $this;
+    }
+
+    public function getBeforePersistClass(): ?string
+    {
+        return $this->beforePersistClass;
+    }
+
+    public function afterPersistClass(?string $class): self
+    {
+        $this->afterPersistClass = $class;
+
+        return $this;
+    }
+
+    public function getAfterPersistClass(): ?string
+    {
+        return $this->afterPersistClass;
+    }
+
+    public function afterProcessClass(?string $class): self
+    {
+        $this->afterProcessClass = $class;
+
+        return $this;
+    }
+
+    public function getAfterProcessClass(): ?string
+    {
+        return $this->afterProcessClass;
+    }
+
+    /**
+     * Define a ordem das colunas hierárquicas (primeira = raiz, demais = filha da anterior).
+     *
+     * @param  array<int, string>  $columnNames  Nomes das colunas na ordem da hierarquia
+     */
+    public function hierarchicalColumns(array $columnNames): self
+    {
+        $this->hierarchicalColumns = array_values($columnNames);
+
+        return $this;
+    }
+
+    /** @return array<int, string>|null */
+    public function getHierarchicalColumns(): ?array
+    {
+        return $this->hierarchicalColumns;
+    }
+
+    /** Nome da coluna FK do pai na tabela (ex.: category_id). */
+    public function parentColumnName(string $name): self
+    {
+        $this->parentColumnName = $name;
+
+        return $this;
+    }
+
+    public function getParentColumnName(): string
+    {
+        return $this->parentColumnName;
+    }
+
+    /** Nome da coluna da tabela que recebe o valor de cada nível (ex.: name). */
+    public function hierarchicalValueColumn(string $name): self
+    {
+        $this->hierarchicalValueColumn = $name;
+
+        return $this;
+    }
+
+    public function getHierarchicalValueColumn(): string
+    {
+        return $this->hierarchicalValueColumn;
     }
 
     /**

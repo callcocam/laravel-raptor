@@ -190,6 +190,9 @@ class ProcessAdvancedImport implements ShouldQueue
                         if (! empty($columnData['exclude_from_save']) && method_exists($column, 'excludeFromSave')) {
                             $column->excludeFromSave(true);
                         }
+                        if (isset($columnData['depends_on']) && $columnData['depends_on'] !== null && method_exists($column, 'dependsOn')) {
+                            $column->dependsOn($columnData['depends_on']);
+                        }
                         $columns[] = $column;
                     }
                 }
@@ -207,6 +210,24 @@ class ProcessAdvancedImport implements ShouldQueue
             }
             if (! empty($sheetData['updateByKeys']) && is_array($sheetData['updateByKeys'])) {
                 $sheet->updateBy($sheetData['updateByKeys']);
+            }
+            if (! empty($sheetData['hierarchicalColumns']) && is_array($sheetData['hierarchicalColumns'])) {
+                $sheet->hierarchicalColumns($sheetData['hierarchicalColumns']);
+            }
+            if (! empty($sheetData['parentColumnName'])) {
+                $sheet->parentColumnName($sheetData['parentColumnName']);
+            }
+            if (! empty($sheetData['hierarchicalValueColumn'])) {
+                $sheet->hierarchicalValueColumn($sheetData['hierarchicalValueColumn']);
+            }
+            if (! empty($sheetData['beforePersistClass'])) {
+                $sheet->beforePersistClass($sheetData['beforePersistClass']);
+            }
+            if (! empty($sheetData['afterPersistClass'])) {
+                $sheet->afterPersistClass($sheetData['afterPersistClass']);
+            }
+            if (! empty($sheetData['afterProcessClass'])) {
+                $sheet->afterProcessClass($sheetData['afterProcessClass']);
             }
 
             $sheets[] = $sheet;

@@ -4,6 +4,8 @@ Sistema robusto de importação de dados via Excel (.xlsx, .csv) com suporte a m
 
 **Plano técnico (sheet principal, relatedSheets, services e job):** [docs/export-import/import-advanced-plan.md](docs/export-import/import-advanced-plan.md)
 
+**Plano: colunas hierárquicas (qualquer planilha) + hooks (before/after persist, after process):** [docs/export-import/import-hierarchical-and-hooks-plan.md](docs/export-import/import-hierarchical-and-hooks-plan.md)
+
 ## Características Principais
 
 - ✅ **Múltiplas Sheets**: Importe várias planilhas em um único arquivo
@@ -65,6 +67,60 @@ Sheet::make('Tabela de produtos')
 ```
 
 Assim você pode reimportar o Excel: linhas com mesmo `tenant_id` + `ean` atualizam o produto; linhas novas são inseridas.
+
+## Hooks (beforePersist, afterPersist, afterProcess)
+
+Qualquer sheet pode definir classes executadas **antes** de persistir cada linha, **depois** de persistir cada linha, ou **uma vez ao final** da sheet (com todas as linhas processadas com sucesso, incluindo id e campos exclude).
+
+- **beforePersistClass** – classe que implementa `BeforePersistHookInterface`: recebe `$data`, `$rowNumber`, `$existing`; retorna `$data` (modificado) ou `null` para não persistir a linha.
+- **afterPersistClass** – classe que implementa `AfterPersistHookInterface`: recebe `$model`, `$data`, `$rowNumber` após cada persist.
+- **afterProcessClass** – classe que implementa `AfterProcessHookInterface`: chamada ao final da sheet com `$sheetName` e `$completedRows` (array de `['row' => int, 'data' => array]` com id e campos exclude). Útil para pós-processamento (ex.: vincular Ean a category_id em outra tabela).
+
+Interfaces em `Callcocam\LaravelRaptor\Support\Import\Contracts\`. Por padrão nenhum hook é executado. Funciona com import síncrono e com Job (queue).
+
+```php
+Sheet::make('Minha aba')
+    ->beforePersistClass(MinhaBeforePersist::class)
+    ->afterPersistClass(MinhaAfterPersist::class)
+    ->afterProcessClass(MinhaAfterProcess::class)
+    ->columns([...])
+```
+
+## Colunas hierárquicas
+
+Para planilhas em que as colunas representam níveis pai/filho (ex.: categorias, organograma, taxonomia), use o **HierarchicalImportService**: por linha, cada nível é resolvido em ordem (find-or-create por contexto + pai + valor); o id de cada nível vira o pai do próximo.
+
+- **hierarchicalColumns** – ordem das colunas (primeira = raiz, demais = filha da anterior).
+- **parentColumnName** – nome da coluna FK do pai na tabela (ex.: `category_id`, `parent_id`). Default: `category_id`.
+- **hierarchicalValueColumn** – coluna da tabela que recebe o valor do nível (ex.: `name`). Default: `name`.
+- **dependsOn** (na Column) – alternativa: em cada coluna defina `->dependsOn('nome_da_coluna_pai')`; o service deriva a ordem (raiz = sem dependsOn).
+
+Colunas que não existem na tabela (ex.: Ean de ligação) usem `->exclude()`; continuam em regras e no hook afterProcess.
+
+Exemplo (categorias com segmento > departamento > categoria):
+
+```php
+use Callcocam\LaravelRaptor\Services\HierarchicalImportService;
+
+Sheet::make('Tabela mercadológico')
+    ->table('categories')
+    ->modelClass(Category::class)
+    ->hierarchicalColumns(['segmento_varejista', 'departamento', 'subdepartamento', 'categoria', 'subcategoria'])
+    ->parentColumnName('category_id')
+    ->hierarchicalValueColumn('name')
+    ->serviceClass(HierarchicalImportService::class)
+    ->columns([
+        ImportText::make('ean')->label('EAN')->exclude(),
+        ImportText::make('segmento_varejista')->label('Segmento varejista')->required(),
+        ImportText::make('departamento')->label('Departamento')->required(),
+        ImportText::make('subdepartamento')->label('Subdepartamento'),
+        ImportText::make('categoria')->label('Categoria')->required(),
+        ImportText::make('subcategoria')->label('Subcategoria'),
+        ImportText::make('tenant_id')->hidden()->defaultValue(fn () => config('app.current_tenant_id')),
+    ])
+```
+
+Cada linha do Excel gera find-or-create em cascata: raiz pelo valor da primeira coluna, depois filho desse pelo valor da segunda, e assim por diante. O `completedRows` (e afterProcess) recebem o **id** do último nível criado/encontrado na linha.
 
 ## Uso Básico
 

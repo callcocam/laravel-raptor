@@ -93,6 +93,7 @@ abstract class Column extends AbstractColumn
             'cast' => $this->getCast(), // Classe de cast ou tipo primitivo
             'hidden' => $this->isHidden(), // Campo invisível (não vem do Excel)
             'exclude_from_save' => $this->isExcludeFromSave(), // Usado em regras/validação, não persiste na tabela
+            'depends_on' => $this->getDependsOn(), // Nome da coluna pai (para hierarquia)
             'sheet' => $this->getSheetName(), // Nome da sheet de origem
         ];
     }
@@ -199,6 +200,21 @@ abstract class Column extends AbstractColumn
     public function isExcludeFromSave(): bool
     {
         return $this->excludeFromSave;
+    }
+
+    /** Nome da coluna pai (para sheets hierárquicas: esta coluna é filha de qual coluna). */
+    protected ?string $dependsOn = null;
+
+    public function dependsOn(?string $parentColumnName): static
+    {
+        $this->dependsOn = $parentColumnName;
+
+        return $this;
+    }
+
+    public function getDependsOn(): ?string
+    {
+        return $this->dependsOn;
     }
 
     /**

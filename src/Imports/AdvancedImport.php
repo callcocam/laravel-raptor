@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Imports;
 
 use Callcocam\LaravelRaptor\Services\DefaultImportService;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\AfterProcessHookInterface;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportServiceInterface;
 use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
@@ -165,6 +166,7 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
                     $this->failedRowsData,
                     $this->chunkedServices[$name]->getFailedRowsData()
                 );
+                $this->dispatchAfterProcessHook($name, $this->chunkedServices[$name]->getCompletedRows());
             }
         }
 
@@ -214,6 +216,40 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
         $this->failedRows += $service->getFailedRows();
         $this->errors = array_merge($this->errors, $service->getErrors());
         $this->failedRowsData = array_merge($this->failedRowsData, $service->getFailedRowsData());
+
+        $this->dispatchAfterProcessHook($mainName, $service->getCompletedRows());
+    }
+
+    /**
+     * Dispara o hook afterProcess quando a Sheet define afterProcessClass.
+     *
+     * @param  array<int, array{row: int, data: array<string, mixed>}>  $completedRows
+     */
+    protected function dispatchAfterProcessHook(string $sheetName, array $completedRows): void
+    {
+        $sheet = $this->getSheetByName($sheetName);
+        if ($sheet === null) {
+            return;
+        }
+        $afterClass = $sheet->getAfterProcessClass();
+        if ($afterClass === null || ! class_exists($afterClass)) {
+            return;
+        }
+        $hook = app($afterClass);
+        if ($hook instanceof AfterProcessHookInterface) {
+            $hook->afterProcess($sheetName, $completedRows);
+        }
+    }
+
+    protected function getSheetByName(string $name): ?Sheet
+    {
+        foreach ($this->sheets as $sheet) {
+            if ($sheet->getName() === $name) {
+                return $sheet;
+            }
+        }
+
+        return null;
     }
 
     /**

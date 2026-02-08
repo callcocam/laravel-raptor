@@ -10,8 +10,12 @@ namespace Callcocam\LaravelRaptor\Services;
 
 use Callcocam\LaravelRaptor\Support\Import\Columns\Column;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\AfterPersistHookInterface;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\AfterProcessHookInterface;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\BeforePersistHookInterface;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\GeneratesImportId;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportServiceInterface;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -32,6 +36,9 @@ class DefaultImportService implements ImportServiceInterface
 
     /** @var array<int, array{row: int, data: array<string, mixed>, message: string}> */
     protected array $failedRowsData = [];
+
+    /** @var array<int, array{row: int, data: array<string, mixed>}> Linhas persistidas com sucesso (para afterProcess). */
+    protected array $completedRows = [];
 
     /** @var array<string, mixed> */
     protected array $context = [];
@@ -66,10 +73,35 @@ class DefaultImportService implements ImportServiceInterface
 
             $this->validate($data, $rowNumber, $existing);
 
-            // Uma transação por linha: se uma falhar (ex.: unique), as demais continuam processando.
-            DB::transaction(function () use ($data, $existing): void {
-                $this->persist($data, $existing);
+            $beforeClass = $this->sheet->getBeforePersistClass();
+            if ($beforeClass && class_exists($beforeClass)) {
+                $hook = app($beforeClass);
+                if ($hook instanceof BeforePersistHookInterface) {
+                    $data = $hook->beforePersist($data, $rowNumber, $existing);
+                    if ($data === null) {
+                        return;
+                    }
+                }
+            }
+
+            $model = null;
+            DB::transaction(function () use ($data, $existing, &$model): void {
+                $model = $this->persist($data, $existing);
             });
+
+            $dataForCompleted = $data;
+            if ($model instanceof Model && ! isset($dataForCompleted['id'])) {
+                $dataForCompleted['id'] = $model->getKey();
+            }
+            $this->completedRows[] = ['row' => $rowNumber, 'data' => $dataForCompleted];
+
+            $afterClass = $this->sheet->getAfterPersistClass();
+            if ($afterClass && class_exists($afterClass) && $model instanceof Model) {
+                $hook = app($afterClass);
+                if ($hook instanceof AfterPersistHookInterface) {
+                    $hook->afterPersist($model, $data, $rowNumber);
+                }
+            }
 
             $this->successfulRows++;
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -290,12 +322,12 @@ class DefaultImportService implements ImportServiceInterface
 
     /**
      * Persiste os dados na tabela da Sheet (Model ou query builder).
-     * Remove colunas marcadas com excludeFromSave (ex.: ean na sheet de categorias) antes de salvar.
-     * Se $existing for passado (updateBy), atualiza; senão insere.
+     * Remove colunas marcadas com excludeFromSave antes de salvar.
+     * Retorna o Model quando usa Eloquent; null quando usa DB::table().
      *
      * @param  array<string, mixed>  $data
      */
-    protected function persist(array $data, ?\Illuminate\Database\Eloquent\Model $existing = null): void
+    protected function persist(array $data, ?Model $existing = null): ?Model
     {
         $dataForSave = $this->filterDataForPersist($data);
 
@@ -303,7 +335,7 @@ class DefaultImportService implements ImportServiceInterface
         $tableName = $this->sheet->getTableName();
 
         if ($tableName === null) {
-            return;
+            return null;
         }
 
         $modelClass = $this->sheet->getModelClass();
@@ -318,19 +350,19 @@ class DefaultImportService implements ImportServiceInterface
                 unset($dataForSave['id'], $dataForSave['created_at']);
                 $existing->forceFill($dataForSave)->save();
 
-                return;
+                return $existing;
             }
 
-            // forceFill permite definir id mesmo quando o model tem $guarded = ['id'] (import com gerador de ID)
             $instance = $model->newInstance();
             $instance->forceFill($dataForSave);
             $instance->save();
 
-            return;
+            return $instance;
         }
 
-        $query = DB::connection($connection)->table($tableName);
-        $query->insert($this->prepareDataForInsert($dataForSave));
+        DB::connection($connection)->table($tableName)->insert($this->prepareDataForInsert($dataForSave));
+
+        return null;
     }
 
     /**
@@ -390,6 +422,16 @@ class DefaultImportService implements ImportServiceInterface
     public function getFailedRowsData(): array
     {
         return $this->failedRowsData;
+    }
+
+    /**
+     * Linhas persistidas com sucesso (row + data com id e campos exclude) para o hook afterProcess.
+     *
+     * @return array<int, array{row: int, data: array<string, mixed>}>
+     */
+    public function getCompletedRows(): array
+    {
+        return $this->completedRows;
     }
 
     public function setContext(array $context): static
