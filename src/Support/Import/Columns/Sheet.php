@@ -47,6 +47,14 @@ class Sheet extends AbstractColumn
      */
     protected int $chunkSize = 0;
 
+    /**
+     * Chaves únicas para atualizar registro existente (ex.: ['ean'] ou ['tenant_id', 'ean']).
+     * Se definido, ao persistir: busca por essas colunas; se encontrar, atualiza; senão, insere.
+     *
+     * @var array<int, string>|null
+     */
+    protected ?array $updateByKeys = null;
+
     public function __construct(string $name)
     {
         $this->name($name);
@@ -82,8 +90,25 @@ class Sheet extends AbstractColumn
             'generateId' => $this->shouldGenerateId(),
             'generateIdClass' => $this->getGenerateIdClass(),
             'chunkSize' => $this->getChunkSize(),
+            'updateByKeys' => $this->getUpdateByKeys(),
             'type' => $this->getType(),
         ];
+    }
+
+    /**
+     * Define chave(s) única(s) para atualizar existente: busca por essas colunas; se achar, atualiza; senão, insere.
+     * Ex.: ->updateBy(['ean']) ou ->updateBy(['tenant_id', 'ean']). Valores vêm de $data (inclui context).
+     */
+    public function updateBy(array $keys): self
+    {
+        $this->updateByKeys = array_values($keys);
+
+        return $this;
+    }
+
+    public function getUpdateByKeys(): ?array
+    {
+        return $this->updateByKeys;
     }
 
     /**

@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Jobs;
 
 use Callcocam\LaravelRaptor\Events\ImportCompleted;
+use Callcocam\LaravelRaptor\Exports\FailedImportRowsExport;
 use Callcocam\LaravelRaptor\Imports\AdvancedImport;
 use Callcocam\LaravelRaptor\Notifications\ImportCompletedNotification;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
@@ -21,6 +22,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -95,11 +97,24 @@ class ProcessAdvancedImport implements ShouldQueue
             unlink($fullPath);
         }
 
+        $failedReportPath = null;
+        $failedRowsData = $import->getFailedRowsData();
+        if ($failedRows > 0 && ! empty($failedRowsData)) {
+            $failedReportPath = 'imports/failed-'.Str::uuid()->toString().'.xlsx';
+            $export = new FailedImportRowsExport($failedRowsData);
+            Excel::store($export, $failedReportPath, 'local');
+        }
+
         $user = \App\Models\User::find($this->userId);
         if ($user) {
             $user->notify(new ImportCompletedNotification(
                 $this->resourceName,
-                true
+                true,
+                null,
+                null,
+                null,
+                null,
+                $failedReportPath
             ));
         }
 
@@ -109,7 +124,12 @@ class ProcessAdvancedImport implements ShouldQueue
             totalRows: $totalRows,
             successfulRows: $successfulRows,
             failedRows: $failedRows,
-            fileName: $this->originalFileName ?? basename($this->filePath)
+            fileName: $this->originalFileName ?? basename($this->filePath),
+            tenantId: null,
+            tenantName: null,
+            clientId: null,
+            clientName: null,
+            failedReportPath: $failedReportPath
         ));
     }
 
@@ -190,6 +210,9 @@ class ProcessAdvancedImport implements ShouldQueue
             }
             if (! empty($sheetData['chunkSize'])) {
                 $sheet->chunkSize((int) $sheetData['chunkSize']);
+            }
+            if (! empty($sheetData['updateByKeys']) && is_array($sheetData['updateByKeys'])) {
+                $sheet->updateBy($sheetData['updateByKeys']);
             }
 
             $sheets[] = $sheet;

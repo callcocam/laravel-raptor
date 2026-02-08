@@ -39,6 +39,47 @@ Sheet::make('Tabela de produtos')
 
 As abas **relacionadas** (relatedSheets) são lidas primeiro e mantidas em memória (geralmente pequenas). Só a sheet principal usa chunk. Recomenda-se `php.ini`: `memory_limit` e `max_execution_time` adequados para o worker da fila.
 
+## Relatório de falhas (Excel)
+
+Quando há linhas com erro, o Job gera um Excel com os **registros que falharam**: mesmas colunas do arquivo original + **Linha** (número da linha) + **Erro** (mensagem). O arquivo é salvo no disco `local` em `imports/failed-{uuid}.xlsx`.
+
+O evento `ImportCompleted` e a notificação `ImportCompletedNotification` incluem `failed_report_path` (caminho relativo) quando esse arquivo existe. A aplicação pode expor uma rota de download, por exemplo:
+
+```php
+// Exemplo: rota para download do relatório de erros (proteger com auth e validação do path)
+Route::get('/imports/failed-report', function (Request $request) {
+    $path = $request->query('path');
+    if (!$path || !str_starts_with($path, 'imports/failed-')) {
+        abort(404);
+    }
+    if (!Storage::disk('local')->exists($path)) {
+        abort(404);
+    }
+    return Storage::disk('local')->download($path, 'importacao-erros.xlsx');
+})->middleware('auth')->name('imports.failed-report');
+```
+
+No frontend, ao receber o evento `import.completed` (ou a notificação), se `failed_report_path` estiver presente, exiba um link "Baixar erros" apontando para essa rota com `?path={failed_report_path}`.
+
+## Atualizar existentes (updateBy)
+
+Para **subir o mesmo arquivo de novo e atualizar** os registros que já existem em vez de falhar por unique:
+
+- Use **`->updateBy([...])`** na Sheet informando a(s) **chave(s) única(s)** (colunas que identificam o registro).
+- O service busca por essas colunas (valores vêm de `$data`, incluindo colunas hidden como `tenant_id`). Se achar, **atualiza**; senão, **insere**.
+- As regras **unique** das colunas são ajustadas para ignorar o próprio registro ao atualizar.
+
+Exemplo (produtos por tenant + EAN):
+
+```php
+Sheet::make('Tabela de produtos')
+    ->updateBy(['tenant_id', 'ean'])  // Atualiza existente por tenant + EAN; senão insere
+    ->modelClass(Product::class)
+    ->columns([...])
+```
+
+Assim você pode reimportar o Excel: linhas com mesmo `tenant_id` + `ean` atualizam o produto; linhas novas são inseridas.
+
 ## Uso Básico
 
 ### Exemplo Simples (Uma Sheet)

@@ -30,6 +30,9 @@ class DefaultImportService implements ImportServiceInterface
     /** @var array<int, array{row: int, message: string, column?: string}> */
     protected array $errors = [];
 
+    /** @var array<int, array{row: int, data: array<string, mixed>, message: string}> */
+    protected array $failedRowsData = [];
+
     /** @var array<string, mixed> */
     protected array $context = [];
 
@@ -55,28 +58,42 @@ class DefaultImportService implements ImportServiceInterface
         try {
             $data = $this->buildDataFromRow($row);
 
-            if ($this->sheet->shouldGenerateId()) {
+            $existing = $this->findExistingByKeys($data);
+
+            if ($existing === null && $this->sheet->shouldGenerateId()) {
                 $data['id'] = $this->generateId($data);
             }
 
-            $this->validate($data, $rowNumber);
+            $this->validate($data, $rowNumber, $existing);
 
             // Uma transação por linha: se uma falhar (ex.: unique), as demais continuam processando.
-            DB::transaction(function () use ($data): void {
-                $this->persist($data);
+            DB::transaction(function () use ($data, $existing): void {
+                $this->persist($data, $existing);
             });
 
             $this->successfulRows++;
         } catch (\Illuminate\Validation\ValidationException $e) {
             $this->failedRows++;
+            $allMessages = [];
             foreach ($e->errors() as $attribute => $messages) {
                 foreach ($messages as $message) {
                     $this->errors[] = ['row' => $rowNumber, 'message' => $message, 'column' => $attribute];
+                    $allMessages[] = ($attribute ? "{$attribute}: " : '') . $message;
                 }
             }
+            $this->failedRowsData[] = [
+                'row' => $rowNumber,
+                'data' => $row,
+                'message' => implode('; ', $allMessages),
+            ];
         } catch (\Throwable $e) {
             $this->failedRows++;
             $this->errors[] = ['row' => $rowNumber, 'message' => $e->getMessage()];
+            $this->failedRowsData[] = [
+                'row' => $rowNumber,
+                'data' => $row,
+                'message' => $e->getMessage(),
+            ];
         }
     }
 
@@ -167,14 +184,49 @@ class DefaultImportService implements ImportServiceInterface
     }
 
     /**
+     * Busca registro existente pelas chaves de updateBy (quando configurado).
+     *
+     * @param  array<string, mixed>  $data
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
+    protected function findExistingByKeys(array $data): ?\Illuminate\Database\Eloquent\Model
+    {
+        $updateByKeys = $this->sheet->getUpdateByKeys();
+        if ($updateByKeys === null || $updateByKeys === []) {
+            return null;
+        }
+
+        $modelClass = $this->sheet->getModelClass();
+        if (! $modelClass || ! class_exists($modelClass)) {
+            return null;
+        }
+
+        $model = app($modelClass);
+        if ($this->connection ?? $this->sheet->getConnection()) {
+            $model->setConnection($this->connection ?? $this->sheet->getConnection());
+        }
+
+        $query = $model->newQuery();
+        foreach ($updateByKeys as $key) {
+            if (array_key_exists($key, $data)) {
+                $query->where($key, $data[$key]);
+            }
+        }
+
+        $found = $query->first();
+
+        return $found instanceof \Illuminate\Database\Eloquent\Model ? $found : null;
+    }
+
+    /**
      * Valida os dados com as regras das colunas.
-     * Para update/upsert futuro: regra unique pode precisar ignorar o próprio registro (ex.: unique:products,ean,{id}).
+     * Quando há registro existente (updateBy), regras unique são ajustadas para ignorar o id desse registro.
      *
      * @param  array<string, mixed>  $data
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    protected function validate(array $data, int $rowNumber): void
+    protected function validate(array $data, int $rowNumber, ?\Illuminate\Database\Eloquent\Model $existing = null): void
     {
         $rules = [];
         $messages = [];
@@ -191,7 +243,13 @@ class DefaultImportService implements ImportServiceInterface
                 continue;
             }
 
-            $rules[$name] = is_array($columnRules) ? $columnRules : explode('|', (string) $columnRules);
+            $columnRules = is_array($columnRules) ? $columnRules : explode('|', (string) $columnRules);
+
+            if ($existing !== null) {
+                $columnRules = $this->applyUniqueIgnoreToRules($columnRules, $name, $existing);
+            }
+
+            $rules[$name] = $columnRules;
 
             if (method_exists($column, 'getMessages') && $column->getMessages()) {
                 foreach ($column->getMessages() as $key => $message) {
@@ -208,11 +266,35 @@ class DefaultImportService implements ImportServiceInterface
     }
 
     /**
+     * Ajusta regras 'unique' para ignorar o id do registro existente (updateBy).
+     *
+     * @param  array<int, string>  $rules
+     * @return array<int, string>
+     */
+    protected function applyUniqueIgnoreToRules(array $rules, string $attribute, \Illuminate\Database\Eloquent\Model $existing): array
+    {
+        $id = $existing->getKey();
+        $table = $existing->getTable();
+
+        return array_map(function ($rule) use ($attribute, $id, $table) {
+            if (is_string($rule) && str_starts_with($rule, 'unique')) {
+                if (preg_match('#^unique:([^,]+),([^,]+)#', $rule, $m)) {
+                    return sprintf('unique:%s,%s,%s', $m[1], $m[2], $id);
+                }
+                return sprintf('unique:%s,%s,%s', $table, $attribute, $id);
+            }
+
+            return $rule;
+        }, $rules);
+    }
+
+    /**
      * Persiste os dados na tabela da Sheet (Model ou query builder).
+     * Se $existing for passado (updateBy), atualiza; senão insere.
      *
      * @param  array<string, mixed>  $data
      */
-    protected function persist(array $data): void
+    protected function persist(array $data, ?\Illuminate\Database\Eloquent\Model $existing = null): void
     {
         $connection = $this->connection ?? $this->sheet->getConnection();
         $tableName = $this->sheet->getTableName();
@@ -228,6 +310,15 @@ class DefaultImportService implements ImportServiceInterface
             if ($connection) {
                 $model->setConnection($connection);
             }
+
+            if ($existing !== null) {
+                $dataForUpdate = $data;
+                unset($dataForUpdate['id'], $dataForUpdate['created_at']);
+                $existing->forceFill($dataForUpdate)->save();
+
+                return;
+            }
+
             // forceFill permite definir id mesmo quando o model tem $guarded = ['id'] (import com gerador de ID)
             $instance = $model->newInstance();
             $instance->forceFill($data);
@@ -273,6 +364,14 @@ class DefaultImportService implements ImportServiceInterface
     public function getErrors(): array
     {
         return $this->errors;
+    }
+
+    /**
+     * @return array<int, array{row: int, data: array<string, mixed>, message: string}>
+     */
+    public function getFailedRowsData(): array
+    {
+        return $this->failedRowsData;
     }
 
     public function setContext(array $context): static

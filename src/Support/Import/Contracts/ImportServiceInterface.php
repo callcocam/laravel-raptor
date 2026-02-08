@@ -44,6 +44,13 @@ interface ImportServiceInterface
     public function getErrors(): array;
 
     /**
+     * Linhas que falharam com dados originais (para gerar Excel de erros).
+     *
+     * @return array<int, array{row: int, data: array<string, mixed>, message: string}>
+     */
+    public function getFailedRowsData(): array;
+
+    /**
      * Define contexto para colunas hidden (tenant_id, user_id, etc.).
      * Valores são aplicados às colunas com defaultValue antes de persistir.
      *

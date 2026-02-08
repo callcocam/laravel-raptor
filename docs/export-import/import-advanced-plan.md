@@ -83,6 +83,7 @@ Se o usuário enviar:
   - Lê a sheet principal; para cada relatedSheet **existente** no arquivo, lê e mescla por lookupKey.
   - Delega ao service o processamento por linha (gerar ID, defaults, validar, persistir).
 - Ao final: remove arquivo temporário, dispara notificação e evento (ex.: `ImportCompleted`).
+- **Relatório de falhas (Excel):** quando houver linhas com erro, o Job pode gerar um Excel com os registros que falharam (dados da linha + número da linha + mensagem de erro) e disponibilizar o link de download na notificação/evento `ImportCompleted`.
 
 ### Ordem sugerida de implementação
 
@@ -102,3 +103,4 @@ Se o usuário enviar:
 | Valores padrão | Colunas hidden | `tenant_id`, `user_id`, etc. via colunas hidden com `defaultValue`. |
 | Processamento | Service | Por linha: resolver dados (principal + related), defaults, gerar ID, validar, persistir. |
 | Execução assíncrona | Job | Recebe arquivo + payload; reconstrói sheets; chama leitor + service; notificação e evento. |
+| Relatório de falhas | Job | Se failedRows > 0: gera Excel com linhas que falharam (dados + coluna "Linha" + "Erro"); salva em disco e inclui link na notificação/evento. |

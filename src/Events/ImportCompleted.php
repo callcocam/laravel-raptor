@@ -20,6 +20,9 @@ class ImportCompleted implements ShouldBroadcastNow
     /**
      * Create a new event instance.
      */
+    /** Caminho relativo ao disco local do Excel com registros que falharam (para download). */
+    public ?string $failedReportPath = null;
+
     public function __construct(
         public int|string $userId,
         public string $modelName,
@@ -30,8 +33,10 @@ class ImportCompleted implements ShouldBroadcastNow
         ?string $tenantId = null,
         ?string $tenantName = null,
         ?string $clientId = null,
-        ?string $clientName = null
+        ?string $clientName = null,
+        ?string $failedReportPath = null
     ) {
+        $this->failedReportPath = $failedReportPath;
         // Captura contexto atual se não foi passado
         $this->tenantId = $tenantId ?? config('app.current_tenant_id');
         $this->tenantName = $tenantName ?? $this->resolveTenantName();
@@ -92,6 +97,7 @@ class ImportCompleted implements ShouldBroadcastNow
                 $this->failedRows
             ),
             'timestamp' => now()->toISOString(),
+            'failed_report_path' => $this->failedReportPath,
             // Contexto do tenant/client
             'tenant_id' => $this->tenantId,
             'tenant_name' => $this->tenantName,

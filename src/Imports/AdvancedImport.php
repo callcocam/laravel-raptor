@@ -40,6 +40,9 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
     /** @var array<int, array{row: int, message: string, column?: string}> */
     protected array $errors = [];
 
+    /** @var array<int, array{row: int, data: array<string, mixed>, message: string}> */
+    protected array $failedRowsData = [];
+
     /** Nomes das sheets principais processadas em chunk (para não reprocessar em process()). */
     protected array $chunkedSheetNames = [];
 
@@ -158,6 +161,10 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
         foreach ($this->chunkedSheetNames as $name) {
             if (isset($this->chunkedServices[$name])) {
                 $this->mergeSheetResults($this->chunkedServices[$name]);
+                $this->failedRowsData = array_merge(
+                    $this->failedRowsData,
+                    $this->chunkedServices[$name]->getFailedRowsData()
+                );
             }
         }
 
@@ -206,6 +213,7 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
         $this->successfulRows += $service->getSuccessfulRows();
         $this->failedRows += $service->getFailedRows();
         $this->errors = array_merge($this->errors, $service->getErrors());
+        $this->failedRowsData = array_merge($this->failedRowsData, $service->getFailedRowsData());
     }
 
     /**
@@ -302,5 +310,15 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
     public function getErrors(): array
     {
         return $this->errors;
+    }
+
+    /**
+     * Linhas que falharam com dados originais (para gerar Excel de erros).
+     *
+     * @return array<int, array{row: int, data: array<string, mixed>, message: string}>
+     */
+    public function getFailedRowsData(): array
+    {
+        return $this->failedRowsData;
     }
 }

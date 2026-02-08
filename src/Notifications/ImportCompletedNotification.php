@@ -16,17 +16,22 @@ class ImportCompletedNotification extends Notification
     protected ?string $clientId;
     protected ?string $clientName;
 
+    /** Caminho relativo ao disco local do Excel com registros que falharam. */
+    protected ?string $failedReportPath = null;
+
     public function __construct(
-        string $resourceName = 'registros', 
+        string $resourceName = 'registros',
         bool $wasQueued = false,
         ?string $tenantId = null,
         ?string $tenantName = null,
         ?string $clientId = null,
-        ?string $clientName = null
+        ?string $clientName = null,
+        ?string $failedReportPath = null
     ) {
         $this->resourceName = $resourceName;
         $this->wasQueued = $wasQueued;
-        
+        $this->failedReportPath = $failedReportPath;
+
         // Captura contexto atual se não foi passado
         $this->tenantId = $tenantId ?? config('app.current_tenant_id');
         $this->tenantName = $tenantName ?? $this->resolveTenantName();
@@ -76,6 +81,7 @@ class ImportCompletedNotification extends Notification
             'message' => $message,
             'type' => 'success',
             'icon' => '📥',
+            'failed_report_path' => $this->failedReportPath,
             // Contexto do tenant/client
             'tenant_id' => $this->tenantId,
             'tenant_name' => $this->tenantName,
