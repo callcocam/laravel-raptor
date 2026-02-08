@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Import\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\GeneratesImportId;
 use Callcocam\LaravelRaptor\Support\Import\Generators\DefaultUlidGenerator;
 
 class Sheet extends AbstractColumn
@@ -43,6 +44,19 @@ class Sheet extends AbstractColumn
         $this->name($name);
         $this->type('sheet');
         $this->setUp();
+    }
+
+    /**
+     * Inclui todas as colunas (inclusive hidden) no payload para o Job.
+     */
+    public function getArrayColumns($model = null): array
+    {
+        $result = [];
+        foreach ($this->getColumns() as $column) {
+            $result[] = method_exists($column, 'toArray') ? $column->toArray($model) : [];
+        }
+
+        return $result;
     }
 
     public function toArray(): array
@@ -242,6 +256,10 @@ class Sheet extends AbstractColumn
         return $this;
     }
 
+    /**
+     * Habilita geração de ID com callback opcional.
+     * Se não informar classe nem callback, usa DefaultUlidGenerator.
+     */
     public function generateId(?callable $callback = null): self
     {
         $this->generateId = true;
@@ -254,6 +272,13 @@ class Sheet extends AbstractColumn
         return $this;
     }
 
+    /**
+     * Define a classe que gera o ID para esta sheet.
+     * A classe deve implementar GeneratesImportId (ex: ProductUlid, CategoryUlid).
+     * Cada sheet pode ter gerador diferente (products vs categories, etc.).
+     *
+     * @param  class-string<GeneratesImportId>  $generatorClass
+     */
     public function generateIdUsing(string $generatorClass): self
     {
         $this->generateId = true;

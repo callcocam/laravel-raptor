@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Import\Columns;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportCastInterface;
 use Closure;
 
 abstract class Column extends AbstractColumn
@@ -72,14 +73,19 @@ abstract class Column extends AbstractColumn
 
     public function toArray(): array
     {
+        $default = $this->getDefaultValue();
+        // Closures não são serializáveis para o Job; defaults de contexto (tenant_id, user_id) vêm via setContext()
+        $defaultSerializable = $default instanceof \Closure ? null : $default;
+
         return [
+            'class' => static::class, // Para reconstruir a coluna no Job (serialização)
             'name' => $this->getName(), // Nome do campo no banco de dados
             'label' => $this->getLabel(), // Cabeçalho folha(sheet) da planilha exel ou índice da coluna
             'index' => $this->getIndex(), // Índice da coluna na planilha (se for numérico)
             'type' => $this->getType(), // Tipo do campo, ex: text, number, date, etc
             'length' => $this->getLength(), // Tamanho do campo
             'rules' => $this->getRules(), // Regras de validação
-            'default' => $this->getDefaultValue(), // Valor padrão do campo
+            'default' => $defaultSerializable, // Valor padrão (Closure omitido; usar context no Job)
             'format' => $this->getFormat(), // Formato de exibição (ex: 'd/m/Y')
             'cast' => $this->getCast(), // Classe de cast ou tipo primitivo
             'hidden' => $this->isHidden(), // Campo invisível (não vem do Excel)
@@ -154,6 +160,16 @@ abstract class Column extends AbstractColumn
         return $this;
     }
 
+    /**
+     * Marca a coluna como hidden (não vem do Excel; usa defaultValue).
+     */
+    public function hidden(bool|\Closure|null $hidden = true): static
+    {
+        $this->hidden = $hidden === true;
+
+        return parent::hidden($hidden);
+    }
+
     public function isHidden(): bool
     {
         return $this->hidden;
@@ -187,9 +203,9 @@ abstract class Column extends AbstractColumn
             $value = $this->getDefaultValue();
         }
 
-        // Aplica cast se definido
+        // Aplica cast se definido (classes podem implementar ImportCastInterface com format(name, label, value, row))
         if ($cast = $this->getCast()) {
-            $value = $this->applyCast($value, $cast);
+            $value = $this->applyCast($value, $cast, is_array($row) ? $row : []);
         }
 
         // Aplica formato se definido
@@ -201,19 +217,43 @@ abstract class Column extends AbstractColumn
     }
 
     /**
-     * Aplica cast ao valor
+     * Aplica cast ao valor.
+     * Se a cast for uma classe que implementa ImportCastInterface, chama format(name, label, value, row).
+     *
+     * @param  array<string, mixed>  $row  Linha completa (para casts que precisam do contexto)
      */
-    protected function applyCast(mixed $value, string $cast): mixed
+    protected function applyCast(mixed $value, string $cast, array $row = []): mixed
     {
-        return match ($cast) {
+        $primitives = match ($cast) {
             'integer', 'int' => (int) $value,
             'float', 'double' => (float) $value,
             'boolean', 'bool' => (bool) $value,
             'string' => (string) $value,
             'array' => (array) $value,
             'datetime', 'date' => $value instanceof \DateTime ? $value : new \DateTime($value),
-            default => class_exists($cast) ? app($cast)->set(null, null, $value, []) : $value,
+            default => null,
         };
+
+        if ($primitives !== null) {
+            return $primitives;
+        }
+
+        if (! class_exists($cast)) {
+            return $value;
+        }
+
+        $instance = app($cast);
+
+        if ($instance instanceof ImportCastInterface) {
+            return $instance->format(
+                $this->getName(),
+                (string) $this->getLabel(),
+                $value,
+                $row
+            );
+        }
+
+        return $value;
     }
 
     /**

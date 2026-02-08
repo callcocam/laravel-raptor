@@ -8,16 +8,26 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
-use Callcocam\LaravelRaptor\Services\AdvancedImportDispatcher;
+use Callcocam\LaravelRaptor\Imports\AdvancedImport;
+use Callcocam\LaravelRaptor\Jobs\ProcessAdvancedImport;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithSheets;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\UploadField;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
 use Callcocam\LaravelRaptor\Support\Table\Confirm;
-use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Action de importação via Excel (CSV/XLSX).
+ *
+ * Apenas recebe e armazena as sheets; cada Sheet define suas colunas,
+ * geração de ID (generateIdUsing) e relatedSheets opcionais.
+ * Processamento (principal + relatedSheets, ignorar abas ausentes) fica no Service/Job.
+ *
+ * @see docs/export-import/import-advanced-plan.md
+ */
 class ImportAction extends ExecuteAction
 {
     use WithSheets;
@@ -27,10 +37,6 @@ class ImportAction extends ExecuteAction
     protected ?string $modelClass = null;
 
     protected bool $useJob = false;
-
-    protected bool $generateIdEnabled = false; 
-
-    protected ?string $generateIdClass = null;
 
     public function __construct(?string $name)
     {
@@ -65,7 +71,7 @@ class ImportAction extends ExecuteAction
                 closeModalOnSuccess: false, // Não fecha o modal automaticamente
             ))
             ->callback(function (Request $request, ?Model $model) {
-                $user = $request->user(); 
+                $user = $request->user();
 
                 if ($errorResponse = $this->ensureSheetsConfigured()) {
                     return $errorResponse;
@@ -85,22 +91,23 @@ class ImportAction extends ExecuteAction
                     ];
                 }
 
-                // Salva o arquivo temporariamente
+                // Salva o arquivo temporariamente (disco local: app/imports/{nome})
                 $fileName = sprintf('%s.%s', Str::uuid(), $file->getClientOriginalExtension());
+                $filePath = 'imports/'.$fileName;
                 $file->storeAs('imports', $fileName, 'local');
 
                 if ($this->shouldUseJob()) {
-                    return $this->dispatchAdvancedImportJob($fileName, $file, $user);
+                    return $this->dispatchAdvancedImportJob($filePath, $file, $user);
                 }
 
                 try {
-                    return $this->processAdvancedImport($fileName, $file, $user);
+                    return $this->processAdvancedImport($filePath, $file, $user);
                 } catch (\Exception $e) {
                     report($e);
 
-                    // Remove o arquivo em caso de erro
-                    if (file_exists(storage_path('app/'.$fileName))) {
-                        unlink(storage_path('app/'.$fileName));
+                    $fullPath = storage_path('app/'.$filePath);
+                    if (file_exists($fullPath)) {
+                        unlink($fullPath);
                     }
 
                     return [
@@ -123,19 +130,17 @@ class ImportAction extends ExecuteAction
     }
 
     /**
-     * Define as sheets para importação avançada
-     * Sobrescreve o método da trait para adicionar lógica específica
+     * Define as sheets para importação avançada.
+     * Cada sheet configura sua própria geração de ID via generateIdUsing(Classe::class).
      */
     public function sheets(array $sheets): static
     {
-        // Define as sheets usando a trait WithSheets
         foreach ($sheets as $sheet) {
             if ($sheet instanceof Sheet) {
                 $this->addSheet($sheet);
             }
         }
 
-        // Armazena as sheets também nas columns para compatibilidade
         $this->columns($sheets);
 
         return $this;
@@ -143,31 +148,7 @@ class ImportAction extends ExecuteAction
 
     public function addSheet(Sheet $sheet): static
     {
-        if ($this->generateIdEnabled) {
-            if ($this->generateIdClass) {
-                $sheet->generateIdUsing($this->generateIdClass);
-            }
-
-            $sheet->generateId($this->generateIdCallback);
-        }
-
         $this->sheets[] = $sheet;
-
-        return $this;
-    }
-
-    public function generateId(?Closure $callback = null): self
-    {
-        $this->generateIdEnabled = true;
-        $this->generateIdCallback = $callback;
-
-        return $this;
-    }
-
-    public function generateIdUsing(string $generatorClass): self
-    {
-        $this->generateIdEnabled = true;
-        $this->generateIdClass = $generatorClass;
 
         return $this;
     }
@@ -185,19 +166,113 @@ class ImportAction extends ExecuteAction
     }
 
     /**
-     * Processa importação avançada com múltiplas sheets
+     * Processa importação síncrona (sem job): mesmo fluxo do Job (AdvancedImport + process).
      */
-    protected function processAdvancedImport(string $fileName, $uploadedFile, $user): array
+    protected function processAdvancedImport(string $filePath, $uploadedFile, $user): array
     {
-        return [];
+        $fullPath = storage_path('app/'.$filePath);
+
+        if (! file_exists($fullPath)) {
+            return [
+                'notification' => [
+                    'title' => 'Erro na Importação',
+                    'text' => 'Arquivo não encontrado.',
+                    'type' => 'error',
+                ],
+            ];
+        }
+
+        $context = [
+            'tenant_id' => config('app.current_tenant_id'),
+            'user_id' => $user->getKey(),
+        ];
+
+        $sheets = $this->getMainSheets();
+        $import = new AdvancedImport($sheets, null, $context);
+        Excel::import($import, $filePath, 'local');
+        $import->process();
+
+        $totalRows = $import->getTotalRows();
+        $successfulRows = $import->getSuccessfulRows();
+        $failedRows = $import->getFailedRows();
+
+        if (file_exists($fullPath)) {
+            unlink($fullPath);
+        }
+
+        $message = $totalRows > 0
+            ? sprintf(
+                'Importação concluída: %d registro(s) processado(s) (%d com sucesso, %d com erro).',
+                $totalRows,
+                $successfulRows,
+                $failedRows
+            )
+            : 'Nenhum registro encontrado nas abas configuradas.';
+
+        return [
+            'notification' => [
+                'title' => 'Importação concluída',
+                'text' => $message,
+                'type' => $failedRows > 0 ? 'warning' : 'success',
+            ],
+        ];
     }
 
     /**
-     * Despacha o job de importação avançada
+     * Despacha o job de importação (processamento assíncrono).
      */
-    protected function dispatchAdvancedImportJob(string $fileName, $uploadedFile, $user): array
+    protected function dispatchAdvancedImportJob(string $filePath, $uploadedFile, $user): array
     {
-        return [];
+        $context = [
+            'tenant_id' => config('app.current_tenant_id'),
+            'user_id' => $user->getKey(),
+        ];
+
+        ProcessAdvancedImport::dispatch(
+            $filePath,
+            $this->getSheetsPayload(),
+            $this->getResourceName(),
+            $user->getKey(),
+            null,
+            null,
+            $uploadedFile->getClientOriginalName(),
+            $context
+        );
+
+        return [
+            'notification' => [
+                'title' => 'Importação enfileirada',
+                'text' => 'O arquivo será processado em background. Você será notificado ao concluir.',
+                'type' => 'success',
+            ],
+        ];
+    }
+
+    /**
+     * Payload das sheets principais (cada uma com suas relatedSheets) para o Job.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    protected function getSheetsPayload(): array
+    {
+        $main = $this->getMainSheets();
+
+        return array_map(fn (Sheet $sheet) => $sheet->toArray(), $main);
+    }
+
+    /**
+     * Nome do recurso para notificação (ex.: "Product", "Category").
+     */
+    protected function getResourceName(): string
+    {
+        $main = array_values($this->getMainSheets());
+        $first = $main[0] ?? null;
+
+        if ($first instanceof Sheet && $first->getModelClass()) {
+            return class_basename($first->getModelClass());
+        }
+
+        return 'Importação';
     }
 
     protected function ensureSheetsConfigured(): ?array

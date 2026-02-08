@@ -2,6 +2,8 @@
 
 Sistema robusto de importação de dados via Excel (.xlsx, .csv) com suporte a múltiplas sheets, validação, formatação e transformação de dados.
 
+**Plano técnico (sheet principal, relatedSheets, services e job):** [docs/export-import/import-advanced-plan.md](docs/export-import/import-advanced-plan.md)
+
 ## Características Principais
 
 - ✅ **Múltiplas Sheets**: Importe várias planilhas em um único arquivo
@@ -258,6 +260,28 @@ ImportDate::make('birth_date')
 ImportNumber::make('price')
     ->label('Preço')
     ->cast('float')
+```
+
+### Cast com classe (ImportCastInterface)
+
+Para transformações complexas (ex.: buscar ID a partir de nome, normalizar texto), use uma classe que implemente `ImportCastInterface`. O método `format()` recebe o nome da coluna no banco, o label (cabeçalho), o valor da célula e a **linha completa** (principal + relatedSheets mescladas).
+
+```php
+use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportCastInterface;
+
+class CategorySlugToIdCast implements ImportCastInterface
+{
+    public function format(string $name, string $label, mixed $value, array $row): mixed
+    {
+        if (empty($value)) return null;
+        return Category::where('slug', $value)->value('id');
+    }
+}
+
+// Na coluna:
+ImportText::make('category_id')
+    ->label('Categoria')
+    ->cast(CategorySlugToIdCast::class)
 ```
 
 ### Valores Padrão
