@@ -14,6 +14,30 @@ Sistema robusto de importação de dados via Excel (.xlsx, .csv) com suporte a m
 - ✅ **Processamento Assíncrono**: Suporte para filas (jobs)
 - ✅ **Suporte a Model ou Table**: Use Eloquent Models ou acesso direto à tabela
 - ✅ **Service Customizável**: Crie services personalizados para lógica complexa
+- ✅ **Leitura em chunks**: Para planilhas com milhares de linhas (reduz uso de memória)
+
+## Testar na página
+
+1. Acesse o recurso que tem a action de importação (ex.: listagem de Produtos no tenant).
+2. Use o botão/ação **Importar** (modal com upload de arquivo).
+3. Selecione um Excel/CSV com a estrutura esperada: **nome da primeira aba** igual ao configurado em `Sheet::make('Nome da aba')` (ex.: `Tabela de produtos`). Colunas com cabeçalhos iguais aos `->label('...')` das colunas.
+4. Envie e confirme. Sem `->useJob()` a importação roda na mesma requisição (pode travar o navegador em arquivos grandes). Com `->useJob()` o processamento vai para a fila e o usuário é notificado ao concluir.
+
+## Arquivos grandes (milhares de registros)
+
+- **Use sempre `->useJob()`** para arquivos grandes, para não estourar timeout da requisição e para o usuário ser notificado ao fim.
+- **Leitura em chunks**: na sheet principal, use `->chunkSize(1000)` (ou outro valor, ex.: 500–2000) para processar a aba em blocos e reduzir pico de memória.
+
+Exemplo:
+
+```php
+Sheet::make('Tabela de produtos')
+    ->chunkSize(1000)  // processa a aba em blocos de 1000 linhas
+    ->modelClass(Product::class)
+    ->columns([...])
+```
+
+As abas **relacionadas** (relatedSheets) são lidas primeiro e mantidas em memória (geralmente pequenas). Só a sheet principal usa chunk. Recomenda-se `php.ini`: `memory_limit` e `max_execution_time` adequados para o worker da fila.
 
 ## Uso Básico
 

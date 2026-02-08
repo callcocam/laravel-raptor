@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Imports;
 
 use Callcocam\LaravelRaptor\Services\DefaultImportService;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
+use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportServiceInterface;
 use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
@@ -39,6 +40,9 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
     /** @var array<int, array{row: int, message: string, column?: string}> */
     protected array $errors = [];
 
+    /** Nomes das sheets principais processadas em chunk (para não reprocessar em process()). */
+    protected array $chunkedSheetNames = [];
+
     /**
      * @param  array<int, Sheet>  $sheets  Apenas sheets principais (cada uma pode ter relatedSheets)
      */
@@ -51,13 +55,89 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
     public function sheets(): array
     {
         $imports = [];
-        $sheetNames = $this->collectSheetNames();
+        $ordered = $this->collectSheetNamesOrdered();
+        $mainSheetsByName = [];
+        foreach ($this->sheets as $sheet) {
+            $mainSheetsByName[$sheet->getName()] = $sheet;
+        }
 
-        foreach ($sheetNames as $name) {
-            $imports[$name] = new SheetRowCollectorImport($name, $this->collector);
+        $chunkedMainSheetAdded = false;
+        foreach ($ordered as $name) {
+            $mainSheet = $mainSheetsByName[$name] ?? null;
+            if ($mainSheet !== null && $mainSheet->getChunkSize() > 0 && ! $chunkedMainSheetAdded) {
+                $this->chunkedSheetNames[] = $name;
+                $chunkedMainSheetAdded = true;
+                // Índice 0 = primeira aba do workbook (Maatwebsite traduz para o nome real).
+                // Assim a importação funciona mesmo se o nome da aba for diferente (ex.: "Produtos" vs "Tabela de produtos").
+                $imports[0] = new ChunkedSheetProcessorImport(
+                    $this,
+                    $mainSheet,
+                    $this->collector,
+                    $this->connection,
+                    $this->context
+                );
+            } elseif ($mainSheet !== null && $mainSheet->getChunkSize() > 0) {
+                $this->chunkedSheetNames[] = $name;
+                $imports[$name] = new ChunkedSheetProcessorImport(
+                    $this,
+                    $mainSheet,
+                    $this->collector,
+                    $this->connection,
+                    $this->context
+                );
+            } else {
+                $imports[$name] = new SheetRowCollectorImport($name, $this->collector);
+            }
         }
 
         return $imports;
+    }
+
+    /** Services das sheets processadas em chunk (para merge em process()). */
+    protected array $chunkedServices = [];
+
+    /**
+     * Chamado pelo ChunkedSheetProcessorImport após cada linha processada.
+     */
+    public function addProcessedRowCount(int $n): void
+    {
+        $this->totalRows += $n;
+    }
+
+    /**
+     * Chamado pelo ChunkedSheetProcessorImport (registra o service para merge em process()).
+     */
+    public function registerChunkedService(string $sheetName, ImportServiceInterface $service): void
+    {
+        $this->chunkedServices[$sheetName] = $service;
+    }
+
+    /**
+     * Acumula sucesso/falha/erros de um service (usado em process() e para sheets em chunk).
+     */
+    public function mergeSheetResults(ImportServiceInterface $service): void
+    {
+        $this->successfulRows += $service->getSuccessfulRows();
+        $this->failedRows += $service->getFailedRows();
+        $this->errors = array_merge($this->errors, $service->getErrors());
+    }
+
+    /**
+     * Exposto para ChunkedSheetProcessorImport (mesma lógica de buildRelatedIndexes).
+     *
+     * @return array<string, array{key: string, byValue: array<string, array<string, mixed>>}>
+     */
+    public function buildRelatedIndexesForSheet(Sheet $sheet): array
+    {
+        return $this->buildRelatedIndexes($sheet);
+    }
+
+    /**
+     * Exposto para ChunkedSheetProcessorImport.
+     */
+    public function getLookupValueForRow(array $row, string $lookupKey): mixed
+    {
+        return $this->getLookupValue($row, $lookupKey);
     }
 
     /**
@@ -71,10 +151,20 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
 
     /**
      * Executa após Excel::import(): mescla principal + relatedSheets e chama o service por linha.
+     * Sheets processadas em chunk já atualizaram totais durante a leitura; aqui só fazemos merge dos resultados.
      */
     public function process(): void
     {
+        foreach ($this->chunkedSheetNames as $name) {
+            if (isset($this->chunkedServices[$name])) {
+                $this->mergeSheetResults($this->chunkedServices[$name]);
+            }
+        }
+
         foreach ($this->sheets as $sheet) {
+            if (in_array($sheet->getName(), $this->chunkedSheetNames, true)) {
+                continue;
+            }
             $this->processSheet($sheet);
         }
     }
@@ -172,22 +262,23 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
     }
 
     /**
-     * Nomes únicos de abas: principal + related de cada sheet.
+     * Nomes únicos de abas: related primeiro (para chunk da principal ter dados), depois principais.
      *
      * @return array<int, string>
      */
-    protected function collectSheetNames(): array
+    protected function collectSheetNamesOrdered(): array
     {
-        $names = [];
+        $related = [];
+        $main = [];
 
         foreach ($this->sheets as $sheet) {
-            $names[$sheet->getName()] = true;
-            foreach ($sheet->getRelatedSheets() as $related) {
-                $names[$related->getName()] = true;
+            foreach ($sheet->getRelatedSheets() as $relatedSheet) {
+                $related[$relatedSheet->getName()] = true;
             }
+            $main[$sheet->getName()] = true;
         }
 
-        return array_keys($names);
+        return array_merge(array_keys($related), array_keys($main));
     }
 
     public function getTotalRows(): int

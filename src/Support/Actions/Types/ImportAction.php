@@ -16,6 +16,7 @@ use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
 use Callcocam\LaravelRaptor\Support\Table\Confirm;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -105,9 +106,9 @@ class ImportAction extends ExecuteAction
                 } catch (\Exception $e) {
                     report($e);
 
-                    $fullPath = storage_path('app/'.$filePath);
-                    if (file_exists($fullPath)) {
-                        unlink($fullPath);
+                    $disk = Storage::disk('local');
+                    if ($disk->exists($filePath)) {
+                        unlink($disk->path($filePath));
                     }
 
                     return [
@@ -170,9 +171,8 @@ class ImportAction extends ExecuteAction
      */
     protected function processAdvancedImport(string $filePath, $uploadedFile, $user): array
     {
-        $fullPath = storage_path('app/'.$filePath);
-
-        if (! file_exists($fullPath)) {
+        $disk = Storage::disk('local');
+        if (! $disk->exists($filePath)) {
             return [
                 'notification' => [
                     'title' => 'Erro na Importação',
@@ -181,6 +181,8 @@ class ImportAction extends ExecuteAction
                 ],
             ];
         }
+
+        $fullPath = $disk->path($filePath);
 
         $context = [
             'tenant_id' => config('app.current_tenant_id'),

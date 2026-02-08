@@ -39,6 +39,14 @@ class Sheet extends AbstractColumn
 
     protected ?string $generateIdClass = null;
 
+    /**
+     * Tamanho do chunk para leitura da sheet principal (arquivos grandes).
+     * 0 = desativado (carrega a aba inteira na memória).
+     *
+     * @var int
+     */
+    protected int $chunkSize = 0;
+
     public function __construct(string $name)
     {
         $this->name($name);
@@ -73,8 +81,25 @@ class Sheet extends AbstractColumn
             'lookupKey' => $this->getLookupKey(),
             'generateId' => $this->shouldGenerateId(),
             'generateIdClass' => $this->getGenerateIdClass(),
+            'chunkSize' => $this->getChunkSize(),
             'type' => $this->getType(),
         ];
+    }
+
+    /**
+     * Define leitura em chunks para a sheet principal (reduz uso de memória em arquivos grandes).
+     * Ex.: ->chunkSize(1000). Use junto de ->useJob() na ImportAction.
+     */
+    public function chunkSize(int $size): self
+    {
+        $this->chunkSize = $size;
+
+        return $this;
+    }
+
+    public function getChunkSize(): int
+    {
+        return $this->chunkSize;
     }
 
     public function serviceClass(?string $class): self

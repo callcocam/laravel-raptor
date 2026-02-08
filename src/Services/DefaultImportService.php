@@ -61,7 +61,10 @@ class DefaultImportService implements ImportServiceInterface
 
             $this->validate($data, $rowNumber);
 
-            $this->persist($data);
+            // Uma transação por linha: se uma falhar (ex.: unique), as demais continuam processando.
+            DB::transaction(function () use ($data): void {
+                $this->persist($data);
+            });
 
             $this->successfulRows++;
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -99,6 +102,7 @@ class DefaultImportService implements ImportServiceInterface
                 $value = $this->context[$name] ?? $column->getDefaultValue();
             } else {
                 $value = $row[$label] ?? $row[$name] ?? null;
+                $value = $this->normalizeExcelErrorValue($value);
             }
 
             $data[$name] = $column->processValue($value, $row);
@@ -121,6 +125,23 @@ class DefaultImportService implements ImportServiceInterface
         }
 
         return true;
+    }
+
+    /**
+     * Converte valores de erro do Excel (#N/A, #DIV/0!, etc.) em null para não persistir literalmente.
+     */
+    protected function normalizeExcelErrorValue(mixed $value): mixed
+    {
+        if (! is_string($value)) {
+            return $value;
+        }
+
+        $err = strtoupper(trim($value));
+        if (in_array($err, ['#N/A', '#DIV/0!', '#VALUE!', '#REF!', '#NAME?', '#NUM!', '#NULL!', '#GETTING_DATA'], true)) {
+            return null;
+        }
+
+        return $value;
     }
 
     /**

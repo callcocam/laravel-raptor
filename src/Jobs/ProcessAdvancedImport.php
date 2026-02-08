@@ -19,6 +19,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 /**
@@ -64,10 +66,13 @@ class ProcessAdvancedImport implements ShouldQueue
 
         $sheets = $this->reconstructSheets($this->sheetsData);
 
-        $fullPath = storage_path('app/'.$this->filePath);
-        if (! file_exists($fullPath)) {
+        // Usar o mesmo disco em que a Action salvou (ex.: local = storage/app/private)
+        $disk = Storage::disk('local');
+        if (! $disk->exists($this->filePath)) {
             return;
         }
+
+        $fullPath = $disk->path($this->filePath);
 
         $import = new AdvancedImport($sheets, $this->connectionName, $this->context ?? []);
         Excel::import($import, $this->filePath, 'local');
@@ -76,6 +81,15 @@ class ProcessAdvancedImport implements ShouldQueue
         $totalRows = $import->getTotalRows();
         $successfulRows = $import->getSuccessfulRows();
         $failedRows = $import->getFailedRows();
+        $errors = $import->getErrors();
+
+        Log::info('ProcessAdvancedImport: processamento concluído', [
+            'filePath' => $this->filePath,
+            'totalRows' => $totalRows,
+            'successfulRows' => $successfulRows,
+            'failedRows' => $failedRows,
+            'errors_sample' => array_slice($errors, 0, 5),
+        ]);
 
         if (file_exists($fullPath)) {
             unlink($fullPath);
@@ -173,6 +187,9 @@ class ProcessAdvancedImport implements ShouldQueue
                     $lookupKey = $relatedSheetData['lookupKey'] ?? 'id';
                     $sheet->addSheet($relatedSheetData['name'], $lookupKey);
                 }
+            }
+            if (! empty($sheetData['chunkSize'])) {
+                $sheet->chunkSize((int) $sheetData['chunkSize']);
             }
 
             $sheets[] = $sheet;
