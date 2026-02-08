@@ -112,6 +112,23 @@ class Sheet extends AbstractColumn
     }
 
     /**
+     * Nomes das colunas que entram em regras/validação mas não devem ser persistidas (ex.: ean na sheet de categorias).
+     *
+     * @return array<int, string>
+     */
+    public function getColumnNamesExcludedFromSave(): array
+    {
+        $names = [];
+        foreach ($this->getColumns() as $column) {
+            if (method_exists($column, 'isExcludeFromSave') && $column->isExcludeFromSave()) {
+                $names[] = $column->getName();
+            }
+        }
+
+        return $names;
+    }
+
+    /**
      * Define leitura em chunks para a sheet principal (reduz uso de memória em arquivos grandes).
      * Ex.: ->chunkSize(1000). Use junto de ->useJob() na ImportAction.
      */

@@ -18,6 +18,9 @@ abstract class Column extends AbstractColumn
 
     protected bool $hidden = false;
 
+    /** Se true, o valor entra em $data para regras/validação mas é removido antes de persistir (coluna não existe na tabela). */
+    protected bool $excludeFromSave = false;
+
     protected ?string $sheetName = null;
 
     protected Closure|string|null $format = null;
@@ -89,6 +92,7 @@ abstract class Column extends AbstractColumn
             'format' => $this->getFormat(), // Formato de exibição (ex: 'd/m/Y')
             'cast' => $this->getCast(), // Classe de cast ou tipo primitivo
             'hidden' => $this->isHidden(), // Campo invisível (não vem do Excel)
+            'exclude_from_save' => $this->isExcludeFromSave(), // Usado em regras/validação, não persiste na tabela
             'sheet' => $this->getSheetName(), // Nome da sheet de origem
         ];
     }
@@ -173,6 +177,28 @@ abstract class Column extends AbstractColumn
     public function isHidden(): bool
     {
         return $this->hidden;
+    }
+
+    /**
+     * Marca a coluna para não ser incluída no persist: entra em $data (regras, validação, processValue),
+     * mas é removida antes de salvar no banco. Use para colunas do Excel que não existem na tabela (ex.: ean na sheet de categorias).
+     */
+    public function excludeFromSave(bool $value = true): static
+    {
+        $this->excludeFromSave = $value;
+
+        return $this;
+    }
+
+    /** Atalho para excludeFromSave(true). */
+    public function exclude(bool $value = true): static
+    {
+        return $this->excludeFromSave($value);
+    }
+
+    public function isExcludeFromSave(): bool
+    {
+        return $this->excludeFromSave;
     }
 
     /**

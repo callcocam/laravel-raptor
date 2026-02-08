@@ -187,6 +187,9 @@ class ProcessAdvancedImport implements ShouldQueue
                         if (isset($columnData['index'])) {
                             $column->index($columnData['index']);
                         }
+                        if (! empty($columnData['exclude_from_save']) && method_exists($column, 'excludeFromSave')) {
+                            $column->excludeFromSave(true);
+                        }
                         $columns[] = $column;
                     }
                 }

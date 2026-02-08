@@ -290,12 +290,15 @@ class DefaultImportService implements ImportServiceInterface
 
     /**
      * Persiste os dados na tabela da Sheet (Model ou query builder).
+     * Remove colunas marcadas com excludeFromSave (ex.: ean na sheet de categorias) antes de salvar.
      * Se $existing for passado (updateBy), atualiza; senão insere.
      *
      * @param  array<string, mixed>  $data
      */
     protected function persist(array $data, ?\Illuminate\Database\Eloquent\Model $existing = null): void
     {
+        $dataForSave = $this->filterDataForPersist($data);
+
         $connection = $this->connection ?? $this->sheet->getConnection();
         $tableName = $this->sheet->getTableName();
 
@@ -312,23 +315,38 @@ class DefaultImportService implements ImportServiceInterface
             }
 
             if ($existing !== null) {
-                $dataForUpdate = $data;
-                unset($dataForUpdate['id'], $dataForUpdate['created_at']);
-                $existing->forceFill($dataForUpdate)->save();
+                unset($dataForSave['id'], $dataForSave['created_at']);
+                $existing->forceFill($dataForSave)->save();
 
                 return;
             }
 
             // forceFill permite definir id mesmo quando o model tem $guarded = ['id'] (import com gerador de ID)
             $instance = $model->newInstance();
-            $instance->forceFill($data);
+            $instance->forceFill($dataForSave);
             $instance->save();
 
             return;
         }
 
         $query = DB::connection($connection)->table($tableName);
-        $query->insert($this->prepareDataForInsert($data));
+        $query->insert($this->prepareDataForInsert($dataForSave));
+    }
+
+    /**
+     * Remove do array as colunas marcadas como excludeFromSave (usadas só em regras/validação).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function filterDataForPersist(array $data): array
+    {
+        $excludedKeys = $this->sheet->getColumnNamesExcludedFromSave();
+        if ($excludedKeys === []) {
+            return $data;
+        }
+
+        return array_diff_key($data, array_flip($excludedKeys));
     }
 
     /**
