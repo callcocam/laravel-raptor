@@ -28,9 +28,7 @@ class ImportAction extends ExecuteAction
 
     protected bool $useJob = false;
 
-    protected bool $generateIdEnabled = false;
-
-    protected $generateIdCallback = null;
+    protected bool $generateIdEnabled = false; 
 
     protected ?string $generateIdClass = null;
 
@@ -67,11 +65,7 @@ class ImportAction extends ExecuteAction
                 closeModalOnSuccess: false, // Não fecha o modal automaticamente
             ))
             ->callback(function (Request $request, ?Model $model) {
-                $user = $request->user();
-
-                if ($user && empty(config('app.current_tenant_id')) && isset($user->tenant_id)) {
-                    config(['app.current_tenant_id' => $user->tenant_id]);
-                }
+                $user = $request->user(); 
 
                 if ($errorResponse = $this->ensureSheetsConfigured()) {
                     return $errorResponse;
@@ -92,8 +86,8 @@ class ImportAction extends ExecuteAction
                 }
 
                 // Salva o arquivo temporariamente
-                $fileName = 'imports/'.Str::uuid().'.'.$file->getClientOriginalExtension();
-                $file->storeAs('', $fileName, 'local');
+                $fileName = sprintf('%s.%s', Str::uuid(), $file->getClientOriginalExtension());
+                $file->storeAs('imports', $fileName, 'local');
 
                 if ($this->shouldUseJob()) {
                     return $this->dispatchAdvancedImportJob($fileName, $file, $user);
@@ -195,13 +189,7 @@ class ImportAction extends ExecuteAction
      */
     protected function processAdvancedImport(string $fileName, $uploadedFile, $user): array
     {
-        return app(AdvancedImportDispatcher::class)->processAdvancedImport(
-            $fileName,
-            $uploadedFile->getClientOriginalName(),
-            $user,
-            $this->modelClass,
-            $this->sheets
-        );
+        return [];
     }
 
     /**
@@ -209,17 +197,7 @@ class ImportAction extends ExecuteAction
      */
     protected function dispatchAdvancedImportJob(string $fileName, $uploadedFile, $user): array
     {
-        // Obtém o nome do recurso
-        $resourceName = app(AdvancedImportDispatcher::class)->getResourceNameFromSheets($this->modelClass, $this->sheets);
-
-        return app(AdvancedImportDispatcher::class)->dispatch(
-            $fileName,
-            $resourceName,
-            $user->id,
-            $this->modelClass,
-            $this->sheets,
-            $uploadedFile->getClientOriginalName()
-        );
+        return [];
     }
 
     protected function ensureSheetsConfigured(): ?array
