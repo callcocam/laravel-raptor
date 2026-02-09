@@ -120,8 +120,9 @@ const initializeFromQuery = () => {
     // Replace the entire cascadingValues object
     cascadingValues.value = newValues;
 
-    // Emit the updated values to ensure all child components are synced
-    emit("update:modelValue", { ...newValues });
+    // Emit under column name so form[column.name] is set (FormRenderer spreads object keys)
+    const sectionKey = props.column.name;
+    emit("update:modelValue", { [sectionKey]: { ...newValues } });
   } else {
     // console.log('🔄 Values unchanged, skipping emit');
   }
@@ -150,20 +151,21 @@ const getCascadingValues = () => {
 };
 
 /**
- * Update a specific cascading field value
+ * Update a specific cascading field value.
+ * Emite sob a chave da coluna para o FormRenderer gravar form[column.name] = { ... }
+ * e o backend (CascadingField.php) receber via data_get($data, $this->getName(), []).
  */
 const updateCascadingValue = (fieldName: string, value: any) => {
-
   if (value === null || value === undefined || value === "") {
     delete cascadingValues.value[fieldName];
   } else {
     cascadingValues.value[fieldName] = value;
   }
 
-
-  // Emite o objeto completo com todos os valores selecionados
-  // O backend (CascadingField.php) vai processar e pegar o último valor válido 
-  emit("update:modelValue", { ...cascadingValues.value });
+  const sectionKey = props.column.name;
+  emit("update:modelValue", {
+    [sectionKey]: { ...cascadingValues.value },
+  });
 };
 
 /**
