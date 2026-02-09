@@ -137,6 +137,8 @@ class TranslateController extends LandlordController
                 ->label('Gerar JSON')
                 ->icon('FileJson')
                 ->color('success')
+                ->url(route('landlord.translates.execute'))
+                ->actionType('header')
                 ->callback(function () {
                     $translationService = app(\Callcocam\LaravelRaptor\Services\TranslationService::class);
 
@@ -155,6 +157,8 @@ class TranslateController extends LandlordController
                 ->label('Sincronizar JSON')
                 ->icon('RefreshCw')
                 ->color('info')
+                ->url(route('landlord.translates.execute'))
+                ->actionType('header')
                 ->callback(function () {
                     $translationService = app(\Callcocam\LaravelRaptor\Services\TranslationService::class);
 
@@ -220,10 +224,10 @@ class TranslateController extends LandlordController
                 ->relationship('overrides')
                 ->label('Chaves e Traduções')
                 ->helperText('Adicione uma ou mais chaves e seus respectivos valores traduzidos.')
-                ->default([])
                 ->columnSpanFull()
                 ->fields([
 
+                    TextField::make('id')->hidden(),
                     TextField::make('key')
                         ->label('Chave')
                         ->helperText('Ex: product, add_to_cart, title')

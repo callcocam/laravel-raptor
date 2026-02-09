@@ -171,8 +171,7 @@ abstract class AbstractController extends ResourceController
 
     public function edit(Request $request, string $record)
     {
-        $model = $this->model()::findOrFail($record);
-        
+        $model = $this->model()::findOrFail($record); 
         // Verifica autorização via Policy (update)
         $this->authorize('update', $model);
         

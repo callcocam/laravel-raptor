@@ -17,30 +17,31 @@ class ExecuteController extends Controller
     {
         // Valida os dados básicos
         $validated = $request->validate([
-            'action' => 'required|string',
-            'model' => 'required|string',
+            'actionName' => 'required|string',
+            'actionType' => 'required|string',
+            'modelClass' => 'nullable|string',
             'record_id' => 'nullable',
-        ]);
-
-        $modelClass = $validated['model'];
-        $actionName = $validated['action'];
-        $recordId = $validated['record_id'];
+        ]); 
+        $actionType = data_get($validated, 'actionType');
+        $modelClass =data_get($validated, 'modelClass');
+        $actionName = data_get($validated, 'actionName');
+        $recordId = data_get($validated, 'record_id'); 
 
         if (!class_exists($modelClass)) {
-            return response()->json(['error' => 'Model not found'], 404);
+            return redirect()->back()->with('error', 'Model not found');
         }
 
         $record = $recordId ? $modelClass::find($recordId) : null;
         $controller = $record ? $record->getController() : app($modelClass)->getController();
 
         if (!$controller) {
-            return response()->json(['error' => 'Controller not found for the model'], 404);
+            return redirect()->back()->with('error', 'Controller not found for the model');
         }
 
         $action = $controller->getAction($actionName);
 
         if (!$action) {
-            return response()->json(['error' => 'Action not found'], 404);
+            return redirect()->back()->with('error', 'Action not found');
         }
 
         return $action->execute($request, $record);

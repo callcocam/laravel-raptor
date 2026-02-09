@@ -11,12 +11,12 @@ namespace Callcocam\LaravelRaptor\Services;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Column;
 use Callcocam\LaravelRaptor\Support\Import\Columns\Sheet;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\AfterPersistHookInterface;
-use Callcocam\LaravelRaptor\Support\Import\Contracts\AfterProcessHookInterface;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\BeforePersistHookInterface;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\GeneratesImportId;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportServiceInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -110,7 +110,7 @@ class DefaultImportService implements ImportServiceInterface
             foreach ($e->errors() as $attribute => $messages) {
                 foreach ($messages as $message) {
                     $this->errors[] = ['row' => $rowNumber, 'message' => $message, 'column' => $attribute];
-                    $allMessages[] = ($attribute ? "{$attribute}: " : '') . $message;
+                    $allMessages[] = ($attribute ? "{$attribute}: " : '').$message;
                 }
             }
             $this->failedRowsData[] = [
@@ -219,7 +219,6 @@ class DefaultImportService implements ImportServiceInterface
      * Busca registro existente pelas chaves de updateBy (quando configurado).
      *
      * @param  array<string, mixed>  $data
-     * @return \Illuminate\Database\Eloquent\Model|null
      */
     protected function findExistingByKeys(array $data): ?\Illuminate\Database\Eloquent\Model
     {
@@ -313,6 +312,7 @@ class DefaultImportService implements ImportServiceInterface
                 if (preg_match('#^unique:([^,]+),([^,]+)#', $rule, $m)) {
                     return sprintf('unique:%s,%s,%s', $m[1], $m[2], $id);
                 }
+
                 return sprintf('unique:%s,%s,%s', $table, $attribute, $id);
             }
 
@@ -333,6 +333,12 @@ class DefaultImportService implements ImportServiceInterface
 
         $connection = $this->connection ?? $this->sheet->getConnection();
         $tableName = $this->sheet->getTableName();
+
+        Log::info('Import: connection e tabela em uso', [
+            'connection' => $connection ?? config('database.default'),
+            'table' => $tableName,
+            'sheet' => $this->sheet->getName(),
+        ]);
 
         if ($tableName === null) {
             return null;

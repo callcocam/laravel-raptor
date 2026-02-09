@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Import\Contracts\AfterPersistHookInterface;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\BeforePersistHookInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service de importação para sheets hierárquicas (ex.: categorias com segmento > departamento > categoria).
@@ -51,10 +52,24 @@ class HierarchicalImportService extends DefaultImportService
 
             $order = $this->resolveHierarchicalOrder();
             if ($order === []) {
+                Log::info('HierarchicalImport: ordem vazia, nenhum nível a processar', [
+                    'sheet' => $this->sheet->getName(),
+                    'row' => $rowNumber,
+                ]);
                 $this->successfulRows++;
 
                 return;
             }
+
+            Log::info('HierarchicalImport: processando linha', [
+                'sheet' => $this->sheet->getName(),
+                'row' => $rowNumber,
+                'connection' => $this->connection ?? $this->sheet->getConnection(),
+                'table' => $this->sheet->getTableName(),
+                'order' => $order,
+                'valueColumn' => $this->sheet->getHierarchicalValueColumn(),
+                'parentColumnName' => $this->sheet->getParentColumnName(),
+            ]);
 
             $lastModel = null;
             DB::transaction(function () use ($data, $order, &$lastModel): void {
@@ -97,7 +112,7 @@ class HierarchicalImportService extends DefaultImportService
             foreach ($e->errors() as $attribute => $messages) {
                 foreach ($messages as $message) {
                     $this->errors[] = ['row' => $rowNumber, 'message' => $message, 'column' => $attribute];
-                    $allMessages[] = ($attribute ? "{$attribute}: " : '') . $message;
+                    $allMessages[] = ($attribute ? "{$attribute}: " : '').$message;
                 }
             }
             $this->failedRowsData[] = [
@@ -186,7 +201,22 @@ class HierarchicalImportService extends DefaultImportService
             $valueColumn => $value,
         ]);
 
+        $connectionName = $this->connection ?? $this->sheet->getConnection();
+        $tableName = $this->sheet->getTableName();
+
         $instance = $model->newQuery()->firstOrCreate($attributes, $attributes);
+
+        Log::info('HierarchicalImport: nível find-or-create', [
+            'connection' => $connectionName ?? config('database.default'),
+            'table' => $tableName,
+            'sheet' => $this->sheet->getName(),
+            'valueColumn' => $valueColumn,
+            'value' => $value,
+            'parentColumnName' => $parentColumnName,
+            'parentId' => $parentId,
+            'id' => $instance instanceof Model ? $instance->getKey() : null,
+            'created' => $instance instanceof Model && $instance->wasRecentlyCreated,
+        ]);
 
         return $instance instanceof Model ? $instance : null;
     }

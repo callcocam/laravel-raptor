@@ -49,7 +49,7 @@ Route::put('/tenant/update-theme', [\Callcocam\LaravelRaptor\Http\Controllers\Te
     ->name('tenant.update-theme');
 
 // Rota de execução genérica
-Route::post('/execute', [config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class), 'execute'])
+Route::post('/execute', config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class) )
     ->name('execute');
 
 // Rotas de notificações

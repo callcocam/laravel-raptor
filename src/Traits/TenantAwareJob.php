@@ -160,15 +160,26 @@ trait TenantAwareJob
     }
 
     /**
-     * Configura o banco de dados do tenant para o job
+     * Configura o banco de dados do tenant para o job.
+     * Passa domainData (domainable_type/domainable_id) quando existir, para resolver
+     * o database do Client/Store quando a estratégia for banco separado.
      */
     protected function configureTenantDatabaseForJob($tenant): void
     {
-        // Se a estratégia for banco separado, configura a conexão
-        if (config('raptor.database.strategy') === 'separate') {
-            $connectionService = app(\Callcocam\LaravelRaptor\Services\TenantConnectionService::class);
-            $connectionService->configureTenantDatabase($tenant);
+        if (config('raptor.database.strategy') !== 'separate') {
+            return;
         }
+
+        $domainData = null;
+        if ($this->domainableType && $this->domainableId) {
+            $domainData = (object) [
+                'domainable_type' => $this->domainableType,
+                'domainable_id' => $this->domainableId,
+            ];
+        }
+
+        $connectionService = app(\Callcocam\LaravelRaptor\Services\TenantConnectionService::class);
+        $connectionService->configureTenantDatabase($tenant, $domainData);
     }
 
     /**

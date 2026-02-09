@@ -110,7 +110,7 @@ trait HasBreadcrumbs
         ];
 
         if (isset($actionLabels[$label])) {
-            return $actionLabels[$label];
+            return __($actionLabels[$label]);
         }
 
         // Transforma snake_case ou kebab-case em Title Case
