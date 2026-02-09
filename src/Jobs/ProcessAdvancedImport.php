@@ -20,8 +20,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -50,8 +48,6 @@ class ProcessAdvancedImport implements ShouldQueue
         protected array $sheetsData,
         protected string $resourceName,
         protected int|string $userId,
-        protected ?string $connectionName = null,
-        protected ?array $connectionConfig = null,
         protected ?string $originalFileName = null,
         /** Contexto para colunas hidden (tenant_id, user_id) — resolvido no dispatch */
         protected ?array $context = null
@@ -63,11 +59,6 @@ class ProcessAdvancedImport implements ShouldQueue
     {
         $this->restoreTenantContext();
 
-        if ($this->connectionName && $this->connectionConfig) {
-            config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
-            DB::purge($this->connectionName);
-        }
-
         $sheets = $this->reconstructSheets($this->sheetsData);
 
         // Usar o mesmo disco em que a Action salvou (ex.: local = storage/app/private)
@@ -78,14 +69,14 @@ class ProcessAdvancedImport implements ShouldQueue
 
         $fullPath = $disk->path($this->filePath);
 
-        $import = new AdvancedImport($sheets, $this->connectionName, $this->context ?? []);
+        $import = new AdvancedImport($sheets, null, $this->context ?? []);
         Excel::import($import, $this->filePath, 'local');
         $import->process();
 
         $totalRows = $import->getTotalRows();
         $successfulRows = $import->getSuccessfulRows();
         $failedRows = $import->getFailedRows();
-        $errors = $import->getErrors(); 
+        $errors = $import->getErrors();
 
         if (file_exists($fullPath)) {
             unlink($fullPath);

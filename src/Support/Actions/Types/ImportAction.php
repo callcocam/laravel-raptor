@@ -235,8 +235,6 @@ class ImportAction extends ExecuteAction
             $this->getSheetsPayload(),
             $this->getResourceName(),
             $user->getKey(),
-            null,
-            null,
             $uploadedFile->getClientOriginalName(),
             $context
         );

@@ -68,6 +68,19 @@ Sheet::make('Tabela de produtos')
 
 Assim você pode reimportar o Excel: linhas com mesmo `tenant_id` + `ean` atualizam o produto; linhas novas são inseridas.
 
+## Multi-database (connection por cliente)
+
+Em sistemas com **um banco por cliente** (multi-database), a connection é criada/atualizada em tempo de execução (ex.: no Job pelo `TenantAwareJob` → `configureTenantDatabaseForJob`). Na Sheet use **o nome da connection**, não o nome do database:
+
+```php
+Sheet::make('Tabela de produtos')
+    ->connection('tenant')  // Nome da connection; o database é definido em runtime
+    ->modelClass(Product::class)
+    ->columns([...])
+```
+
+O Laravel resolve a connection no momento do uso (quando o service roda); nessa altura a connection já foi configurada com o database correto do tenant/cliente. Não é necessário passar o nome do database na sheet.
+
 ## Hooks (beforePersist, afterPersist, afterProcess)
 
 Qualquer sheet pode definir classes executadas **antes** de persistir cada linha, **depois** de persistir cada linha, ou **uma vez ao final** da sheet (com todas as linhas processadas com sucesso, incluindo id e campos exclude).

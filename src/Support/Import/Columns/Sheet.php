@@ -42,8 +42,6 @@ class Sheet extends AbstractColumn
     /**
      * Tamanho do chunk para leitura da sheet principal (arquivos grandes).
      * 0 = desativado (carrega a aba inteira na memória).
-     *
-     * @var int
      */
     protected int $chunkSize = 0;
 
@@ -322,7 +320,12 @@ class Sheet extends AbstractColumn
     }
 
     /**
-     * Define a conexão do banco de dados
+     * Define o nome da conexão do banco de dados.
+     *
+     * Use o nome da connection (ex.: 'tenant'), não o nome do database.
+     * Em multi-database (um DB por cliente), a connection é configurada em tempo de execução
+     * (ex.: no Job via TenantAwareJob → configureTenantDatabaseForJob); ao usar a connection
+     * aqui, o Laravel resolve no momento do uso e já encontra a connection com o database correto.
      */
     public function connection(?string $connection): self
     {
