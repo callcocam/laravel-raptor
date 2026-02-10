@@ -238,8 +238,9 @@ class HierarchicalImportService extends DefaultImportService
         // Monta chave de cache (ID gerado ou hash dos atributos de busca)
         $cacheKey = $generatedId ?? $this->buildCacheKey($parentId, $value);
 
-        // Verifica cache antes de fazer query
-        if (isset($this->levelsCache[$cacheKey])) {
+        // Verifica cache APENAS quando usa firstOrCreate (sem ID gerado)
+        // Quando usa updateOrCreate (com ID), sempre faz a query para atualizar campos do hook
+        if ($generatedId === null && isset($this->levelsCache[$cacheKey])) {
             return $this->levelsCache[$cacheKey];
         }
 
