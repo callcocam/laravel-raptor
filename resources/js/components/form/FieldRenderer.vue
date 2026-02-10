@@ -9,24 +9,20 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue' 
+import { computed } from 'vue'
 import { ComponentRegistry } from '~/raptor'
+import type { FormColumn, FieldEmitValue } from '~/types/form'
 
 interface Props {
-  column: {
-    name: string
-    component?: string
-    index?: number
-    [key: string]: any
-  }
+  column: FormColumn
   modelValue?: any
   error?: string | string[]
   index?: number
 }
 
-const props = defineProps<Props>() 
+const props = defineProps<Props>()
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: any): void
+  (e: 'update:modelValue', value: FieldEmitValue): void
 }>() 
 /**
  * Obtém o componente a ser renderizado do ComponentRegistry

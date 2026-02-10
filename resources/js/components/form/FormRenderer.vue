@@ -32,25 +32,11 @@
 
 <script setup lang="ts">
 import { computed, provide } from "vue";
-import { Form } from "@inertiajs/vue3";
 import FieldRenderer from "./FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
-
-interface FormColumn {
-  name: string;
-  label?: string;
-  component?: string;
-  required?: boolean;
-  columnSpan?: string;
-  gridColumns?: string;
-  order?: number;
-  gap?: string;
-  responsive?: {
-    grid?: { sm?: string; md?: string; lg?: string; xl?: string };
-    span?: { sm?: string; md?: string; lg?: string; xl?: string };
-  };
-  [key: string]: any;
-}
+import type { FormColumn } from "~/types/form";
+import { isMultiFieldUpdate } from "~/types/form";
+import type { FieldEmitValue } from "~/types/form";
 
 interface Props {
   columns?: FormColumn[];
@@ -92,25 +78,22 @@ const formData = computed(() => props.modelValue);
 // Provê formData para componentes filhos (para cálculos)
 provide('formData', formData);
 
-// Handler para atualização de campos
-const handleFieldUpdate = (fieldName: string, value: any) => {
-  if (props.modelValue && typeof props.modelValue === "object") {
-    // Se o valor for um File, Blob, FileList ou Array, atribui diretamente
-    if (value instanceof File || value instanceof Blob || value instanceof FileList || Array.isArray(value)) {
+/**
+ * Atualiza o form conforme o contrato FieldEmitValue.
+ * - MultiFieldUpdate: aplica cada chave de fields em formData.
+ * - SingleFieldValue: atribui o valor a formData[fieldName].
+ */
+const handleFieldUpdate = (fieldName: string, value: FieldEmitValue) => {
+  if (!props.modelValue || typeof props.modelValue !== "object") return;
+
+  if (isMultiFieldUpdate(value)) {
+    Object.entries(value.fields).forEach(([key, val]) => {
       // eslint-disable-next-line vue/no-mutating-props
-      props.modelValue[fieldName] = value;
-    }
-    // Se o valor for um objeto com múltiplos campos (como CNPJ que mapeia para outros campos)
-    else if (typeof value === 'object' && value !== null) {
-      // Mescla todos os campos do objeto no formData
-      Object.keys(value).forEach(key => {
-        props.modelValue[key] = value[key];
-      });
-    } else {
-      // Valor simples - atribui diretamente ao campo
-      // eslint-disable-next-line vue/no-mutating-props
-      props.modelValue[fieldName] = value;
-    }
+      props.modelValue[key] = val;
+    });
+  } else {
+    // eslint-disable-next-line vue/no-mutating-props
+    props.modelValue[fieldName] = value;
   }
 };
 

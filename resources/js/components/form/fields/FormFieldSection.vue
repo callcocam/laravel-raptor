@@ -96,6 +96,8 @@ import {
 } from "@/components/ui/collapsible";
 import FieldRenderer from "../FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
+import { createMultiFieldUpdate } from "~/types/form";
+import type { FieldEmitValue } from "~/types/form";
 
 interface SectionField {
   name: string;
@@ -133,7 +135,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: Record<string, any>): void;
+  (e: "update:modelValue", value: FieldEmitValue): void;
 }>();
 
 // Grid layout composable
@@ -185,9 +187,8 @@ function getNestedValue(obj: Record<string, any>, path: string): any {
   return current;
 }
 
-// Handle update de campo individual
 function handleFieldUpdate(fieldName: string, value: any) {
   fieldValues.value[fieldName] = value;
-  emit("update:modelValue", fieldValues.value);
+  emit("update:modelValue", createMultiFieldUpdate({ ...fieldValues.value }));
 }
 </script>

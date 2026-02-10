@@ -117,12 +117,8 @@ const initializeFromQuery = () => {
   const newValuesStr = JSON.stringify(newValues);
 
   if (currentValuesStr !== newValuesStr) {
-    // Replace the entire cascadingValues object
     cascadingValues.value = newValues;
-
-    // Emit under column name so form[column.name] is set (FormRenderer spreads object keys)
-    const sectionKey = props.column.name;
-    emit("update:modelValue", { [sectionKey]: { ...newValues } });
+    emit("update:modelValue", { ...newValues });
   } else {
     // console.log('🔄 Values unchanged, skipping emit');
   }
@@ -152,8 +148,7 @@ const getCascadingValues = () => {
 
 /**
  * Update a specific cascading field value.
- * Emite sob a chave da coluna para o FormRenderer gravar form[column.name] = { ... }
- * e o backend (CascadingField.php) receber via data_get($data, $this->getName(), []).
+ * Emite o objeto completo como valor do campo (column.name); FormRenderer faz formData[column.name] = value.
  */
 const updateCascadingValue = (fieldName: string, value: any) => {
   if (value === null || value === undefined || value === "") {
@@ -161,11 +156,7 @@ const updateCascadingValue = (fieldName: string, value: any) => {
   } else {
     cascadingValues.value[fieldName] = value;
   }
-
-  const sectionKey = props.column.name;
-  emit("update:modelValue", {
-    [sectionKey]: { ...cascadingValues.value },
-  });
+  emit("update:modelValue", { ...cascadingValues.value });
 };
 
 /**

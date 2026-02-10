@@ -79,6 +79,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { Search } from 'lucide-vue-next'
+import { createMultiFieldUpdate } from '~/types/form'
+import type { FieldEmitValue } from '~/types/form'
 
 interface FormColumn {
   name: string
@@ -106,7 +108,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number | null | Record<string, any>): void
+  (e: 'update:modelValue', value: FieldEmitValue): void
 }>()
 
 const isLoading = ref(false)
@@ -170,21 +172,19 @@ const updateValue = (value: string | number | null) => {
     
     const updatedValues = {
       ...currentValue,
-      [props.column.name]: cleaned
+      [props.column.name]: cleaned,
     }
-    
-    emit('update:modelValue', updatedValues)
+    emit('update:modelValue', createMultiFieldUpdate(updatedValues))
   } else {
     internalCnpjValue.value = ''
-    
+
     const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {}
-    
+
     const updatedValues = {
       ...currentValue,
-      [props.column.name]: null
+      [props.column.name]: null,
     }
-    
-    emit('update:modelValue', updatedValues)
+    emit('update:modelValue', createMultiFieldUpdate(updatedValues))
   }
 }
 
@@ -230,17 +230,13 @@ const searchCnpj = async () => {
       mappedData[formField as string] = value
     })
 
-    // Normaliza o modelValue para sempre ser um objeto
     const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {}
-    
-    // Emite todos os valores mapeados de uma vez, mantendo o CNPJ
     const updatedValues = {
       ...currentValue,
       [props.column.name]: plainCnpj,
       ...mappedData,
     }
-    
-    emit('update:modelValue', updatedValues)
+    emit('update:modelValue', createMultiFieldUpdate(updatedValues))
 
   } catch (e: any) {
     searchError.value = e.message || 'Não foi possível consultar o CNPJ.'

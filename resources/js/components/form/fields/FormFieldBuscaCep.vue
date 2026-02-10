@@ -92,6 +92,8 @@ import {
 } from "@/components/ui/field";
 import FieldRenderer from "../FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
+import { createMultiFieldUpdate } from "~/types/form";
+import type { FieldEmitValue } from "~/types/form";
 
 interface AddressField {
   name: string;
@@ -129,7 +131,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: Record<string, any>): void;
+  (e: "update:modelValue", value: FieldEmitValue): void;
 }>();
 
 // Grid layout composable
@@ -225,14 +227,9 @@ async function searchCep(cep: string) {
       fieldValues.value[formField] = value;
     });
 
-    // Emite todos os valores de uma vez
     const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {};
-    
-    const updatedValues = {
-      ...currentValue,
-      ...fieldValues.value,
-    }; 
-    emit("update:modelValue", updatedValues);
+    const updatedValues = { ...currentValue, ...fieldValues.value };
+    emit("update:modelValue", createMultiFieldUpdate(updatedValues));
   } catch (error) {
     console.error("Erro ao buscar CEP:", error);
     cepError.value = "Erro ao buscar CEP. Tente novamente.";
@@ -241,16 +238,10 @@ async function searchCep(cep: string) {
   }
 }
 
-// Emite valor atualizado
 function emitValue(fieldName: string, value: any) {
-  // Normaliza o modelValue para sempre ser um objeto
   const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {};
-  
-  const updatedValues = {
-    ...currentValue,
-    [fieldName]: value,
-  }; 
-  emit("update:modelValue", updatedValues);
+  const updatedValues = { ...currentValue, [fieldName]: value };
+  emit("update:modelValue", createMultiFieldUpdate(updatedValues));
 }
 
 // Handle update de campo individual
