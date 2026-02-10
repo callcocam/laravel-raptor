@@ -6,6 +6,7 @@
  -->
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Loader2 } from 'lucide-vue-next'
 import ActionRenderer from '~/components/actions/ActionRenderer.vue'
 import type { TableAction } from '~/types/table'
 
@@ -26,28 +27,27 @@ const props = withDefaults(defineProps<Props>(), {
 const preparedActions = computed(() => {
   return props.actions.map(action => ({
     ...action,
-    // Define o componente baseado no tipo de ação
     component: action.component || getComponentForActionType(action.actionType || ''),
-    // Adiciona o estado de processing à ação
     processing: props.processing,
   }))
 })
 
-/**
- * Mapeia o tipo de ação para o componente correto
- */
 function getComponentForActionType(actionType: string): string {
   const typeMap: Record<string, string> = {
     'submit': 'action-form-button',
     'cancel': 'action-form-button',
   }
-
   return typeMap[actionType] || 'action-button'
 }
 </script>
 
 <template>
   <div class="flex items-center justify-end gap-2">
+    <Loader2
+      v-if="processing"
+      class="size-4 shrink-0 animate-spin text-muted-foreground"
+      aria-hidden="true"
+    />
     <ActionRenderer
       v-for="action in preparedActions"
       :key="action.name"

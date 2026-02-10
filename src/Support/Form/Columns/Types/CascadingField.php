@@ -31,6 +31,12 @@ class CascadingField extends Column
 
     protected array $onlyProps = [];
 
+    protected string $fieldLevelName = 'level_name';
+
+    protected string $fieldLevelNivel = 'nivel';
+
+    protected array $fieldLevelNames = [];
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
@@ -38,29 +44,42 @@ class CascadingField extends Column
         $this->setUp();
         $this->valueUsing(function ($data, $model) {
             $currentValue = data_get($data, $this->getName(), []);
-
+            $levelNames = [];
+            foreach ($this->getFields() as $field) {
+                $levelNames[] = $field->getName();
+            }
             // Se não for array, converte para array vazio
-            if (!is_array($currentValue)) {
+            if (! is_array($currentValue)) {
                 $currentValue = [];
             }
 
             // Pega o último valor não vazio da hierarquia
             $lastValue = null;
+            $lastLevelName = null;
+            $lastLevelNivel = null;
+            $lastLevelPosition = 1;
             foreach ($currentValue as $key => $value) {
-                if (!empty($value)) {
+                if (! empty($value)) {
                     $lastValue = $value;
+                    $lastLevelName = $levelNames[$lastLevelPosition] ?? null;
+                    $lastLevelNivel = ++$lastLevelPosition;
                 }
             }
 
             // Adiciona o último valor selecionado no campo fieldsUsing
-            if ($lastValue) {
+            if ($lastValue) { 
                 return [
                     $this->getFieldsUsing() => $lastValue,
                     $this->getName() => $currentValue,
+                    $this->fieldLevelName => $lastLevelName,
+                    $this->fieldLevelNivel => $lastLevelNivel,
                 ];
             }
+
             return [
                 $this->getName() => $currentValue,
+                $this->fieldLevelName => $lastLevelName,
+                $this->fieldLevelNivel => $lastLevelNivel,
             ];
         });
     }
@@ -105,6 +124,10 @@ class CascadingField extends Column
     protected function cascadingFields($model = null): array
     {
         $fields = $this->getFields();
+
+        foreach ($fields as $field) {
+            $this->fieldLevelNames[] = $field->getName();
+        }
 
         $cascadingFields = [];
         if ($this->queryUsingCallback instanceof Closure) {

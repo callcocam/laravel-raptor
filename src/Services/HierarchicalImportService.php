@@ -61,30 +61,34 @@ class HierarchicalImportService extends DefaultImportService
                 return;
             }
 
-            Log::info('HierarchicalImport: processando linha', [
-                'sheet' => $this->sheet->getName(),
-                'row' => $rowNumber,
-                'connection' => $this->connection ?? $this->sheet->getConnection(),
-                'table' => $this->sheet->getTableName(),
-                'order' => $order,
-                'valueColumn' => $this->sheet->getHierarchicalValueColumn(),
-                'parentColumnName' => $this->sheet->getParentColumnName(),
-            ]);
 
             $lastModel = null;
             DB::transaction(function () use ($data, $order, &$lastModel): void {
                 $parentId = null;
                 $valueColumn = $this->sheet->getHierarchicalValueColumn();
                 $parentColumnName = $this->sheet->getParentColumnName();
+                $hierarchyPath = []; // Acumula o caminho hierárquico
 
-                foreach ($order as $columnName) {
+                foreach ($order as $levelIndex => $columnName) {
                     $value = $data[$columnName] ?? null;
                     if ($value === null || (is_string($value) && trim($value) === '')) {
                         continue;
                     }
                     $value = is_string($value) ? trim($value) : $value;
 
-                    $lastModel = $this->findOrCreateLevel($parentId, $valueColumn, $value, $parentColumnName);
+                    // Adiciona o valor atual ao caminho hierárquico
+                    $hierarchyPath[] = $value;
+
+                    $lastModel = $this->findOrCreateLevel(
+                        $parentId,
+                        $valueColumn,
+                        $value,
+                        $parentColumnName,
+                        $columnName,
+                        $levelIndex,
+                        $hierarchyPath,
+                        $data
+                    );
                     if ($lastModel instanceof Model) {
                         $parentId = $lastModel->getKey();
                     }
@@ -101,7 +105,7 @@ class HierarchicalImportService extends DefaultImportService
             if ($afterClass && class_exists($afterClass) && $lastModel instanceof Model) {
                 $hook = app($afterClass);
                 if ($hook instanceof AfterPersistHookInterface) {
-                    $hook->afterPersist($lastModel, $data, $rowNumber);
+                    $hook->afterPersist($lastModel, $data, $rowNumber, $this->sheet);
                 }
             }
 
@@ -112,7 +116,7 @@ class HierarchicalImportService extends DefaultImportService
             foreach ($e->errors() as $attribute => $messages) {
                 foreach ($messages as $message) {
                     $this->errors[] = ['row' => $rowNumber, 'message' => $message, 'column' => $attribute];
-                    $allMessages[] = ($attribute ? "{$attribute}: " : '').$message;
+                    $allMessages[] = ($attribute ? "{$attribute}: " : '') . $message;
                 }
             }
             $this->failedRowsData[] = [
@@ -183,9 +187,24 @@ class HierarchicalImportService extends DefaultImportService
      * Find-or-create um nível: busca por contexto + pai + valor; cria se não existir.
      *
      * @param  mixed  $parentId  ID do pai (null para raiz)
+     * @param  string  $valueColumn  Nome da coluna que recebe o valor
+     * @param  mixed  $value  Valor do nível
+     * @param  string  $parentColumnName  Nome da coluna FK do pai
+     * @param  string  $columnName  Nome da coluna Excel (para level_name)
+     * @param  int  $levelIndex  Índice do nível na hierarquia (para level)
+     * @param  array  $hierarchyPath  Caminho hierárquico completo até este nível
+     * @param  array  $originalData  Dados originais da linha (para o generator)
      */
-    protected function findOrCreateLevel(mixed $parentId, string $valueColumn, mixed $value, string $parentColumnName): ?Model
-    {
+    protected function findOrCreateLevel(
+        mixed $parentId,
+        string $valueColumn,
+        mixed $value,
+        string $parentColumnName,
+        string $columnName,
+        int $levelIndex,
+        array $hierarchyPath = [],
+        array $originalData = []
+    ): ?Model {
         $modelClass = $this->sheet->getModelClass();
         if (! $modelClass || ! class_exists($modelClass)) {
             return null;
@@ -196,27 +215,45 @@ class HierarchicalImportService extends DefaultImportService
             $model->setConnection($this->connection ?? $this->sheet->getConnection());
         }
 
-        $attributes = array_merge($this->context, [
+        // Atributos de busca: identificam a unicidade do registro
+        $searchAttributes = array_merge($this->context, [
             $parentColumnName => $parentId,
             $valueColumn => $value,
         ]);
 
-        $connectionName = $this->connection ?? $this->sheet->getConnection();
-        $tableName = $this->sheet->getTableName();
+        // Atributos adicionais: preenchidos na criação ou atualização
+        $additionalAttributes = [];
 
-        $instance = $model->newQuery()->firstOrCreate($attributes, $attributes);
+        // Gera o ID determinístico se configurado e ainda não existir
+        $existing = $model->newQuery()->where($searchAttributes)->first();
+        if ($existing === null && $this->sheet->shouldGenerateId()) {
+            // Prepara dados para o generator com o caminho hierárquico
+            $dataForGenerator = array_merge($originalData, $this->context, [
+                'hierarchy_path' => implode(' > ', $hierarchyPath),
+                $valueColumn => $value,
+                $parentColumnName => $parentId,
+                'level_index' => $levelIndex,
+                'column_name' => $columnName,
+            ]);
 
-        Log::info('HierarchicalImport: nível find-or-create', [
-            'connection' => $connectionName ?? config('database.default'),
-            'table' => $tableName,
-            'sheet' => $this->sheet->getName(),
-            'valueColumn' => $valueColumn,
-            'value' => $value,
-            'parentColumnName' => $parentColumnName,
-            'parentId' => $parentId,
-            'id' => $instance instanceof Model ? $instance->getKey() : null,
-            'created' => $instance instanceof Model && $instance->wasRecentlyCreated,
-        ]);
+            $additionalAttributes['id'] = $this->generateId($dataForGenerator);
+        }
+
+        // Adiciona level_name se configurado (slug do nome da coluna Excel)
+        $levelNameColumn = $this->sheet->getLevelNameColumn();
+        if ($levelNameColumn !== null) {
+            $additionalAttributes[$levelNameColumn] = \Illuminate\Support\Str::slug($columnName);
+        }
+
+        // Adiciona level se configurado (índice do nível na hierarquia)
+        $levelIndexColumn = $this->sheet->getLevelIndexColumn();
+        if ($levelIndexColumn !== null) {
+            $additionalAttributes[$levelIndexColumn] = $levelIndex;
+        }
+
+        // Busca por context + parent + value; se não achar, cria com todos os atributos
+        $allAttributes = array_merge($searchAttributes, $additionalAttributes);
+        $instance = $model->newQuery()->firstOrCreate($searchAttributes, $allAttributes);
 
         return $instance instanceof Model ? $instance : null;
     }

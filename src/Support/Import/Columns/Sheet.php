@@ -67,6 +67,12 @@ class Sheet extends AbstractColumn
     /** Nome da coluna da tabela que recebe o valor do nível (ex.: name). */
     protected string $hierarchicalValueColumn = 'name';
 
+    /** Nome da coluna que armazena o nome do nível (slug da coluna Excel). Use null para desabilitar. */
+    protected ?string $levelNameColumn = 'level_name';
+
+    /** Nome da coluna que armazena o índice do nível na hierarquia. Use null para desabilitar. */
+    protected ?string $levelIndexColumn = 'nivel';
+
     /** Classe do hook executada antes de persistir cada linha (implemente BeforePersistHookInterface). */
     protected ?string $beforePersistClass = null;
 
@@ -115,6 +121,8 @@ class Sheet extends AbstractColumn
             'hierarchicalColumns' => $this->getHierarchicalColumns(),
             'parentColumnName' => $this->getParentColumnName(),
             'hierarchicalValueColumn' => $this->getHierarchicalValueColumn(),
+            'levelNameColumn' => $this->getLevelNameColumn(),
+            'levelIndexColumn' => $this->getLevelIndexColumn(),
             'beforePersistClass' => $this->getBeforePersistClass(),
             'afterPersistClass' => $this->getAfterPersistClass(),
             'afterProcessClass' => $this->getAfterProcessClass(),
@@ -200,6 +208,32 @@ class Sheet extends AbstractColumn
     public function getHierarchicalValueColumn(): string
     {
         return $this->hierarchicalValueColumn;
+    }
+
+    /** Nome da coluna que armazena o nome do nível (slug da coluna Excel). Use null para desabilitar. */
+    public function levelNameColumn(?string $name): self
+    {
+        $this->levelNameColumn = $name;
+
+        return $this;
+    }
+
+    public function getLevelNameColumn(): ?string
+    {
+        return $this->levelNameColumn;
+    }
+
+    /** Nome da coluna que armazena o índice do nível na hierarquia. Use null para desabilitar. */
+    public function levelIndexColumn(?string $name): self
+    {
+        $this->levelIndexColumn = $name;
+
+        return $this;
+    }
+
+    public function getLevelIndexColumn(): ?string
+    {
+        return $this->levelIndexColumn;
     }
 
     /**

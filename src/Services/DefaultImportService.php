@@ -332,13 +332,7 @@ class DefaultImportService implements ImportServiceInterface
         $dataForSave = $this->filterDataForPersist($data);
 
         $connection = $this->connection ?? $this->sheet->getConnection();
-        $tableName = $this->sheet->getTableName();
-
-        Log::info('Import: connection e tabela em uso', [
-            'connection' => $connection ?? config('database.default'),
-            'table' => $tableName,
-            'sheet' => $this->sheet->getName(),
-        ]);
+        $tableName = $this->sheet->getTableName(); 
 
         if ($tableName === null) {
             return null;
