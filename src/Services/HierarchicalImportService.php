@@ -21,9 +21,20 @@ use Illuminate\Support\Facades\Log;
  * Por linha: processa cada nível na ordem de hierarchicalColumns; para cada nível com valor
  * faz find-or-create (contexto + pai + valor); o id do nível é usado como pai do próximo.
  * Acumula em completedRows com o id do último nível criado/encontrado.
+ *
+ * Performance: usa cache em memória para evitar queries repetidas de níveis já processados.
  */
 class HierarchicalImportService extends DefaultImportService
 {
+    /**
+     * Cache de níveis já processados nesta importação.
+     * Chave: ID gerado ou hash(context+parent+value)
+     * Valor: Model do nível
+     *
+     * @var array<string, Model>
+     */
+    protected array $levelsCache = [];
+
     /**
      * Processa uma linha hierárquica: monta dados, valida, executa beforePersist, depois
      * find-or-create por nível na ordem de hierarchicalColumns; após cada nível o id vira pai do próximo.
@@ -184,6 +195,7 @@ class HierarchicalImportService extends DefaultImportService
 
     /**
      * Find-or-create um nível: busca por contexto + pai + valor; cria se não existir.
+     * Usa cache em memória para evitar queries repetidas.
      *
      * @param  mixed  $parentId  ID do pai (null para raiz)
      * @param  string  $valueColumn  Nome da coluna que recebe o valor
@@ -209,6 +221,28 @@ class HierarchicalImportService extends DefaultImportService
             return null;
         }
 
+        // Gera o ID determinístico (se configurado) para usar como chave de cache
+        $generatedId = null;
+        if ($this->sheet->shouldGenerateId()) {
+            $dataForGenerator = array_merge($originalData, $this->context, [
+                'hierarchy_path' => implode(' > ', $hierarchyPath),
+                $valueColumn => $value,
+                $parentColumnName => $parentId,
+                'level_index' => $levelIndex,
+                'column_name' => $columnName,
+            ]);
+
+            $generatedId = $this->generateId($dataForGenerator);
+        }
+
+        // Monta chave de cache (ID gerado ou hash dos atributos de busca)
+        $cacheKey = $generatedId ?? $this->buildCacheKey($parentId, $value);
+
+        // Verifica cache antes de fazer query
+        if (isset($this->levelsCache[$cacheKey])) {
+            return $this->levelsCache[$cacheKey];
+        }
+
         $model = app($modelClass);
         if ($this->connection ?? $this->sheet->getConnection()) {
             $model->setConnection($this->connection ?? $this->sheet->getConnection());
@@ -223,19 +257,7 @@ class HierarchicalImportService extends DefaultImportService
         // Atributos adicionais: preenchidos na criação ou atualização
         $additionalAttributes = [];
 
-        // Gera o ID determinístico se configurado
-        $generatedId = null;
-        if ($this->sheet->shouldGenerateId()) {
-            // Prepara dados para o generator com o caminho hierárquico
-            $dataForGenerator = array_merge($originalData, $this->context, [
-                'hierarchy_path' => implode(' > ', $hierarchyPath),
-                $valueColumn => $value,
-                $parentColumnName => $parentId,
-                'level_index' => $levelIndex,
-                'column_name' => $columnName,
-            ]);
-
-            $generatedId = $this->generateId($dataForGenerator);
+        if ($generatedId !== null) {
             $additionalAttributes['id'] = $generatedId;
         }
 
@@ -262,6 +284,55 @@ class HierarchicalImportService extends DefaultImportService
             $instance = $model->newQuery()->firstOrCreate($searchAttributes, $allAttributes);
         }
 
+        // Armazena no cache para próximas linhas
+        if ($instance instanceof Model) {
+            $this->levelsCache[$cacheKey] = $instance;
+        }
+
         return $instance instanceof Model ? $instance : null;
+    }
+
+    /**
+     * Gera uma chave de cache única para um nível baseado em context + parent + value.
+     */
+    protected function buildCacheKey(mixed $parentId, mixed $value): string
+    {
+        $contextKey = md5(json_encode($this->context));
+        $parentKey = $parentId ?? 'root';
+        $valueKey = is_string($value) ? $value : json_encode($value);
+
+        return "{$contextKey}:{$parentKey}:{$valueKey}";
+    }
+
+    /**
+     * Limpa o cache de níveis (útil para testes ou processos longos).
+     */
+    public function clearLevelsCache(): void
+    {
+        $this->levelsCache = [];
+    }
+
+    /**
+     * Retorna estatísticas do cache para debug/monitoramento.
+     *
+     * @return array{cached_levels: int, memory_usage: string}
+     */
+    public function getCacheStats(): array
+    {
+        return [
+            'cached_levels' => count($this->levelsCache),
+            'memory_usage' => $this->formatBytes(memory_get_usage(true)),
+        ];
+    }
+
+    /**
+     * Formata bytes em formato legível (KB, MB, GB).
+     */
+    protected function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB'];
+        $power = $bytes > 0 ? floor(log($bytes, 1024)) : 0;
+
+        return round($bytes / pow(1024, $power), 2).' '.$units[$power];
     }
 }
