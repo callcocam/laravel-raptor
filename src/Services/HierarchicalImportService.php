@@ -257,6 +257,25 @@ class HierarchicalImportService extends DefaultImportService
         // Atributos adicionais: preenchidos na criação ou atualização
         $additionalAttributes = [];
 
+        // Inclui dados do hook (status, etc.) mas remove colunas hierárquicas
+        $hierarchicalColumns = $this->sheet->getHierarchicalColumns() ?? [];
+        foreach ($originalData as $key => $val) {
+            // Ignora colunas hierárquicas (já tratadas acima)
+            if (in_array($key, $hierarchicalColumns, true)) {
+                continue;
+            }
+            // Ignora campos de contexto (já incluídos em searchAttributes)
+            if (array_key_exists($key, $this->context)) {
+                continue;
+            }
+            // Ignora campos especiais
+            if (in_array($key, [$parentColumnName, $valueColumn], true)) {
+                continue;
+            }
+            // Adiciona campo do hook (ex: status) aos attributes
+            $additionalAttributes[$key] = $val;
+        }
+
         if ($generatedId !== null) {
             $additionalAttributes['id'] = $generatedId;
         }
