@@ -115,7 +115,7 @@ class HierarchicalImportService extends DefaultImportService
             if ($afterClass && class_exists($afterClass) && $lastModel instanceof Model) {
                 $hook = app($afterClass);
                 if ($hook instanceof AfterPersistHookInterface) {
-                    $hook->afterPersist($lastModel, $data, $rowNumber, $this->sheet);
+                    $hook->afterPersist($lastModel, $data, $rowNumber);
                 }
             }
 
