@@ -61,7 +61,6 @@ class HierarchicalImportService extends DefaultImportService
                 return;
             }
 
-
             $lastModel = null;
             DB::transaction(function () use ($data, $order, &$lastModel): void {
                 $parentId = null;
@@ -116,7 +115,7 @@ class HierarchicalImportService extends DefaultImportService
             foreach ($e->errors() as $attribute => $messages) {
                 foreach ($messages as $message) {
                     $this->errors[] = ['row' => $rowNumber, 'message' => $message, 'column' => $attribute];
-                    $allMessages[] = ($attribute ? "{$attribute}: " : '') . $message;
+                    $allMessages[] = ($attribute ? "{$attribute}: " : '').$message;
                 }
             }
             $this->failedRowsData[] = [
@@ -224,9 +223,9 @@ class HierarchicalImportService extends DefaultImportService
         // Atributos adicionais: preenchidos na criação ou atualização
         $additionalAttributes = [];
 
-        // Gera o ID determinístico se configurado e ainda não existir
-        $existing = $model->newQuery()->where($searchAttributes)->first();
-        if ($existing === null && $this->sheet->shouldGenerateId()) {
+        // Gera o ID determinístico se configurado
+        $generatedId = null;
+        if ($this->sheet->shouldGenerateId()) {
             // Prepara dados para o generator com o caminho hierárquico
             $dataForGenerator = array_merge($originalData, $this->context, [
                 'hierarchy_path' => implode(' > ', $hierarchyPath),
@@ -236,13 +235,14 @@ class HierarchicalImportService extends DefaultImportService
                 'column_name' => $columnName,
             ]);
 
-            $additionalAttributes['id'] = $this->generateId($dataForGenerator);
+            $generatedId = $this->generateId($dataForGenerator);
+            $additionalAttributes['id'] = $generatedId;
         }
 
         // Adiciona level_name se configurado (slug do nome da coluna Excel)
         $levelNameColumn = $this->sheet->getLevelNameColumn();
         if ($levelNameColumn !== null) {
-            $additionalAttributes[$levelNameColumn] = \Illuminate\Support\Str::slug($columnName);
+            $additionalAttributes[$levelNameColumn] = \Illuminate\Support\Str::slug($columnName, '_');
         }
 
         // Adiciona level se configurado (índice do nível na hierarquia)
@@ -251,9 +251,16 @@ class HierarchicalImportService extends DefaultImportService
             $additionalAttributes[$levelIndexColumn] = $levelIndex;
         }
 
-        // Busca por context + parent + value; se não achar, cria com todos os atributos
-        $allAttributes = array_merge($searchAttributes, $additionalAttributes);
-        $instance = $model->newQuery()->firstOrCreate($searchAttributes, $allAttributes);
+        // Se gerou ID determinístico, usa updateOrCreate pelo ID (sempre atualiza)
+        // Isso garante que reimportar atualiza os campos (level_name, level, etc.)
+        if ($generatedId !== null) {
+            $allAttributes = array_merge($searchAttributes, $additionalAttributes);
+            $instance = $model->newQuery()->updateOrCreate(['id' => $generatedId], $allAttributes);
+        } else {
+            // Se não gerou ID, busca por context + parent + value; se não achar, cria
+            $allAttributes = array_merge($searchAttributes, $additionalAttributes);
+            $instance = $model->newQuery()->firstOrCreate($searchAttributes, $allAttributes);
+        }
 
         return $instance instanceof Model ? $instance : null;
     }
