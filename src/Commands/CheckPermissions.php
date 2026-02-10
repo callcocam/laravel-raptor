@@ -213,8 +213,8 @@ class CheckPermissions extends Command
             $permissionModel = config('raptor.shinobi.models.permission');
             
             // Remove todas as relações permission_role e permission_user primeiro
-            \DB::table('permission_role')->delete();
-            \DB::table('permission_user')->delete();
+            DB::table('permission_role')->delete();
+            DB::table('permission_user')->delete();
             
             // Remove todas as permissions usando delete() para respeitar foreign keys
             app($permissionModel)->query()->forceDelete();

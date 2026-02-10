@@ -11,15 +11,16 @@ namespace Callcocam\LaravelRaptor\Concerns;
 trait GeneratesPermissionIds
 {
     /**
-     * Gera um ID determinístico baseado no slug da permissão.
-     * Isso garante que a mesma permissão sempre terá o mesmo ID.
-     * 
-     * Usa CRC32 para gerar um hash numérico consistente.
+     * Gera um ULID determinístico baseado no slug da permissão.
+     * Compatível com a coluna ulid('id') da tabela permissions.
+     * O mesmo slug sempre gera o mesmo ID (útil para sync entre ambientes).
      */
-    protected function generateDeterministicId(string $slug): int
+    protected function generateDeterministicId(string $slug): string
     {
-        // Usa crc32 para gerar um hash numérico do slug
-        // Como crc32 pode retornar valores negativos, usamos abs() e limitamos
-        return abs(crc32($slug));
+        $hash = md5($slug);
+        $prefix = 'PM'; // Permission
+        $hashComponent = strtoupper(substr($hash, 0, 24));
+
+        return $prefix.$hashComponent;
     }
 }
