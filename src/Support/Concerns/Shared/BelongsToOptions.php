@@ -9,7 +9,6 @@
 namespace Callcocam\LaravelRaptor\Support\Concerns\Shared;
 
 use Closure;
-use Illuminate\Support\Facades\Log;
 
 trait BelongsToOptions
 {
@@ -20,11 +19,11 @@ trait BelongsToOptions
 
     protected Closure|bool|null $multiple = null;
 
-    protected Closure|string|null $optionKey = "id";
+    protected Closure|string|null $optionKey = 'id';
 
     protected Closure|string|null $optionLabel = 'name';
 
-    protected array  $rawOptions = [];
+    protected array $rawOptions = [];
 
     /**
      * Set the options for the filter.
@@ -43,7 +42,8 @@ trait BelongsToOptions
         $this->rawOptions = $options;
 
         return $this;
-    } 
+    }
+
     /**
      * Get the options for the filter.
      * Converte automaticamente para o formato [label, value]
@@ -61,7 +61,7 @@ trait BelongsToOptions
                     ->pluck($labelColumn, $keyColumn)
                     ->toArray();
             }
-        } 
+        }
         $options = $this->evaluate($this->options, ['model' => $model, 'column' => $this, 'record' => $model]);
 
         return $this->normalizeOptions($options);
@@ -73,12 +73,12 @@ trait BelongsToOptions
     }
 
     /**
-     * Normaliza as opções para o formato esperado [label => value]
-     * 
+     * Normaliza as opções para o formato esperado [label, value]
+     *
      * Aceita diversos formatos de entrada:
-     * - ['key' => 'value'] => [['label' => 'value', 'value' => 'key']]
+     * - ['key' => 'label'] => [['label' => 'label', 'value' => 'key']] (inclui id => name de pluck)
      * - [['label' => 'Teste', 'value' => '01']] => mantém o formato
-     * - ['value1', 'value2'] => [['label' => 'value1', 'value' => 'value1']]
+     * - ['value1', 'value2'] (índices 0,1,2...) => [['label' => 'value1', 'value' => 'value1']]
      */
     protected function normalizeOptions(array $options): array
     {
@@ -87,29 +87,34 @@ trait BelongsToOptions
         }
 
         $normalized = [];
+        $keys = array_keys($options);
+        $isSequentialList = $keys === range(0, count($options) - 1);
 
         foreach ($options as $key => $value) {
             // Já está no formato correto [label, value]
             if (is_array($value) && isset($value['label']) && isset($value['value'])) {
                 $normalized[] = $value;
+
                 continue;
             }
 
-            // Formato associativo: ['key' => 'label']
-            if (!is_numeric($key) && !is_array($value)) {
-                $normalized[] = [
-                    'label' => (string) $value,
-                    'value' => (string) $key,
-                ];
-                continue;
-            }
-
-            // Formato numérico simples: ['option1', 'option2']
-            if (is_numeric($key) && !is_array($value)) {
+            // Formato lista sequencial: [0 => 'opt1', 1 => 'opt2'] => value e label iguais
+            if ($isSequentialList && is_numeric($key) && ! is_array($value)) {
                 $normalized[] = [
                     'label' => (string) $value,
                     'value' => (string) $value,
                 ];
+
+                continue;
+            }
+
+            // Formato associativo: ['key' => 'label'] ou [id => name] (ex.: pluck('name', 'id'))
+            if (! is_array($value)) {
+                $normalized[] = [
+                    'label' => (string) $value,
+                    'value' => (string) $key,
+                ];
+
                 continue;
             }
 
@@ -124,6 +129,7 @@ trait BelongsToOptions
                         'label' => (string) $value[$labelField],
                         'value' => (string) $value[$valueField],
                     ];
+
                     continue;
                 }
             }
@@ -161,6 +167,7 @@ trait BelongsToOptions
     {
         return $this->evaluate($this->optionKey);
     }
+
     /**
      * Encontra o campo mais provável para ser usado como label
      */

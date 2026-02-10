@@ -24,6 +24,12 @@ class InconController extends ResourceController
                 ->name('icons.index')
                 ->icon('BrickWallFire')
                 ->order(1)
+                ->visible(function () {
+                    if (auth()->user()) {
+                        return auth()->user()->isAdmin();
+                    }
+                    return false;
+                })
                 ->middlewares(['auth', 'verified']),
         ];
     }

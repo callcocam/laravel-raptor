@@ -199,10 +199,10 @@ watch(selectedValues, (newSelectedArray) => {
 
 const hasError = computed(() => !!props.error);
 const hasSearch = computed(
-  () => props.column.searchable !== false && (props.column.options?.length ?? 0) > 5
+  () => props.column.searchable !== false && normalizedOptions.value.length > 5
 );
 const showSelectAll = computed(
-  () => props.column.showSelectAll !== false && (props.column.options?.length ?? 0) > 3
+  () => props.column.showSelectAll !== false && normalizedOptions.value.length > 3
 );
 
 const errorArray = computed(() => {
@@ -213,8 +213,27 @@ const errorArray = computed(() => {
   return [{ message: props.error }];
 });
 
+/** Opções sempre no formato [{ label, value }]; converte objeto { [value]: label } se vier do backend */
+const normalizedOptions = computed((): CheckboxOption[] => {
+  const raw = props.column.options;
+  if (!raw || (typeof raw !== 'object')) return [];
+  if (Array.isArray(raw)) {
+    return raw.every((o: any) => o && typeof o === 'object' && 'label' in o && 'value' in o)
+      ? raw as CheckboxOption[]
+      : raw.map((o: any) =>
+          typeof o === 'object' && o !== null && 'label' in o && 'value' in o
+            ? { label: String(o.label), value: o.value }
+            : { label: String(o), value: o }
+        );
+  }
+  return Object.entries(raw).map(([value, label]) => ({
+    label: String(label),
+    value: value as string | number,
+  }));
+});
+
 const filteredOptions = computed(() => {
-  const options = props.column.options || [];
+  const options = normalizedOptions.value;
 
   if (!searchQuery.value) {
     return options;
