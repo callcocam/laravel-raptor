@@ -92,10 +92,11 @@ class ImportAction extends ExecuteAction
                     ];
                 }
 
-                // Salva o arquivo temporariamente (disco local: app/imports/{nome})
+                // Salva o arquivo temporariamente no disco configurado (raptor.export.disk)
+                $disk = config('raptor.export.disk', 'public');
                 $fileName = sprintf('%s.%s', Str::uuid(), $file->getClientOriginalExtension());
                 $filePath = 'imports/'.$fileName;
-                $file->storeAs('imports', $fileName, 'local');
+                $file->storeAs('imports', $fileName, $disk);
 
                 if ($this->shouldUseJob()) {
                     return $this->dispatchAdvancedImportJob($filePath, $file, $user);
@@ -106,9 +107,9 @@ class ImportAction extends ExecuteAction
                 } catch (\Exception $e) {
                     report($e);
 
-                    $disk = Storage::disk('local');
-                    if ($disk->exists($filePath)) {
-                        unlink($disk->path($filePath));
+                    $storageDisk = Storage::disk(config('raptor.export.disk', 'public'));
+                    if ($storageDisk->exists($filePath)) {
+                        unlink($storageDisk->path($filePath));
                     }
 
                     return [
@@ -171,7 +172,7 @@ class ImportAction extends ExecuteAction
      */
     protected function processAdvancedImport(string $filePath, $uploadedFile, $user): array
     {
-        $disk = Storage::disk('local');
+        $disk = Storage::disk(config('raptor.export.disk', 'public'));
         if (! $disk->exists($filePath)) {
             return [
                 'notification' => [
@@ -191,7 +192,7 @@ class ImportAction extends ExecuteAction
 
         $sheets = $this->getMainSheets();
         $import = new AdvancedImport($sheets, null, $context);
-        Excel::import($import, $filePath, 'local');
+        Excel::import($import, $filePath, config('raptor.export.disk', 'public'));
         $import->process();
 
         $totalRows = $import->getTotalRows();

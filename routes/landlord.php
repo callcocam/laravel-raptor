@@ -36,7 +36,7 @@ Route::get('download-import-failed/{filename}', function (string $filename) {
     if (! str_starts_with($filename, 'failed-') || ! str_ends_with($filename, '.xlsx')) {
         abort(404);
     }
-    $path = Storage::disk('local')->path('imports/' . $filename);
+    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('imports/' . $filename);
     if (! file_exists($path)) {
         abort(404);
     }

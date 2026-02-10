@@ -61,8 +61,9 @@ class ProcessAdvancedImport implements ShouldQueue
 
         $sheets = $this->reconstructSheets($this->sheetsData);
 
-        // Usar o mesmo disco em que a Action salvou (ex.: local = storage/app/private)
-        $disk = Storage::disk('local');
+        // Usar o mesmo disco em que a Action salvou (raptor.export.disk)
+        $diskName = config('raptor.export.disk', 'public');
+        $disk = Storage::disk($diskName);
         if (! $disk->exists($this->filePath)) {
             return;
         }
@@ -70,7 +71,7 @@ class ProcessAdvancedImport implements ShouldQueue
         $fullPath = $disk->path($this->filePath);
 
         $import = new AdvancedImport($sheets, null, $this->context ?? []);
-        Excel::import($import, $this->filePath, 'local');
+        Excel::import($import, $this->filePath, $diskName);
         $import->process();
 
         $totalRows = $import->getTotalRows();
@@ -87,7 +88,7 @@ class ProcessAdvancedImport implements ShouldQueue
         if ($failedRows > 0 && ! empty($failedRowsData)) {
             $failedReportPath = 'imports/failed-'.Str::uuid()->toString().'.xlsx';
             $export = new FailedImportRowsExport($failedRowsData);
-            Excel::store($export, $failedReportPath, 'local');
+            Excel::store($export, $failedReportPath, config('raptor.export.disk', 'public'));
         }
 
         $this->notifyUser(new ImportCompletedNotification(
