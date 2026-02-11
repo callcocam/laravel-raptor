@@ -2,11 +2,6 @@
   <div class="space-y-4">
     <!-- Filtros e Header Actions -->
     <div class="flex flex-col space-y-4">
-      <!-- Header Actions -->
-      <!-- <HeaderActions
-        v-if="table.headerActions.value.length"
-        :actions="table.headerActions.value"
-      /> -->
       <TableFilters
         v-if="table.filters.value.length"
         :filters="table.filters.value"
@@ -24,8 +19,13 @@
           :key="record.id"
           class="p-4 hover:bg-accent/50 transition-colors"
         >
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div v-for="column in table.columns.value" :key="column.name">
+          <div :class="tableGridClasses" class="grid">
+            <div
+              v-for="column in visibleColumns"
+              :key="column.name"
+              :class="getColumnClasses(column)"
+              :style="getColumnStyles(column)"
+            >
               <span class="text-xs font-medium text-muted-foreground">
                 {{ column.label }}
               </span>
@@ -61,14 +61,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import { useInertiaTable } from "~/composables/useInertiaTable";
+import { useGridLayout } from "~/composables/useGridLayout";
 import TableFilters from "../filters/TableFilters.vue";
 import TablePagination from "./TablePagination.vue";
 import ActionRenderer from "../actions/ActionRenderer.vue";
 import TableColumnRenderer from "./TableColumnRenderer.vue";
-import HeaderActions from "./HeaderActions.vue";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-vue-next";
 
 const props = withDefaults(
   defineProps<{
@@ -81,18 +80,38 @@ const props = withDefaults(
 
 const table = useInertiaTable(props.tableKey);
 
+const columns = computed(() => table.columns.value);
+
+const firstColumnWithGrid = computed(() =>
+  columns.value.find((c) => c.gridColumns != null || c.gap != null)
+);
+
+const { getFormClasses, getColumnClasses, getColumnStyles } = useGridLayout({
+  gridColumns: firstColumnWithGrid.value?.gridColumns ?? "3",
+  gap: firstColumnWithGrid.value?.gap ?? "3",
+});
+
+const tableGridClasses = computed(() => {
+  const gridColumns = firstColumnWithGrid.value?.gridColumns ?? "12";
+  const gap = firstColumnWithGrid.value?.gap ?? "1";
+  return getFormClasses(gridColumns, gap);
+});
+
+const visibleColumns = computed(() => {
+  const cols = columns.value.filter((c) => c.visible !== false);
+  return cols.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+});
+
 /**
  * Converte actions de objeto para array e filtra visíveis
  */
 const getActions = (record: any) => {
   if (!record.actions) return [];
 
-  // Se já é array, filtra diretamente
   if (Array.isArray(record.actions)) {
     return record.actions.filter((a: any) => a.visible !== false);
   }
 
-  // Se é objeto, converte para array
   return Object.values(record.actions).filter((a: any) => a.visible !== false);
 };
 </script>

@@ -34,12 +34,19 @@ ComponentRegistry.registerBulk({
  */
 ComponentRegistry.registerBulk({
     'table-column-text': defineAsyncComponent(() => import('~/components/table/columns/TableText.vue')),
+    'table-column-text-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TableText.vue')),
     'table-column-email': defineAsyncComponent(() => import('~/components/table/columns/TableEmail.vue')),
+    'table-column-email-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TableEmail.vue')),
     'table-column-date': defineAsyncComponent(() => import('~/components/table/columns/TableDate.vue')),
+    'table-column-date-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TableDate.vue')),
     'table-column-phone': defineAsyncComponent(() => import('~/components/table/columns/TablePhone.vue')),
+    'table-column-phone-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TablePhone.vue')),
     'table-column-status': defineAsyncComponent(() => import('~/components/table/columns/TableStatus.vue')),
+    'table-column-status-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TableStatus.vue')),
     'table-column-boolean': defineAsyncComponent(() => import('~/components/table/columns/TableBoolean.vue')),
+    'table-column-boolean-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TableBoolean.vue')),
     'table-column-image': defineAsyncComponent(() => import('~/components/table/columns/TableImage.vue')),
+    'table-column-image-editable': defineAsyncComponent(() => import('~/components/table/columns/editable/TableImage.vue')),
 })
 
 /**

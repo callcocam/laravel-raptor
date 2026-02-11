@@ -1,45 +1,7 @@
 <template>
   <div class="inline-flex items-center gap-2">
-    <!-- Editable: Toggle Switch -->
-    <button
-      v-if="column.editable"
-      type="button"
-      role="switch"
-      :aria-checked="isActive"
-      :disabled="isUpdating"
-      :class="[
-        'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent',
-        'transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2',
-        'focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-        'disabled:cursor-not-allowed disabled:opacity-50',
-        isActive ? activeClasses : inactiveClasses
-      ]"
-      :title="column.tooltip || (isActive ? 'Clique para desativar' : 'Clique para ativar')"
-      @click="handleToggle"
-    >
-      <span
-        :class="[
-          'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg',
-          'transform ring-0 transition duration-200 ease-in-out',
-          isActive ? 'translate-x-5' : 'translate-x-0'
-        ]"
-      >
-        <Icon
-          v-if="isUpdating"
-          is="Loader2"
-          class="h-full w-full p-0.5 text-muted-foreground animate-spin"
-        />
-        <Icon
-          v-else-if="icon"
-          :is="icon"
-          class="h-full w-full p-0.5 text-muted-foreground"
-        />
-      </span>
-    </button>
-
-    <!-- Read-only: Badge -->
+    <!-- Read-only: Badge (versão editável usa table-column-status-editable em columns/editable/) -->
     <span
-      v-else
       :class="[
         'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
         'transition-colors duration-150',
@@ -58,10 +20,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { computed } from 'vue'
 import Icon from '~/components/icon.vue'
-import { toast } from 'vue-sonner'
 
 const props = defineProps<{
   record: Record<string, any>
@@ -74,16 +34,10 @@ const props = defineProps<{
     labelKey?: string
     colorKey?: string
     iconKey?: string
-    editable?: boolean
-    executeUrl?: string
-    statusKey?: string
-    hasCallback?: boolean
-    activeValues?: string[]
+    statusConfig?: Record<string, { label?: string; color?: string; icon?: string }>
     [key: string]: any
   }
 }>()
-
-const isUpdating = ref(false)
 
 // Get nested value from object using dot notation
 const getNestedValue = (obj: any, path: string): any => {
@@ -143,12 +97,6 @@ const icon = computed<string | undefined>(() => {
   return props.column.icon
 })
 
-const isActive = computed(() => {
-  const val = String(value.value).toLowerCase()
-  const activeValues = (props.column.activeValues || ['active', 'published', '1', 'true', 'ativo']).map(v => String(v).toLowerCase())
-  return activeValues.includes(val)
-})
-
 const statusClasses = computed(() => {
   const colorMap: Record<string, string> = {
     success: 'bg-primary/10 text-primary border border-primary/20',
@@ -172,52 +120,4 @@ const dotClasses = computed(() => {
 
   return colorMap[color.value] || colorMap.muted
 })
-
-const activeClasses = computed(() => {
-  const colorMap: Record<string, string> = {
-    success: 'bg-primary',
-    warning: 'bg-yellow-500',
-    danger: 'bg-destructive',
-    info: 'bg-blue-500',
-    muted: 'bg-muted-foreground',
-  }
-  
-  return colorMap[color.value] || colorMap.success
-})
-
-const inactiveClasses = 'bg-muted'
-
-const handleToggle = async () => {
-  if (isUpdating.value || !props.column.executeUrl) return
-
-  isUpdating.value = true
-  
-  const statusKey = props.column.statusKey || props.column.name
-  const newValue = isActive.value ? 'inactive' : 'active'
-  
-  router.post(
-    props.column.executeUrl,
-    { 
-      actionType: 'column',
-      actionName: props.column.name,
-      fieldName: props.column.name,
-      record: props.record.id,
-      [statusKey]: newValue,
-    },
-    {
-      preserveScroll: true,
-      preserveState: true,
-      onSuccess: () => {
-        // toast.success('Status atualizado com sucesso')
-      },
-      onError: (errors) => {
-        console.error('Error updating status:', errors)
-        toast.error('Erro ao atualizar status')
-      },
-      onFinish: () => {
-        isUpdating.value = false
-      },
-    }
-  )
-}
 </script>

@@ -23,6 +23,13 @@ import TableDate from '../components/table/columns/TableDate.vue'
 import TableEmail from '../components/table/columns/TableEmail.vue'
 import TablePhone from '../components/table/columns/TablePhone.vue'
 import TableStatus from '../components/table/columns/TableStatus.vue'
+import TableStatusEditable from '../components/table/columns/editable/TableStatus.vue'
+import TableTextEditable from '../components/table/columns/editable/TableText.vue'
+import TableBooleanEditable from '../components/table/columns/editable/TableBoolean.vue'
+import TableDateEditable from '../components/table/columns/editable/TableDate.vue'
+import TableEmailEditable from '../components/table/columns/editable/TableEmail.vue'
+import TablePhoneEditable from '../components/table/columns/editable/TablePhone.vue'
+import TableImageEditable from '../components/table/columns/editable/TableImage.vue'
 import TableText from '../components/table/columns/TableText.vue'
 
 // Componentes de Breadcrumb
@@ -52,11 +59,18 @@ export function initializeComponents(): void {
   // Registra componentes de Table
   ComponentRegistry.registerBulk({
     'table-column-boolean': TableBoolean,
+    'table-column-boolean-editable': TableBooleanEditable,
     'table-column-date': TableDate,
+    'table-column-date-editable': TableDateEditable,
     'table-column-email': TableEmail,
+    'table-column-email-editable': TableEmailEditable,
     'table-column-phone': TablePhone,
+    'table-column-phone-editable': TablePhoneEditable,
     'table-column-status': TableStatus,
+    'table-column-status-editable': TableStatusEditable,
     'table-column-text': TableText,
+    'table-column-text-editable': TableTextEditable,
+    'table-column-image-editable': TableImageEditable,
   })
 
   // Registra componentes de Breadcrumb

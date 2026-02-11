@@ -445,11 +445,22 @@ abstract class AbstractController extends ResourceController
             }
             // Executa o callback da action
             $result = $callback->executeCallback($request, $model);
-           
-            if (!$result) { 
+
+            // Coluna editável sem callback: atualiza o campo do modelo (blur/saída do campo)
+            if ($result === null && $type === 'column' && $model && method_exists($callback, 'isEditable') && $callback->isEditable()) {
+                $fieldKey = method_exists($callback, 'getStatusKey') ? $callback->getStatusKey() : $callback->getName();
+                if ($request->has($fieldKey)) {
+                    $model->{$fieldKey} = $request->input($fieldKey);
+                    $model->save();
+
+                    return redirect()->back()->with('success', __('Campo atualizado com sucesso.'));
+                }
+            }
+
+            if (!$result) {
                 return redirect()
                     ->back()
-                    ->with('error', 'Ação não retornou nenhum resultado.'); 
+                    ->with('error', 'Ação não retornou nenhum resultado.');
             }
           
             // Hook: depois de executar action
