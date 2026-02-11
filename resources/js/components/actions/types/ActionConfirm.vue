@@ -6,7 +6,7 @@
  *
  * Usa AlertDialog da shadcn-vue para seguir o padrão do projeto
  -->
-<template>
+ <template>
   <AlertDialog v-model:open="isOpen">
     <AlertDialogTrigger as-child>
       <Button :variant="variant" :size="computedSize" class="gap-1.5 btn-gradient">
@@ -94,8 +94,12 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   size: "sm",
+  inertia: {
+    preserveScroll: true,
+    preserveState: true,
+    only: [],
+  }
 });
-
 const emit = defineEmits<{
   (e: "click", record?: Record<string, any>): void;
   (e: "open"): void;
@@ -116,9 +120,11 @@ const showTypedError = ref(false);
 const form = useForm({
   actionType: '',
   actionName: '',
-  record: null as Record<string, any> | null,
 });
-
+// verifica se o action tem inertia
+const inertia = computed(() => {
+  return props.action.inertia;
+});
 // Alias para manter compatibilidade no template
 const isSubmitting = computed(() => form.processing);
 
@@ -218,18 +224,24 @@ const confirmAction = () => {
     return;
   }
 
-  // Atualiza o form com os dados da action e o record
+  // Atualiza as propriedades do form (useForm expõe actionType/actionName como keys reativas)
   form.actionType = props.action.actionType || '';
   form.actionName = props.action.name || '';
-  form.record = props.record ?? null;
+
+  // Inclui o record no payload via transform (data() só envia keys de defaults; record é dinâmico)
+  form.transform((data) => ({
+    ...data,
+    ...(props.record || {}),
+  }));
 
   // Submit usando useForm do Inertia - processing e errors são gerenciados automaticamente
   form.submit(
     props.action.method.toLowerCase() as "post" | "put" | "patch" | "delete",
     props.action.url,
     {
-      preserveScroll: true,
-      preserveState: true,
+      preserveScroll: inertia.value?.preserveScroll || true,
+      preserveState: inertia.value?.preserveState || true,
+      only: inertia.value?.only || [],
       onSuccess: (page) => {
         emit("submit", props.record ?? {});
         emit("success", page);

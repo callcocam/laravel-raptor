@@ -14,27 +14,30 @@ use Illuminate\Http\Request;
 class ConfirmAction extends ExecuteAction
 {
 
-    public function __construct(?string $name = null, ?string $message = null)
+    public function __construct(?string $name = null)
     {
-        parent::__construct($name, $message);
+        parent::__construct($name);
 
-        $this->component('confirm-action')->confirm([
-            'title' => 'Confirmar Ação',
-            'text' => 'Tem certeza que deseja confirmar a ação?',
-            'confirmButtonText' => 'Sim, Confirmar',
-            'cancelButtonText' => 'Cancelar',
-            'successMessage' => 'A ação foi confirmada com sucesso.',
-        ])
-        ->executeUrlCallback(str($this->name)->replace('confirm', 'execute')->toString())
-        ->callback(function (Request $request, $model = null) {
-            return [
-                'notification' => [
-                    'title' => 'A ação foi confirmada com sucesso.',
-                    'message' => 'A ação foi confirmada com sucesso.',
-                    'text' => 'A ação foi confirmada com sucesso.',
-                    'type' => 'success',
-                ],
-            ];
-        });
+        $this->component('confirm-action')
+            ->actionType('actions')
+            ->method('POST')
+            ->confirm([
+                'title' => 'Confirmar Ação',
+                'text' => 'Tem certeza que deseja confirmar a ação?',
+                'confirmButtonText' => 'Sim, Confirmar',
+                'cancelButtonText' => 'Cancelar',
+                'successMessage' => 'A ação foi confirmada com sucesso.',
+            ])
+            ->executeUrlCallback(str($this->name)->replace('confirm', 'execute')->toString())
+            ->callback(function (?Request $request = null, $model = null) {
+                return [
+                    'notification' => [
+                        'title' => 'A ação foi confirmada com sucesso.',
+                        'message' => 'A ação foi confirmada com sucesso.',
+                        'text' => 'A ação foi confirmada com sucesso.',
+                        'type' => 'success',
+                    ],
+                ];
+            });
     }
 }
