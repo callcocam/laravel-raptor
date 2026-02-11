@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from "vue";
+import { ref, computed, h, watch } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import { Button } from "@/components/ui/button";
 import {
@@ -89,6 +89,7 @@ import type { TableAction } from "~/types/table";
 interface Props {
   action: TableAction;
   size?: "default" | "sm" | "lg" | "icon";
+  record?: Record<string, any>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -96,7 +97,10 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: "click"): void;
+  (e: "click", record?: Record<string, any>): void;
+  (e: "open"): void;
+  (e: "close"): void;
+  (e: "submit", record: Record<string, any>): void;
   (e: "success", data: any): void;
   (e: "error", error: any): void;
 }>();
@@ -111,7 +115,8 @@ const showTypedError = ref(false);
 // Form do Inertia - gerencia automaticamente processing, errors, success
 const form = useForm({
   actionType: '',
-  actionName: ''
+  actionName: '',
+  record: null as Record<string, any> | null,
 });
 
 // Alias para manter compatibilidade no template
@@ -196,6 +201,15 @@ const questionIcon = computed(() => {
   return h(QuestionIcon);
 });
 
+// Watch para emitir eventos quando o dialog abre/fecha
+watch(isOpen, (newValue) => {
+  if (newValue) {
+    emit("open");
+  } else {
+    emit("close");
+  }
+});
+
 // Confirma a ação
 const confirmAction = () => {
   // Verifica confirmação por digitação se necessário
@@ -204,9 +218,10 @@ const confirmAction = () => {
     return;
   }
 
-  // Atualiza o form com os dados da action
+  // Atualiza o form com os dados da action e o record
   form.actionType = props.action.actionType || '';
   form.actionName = props.action.name || '';
+  form.record = props.record ?? null;
 
   // Submit usando useForm do Inertia - processing e errors são gerenciados automaticamente
   form.submit(
@@ -216,6 +231,7 @@ const confirmAction = () => {
       preserveScroll: true,
       preserveState: true,
       onSuccess: (page) => {
+        emit("submit", props.record ?? {});
         emit("success", page);
         isOpen.value = false;
         // Reseta palavra digitada
@@ -223,7 +239,7 @@ const confirmAction = () => {
         showTypedError.value = false;
 
         // Emite evento de click para compatibilidade
-        emit("click");
+        emit("click", props.record);
       },
       onError: (errors) => {
         emit("error", errors);
@@ -231,4 +247,20 @@ const confirmAction = () => {
     }
   );
 };
+
+// Expõe métodos para controle externo (paridade com ActionModalSlideover)
+const openDialog = () => {
+  isOpen.value = true;
+};
+const closeDialog = () => {
+  isOpen.value = false;
+  typedWord.value = '';
+  showTypedError.value = false;
+};
+
+defineExpose({
+  open: openDialog,
+  close: closeDialog,
+  isOpen,
+});
 </script>
