@@ -144,6 +144,7 @@ class TenantController extends LandlordController
 
             BooleanColumn::make('status')
                 ->label('Ativo')
+                ->editable()
                 ->sortable(),
 
             DateColumn::make('created_at')

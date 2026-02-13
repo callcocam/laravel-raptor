@@ -90,7 +90,7 @@ class RoleController extends LandlordController
                 ->columns(2)
                 ->searchable()
                 ->showSelectAll(true)
-                ->defaultUsing(fn ($request, $model) => $model ? $model->permissions->pluck('id')->toArray() : [])
+                ->defaultUsing(fn($request, $model) => $model ? $model->permissions->pluck('id')->toArray() : [])
                 ->helpText(config('raptor.controllers.roles.form.permissions.helpText', __('Selecione as permissões associadas a esta role'))),
         ]);
 
@@ -102,21 +102,27 @@ class RoleController extends LandlordController
         return $table->columns([
             TextColumn::make('name', config('raptor.controllers.roles.table.name', 'Nome'))
                 ->searchable()
+                ->columnSpanSix()
                 ->sortable(),
 
             TextColumn::make('slug', config('raptor.controllers.roles.table.slug', 'Slug'))
                 ->searchable()
+                ->columnSpanSix()
                 ->sortable(),
-
-            TextColumn::make('description', config('raptor.controllers.roles.table.description', 'Descrição'))
-                ->searchable(),
 
             BooleanColumn::make('special', config('raptor.controllers.roles.table.special', 'Especial'))
                 ->trueLabel('Sim')
                 ->falseLabel('Não')
                 ->trueColor('success')
                 ->falseColor('secondary')
-                ->sortable(),
+                ->editable()
+                ->executeUrl(route('landlord.roles.execute'))
+                ->sortable()->columnSpanSix(),
+            BooleanColumn::make('status', config('raptor.controllers.roles.table.status', 'Status'))
+                ->editable()
+                ->executeUrl(route('landlord.roles.execute'))
+                ->sortable()->columnSpanSix(),
+
 
             DateColumn::make('created_at', config('raptor.controllers.roles.table.created_at', 'Criado em'))
                 ->format('d/m/Y H:i')
@@ -125,6 +131,9 @@ class RoleController extends LandlordController
             DateColumn::make('updated_at', config('raptor.controllers.roles.table.updated_at', 'Atualizado'))
                 ->relative()
                 ->sortable(),
+
+            TextColumn::make('description', config('raptor.controllers.roles.table.description', 'Descrição'))
+                ->searchable()->columnSpanFull(),
         ])
             ->filters([
                 \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
@@ -147,11 +156,11 @@ class RoleController extends LandlordController
             TextInfolist::make('slug', config('raptor.controllers.roles.infolist.slug', 'Slug')),
             TextInfolist::make('description', config('raptor.controllers.roles.infolist.description', 'Descrição')),
             TextInfolist::make('special', config('raptor.controllers.roles.infolist.special', 'Permissões Especiais'))
-                ->value(fn ($value) => $value ? 'Sim' : 'Não'),
+                ->value(fn($value) => $value ? 'Sim' : 'Não'),
             TextInfolist::make('created_at', config('raptor.controllers.roles.infolist.created_at', 'Criado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.roles.infolist.updated_at', 'Atualizado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 
