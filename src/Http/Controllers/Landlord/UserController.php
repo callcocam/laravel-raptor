@@ -103,10 +103,8 @@ class UserController extends LandlordController
                 ->minLength(8)
                 ->showToggle()
                 ->columnSpan('6')
-                ->helpText('Digite a senha novamente'),
-
-            CheckboxField::make('email_verified_at', 'E-mail Verificado')
-                ->helpText('Marque se o e-mail já foi verificado'),
+                ->helpText('Digite a senha novamente'), 
+                
             CheckboxField::make('roles', 'Papéis')
                 ->relationship('roles', 'name')
                 ->multiple()
