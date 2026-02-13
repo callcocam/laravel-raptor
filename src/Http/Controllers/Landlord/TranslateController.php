@@ -13,8 +13,8 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
@@ -38,26 +38,26 @@ class TranslateController extends LandlordController
     public function getPages(): array
     {
         return [
-            'index' => Index::route('/translates')
-                ->label('Traduções')
-                ->name('translates.index')
-                ->icon('Languages')
-                ->group('Sistema')
-                ->groupCollapsible(true)
-                ->order(30)
-                ->middlewares(['auth', 'verified']),
+            'index' => Index::route(config('raptor.controllers.translates.index.route', '/translates'))
+                ->label(config('raptor.controllers.translates.index.label', __('Traduções')))
+                ->name(config('raptor.controllers.translates.index.name', 'translates.index'))
+                ->icon(config('raptor.controllers.translates.index.icon', 'Languages'))
+                ->group(config('raptor.controllers.translates.index.group', 'Sistema'))
+                ->groupCollapsible(config('raptor.controllers.translates.index.groupCollapsible', true))
+                ->order(config('raptor.controllers.translates.index.order', 30))
+                ->middlewares(config('raptor.controllers.translates.index.middlewares', ['auth', 'verified'])),
             'create' => Create::route('/translates/create')
-                ->label('Criar Tradução')
-                ->name('translates.create')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.translates.create.label', __('Criar Tradução')))
+                ->name(config('raptor.controllers.translates.create.name', 'translates.create'))
+                ->middlewares(config('raptor.controllers.translates.create.middlewares', ['auth', 'verified'])),
             'edit' => Edit::route('/translates/{record}/edit')
-                ->label('Editar Tradução')
-                ->name('translates.edit')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.translates.edit.label', __('Editar Tradução')))
+                ->name(config('raptor.controllers.translates.edit.name', 'translates.edit'))
+                ->middlewares(config('raptor.controllers.translates.edit.middlewares', ['auth', 'verified'])),
             'execute' => Execute::route('/translates/execute/actions')
-                ->label('Executar Ações')
-                ->name('translates.execute')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.translates.execute.label', __('Executar Ações')))
+                ->name(config('raptor.controllers.translates.execute.name', 'translates.execute'))
+                ->middlewares(config('raptor.controllers.translates.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -76,7 +76,7 @@ class TranslateController extends LandlordController
                 ->label('Tenant')
                 ->default('Global')
                 ->badge()
-                ->color(fn($value) => $value === 'Global' ? 'gray' : 'success')
+                ->color(fn ($value) => $value === 'Global' ? 'gray' : 'success')
                 ->sortable()
                 ->searchable(),
 
@@ -89,7 +89,7 @@ class TranslateController extends LandlordController
             TextColumn::make('locale')
                 ->label('Idioma')
                 ->badge()
-                ->color(fn($value) => match ($value) {
+                ->color(fn ($value) => match ($value) {
                     'pt_BR' => 'primary',
                     'en' => 'success',
                     'es' => 'warning',
@@ -115,8 +115,8 @@ class TranslateController extends LandlordController
                 ->trueLabel('Globais')
                 ->falseLabel('Por Tenant')
                 ->queries(
-                    true: fn($query) => $query->whereNull('tenant_id'),
-                    false: fn($query) => $query->whereNotNull('tenant_id'),
+                    true: fn ($query) => $query->whereNull('tenant_id'),
+                    false: fn ($query) => $query->whereNotNull('tenant_id'),
                 ),
         ]);
 
@@ -148,7 +148,7 @@ class TranslateController extends LandlordController
 
                         return redirect()->back()->with('success', 'Arquivos JSON gerados com sucesso!');
                     } catch (\Exception $e) {
-                        return redirect()->back()->with('error', 'Erro ao gerar arquivos JSON: ' . $e->getMessage());
+                        return redirect()->back()->with('error', 'Erro ao gerar arquivos JSON: '.$e->getMessage());
                     }
                 }),
 
@@ -172,7 +172,7 @@ class TranslateController extends LandlordController
 
                         return redirect()->back()->with('success', 'Arquivos JSON sincronizados com sucesso!');
                     } catch (\Exception $e) {
-                        return redirect()->back()->with('error', 'Erro ao sincronizar: ' . $e->getMessage());
+                        return redirect()->back()->with('error', 'Erro ao sincronizar: '.$e->getMessage());
                     }
                 }),
         ]);
@@ -212,7 +212,6 @@ class TranslateController extends LandlordController
                 ->placeholder('Deixe vazio se não houver grupo')
                 ->columnSpanFull(),
 
-
             SelectField::make('locale')
                 ->label('Idioma')
                 ->options(array_intersect_key($localeOptions, array_flip($availableLocales)))
@@ -239,7 +238,7 @@ class TranslateController extends LandlordController
                         ->helperText('Valor traduzido que substituirá a tradução padrão')
                         ->required()
                         ->columnSpan('7'),
-                ])
+                ]),
         ]);
 
         return $form;
@@ -319,7 +318,7 @@ class TranslateController extends LandlordController
 
             TextInfolist::make('full_key')
                 ->label('Chave Completa')
-                ->value(fn($record) => $record->getFullKey()),
+                ->value(fn ($record) => $record->getFullKey()),
 
             TextInfolist::make('created_at')
                 ->label('Criado em')

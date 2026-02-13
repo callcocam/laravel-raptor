@@ -15,8 +15,8 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\EmailField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\PasswordField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
@@ -26,102 +26,91 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\EmailColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
-use Illuminate\Support\Facades\DB;
 
 class UserController extends TenantController
 {
     use WithRequests;
 
     /**
-     * Define o model que será usado pelo controller
+     * Define o model que será usado pelo controller (tenant = usuários do contexto tenant/shinobi)
      */
     public function model(): ?string
     {
-        return config('raptor.landlord.models.user', \Callcocam\LaravelRaptor\Models\Auth\User::class);
+        return config('raptor.shinobi.models.user', \App\Models\User::class);
     }
 
     public function getPages(): array
     {
         return [
             'index' => Index::route('/users')
-                ->label('Usuários')
-                ->name('users.index')
-                ->icon('Users')
-                ->group('Segurança')
-                ->groupCollapsible(true)
-                ->order(5)
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.users.index.label', __('Usuários')))
+                ->name(config('raptor.controllers.users.index.name', 'users.index'))
+                ->icon(config('raptor.controllers.users.index.icon', 'Users'))
+                ->group(config('raptor.controllers.users.index.group', 'Segurança'))
+                ->groupCollapsible(config('raptor.controllers.users.index.groupCollapsible', true))
+                ->order(config('raptor.controllers.users.index.order', 5))
+                ->middlewares(config('raptor.controllers.users.index.middlewares', ['auth', 'verified'])),
             'create' => Create::route('/users/create')
-                ->label('Criar Usuário')
-                ->name('users.create')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.users.create.label', __('Criar Usuário')))
+                ->name(config('raptor.controllers.users.create.name', 'users.create'))
+                ->icon(config('raptor.controllers.users.create.icon', 'Users'))
+                ->group(config('raptor.controllers.users.create.group', 'Segurança'))
+                ->groupCollapsible(config('raptor.controllers.users.create.groupCollapsible', true))
+                ->order(config('raptor.controllers.users.create.order', 5))
+                ->middlewares(config('raptor.controllers.users.create.middlewares', ['auth', 'verified'])),
             'edit' => Edit::route('/users/{record}/edit')
-                ->label('Editar Usuário')
-                ->name('users.edit')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.users.edit.label', __('Editar Usuário')))
+                ->name(config('raptor.controllers.users.edit.name', 'users.edit'))
+                ->icon(config('raptor.controllers.users.edit.icon', 'Users'))
+                ->group(config('raptor.controllers.users.edit.group', 'Segurança'))
+                ->groupCollapsible(config('raptor.controllers.users.edit.groupCollapsible', true))
+                ->order(config('raptor.controllers.users.edit.order', 5))
+                ->middlewares(config('raptor.controllers.users.edit.middlewares', ['auth', 'verified'])),
             'execute' => Execute::route('/users/execute/actions')
-                ->label('Executar Usuário')
-                ->name('users.execute')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.users.execute.label', __('Executar Usuário')))
+                ->name(config('raptor.controllers.users.execute.name', 'users.execute'))
+                ->icon(config('raptor.controllers.users.execute.icon', 'Users'))
+                ->group(config('raptor.controllers.users.execute.group', 'Segurança'))
+                ->groupCollapsible(config('raptor.controllers.users.execute.groupCollapsible', true))
+                ->order(config('raptor.controllers.users.execute.order', 5))
+                ->middlewares(config('raptor.controllers.users.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
     protected function form(Form $form): Form
     {
         $form->columns([
-            TextField::make('name', 'Nome')
+            TextField::make('name', config('raptor.controllers.users.form.name.label', __('Nome')))
                 ->required()
-                ->placeholder('Nome completo do usuário')
+                ->placeholder(config('raptor.controllers.users.form.name.placeholder', __('Nome completo do usuário')))
                 ->columnSpan('7')
-                ->helpText('Nome completo do usuário'),
+                ->helpText(config('raptor.controllers.users.form.name.helpText', __('Nome completo do usuário'))),
 
-            EmailField::make('email', 'E-mail')
-                ->required()
-                ->rules(function ($record) {
-                    return ['required', 'string', 'max:255', 'unique:users,email' . ($record ? ",{$record->id}" : '')];
-                })
-                ->placeholder('email@exemplo.com')
-                ->columnSpan('5')
-                ->helpText('E-mail único para login'),
+            EmailField::make('email', config('raptor.controllers.users.form.email.label', __('E-mail')))
+                ->placeholder(config('raptor.controllers.users.form.email.placeholder', __('email@exemplo.com')))
+                ->helpText(config('raptor.controllers.users.form.email.helpText', __('E-mail único para login'))),
 
-            PasswordField::make('password', 'Senha')
-                ->required()
-                ->minLength(8)
-                ->showToggle()
-                ->columnSpan('6')
-                ->helpText('Senha com no mínimo 8 caracteres'),
+            PasswordField::make('password', config('raptor.controllers.users.form.password.label', __('Senha')))
+                ->placeholder(config('raptor.controllers.users.form.password.placeholder', __('Senha com no mínimo 8 caracteres')))
+                ->helpText(config('raptor.controllers.users.form.password.helpText', __('Senha com no mínimo 8 caracteres'))),
 
-            PasswordField::make('password_confirmation', 'Confirmar Senha')
-                ->required()
-                ->minLength(8)
-                ->showToggle()
-                ->columnSpan('6')
-                ->helpText('Digite a senha novamente'),
-            CheckboxField::make('roles', 'Papéis')
-                ->options(function () {
-                    $tenantId = config('app.current_tenant_id');
-
-                    return DB::table(config('raptor.shinobi.tables.roles'))
-                        ->where(function ($query) use ($tenantId) {
-                            $query->whereNull('tenant_id')
-                                ->orWhere('tenant_id', $tenantId);
-                        })
-                        ->pluck('name', 'id')
-                        ->toArray();
-                })
+            PasswordField::make('password_confirmation', config('raptor.controllers.users.form.password_confirmation.label', __('Confirmar Senha')))
+                ->placeholder(config('raptor.controllers.users.form.password_confirmation.placeholder', __('Confirmar Senha')))
+                ->helpText(config('raptor.controllers.users.form.password_confirmation.helpText', __('Confirmar Senha')))
+                ->required(config('raptor.controllers.users.form.password_confirmation.required', true))
+                ->minLength(config('raptor.controllers.users.form.password_confirmation.minLength', 8))
+                ->showToggle(config('raptor.controllers.users.form.password_confirmation.showToggle', true))
+                ->columnSpan(config('raptor.controllers.users.form.password_confirmation.columnSpan', '6')),
+            CheckboxField::make('roles', config('raptor.controllers.users.form.roles.label', __('Papéis')))
+                ->relationship('roles', 'name')
                 ->multiple()
-                ->defaultUsing(function ($model) {
-                    if ($model) {
-                        return DB::table(config('raptor.shinobi.tables.role_user'))
-                            ->where('user_id', $model->id)
-                            ->pluck('role_id')
-                            ->toArray();
-                    }
-                    return [];
-                })
-                ->helpText('Atribua papéis ao usuário'),
-            CheckboxField::make('email_verified_at', 'E-mail Verificado')
-                ->helpText('Marque se o e-mail já foi verificado'),
+                ->defaultUsing(fn ($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
+                ->helpText(config('raptor.controllers.users.form.roles.helpText', __('Atribua papéis ao usuário'))),
+            // CheckboxField::make(
+            //     'email_verified_at',
+            //     config('raptor.controllers.users.form.email_verified_at.label', __('E-mail Verificado'))
+            // )
+            //     ->helpText(config('raptor.controllers.users.form.email_verified_at.helpText', __('Marque se o e-mail já foi verificado'))),
         ]);
 
         return $form;
@@ -130,70 +119,64 @@ class UserController extends TenantController
     protected function table(TableBuilder $table): TableBuilder
     {
         return $table->columns([
-            TextColumn::make('name', 'Nome')
+            TextColumn::make('name', config('raptor.controllers.users.table.name', 'Nome'))
                 ->searchable()
                 ->sortable(),
 
-            EmailColumn::make('email', 'E-mail')
+            EmailColumn::make('email', config('raptor.controllers.users.table.email', 'E-mail'))
                 ->searchable()
                 ->sortable(),
 
-            BooleanColumn::make('email_verified_at', 'Verificado')
+            BooleanColumn::make('email_verified_at', config('raptor.controllers.users.table.email_verified_at', 'Verificado'))
                 ->trueLabel('Sim')
                 ->falseLabel('Não')
                 ->trueColor('success')
                 ->falseColor('warning')
                 ->sortable(),
 
-            DateColumn::make('created_at', 'Criado em')
+            DateColumn::make('created_at', config('raptor.controllers.users.table.created_at', 'Criado em'))
                 ->format('d/m/Y H:i')
                 ->sortable(),
 
-            DateColumn::make('updated_at', 'Atualizado em')
+            DateColumn::make('updated_at', config('raptor.controllers.users.table.updated_at', 'Atualizado em'))
                 ->relative()
                 ->sortable(),
         ])
             ->filters([
-                \Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter::make('status')
-                    ->label('Status')
-                    ->options([
-                        'draft' => 'Rascunho',
-                        'published' => 'Publicado',
-                    ]),
                 \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make('users.show'),
-                \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make('users.edit'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ViewAction::make(config('raptor.controllers.users.actions.show', 'users.show')),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make(config('raptor.controllers.users.actions.edit', 'users.edit')),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('tenant.loginAs')
-                    ->label('Login como')
+                    ->label(config('raptor.controllers.users.actions.login_as_label', 'Login como'))
                     ->icon('Login')
-                    ->visible(function ($record) { 
-                        return auth()->user()->isAdmin();
+                    ->visible(function ($record) {
+                        return auth()->check() && method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin();
                     })
                     ->color('secondary')
-                    ->url(fn($record) => route('tenant.loginAs', ['token' => $record->id]))
+                    ->url(fn ($record) => route('tenant.loginAs', ['token' => $record->id]))
                     ->actionAlink()
-                    ->tooltip('Faça login como este usuário'),
-                \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make('users.restore'),
-                \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('users.forceDelete'),
-                \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('users.destroy'),
+                    ->tooltip(config('raptor.controllers.users.actions.login_as_tooltip', 'Faça login como este usuário')),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make(config('raptor.controllers.users.actions.restore', 'users.restore')),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make(config('raptor.controllers.users.actions.force_delete', 'users.forceDelete')),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make(config('raptor.controllers.users.actions.destroy', 'users.destroy')),
             ])->headerActions([
-                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('users.create'),
+                \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make(config('raptor.controllers.users.actions.create', 'users.create')),
             ]);
     }
 
     protected function infolist(InfoListBuilder $infolist): InfoListBuilder
     {
         return $infolist->columns([
-            TextInfolist::make('name', 'Nome'),
-            TextInfolist::make('email', 'E-mail'),
-            TextInfolist::make('email_verified_at', 'E-mail Verificado')
-                ->value(fn($value) => $value ? 'Sim - ' . \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
-            TextInfolist::make('created_at', 'Criado em')
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
-            TextInfolist::make('updated_at', 'Atualizado em')
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+            TextInfolist::make('name', config('raptor.controllers.users.infolist.name', 'Nome')),
+            TextInfolist::make('email', config('raptor.controllers.users.infolist.email', 'E-mail')),
+            TextInfolist::make('email_verified_at', config('raptor.controllers.users.infolist.email_verified_at', 'E-mail Verificado'))
+                ->value(fn ($value) => $value ? 'Sim - '.\Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
+            TextInfolist::make('created_at', config('raptor.controllers.users.infolist.created_at', 'Criado em'))
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+            TextInfolist::make('updated_at', config('raptor.controllers.users.infolist.updated_at', 'Atualizado em'))
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

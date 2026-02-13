@@ -9,38 +9,40 @@
 namespace Callcocam\LaravelRaptor\Traits;
 
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
+use Callcocam\LaravelRaptor\Services\TenantDatabaseManager;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
+use Callcocam\LaravelRaptor\Support\ResolvedTenantConfig;
 use Illuminate\Console\Command;
 
 /**
  * Trait para Commands que precisam do contexto do tenant
- * 
+ *
  * Adiciona opção --tenant para especificar o tenant
  * e métodos para restaurar o contexto.
- * 
+ *
  * @example
  * ```php
  * class ProcessOrdersCommand extends Command
  * {
  *     use \Callcocam\LaravelRaptor\Traits\TenantAwareCommand;
- *     
+ *
  *     protected $signature = 'orders:process {--tenant= : ID ou domínio do tenant}';
- *     
+ *
  *     public function handle(): int
  *     {
  *         // Configura o tenant pelo argumento --tenant
  *         if (!$this->setupTenantFromOption()) {
  *             return Command::FAILURE;
  *         }
- *         
+ *
  *         // Agora pode usar app('tenant'), config('app.current_tenant_id'), etc.
  *         $this->info("Processando para tenant: " . app('tenant')->name);
- *         
+ *
  *         return Command::SUCCESS;
  *     }
  * }
  * ```
- * 
+ *
  * Para iterar sobre todos os tenants:
  * ```php
  * public function handle(): int
@@ -49,7 +51,7 @@ use Illuminate\Console\Command;
  *         $this->info("Processando: {$tenant->name}");
  *         // Seu código aqui - contexto do tenant já configurado
  *     });
- *     
+ *
  *     return Command::SUCCESS;
  * }
  * ```
@@ -58,67 +60,73 @@ trait TenantAwareCommand
 {
     /**
      * Configura o contexto do tenant a partir da opção --tenant
-     * 
+     *
      * @return bool True se conseguiu configurar, false se falhou
      */
     protected function setupTenantFromOption(): bool
     {
         $tenantIdentifier = $this->option('tenant');
 
-        if (!$tenantIdentifier) {
+        if (! $tenantIdentifier) {
             $this->error('A opção --tenant é obrigatória');
+
             return false;
         }
 
         $tenant = $this->findTenant($tenantIdentifier);
 
-        if (!$tenant) {
+        if (! $tenant) {
             $this->error("Tenant não encontrado: {$tenantIdentifier}");
+
             return false;
         }
 
         $this->setupTenantContext($tenant);
+
         return true;
     }
 
     /**
      * Configura o contexto do tenant opcional (não falha se não informado)
-     * 
+     *
      * @return bool True se configurou um tenant, false se não tinha tenant para configurar
      */
     protected function setupTenantFromOptionIfProvided(): bool
     {
         $tenantIdentifier = $this->option('tenant');
 
-        if (!$tenantIdentifier) {
+        if (! $tenantIdentifier) {
             return false;
         }
 
         $tenant = $this->findTenant($tenantIdentifier);
 
-        if (!$tenant) {
+        if (! $tenant) {
             $this->warn("Tenant não encontrado: {$tenantIdentifier}");
+
             return false;
         }
 
         $this->setupTenantContext($tenant);
+
         return true;
     }
 
     /**
      * Executa uma callback para cada tenant ativo
-     * 
-     * @param callable $callback Função que recebe o tenant
-     * @param bool $showProgress Exibe barra de progresso
+     *
+     * @param  callable  $callback  Função que recebe o tenant
+     * @param  bool  $showProgress  Exibe barra de progresso
      */
     protected function forEachTenant(callable $callback, bool $showProgress = true): void
     {
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
-        
+
         $tenants = $tenantModel::where('status', TenantStatus::Published->value)->get();
 
         if ($tenants->isEmpty()) {
             $this->warn('Nenhum tenant ativo encontrado.');
+
             return;
         }
 
@@ -164,27 +172,25 @@ trait TenantAwareCommand
     }
 
     /**
-     * Configura o contexto de um tenant específico
+     * Configura o contexto de um tenant específico (usa ResolvedTenantConfig como jobs/HTTP).
      */
     protected function setupTenantContext($tenant): void
     {
-        // Limpa contexto anterior
         $this->clearTenantContext();
 
-        // Registra no container
+        $config = ResolvedTenantConfig::from($tenant, null);
+
         app()->instance('tenant.context', true);
-        app()->instance('current.tenant', $tenant);
-        app()->instance('tenant', $tenant);
+        app()->instance('current.tenant', $config->tenant);
+        app()->instance('tenant', $config->tenant);
+        app()->instance(ResolvedTenantConfig::class, $config);
 
-        // Registra na config
-        config(['app.context' => 'tenant']);
-        config(['app.current_tenant_id' => $tenant->id]);
+        config($config->toAppConfig());
+        Landlord::addTenant($config->tenant);
 
-        // Adiciona ao Landlord para scopes automáticos
-        Landlord::addTenant($tenant);
-
-        // Configura banco de dados se necessário
-        $this->configureTenantDatabaseForCommand($tenant);
+        if (config('raptor.database.configure_in_commands', true)) {
+            app(TenantDatabaseManager::class)->applyConfig($config);
+        }
     }
 
     /**
@@ -194,7 +200,7 @@ trait TenantAwareCommand
     {
         // Remove do Landlord
         Landlord::disable();
-        
+
         // Limpa config
         config([
             'app.context' => null,
@@ -205,29 +211,13 @@ trait TenantAwareCommand
             'app.current_store_id' => null,
         ]);
 
-        // Remove instâncias do container (se possível)
         app()->forgetInstance('tenant');
         app()->forgetInstance('current.tenant');
         app()->forgetInstance('tenant.context');
+        app()->forgetInstance(ResolvedTenantConfig::class);
         app()->forgetInstance('current.domainable');
         app()->forgetInstance('current.client');
         app()->forgetInstance('current.store');
-    }
-
-    /**
-     * Configura o banco de dados do tenant para o command
-     */
-    protected function configureTenantDatabaseForCommand($tenant): void
-    {
-        // Se a estratégia for banco separado, configura a conexão
-        if (config('raptor.database.strategy') === 'separate') {
-            $resolverClass = config('raptor.services.tenant_resolver', \Callcocam\LaravelRaptor\Services\TenantResolver::class);
-            
-            if (class_exists($resolverClass)) {
-                $resolver = app($resolverClass);
-                $resolver->configureTenantDatabase($tenant, null);
-            }
-        }
     }
 
     /**

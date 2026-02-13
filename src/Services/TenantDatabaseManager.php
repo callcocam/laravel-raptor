@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use Callcocam\LaravelRaptor\Support\ResolvedTenantConfig;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -40,6 +41,39 @@ class TenantDatabaseManager
             'database' => $database,
         ]));
         DB::purge('tenant');
+    }
+
+    /**
+     * Altera o banco de uma conexão para o informado.
+     * Models que usam essa conexão passam a usar o banco do tenant.
+     */
+    public function switchConnectionTo(string $connectionName, string $database): void
+    {
+        Config::set("database.connections.{$connectionName}.database", $database);
+        DB::purge($connectionName);
+    }
+
+    /**
+     * Altera o banco da conexão default para o informado.
+     */
+    public function switchDefaultConnectionTo(string $database): void
+    {
+        $this->switchConnectionTo($this->defaultConnection, $database);
+    }
+
+    /**
+     * Aplica a configuração resolvida do tenant: conexão "tenant" + conexão informada em config.
+     * Resolver customizado pode definir connectionName (ex.: client, store); pacote usa default.
+     */
+    public function applyConfig(ResolvedTenantConfig $config): void
+    {
+        if (! $config->hasDedicatedDatabase()) {
+            return;
+        }
+
+        $database = (string) $config->database;
+        $this->setupConnection($database);
+        $this->switchConnectionTo($config->connectionName ?? $this->defaultConnection, $database);
     }
 
     /**
@@ -172,6 +206,42 @@ class TenantDatabaseManager
         } else {
             DB::connection($this->defaultConnection)->statement("DROP DATABASE IF EXISTS `{$database}`");
         }
+    }
+
+    /**
+     * Cria configuração inicial do tenant quando o banco está vazio (role, permissões, usuário).
+     * Sempre envia email ao endereço do tenant: novas credenciais (banco vazio) ou aviso de atualização.
+     */
+    public function createTenantConfiguration(Model $tenant): void
+    {
+        $database = $tenant->getAttribute('database');
+        if (empty($database)) {
+            return;
+        }
+        $this->setupConnection($database);
+        $databaseWasEmpty = $this->tenantDatabaseIsEmpty();
+        $class = config('raptor.tenant_configuration.class', DefaultTenantConfiguration::class);
+        if (! $class || ! class_exists($class)) {
+            return;
+        }
+        app($class)->run($tenant, $databaseWasEmpty);
+    }
+
+    /**
+     * Verifica se o banco da conexão tenant está vazio (sem users, roles ou permissions).
+     */
+    protected function tenantDatabaseIsEmpty(): bool
+    {
+        $userModelClass = config('raptor.shinobi.models.user');
+        $usersTable = (new $userModelClass)->getTable();
+        $rolesTable = config('raptor.shinobi.tables.roles');
+        $permissionsTable = config('raptor.shinobi.tables.permissions');
+
+        $hasUsers = DB::connection('tenant')->table($usersTable)->exists();
+        $hasRoles = DB::connection('tenant')->table($rolesTable)->exists();
+        $hasPermissions = DB::connection('tenant')->table($permissionsTable)->exists();
+
+        return ! $hasUsers && ! $hasRoles && ! $hasPermissions;
     }
 
     /**

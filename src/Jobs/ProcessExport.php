@@ -11,17 +11,15 @@ namespace Callcocam\LaravelRaptor\Jobs;
 use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
-use Callcocam\LaravelRaptor\Support\TenantContext;
 use Callcocam\LaravelRaptor\Traits\NotifiesUserOnCompletion;
 use Callcocam\LaravelRaptor\Traits\TenantAwareJob;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ProcessExport implements ShouldQueue
@@ -38,29 +36,18 @@ class ProcessExport implements ShouldQueue
         protected string $filePath,
         protected string $resourceName,
         protected int|string $userId,
-        protected ?string $connectionName = null,
-        protected ?array $connectionConfig = null
     ) {
-        // Captura o contexto do tenant no momento do dispatch
         $this->captureTenantContext();
+    }
+
+    public function middleware(): array
+    {
+        return $this->tenantMiddleware();
     }
 
     public function handle(): void
     {
-        // Restaura o contexto do tenant no worker
-        $this->restoreTenantContext();
- 
-        // Se temos a configuração da conexão, registra ela dinamicamente
-        if ($this->connectionName && $this->connectionConfig) {
-            config(["database.connections.{$this->connectionName}" => $this->connectionConfig]);
-            DB::purge($this->connectionName);
-            Log::info('📦 Conexão dinâmica configurada', ['connection' => $this->connectionName]);
-        }
-        // Reconstrói a query a partir do model class com a conexão correta
         $model = app($this->modelClass);
-        if ($this->connectionName) {
-            $model->setConnection($this->connectionName);
-        }
         $query = $model->newQuery();
         // Aplica os filtros processados (já sem page, per_page e com filtros extraídos)
         if (! empty($this->filters)) {
@@ -124,6 +111,6 @@ class ProcessExport implements ShouldQueue
             }
         }
 
-        return url('download-export/' . $filename);
+        return url('download-export/'.$filename);
     }
 }

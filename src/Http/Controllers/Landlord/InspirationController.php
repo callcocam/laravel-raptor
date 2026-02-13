@@ -8,7 +8,6 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
-
 use Callcocam\LaravelRaptor\Http\Controllers\AbstractController;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
@@ -17,11 +16,9 @@ use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
 use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
-use Illuminate\Http\Request;
 
 class InspirationController extends AbstractController
 {
-   
     /**
      * Define o model que será usado pelo controller
      */
@@ -33,26 +30,26 @@ class InspirationController extends AbstractController
     public function getPages(): array
     {
         return [
-            'index' => Index::route('/inspirations')
-                ->label('Inspirations')
-                ->name('inspirations.index')
-                ->icon('FolderTree')
-                ->group('Sistema')
-                ->groupCollapsible(true)
-                ->order(20)
-                ->middlewares(['auth', 'verified']),
+            'index' => Index::route(config('raptor.controllers.inspirations.index.route', '/inspirations'))
+                ->label(config('raptor.controllers.inspirations.index.label', __('Inspirations')))
+                ->name(config('raptor.controllers.inspirations.index.name', 'inspirations.index'))
+                ->icon(config('raptor.controllers.inspirations.index.icon', 'FolderTree'))
+                ->group(config('raptor.controllers.inspirations.index.group', 'Sistema'))
+                ->groupCollapsible(config('raptor.controllers.inspirations.index.groupCollapsible', true))
+                ->order(config('raptor.controllers.inspirations.index.order', 20))
+                ->middlewares(config('raptor.controllers.inspirations.index.middlewares', ['auth', 'verified'])),
             'create' => Create::route('/inspirations/create')
-                ->label('Criar Inspiration')
-                ->name('inspirations.create')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.inspirations.create.label', __('Criar Inspiration')))
+                ->name(config('raptor.controllers.inspirations.create.name', 'inspirations.create'))
+                ->middlewares(config('raptor.controllers.inspirations.create.middlewares', ['auth', 'verified'])),
             'edit' => Edit::route('/inspirations/{record}/edit')
-                ->label('Editar Inspiration')
-                ->name('inspirations.edit')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.inspirations.edit.label', __('Editar Inspiration')))
+                ->name(config('raptor.controllers.inspirations.edit.name', 'inspirations.edit'))
+                ->middlewares(config('raptor.controllers.inspirations.edit.middlewares', ['auth', 'verified'])),
             'execute' => Execute::route('/inspirations/execute/actions')
-                ->label('Executar Inspiration')
-                ->name('inspirations.execute')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.inspirations.execute.label', __('Executar Inspiration')))
+                ->name(config('raptor.controllers.inspirations.execute.name', 'inspirations.execute'))
+                ->middlewares(config('raptor.controllers.inspirations.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -155,7 +152,7 @@ class InspirationController extends AbstractController
         ]);
 
         $table->headerActions([
-            \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('inspirations.create'), 
+            \Callcocam\LaravelRaptor\Support\Actions\Types\CreateAction::make('inspirations.create'),
         ]);
 
         return $table;

@@ -15,7 +15,6 @@ use Inertia\Inertia;
 
 class InconController extends ResourceController
 {
-
     public function getPages(): array
     {
         return [
@@ -30,6 +29,7 @@ class InconController extends ResourceController
                     if (auth()->user()) {
                         return auth()->user()->isAdmin();
                     }
+
                     return false;
                 })
                 ->middlewares(['auth', 'verified']),
@@ -47,11 +47,12 @@ class InconController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
         ]);
     }
+
     /**
      * Define o resource path para as views
      */
     protected function resourcePath(): ?string
     {
-        return 'landlord';
+        return 'tenant';
     }
 }

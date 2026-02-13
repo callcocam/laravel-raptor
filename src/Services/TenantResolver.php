@@ -11,15 +11,16 @@ namespace Callcocam\LaravelRaptor\Services;
 use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
+use Callcocam\LaravelRaptor\Support\ResolvedTenantConfig;
 use Illuminate\Http\Request;
 
 /**
  * Service padrão para resolver tenant baseado no domínio
- * 
+ *
  * Esta implementação é simples e focada apenas na tabela de tenants.
  * Para lógicas mais complexas (Client, Store, banco separado, etc),
  * crie sua própria classe implementando TenantResolverInterface.
- * 
+ *
  * @example Configurar resolver customizado em config/raptor.php:
  * ```php
  * 'services' => [
@@ -30,6 +31,7 @@ use Illuminate\Http\Request;
 class TenantResolver implements TenantResolverInterface
 {
     protected bool $resolved = false;
+
     protected mixed $tenant = null;
 
     /**
@@ -44,7 +46,6 @@ class TenantResolver implements TenantResolverInterface
 
         $this->tenant = $this->detectTenant($request);
         $this->resolved = true;
-
         if ($this->tenant) {
             $this->storeTenantContext($this->tenant);
         }
@@ -64,6 +65,7 @@ class TenantResolver implements TenantResolverInterface
         $landlordSubdomain = config('raptor.landlord.subdomain', 'landlord');
         if (str_contains($host, "{$landlordSubdomain}.")) {
             config(['app.context' => 'landlord']);
+
             return null;
         }
 
@@ -83,23 +85,31 @@ class TenantResolver implements TenantResolverInterface
      */
     public function storeTenantContext(mixed $tenant, ?object $domainData = null): void
     {
-        app()->instance('tenant.context', true);
-        app()->instance('current.tenant', $tenant);
-        app()->instance('tenant', $tenant);
-        
-        config(['app.context' => 'tenant']);
-        config(['app.current_tenant_id' => $tenant->id]);
+        $config = ResolvedTenantConfig::from($tenant, $domainData);
 
-        Landlord::addTenant($tenant);
+        app()->instance('tenant.context', true);
+        app()->instance('current.tenant', $config->tenant);
+        app()->instance('tenant', $config->tenant);
+        app()->instance(ResolvedTenantConfig::class, $config);
+
+        config($config->toAppConfig());
+        Landlord::addTenant($config->tenant);
+
+        app(TenantDatabaseManager::class)->applyConfig($config);
     }
 
     /**
      * {@inheritdoc}
+     * Usa ResolvedTenantConfig para aplicar banco (conexão default; resolver customizado pode usar client/store).
      */
     public function configureTenantDatabase(mixed $tenant, ?object $domainData = null): void
     {
-        // Implementação padrão não faz nada
-        // Override em subclasses para banco separado por tenant
+        if ($tenant === null) {
+            return;
+        }
+
+        $config = ResolvedTenantConfig::from($tenant, $domainData);
+        app(TenantDatabaseManager::class)->applyConfig($config);
     }
 
     /**

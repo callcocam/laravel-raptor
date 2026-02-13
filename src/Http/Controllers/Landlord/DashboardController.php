@@ -15,16 +15,15 @@ use Inertia\Inertia;
 
 class DashboardController extends ResourceController
 {
-
     public function getPages(): array
     {
         return [
-            'index' => Index::route('/dashboard')
-                ->label('Dashboard')
-                ->name('dashboard.index')
-                ->icon('Home')
-                ->order(1)
-                ->middlewares(['auth', 'verified']),
+            'index' => Index::route(config('raptor.controllers.dashboard.index.route', '/dashboard'))
+                ->label(config('raptor.controllers.dashboard.index.label', __('Dashboard')))
+                ->name(config('raptor.controllers.dashboard.index.name', 'dashboard.index'))
+                ->icon(config('raptor.controllers.dashboard.index.icon', 'Home'))
+                ->order(config('raptor.controllers.dashboard.index.order', 1))
+                ->middlewares(config('raptor.controllers.dashboard.index.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -39,6 +38,7 @@ class DashboardController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
         ]);
     }
+
     /**
      * Define o resource path para as views
      */

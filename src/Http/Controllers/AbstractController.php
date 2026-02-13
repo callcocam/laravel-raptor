@@ -24,7 +24,6 @@ abstract class AbstractController extends ResourceController
 {
     use AuthorizesRequests;
 
-
     abstract protected function table(TableBuilder $table): TableBuilder;
 
     abstract protected function form(Form $form): Form;
@@ -34,12 +33,10 @@ abstract class AbstractController extends ResourceController
         return app($this->model())->newQuery();
     }
 
-
     protected function infolist(InfoList $infoList): InfoList
     {
         return $infoList;
     }
-
 
     public function index(Request $request)
     {
@@ -52,7 +49,7 @@ abstract class AbstractController extends ResourceController
 
         // Storage::disk('local')->put('raptor.json', json_encode($data));
         return Inertia::render(sprintf('admin/%s/index', $this->resourcePath()), [
-            'message' => $this->getSubtitle(),
+            'message' => $this->getSubtitle('index'),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
             'resourceLabel' => $this->getTitle(),
@@ -75,7 +72,7 @@ abstract class AbstractController extends ResourceController
         }
 
         return Inertia::render(sprintf('admin/%s/create', $this->resourcePath()), [
-            'message' => $this->getSubtitle(),
+            'message' => $this->getSubtitle('create'),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
             'resourceLabel' => $this->getTitle(),
@@ -84,8 +81,8 @@ abstract class AbstractController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
             'form' => $this->form(Form::make($model, 'model')->defaultActions($this->getFormActions()))->render(),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'create'))
-                ->map(fn($action) => $action->render($model, $request))
-                ->filter(fn($action) => $action['visible'] ?? true)
+                ->map(fn ($action) => $action->render($model, $request))
+                ->filter(fn ($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
             'action' => $this->getFormDefaultStoreAction($request->route()->getAction('as'), null),
@@ -96,7 +93,7 @@ abstract class AbstractController extends ResourceController
     public function store(Request $request): BaseRedirectResponse
     {
         try {
-            $model  = app($this->model());
+            $model = app($this->model());
 
             // Verifica autorização via Policy (create)
             $this->authorize('create', $model);
@@ -134,6 +131,7 @@ abstract class AbstractController extends ResourceController
 
             $route = str($request->route()->getAction('as'))->replaceLast('.store', '.edit')->toString();
             $route = $this->getRedirectRouteAfterStore($route, $record);
+
             return redirect()->route($route, [
                 'record' => $record->getKey(),
             ])
@@ -153,7 +151,7 @@ abstract class AbstractController extends ResourceController
         $this->authorize('view', $model);
 
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
-            'message' => $this->getSubtitle(),
+            'message' => $this->getSubtitle('show'),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
             'resourceLabel' => $this->getTitle(),
@@ -163,8 +161,8 @@ abstract class AbstractController extends ResourceController
             'model' => $model,
             'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'show'))
-                ->map(fn($action) => $action->render($model, $request))
-                ->filter(fn($action) => $action['visible'] ?? true)
+                ->map(fn ($action) => $action->render($model, $request))
+                ->filter(fn ($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
             'actionName' => __('Visualizar :resource', ['resource' => $this->getTitle()]),
@@ -181,7 +179,7 @@ abstract class AbstractController extends ResourceController
         $this->authorize('update', $model);
 
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
-            'message' => $this->getSubtitle(),
+            'message' => $this->getSubtitle('edit'),
             'resourceName' => $this->getResourceName(),
             'resourcePluralName' => $this->getResourcePluralName(),
             'resourceLabel' => $this->getTitle(),
@@ -191,8 +189,8 @@ abstract class AbstractController extends ResourceController
             'model' => $model,
             'form' => $this->form(Form::make($model, 'model')->model($model)->defaultActions($this->getFormActions()))->render($model),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'edit'))
-                ->map(fn($action) => $action->render($model, $request))
-                ->filter(fn($action) => $action['visible'] ?? true)
+                ->map(fn ($action) => $action->render($model, $request))
+                ->filter(fn ($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
             'actionName' => __('Editar :resource', ['resource' => $this->getTitle()]),
@@ -235,7 +233,7 @@ abstract class AbstractController extends ResourceController
 
             $model->update($validated);
 
-            //Vamo fazer atualizações de relacionados se necessário
+            // Vamo fazer atualizações de relacionados se necessário
             $form->updateRelatedData($validated, $model, $request);
 
             // Hook: depois de atualizar
@@ -361,7 +359,7 @@ abstract class AbstractController extends ResourceController
             $this->beforeBulkAction($request, $ids);
 
             // Chama método dinâmico baseado na action
-            $methodName = 'bulk' . ucfirst($action);
+            $methodName = 'bulk'.ucfirst($action);
 
             if (method_exists($this, $methodName)) {
                 $result = $this->$methodName($ids);
@@ -401,7 +399,7 @@ abstract class AbstractController extends ResourceController
             $actionName = data_get($validated, 'actionName');
             $recordId = data_get($validated, 'record');
             $fieldName = data_get($validated, 'fieldName');
-            if (!$type || !$actionName) {
+            if (! $type || ! $actionName) {
                 return redirect()
                     ->back()
                     ->with('error', 'Parâmetros inválidos para execução da ação.');
@@ -413,20 +411,19 @@ abstract class AbstractController extends ResourceController
                 $model = null;
             }
 
-
             $actions = match ($type) {
                 'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
                 'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions()),
-                'column' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getColumns())->filter(fn($column) => $column->getName() === $fieldName),
+                'column' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getColumns())->filter(fn ($column) => $column->getName() === $fieldName),
                 'form' => collect($this->form(Form::make($model))->getActions()),
-                'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn($column) => $column->getName() === $fieldName)->flatMap(function ($column) {
+                'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn ($column) => $column->getName() === $fieldName)->flatMap(function ($column) {
                     return $column->getActions();
                 }),
                 default => collect([])
             };
-            $callback = $actions->filter(fn($action) => $action->getName() === $actionName)->first();
-            if (!$callback) {
+            $callback = $actions->filter(fn ($action) => $action->getName() === $actionName)->first();
+            if (! $callback) {
                 return redirect()
                     ->back()
                     ->with('error', 'Ação não encontrada.');
@@ -436,14 +433,14 @@ abstract class AbstractController extends ResourceController
             $validationMessages = $callback->getValidationMessages();
 
             // Valida os dados do formulário da action se houver regras
-            if (!empty($validationRules)) {
+            if (! empty($validationRules)) {
                 $request->validate($validationRules, $validationMessages);
             }
 
             // Hook: antes de executar action
             $this->beforeExecute($request, $actionName, $model);
 
-            if (!method_exists($callback, 'executeCallback')) {
+            if (! method_exists($callback, 'executeCallback')) {
                 return redirect()
                     ->back()
                     ->with('error', 'Ação não possui um callback definido.');
@@ -462,7 +459,7 @@ abstract class AbstractController extends ResourceController
                 }
             }
 
-            if (!$result) {
+            if (! $result) {
                 return redirect()
                     ->back()
                     ->with('error', 'Ação não retornou nenhum resultado.');
@@ -487,6 +484,7 @@ abstract class AbstractController extends ResourceController
 
                 return redirect()->back()->with($type, $message);
             }
+
             return redirect()->back()
                 ->with('success', 'Ação executada com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -496,6 +494,7 @@ abstract class AbstractController extends ResourceController
             return $this->handleExecuteError($e, $request->input('actionName', 'desconhecida'));
         }
     }
+
     /**
      * Define as regras de validação para store/update
      */
@@ -603,8 +602,6 @@ abstract class AbstractController extends ResourceController
     {
         //
     }
-
-
 
     /**
      * Retorna as rotas padrão do formulário (store/update)

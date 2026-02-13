@@ -55,10 +55,13 @@ class ProcessAdvancedImport implements ShouldQueue
         $this->captureTenantContext();
     }
 
+    public function middleware(): array
+    {
+        return $this->tenantMiddleware();
+    }
+
     public function handle(): void
     {
-        $this->restoreTenantContext();
-
         $sheets = $this->reconstructSheets($this->sheetsData);
 
         // Usar o mesmo disco em que a Action salvou (raptor.export.disk)

@@ -19,6 +19,7 @@ use Callcocam\LaravelRaptor\Commands\TenantMigrateCommand;
 use Callcocam\LaravelRaptor\Commands\TranslationGenerateJsonCommand;
 use Callcocam\LaravelRaptor\Commands\TranslationSyncCommand;
 use Callcocam\LaravelRaptor\Console\Commands\ThemeSetupCommand;
+use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
 use Callcocam\LaravelRaptor\Http\Middleware\LandlordMiddleware;
 use Callcocam\LaravelRaptor\Http\Middleware\ShareRaptorData;
 use Callcocam\LaravelRaptor\Http\Middleware\TenantCustomDomainMiddleware;
@@ -28,19 +29,18 @@ use Callcocam\LaravelRaptor\Models\Inspiration;
 use Callcocam\LaravelRaptor\Models\Permission;
 use Callcocam\LaravelRaptor\Models\Role;
 use Callcocam\LaravelRaptor\Models\Tenant;
+use Callcocam\LaravelRaptor\Notifications\Channels\TenantAwareDatabaseChannel;
 use Callcocam\LaravelRaptor\Policies\InspirationPolicy;
 use Callcocam\LaravelRaptor\Policies\PermissionPolicy;
 use Callcocam\LaravelRaptor\Policies\RolePolicy;
 use Callcocam\LaravelRaptor\Policies\TenantPolicy;
 use Callcocam\LaravelRaptor\Policies\UserPolicy;
-use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
 use Callcocam\LaravelRaptor\Services\DomainDetectionService;
 use Callcocam\LaravelRaptor\Services\TenantResolver;
 use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
 use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
 use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
 use Callcocam\LaravelRaptor\Traits\RequestMacrosTrait;
-use Callcocam\LaravelRaptor\Notifications\Channels\TenantAwareDatabaseChannel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
@@ -132,7 +132,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         // Permite que a aplicação use uma implementação customizada
         $this->app->singleton(TenantResolverInterface::class, function ($app) {
             $resolverClass = config('raptor.services.tenant_resolver', TenantResolver::class);
-            return new $resolverClass();
+
+            return new $resolverClass;
         });
 
         // Alias para facilitar o uso
@@ -147,6 +148,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
      */
     public function packageBooted(): void
     {
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'laravel-raptor');
+
         // Registra os middlewares
         $this->registerMiddleware();
 
@@ -177,7 +180,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         Route::prefix('api')
             ->middleware(['web', 'auth'])
             ->group(function () {
-                $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
+                $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
             });
     }
 
@@ -186,7 +189,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
      */
     protected function registerBroadcastChannels(): void
     {
-        if (file_exists($channelsPath = __DIR__ . '/../routes/channels.php')) {
+        if (file_exists($channelsPath = __DIR__.'/../routes/channels.php')) {
             require $channelsPath;
         }
     }
@@ -198,7 +201,7 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         // Substitui o canal 'database' padrão pelo nosso que inclui tenant_id e client_id
         Notification::extend('database', function ($app) {
-            return new TenantAwareDatabaseChannel();
+            return new TenantAwareDatabaseChannel;
         });
     }
 
@@ -234,10 +237,10 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
     /**
      * Registra as rotas baseadas no contexto (tenant ou landlord).
-     * 
+     *
      * Detecta o contexto atual e carrega APENAS o arquivo de rotas correspondente.
      * Isso evita conflitos de rotas com mesma URI em contextos diferentes.
-     * 
+     *
      * Em ambiente CLI (artisan), carrega AMBOS os contextos para que comandos
      * como route:list e permissions:check funcionem corretamente.
      */
@@ -247,14 +250,15 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         if (app()->runningInConsole()) {
             $this->registerRoutesForContext('tenant');
             $this->registerRoutesForContext('landlord');
+
             return;
         }
-        
+
         // Em ambiente web, carrega apenas o contexto detectado
         $context = request()->getContext() ?? 'tenant';
         $this->registerRoutesForContext($context);
     }
-    
+
     /**
      * Registra as rotas para um contexto específico.
      * Carrega tanto as rotas autenticadas quanto as guest (públicas).
@@ -263,16 +267,16 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         // Rotas autenticadas (requerem auth)
         $routeFile = sprintf('%s/../routes/%s.php', __DIR__, $context);
-        
+
         if (file_exists($routeFile)) {
             Route::middleware(['web', 'auth', $context])
                 ->name(sprintf('%s.', $context))
                 ->group($routeFile);
         }
-        
+
         // Rotas guest/públicas (sem auth) - ex: login-as
         $guestRouteFile = sprintf('%s/../routes/%s-guest.php', __DIR__, $context);
-        
+
         if (file_exists($guestRouteFile)) {
             Route::middleware(['web', $context])
                 ->name(sprintf('%s.', $context))
@@ -280,9 +284,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         }
 
         $webRouteFile = sprintf('%s/../routes/web.php', __DIR__);
-        
+
         if (file_exists($webRouteFile)) {
-            Route::middleware(['web', $context]) 
+            Route::middleware(['web', $context])
                 ->group($webRouteFile);
         }
     }

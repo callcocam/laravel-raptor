@@ -15,10 +15,12 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
-use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
-use Callcocam\LaravelRaptor\Support\Info\Columns\Types\StatusColumn as StatusColumnInfolist;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\CardColumn;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\HasManyColumn;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\StatusColumn as StatusColumnInfolist;
+use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
@@ -27,8 +29,6 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
-use Callcocam\LaravelRaptor\Support\Info\Columns\Types\HasManyColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -42,30 +42,29 @@ class TenantController extends LandlordController
         return config('raptor.landlord.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
     }
 
-
     public function getPages(): array
     {
         return [
-            'index' => Index::route('/tenants')
-                ->label('Inquilinos')
-                ->name('tenants.index')
-                ->icon('Shield')
-                ->group('Segurança')
-                ->groupCollapsible(true)
-                ->order(15)
-                ->middlewares(['auth', 'verified']),
+            'index' => Index::route(config('raptor.controllers.tenants.index.route', '/tenants'))
+                ->label(config('raptor.controllers.tenants.index.label', __('Inquilinos')))
+                ->name(config('raptor.controllers.tenants.index.name', 'tenants.index'))
+                ->icon(config('raptor.controllers.tenants.index.icon', 'Shield'))
+                ->group(config('raptor.controllers.tenants.index.group', 'Segurança'))
+                ->groupCollapsible(config('raptor.controllers.tenants.index.groupCollapsible', true))
+                ->order(config('raptor.controllers.tenants.index.order', 15))
+                ->middlewares(config('raptor.controllers.tenants.index.middlewares', ['auth', 'verified'])),
             'create' => Create::route('/tenants/create')
-                ->label('Criar Inquilino')
-                ->name('tenants.create')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.tenants.create.label', __('Criar Inquilino')))
+                ->name(config('raptor.controllers.tenants.create.name', 'tenants.create'))
+                ->middlewares(config('raptor.controllers.tenants.create.middlewares', ['auth', 'verified'])),
             'edit' => Edit::route('/tenants/{record}/edit')
-                ->label('Editar Inquilinos')
-                ->name('tenants.edit')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.tenants.edit.label', __('Editar Inquilino')))
+                ->name(config('raptor.controllers.tenants.edit.name', 'tenants.edit'))
+                ->middlewares(config('raptor.controllers.tenants.edit.middlewares', ['auth', 'verified'])),
             'execute' => Execute::route('/tenants/execute/actions')
-                ->label('Executar Inquilinos')
-                ->name('tenants.execute')
-                ->middlewares(['auth', 'verified']),
+                ->label(config('raptor.controllers.tenants.execute.label', __('Executar Inquilinos')))
+                ->name(config('raptor.controllers.tenants.execute.name', 'tenants.execute'))
+                ->middlewares(config('raptor.controllers.tenants.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -109,12 +108,13 @@ class TenantController extends LandlordController
                     LinkAction::make('view')
                         ->actionAlink()
                         ->label('Login como')
-                        ->url(function ($target) { 
-                            if($target->tenant_id === null){
+                        ->url(function ($target) {
+                            if ($target->tenant_id === null) {
                                 return null;
                             }
-                            return sprintf("//%s/login-as" . '?%s', $target->tenant->domain, http_build_query([
-                                'token' => auth()->user()->id
+
+                            return sprintf('//%s/login-as'.'?%s', $target->tenant->domain, http_build_query([
+                                'token' => auth()->user()->id,
                             ]));
                         })
                         ->targetBlank()
@@ -168,10 +168,10 @@ class TenantController extends LandlordController
             \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('tenants.forceDelete'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('tenants.destroy'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('tenants.view')
-                ->visible(fn($record) => !empty($record->domain))
+                ->visible(fn ($record) => ! empty($record->domain))
                 ->actionAlink()
                 ->label('Ver Site')
-                ->url(fn($record) => 'http://' . $record->domain)
+                ->url(fn ($record) => 'http://'.$record->domain)
                 ->targetBlank()
                 ->icon('ExternalLink'),
         ]);
@@ -186,7 +186,6 @@ class TenantController extends LandlordController
 
         return $table;
     }
-
 
     protected function form(Form $form): Form
     {
@@ -208,7 +207,7 @@ class TenantController extends LandlordController
                 ->label('Domínio')
                 ->required()
                 ->rules(function ($record) {
-                    return ['required', 'string', 'max:255', 'unique:tenants,domain' . ($record ? ",{$record->id}" : '')];
+                    return ['required', 'string', 'max:255', 'unique:tenants,domain'.($record ? ",{$record->id}" : '')];
                 })
                 ->placeholder('exemplo.com')
                 ->columnSpan('4'),
@@ -359,7 +358,6 @@ class TenantController extends LandlordController
     {
         return 'landlord';
     }
- 
 
     protected function beforeDelete(string $id): void
     {
@@ -369,7 +367,6 @@ class TenantController extends LandlordController
             app(TenantDatabaseManager::class)->deleteTenantRecordFromTenantDatabase($model);
         }
     }
- 
 
     protected function beforeForceDelete(string $id): void
     {
@@ -379,7 +376,6 @@ class TenantController extends LandlordController
             app(TenantDatabaseManager::class)->dropDatabase($database);
         }
     }
- 
 
     /**
      * Pastas de migrations a rodar quando o tenant tiver database dedicado (passado na hora).
@@ -400,11 +396,13 @@ class TenantController extends LandlordController
         if (empty($database)) {
             return;
         }
-        app(TenantDatabaseManager::class)->ensureDatabaseAndRunMigrations(
+        $manager = app(TenantDatabaseManager::class);
+        $manager->ensureDatabaseAndRunMigrations(
             $database,
             $this->tenantMigrationPaths(),
             $model
         );
+        $manager->createTenantConfiguration($model);
     }
 
     protected function afterUpdate(Request $request, $model): void
@@ -413,11 +411,13 @@ class TenantController extends LandlordController
         if (empty($database)) {
             return;
         }
-        app(TenantDatabaseManager::class)->ensureDatabaseAndRunMigrations(
+        $manager = app(TenantDatabaseManager::class);
+        $manager->ensureDatabaseAndRunMigrations(
             $database,
             $this->tenantMigrationPaths(),
             $model
         );
+        $manager->createTenantConfiguration($model);
     }
 
     protected function afterDelete(string $id, $model): void
@@ -436,6 +436,5 @@ class TenantController extends LandlordController
             $this->tenantMigrationPaths(),
             $model
         );
-    } 
-
+    }
 }

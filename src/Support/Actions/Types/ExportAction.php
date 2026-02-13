@@ -8,32 +8,43 @@
 
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
+use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Callcocam\LaravelRaptor\Exports\DefaultExport;
 use Callcocam\LaravelRaptor\Jobs\ProcessExport;
 use Callcocam\LaravelRaptor\Notifications\ExportCompletedNotification;
-use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ExportAction extends ExecuteAction
 {
     protected string $method = 'POST';
+
     protected ?string $modelClass = null;
+
     protected ?Builder $query = null;
+
     protected array $exportColumns = [];
+
     protected bool $useJob = false;
+
     protected ?string $exportClass = null;
+
     protected ?string $jobClass = null;
+
     protected ?string $fileName = null;
+
     protected ?Closure $callbackFilter = null;
+
     protected ?string $parameterFiltersName = null;
+
     protected array $defaultFilters = [];
+
     protected array $allowedFilters = [];
+
     protected array $excludedFilters = ['page', 'per_page', 'actionType', 'actionName'];
 
     public function __construct(?string $name)
@@ -57,23 +68,14 @@ class ExportAction extends ExecuteAction
             ->callback(function (Request $request, ?Model $model) {
                 $user = $request->user();
                 $fileName = $this->getFileName();
-                $filePath = 'exports/' . $fileName;
+                $filePath = 'exports/'.$fileName;
                 $resourceName = $this->getResourceName();
 
                 $rawFilters = $this->getRawFilters($request);
                 $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
                 if ($this->shouldUseJob()) {
-                    // Extrai e processa os filtros da request
-
-                    // Obtém a conexão do modelo
-                    $model = app($this->getModelClass());
-                    $connectionName = $model->getConnectionName();
-                    $connectionConfig = config("database.connections.{$connectionName}");
-
-                    // Usa a classe de job customizada ou a padrão
                     $jobClass = $this->getJobClass();
 
-                    // Envia para fila
                     $jobClass::dispatch(
                         $this->getModelClass(),
                         $filters,
@@ -82,8 +84,6 @@ class ExportAction extends ExecuteAction
                         $filePath,
                         $resourceName,
                         $user->id,
-                        $connectionName,
-                        $connectionConfig
                     );
 
                     return [
@@ -94,7 +94,7 @@ class ExportAction extends ExecuteAction
                         ],
                     ];
                 }
-                // Exportação síncrona - aplica callback se existir 
+                // Exportação síncrona - aplica callback se existir
 
                 $query = $this->applyFiltersFromRequest($this->getQuery(), $request, $filters);
 
@@ -130,6 +130,7 @@ class ExportAction extends ExecuteAction
                     ];
                 } catch (\Exception $e) {
                     report($e);
+
                     return [
                         'notification' => [
                             'title' => 'Erro na Exportação',
@@ -145,8 +146,6 @@ class ExportAction extends ExecuteAction
     /**
      * Apply filters from the request to the query.
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param Request $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
     protected function applyFiltersFromRequest(\Illuminate\Database\Eloquent\Builder $query, Request $request, $filters = [])
@@ -180,9 +179,6 @@ class ExportAction extends ExecuteAction
 
     /**
      * Processa os filtros removendo paginação e extraindo filtros aninhados
-     *
-     * @param array $rawFilters
-     * @return array
      */
     protected function processFilters(array $rawFilters): array
     {
@@ -195,7 +191,7 @@ class ExportAction extends ExecuteAction
             }
 
             // Se houver lista de permitidos, verifica se está nela
-            if (!empty($this->allowedFilters) && !in_array($key, $this->allowedFilters)) {
+            if (! empty($this->allowedFilters) && ! in_array($key, $this->allowedFilters)) {
                 continue;
             }
 
@@ -208,15 +204,15 @@ class ExportAction extends ExecuteAction
                     }
 
                     // Se houver lista de permitidos, verifica se está nela
-                    if (!empty($this->allowedFilters) && !in_array($subKey, $this->allowedFilters)) {
+                    if (! empty($this->allowedFilters) && ! in_array($subKey, $this->allowedFilters)) {
                         continue;
                     }
 
-                    if (!empty($subValue)) {
+                    if (! empty($subValue)) {
                         $filters[$subKey] = $subValue;
                     }
                 }
-            } elseif (!empty($value)) {
+            } elseif (! empty($value)) {
                 $filters[$key] = $value;
             }
         }
@@ -224,10 +220,10 @@ class ExportAction extends ExecuteAction
         return $filters;
     }
 
-
     public function parameterFiltersName(string $name): self
     {
         $this->parameterFiltersName = $name;
+
         return $this;
     }
 
@@ -235,36 +231,42 @@ class ExportAction extends ExecuteAction
     {
         $this->modelClass = $modelClass;
         $this->query = null; // Reset query if model is set
+
         return $this;
     }
 
     public function defaultFilters(array $filters): self
     {
         $this->defaultFilters = $filters;
+
         return $this;
     }
 
     public function allowedFilters(array $filters): self
     {
         $this->allowedFilters = $filters;
+
         return $this;
     }
 
     public function excludedFilters(array $filters): self
     {
         $this->excludedFilters = array_merge($this->excludedFilters, $filters);
+
         return $this;
     }
 
     public function onlyFilters(array $filters): self
     {
         $this->allowedFilters = $filters;
+
         return $this;
     }
 
     public function exceptFilters(array $filters): self
     {
         $this->excludedFilters = array_merge($this->excludedFilters, $filters);
+
         return $this;
     }
 
@@ -272,6 +274,7 @@ class ExportAction extends ExecuteAction
     {
         $this->query = $query;
         $this->modelClass = null; // Reset modelClass if query is set
+
         return $this;
     }
 
@@ -296,6 +299,7 @@ class ExportAction extends ExecuteAction
     public function exportColumns(array $columns): self
     {
         $this->exportColumns = $columns;
+
         return $this;
     }
 
@@ -308,12 +312,14 @@ class ExportAction extends ExecuteAction
                 return $model::getTableColumns();
             }
         }
+
         return $this->exportColumns;
     }
 
     public function useJob(bool $useJob = true): self
     {
         $this->useJob = $useJob;
+
         return $this;
     }
 
@@ -325,6 +331,7 @@ class ExportAction extends ExecuteAction
     public function export(string $exportClass): self
     {
         $this->exportClass = $exportClass;
+
         return $this;
     }
 
@@ -336,6 +343,7 @@ class ExportAction extends ExecuteAction
     public function job(string $jobClass): self
     {
         $this->jobClass = $jobClass;
+
         return $this;
     }
 
@@ -347,6 +355,7 @@ class ExportAction extends ExecuteAction
     public function fileName(string $fileName): self
     {
         $this->fileName = $fileName;
+
         return $this;
     }
 
@@ -357,18 +366,21 @@ class ExportAction extends ExecuteAction
         }
 
         $modelName = class_basename($this->getModelClass());
+
         return sprintf('%s-%s.xlsx', Str::kebab($modelName), now()->format('Y-m-d-H-i-s'));
     }
 
     public function callbackFilter(callable $callback): self
     {
         $this->callbackFilter = $callback;
+
         return $this;
     }
 
     protected function getResourceName(): string
     {
         $modelName = class_basename($this->getModelClass());
+
         return Str::plural(Str::lower(str_replace('_', ' ', Str::snake($modelName))));
     }
 }

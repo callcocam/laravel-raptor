@@ -52,7 +52,7 @@ return [
             'user' => \App\Models\User::class,
             'translation_group' => \Callcocam\LaravelRaptor\Models\TranslationGroup::class,
             'translate' => \Callcocam\LaravelRaptor\Models\TranslationOverride::class,
-        ]
+        ],
     ],
 
     /*
@@ -161,6 +161,10 @@ return [
     'database' => [
         // Estratégia de multi-tenancy: 'shared' (único DB) ou 'separate' (DB por tenant)
         'strategy' => env('RAPTOR_DB_STRATEGY', 'shared'),
+        // Em jobs (TenantAwareJob): configurar conexão default + tenant para o banco do tenant
+        'configure_in_jobs' => env('RAPTOR_DB_CONFIGURE_IN_JOBS', true),
+        // Em commands (TenantAwareCommand): configurar conexão ao usar setupTenantContext/forEachTenant
+        'configure_in_commands' => env('RAPTOR_DB_CONFIGURE_IN_COMMANDS', true),
     ],
 
     /*
@@ -198,7 +202,7 @@ return [
         */
         'cache_enabled' => env('RAPTOR_ROUTE_CACHE', false),
         'cache_ttl' => 3600, // segundos
-        
+
         /*
         |----------------------------------------------------------------------
         | Diretórios por Contexto
@@ -221,7 +225,7 @@ return [
                 // 'Seu\\Namespace\\Landlord\\Controllers' => base_path('caminho/para/controllers'),
             ],
         ],
-        
+
         /*
         |----------------------------------------------------------------------
         | Diretórios do Pacote (internos - não modificar)
@@ -362,10 +366,10 @@ return [
     | 1. Crie sua classe implementando TenantResolverInterface:
     |    ```php
     |    namespace App\Services;
-    |    
+    |
     |    use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
     |    use Callcocam\LaravelRaptor\Services\TenantResolver;
-    |    
+    |
     |    class MyTenantResolver extends TenantResolver
     |    {
     |        protected function detectAndConfigureTenant(Request $request): mixed
@@ -385,8 +389,25 @@ return [
     'services' => [
         // Classe responsável por resolver o tenant baseado no domínio
         // Implemente TenantResolverInterface para customizar
-        // 'tenant_resolver' => \Callcocam\LaravelRaptor\Services\TenantResolver::class,
-        'tenant_resolver' => \App\Services\AdvancedTenantResolver::class,
+        'tenant_resolver' => \Callcocam\LaravelRaptor\Services\TenantResolver::class,
+        // 'tenant_resolver' => \App\Services\AdvancedTenantResolver::class,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Tenant Configuration (role, permissions, user)
+    |--------------------------------------------------------------------------
+    |
+    | Executada na criação ou edição do tenant, apenas quando o banco do tenant
+    | está vazio (sem users, roles ou permissions). Cria uma role Super
+    | Administrador (special), gera permissões via PermissionGenerator na
+    | conexão do tenant, um usuário e envia email ao endereço do tenant.
+    | Role/usuário/permissões existem só no banco do tenant (não compartilhados).
+    |
+    */
+    'tenant_configuration' => [
+        'class' => \Callcocam\LaravelRaptor\Services\DefaultTenantConfiguration::class,
+        'mail' => \Callcocam\LaravelRaptor\Mail\TenantConfiguredMail::class, // null para não enviar
     ],
 
 ];

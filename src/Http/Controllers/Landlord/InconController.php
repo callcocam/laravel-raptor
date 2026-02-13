@@ -15,16 +15,15 @@ use Inertia\Inertia;
 
 class InconController extends ResourceController
 {
-
     public function getPages(): array
     {
         return [
-            'index' => Index::route('/icons')
-                ->label('Icons')
-                ->name('icons.index')
-                ->icon('BrickWallFire')
-                ->order(1)
-                ->middlewares(['auth', 'verified']),
+            'index' => Index::route(config('raptor.controllers.icons.index.route', '/icons'))
+                ->label(config('raptor.controllers.icons.index.label', __('Icons')))
+                ->name(config('raptor.controllers.icons.index.name', 'icons.index'))
+                ->icon(config('raptor.controllers.icons.index.icon', 'BrickWallFire'))
+                ->order(config('raptor.controllers.icons.index.order', 1))
+                ->middlewares(config('raptor.controllers.icons.index.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -39,6 +38,7 @@ class InconController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
         ]);
     }
+
     /**
      * Define o resource path para as views
      */

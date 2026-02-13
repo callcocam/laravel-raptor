@@ -10,6 +10,7 @@ import { computed } from 'vue';
 
 interface Props {
     title?: string;
+    /** Descrição/subtítulo exibido abaixo do título da página */
     message?: string;
     resourceName?: string;
     resourcePluralName?: string;
@@ -17,7 +18,7 @@ interface Props {
     resourcePluralLabel?: string;
     maxWidth?: string;
     breadcrumbs?: BackendBreadcrumb[];
-    actionName?: string; // Prop opcional para nome da ação
+    actionName?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -49,8 +50,8 @@ const pageTitle = computed(() => props.title || props.resourcePluralLabel || 'Da
       <slot>
         <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
           <slot name="content">
-            <!-- Conteúdo padrão se nenhum slot for fornecido -->
-            <div class="text-muted-foreground">
+            <!-- Conteúdo padrão se nenhum slot for fornecido (descrição só aparece se existir) -->
+            <div v-if="message || resourceLabel" class="text-muted-foreground">
               {{ message || resourceLabel }}
             </div>
           </slot>

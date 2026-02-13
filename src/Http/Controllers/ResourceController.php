@@ -16,10 +16,10 @@ use Closure;
 
 abstract class ResourceController extends Controller
 {
+    use \Callcocam\LaravelRaptor\Support\Concerns\HasTranslations;
     use EvaluatesClosures;
     use HasBreadcrumbs;
     use WithRequests;
-    use \Callcocam\LaravelRaptor\Support\Concerns\HasTranslations;
     /**
      * Define as variáveis basicas que podem ser substituídas pelos controllers filhos
      */
@@ -154,7 +154,6 @@ abstract class ResourceController extends Controller
 
     /**
      * Retorna o caminho do recurso para as views
-     * @return string|null
      */
     protected function getResourcePath(): ?string
     {
@@ -191,7 +190,7 @@ abstract class ResourceController extends Controller
 
         $modelName = str_replace('Controller', '', $controllerBasename);
 
-        $modelClass = 'App\\Models\\' . $modelName;
+        $modelClass = 'App\\Models\\'.$modelName;
 
         if (class_exists($modelClass)) {
             return $modelClass;
@@ -205,8 +204,36 @@ abstract class ResourceController extends Controller
         return __($this->getResourceLabel());
     }
 
-    public function getSubtitle(): ?string
+    /**
+     * Descrição (subtitle) da página. Use $context para mensagens por ação (index, create, edit, show).
+     * Subclasses podem sobrescrever getSubtitleForContext() para customizar por recurso.
+     */
+    public function getSubtitle(?string $context = null): ?string
     {
-        return __('Manage your :resource', ['resource' => $this->getTitle()]);
+        $resource = $this->getTitle();
+        $custom = $this->getSubtitleForContext($context, $resource);
+        if ($custom !== null) {
+            return $custom;
+        }
+        $keys = [
+            'index' => __('List and manage :resource', ['resource' => $resource]),
+            'create' => __('Fill in the form to add a new :resource', ['resource' => $resource]),
+            'edit' => __('Update the information for this :resource', ['resource' => $resource]),
+            'show' => __('View details of this :resource', ['resource' => $resource]),
+        ];
+        if ($context !== null && isset($keys[$context])) {
+            return $keys[$context];
+        }
+
+        return __('Manage your :resource', ['resource' => $resource]);
+    }
+
+    /**
+     * Permite que o controller filho defina descrições customizadas por contexto.
+     * Retorne null para usar o padrão.
+     */
+    protected function getSubtitleForContext(?string $context, string $resource): ?string
+    {
+        return null;
     }
 }
