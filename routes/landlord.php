@@ -69,3 +69,12 @@ Route::prefix('notifications')->name('notifications.')->group(function () {
 // Rota de login como outro usuário
 Route::middleware('guest')->get('login-as', [\Callcocam\LaravelRaptor\Http\Controllers\LoginAsController::class, 'loginAs'])
     ->name('loginAs');
+
+// Cloudflare DNS: página com formulário + API (campo CloudflareDnsField)
+Route::prefix('cloudflare')->name('cloudflare.')->middleware(config('raptor.landlord.middleware', ['web', 'auth', 'landlord']))->group(function () {
+    Route::get('create', [\Callcocam\LaravelRaptor\Http\Controllers\Landlord\CloudflareController::class, 'create'])->name('create');
+    Route::get('zones', [\Callcocam\LaravelRaptor\Http\Controllers\Api\CloudflareController::class, 'zones'])->name('zones');
+    Route::get('zones/{zoneId}/records', [\Callcocam\LaravelRaptor\Http\Controllers\Api\CloudflareController::class, 'records'])->name('records');
+    Route::post('records', [\Callcocam\LaravelRaptor\Http\Controllers\Api\CloudflareController::class, 'store'])->name('store');
+    Route::delete('zones/{zoneId}/records/{recordId}', [\Callcocam\LaravelRaptor\Http\Controllers\Api\CloudflareController::class, 'destroy'])->name('destroy');
+});

@@ -11,7 +11,7 @@ namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
 use Callcocam\LaravelRaptor\Services\TenantDatabaseManager;
 use Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction;
-use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField; 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
@@ -113,7 +113,7 @@ class TenantController extends LandlordController
                                 return null;
                             }
 
-                            return sprintf('//%s/login-as'.'?%s', $target->tenant->domain, http_build_query([
+                            return sprintf('//%s/login-as' . '?%s', $target->tenant->domain, http_build_query([
                                 'token' => auth()->user()->id,
                             ]));
                         })
@@ -168,10 +168,10 @@ class TenantController extends LandlordController
             \Callcocam\LaravelRaptor\Support\Actions\Types\ForceDeleteAction::make('tenants.forceDelete'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make('tenants.destroy'),
             \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('tenants.view')
-                ->visible(fn ($record) => ! empty($record->domain))
+                ->visible(fn($record) => ! empty($record->domain))
                 ->actionAlink()
                 ->label('Ver Site')
-                ->url(fn ($record) => 'http://'.$record->domain)
+                ->url(fn($record) => 'http://' . $record->domain)
                 ->targetBlank()
                 ->icon('ExternalLink'),
         ]);
@@ -207,7 +207,7 @@ class TenantController extends LandlordController
                 ->label('Domínio')
                 ->required()
                 ->rules(function ($record) {
-                    return ['required', 'string', 'max:255', 'unique:tenants,domain'.($record ? ",{$record->id}" : '')];
+                    return ['required', 'string', 'max:255', 'unique:tenants,domain' . ($record ? ",{$record->id}" : '')];
                 })
                 ->placeholder('exemplo.com')
                 ->columnSpan('4'),
@@ -257,8 +257,7 @@ class TenantController extends LandlordController
             CheckboxField::make('is_primary')
                 ->label('Inquilino Principal')
                 ->default(false)
-                ->columnSpan('12'),
-
+                ->columnSpan('12'), 
             // Seção de Domínios
             // RepeaterField::make('domains')
             //     ->label('Lista de Domínios')

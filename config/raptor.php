@@ -179,6 +179,21 @@ return [
         'disk' => env('RAPTOR_EXPORT_DISK', 'public'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Cloudflare (DNS)
+    |--------------------------------------------------------------------------
+    |
+    | Integração com a API Cloudflare para criar/apagar registros DNS
+    | (domínios e subdomínios). Usado pelo campo CloudflareDnsField.
+    |
+    */
+    'cloudflare' => [
+        'api_token' => env('CLOUDFLARE_API_TOKEN', ''),
+        'base_uri' => env('CLOUDFLARE_API_BASE_URI', 'https://api.cloudflare.com/client/v4'),
+        'timeout' => (int) env('CLOUDFLARE_API_TIMEOUT', 30),
+    ],
+
     // Disco padrão para upload de arquivos (formulários, FileUpload, etc.)
     'filesystem_disk' => env('RAPTOR_FILESYSTEM_DISK', 'public'),
 

@@ -77,6 +77,7 @@ ComponentRegistry.registerBulk({
     'form-field-search-select': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSearchSelect.vue')),
     'form-field-search-combobox': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSearchCombobox.vue')),
     'form-field-busca-cep': defineAsyncComponent(() => import('~/components/form/fields/FormFieldBuscaCep.vue')),
+    'form-field-cloudflare-dns': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCloudflareDns.vue')),
     'form-field-cnpj': defineAsyncComponent(() => import('~/components/form/fields/FormFieldCnpj.vue')),
     'form-field-mask': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMask.vue')),
     'form-field-relationship': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRelationship.vue')),
