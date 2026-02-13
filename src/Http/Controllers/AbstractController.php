@@ -69,7 +69,10 @@ abstract class AbstractController extends ResourceController
         // Verifica autorização via Policy (create)
         $this->authorize('create', $this->model());
 
-        $model  = app($this->model());
+        $model = app($this->model());
+        if ($request->session()->has('_old_input')) {
+            $model->fill($request->session()->get('_old_input'));
+        }
 
         return Inertia::render(sprintf('admin/%s/create', $this->resourcePath()), [
             'message' => $this->getSubtitle(),
@@ -136,10 +139,9 @@ abstract class AbstractController extends ResourceController
             ])
                 ->with('success', 'Item criado com sucesso.');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Re-lança exceção de validação para o Laravel tratar
             throw $e;
         } catch (\Exception $e) {
-            return $this->handleStoreError($e);
+            throw $e;
         }
     }
 
@@ -171,10 +173,13 @@ abstract class AbstractController extends ResourceController
 
     public function edit(Request $request, string $record)
     {
-        $model = $this->model()::findOrFail($record); 
+        $model = $this->model()::findOrFail($record);
+        if ($request->session()->has('_old_input')) {
+            $model->fill($request->session()->get('_old_input'));
+        }
         // Verifica autorização via Policy (update)
         $this->authorize('update', $model);
-        
+
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
             'message' => $this->getSubtitle(),
             'resourceName' => $this->getResourceName(),

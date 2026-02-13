@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Services\TenantDatabaseManager;
 use Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
@@ -28,7 +29,8 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\HasManyColumn;
-
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class TenantController extends LandlordController
 {
@@ -357,4 +359,83 @@ class TenantController extends LandlordController
     {
         return 'landlord';
     }
+ 
+
+    protected function beforeDelete(string $id): void
+    {
+        $model = $this->model()::findOrFail($id);
+        $database = $model->getAttribute('database');
+        if (! empty($database)) {
+            app(TenantDatabaseManager::class)->deleteTenantRecordFromTenantDatabase($model);
+        }
+    }
+ 
+
+    protected function beforeForceDelete(string $id): void
+    {
+        $model = $this->model()::withTrashed()->findOrFail($id);
+        $database = $model->getAttribute('database');
+        if (! empty($database)) {
+            app(TenantDatabaseManager::class)->dropDatabase($database);
+        }
+    }
+ 
+
+    /**
+     * Pastas de migrations a rodar quando o tenant tiver database dedicado (passado na hora).
+     *
+     * @return array<int, string>
+     */
+    protected function tenantMigrationPaths(): array
+    {
+        return [
+            'database/migrations/',
+            'database/migrations/tenant/',
+        ];
+    }
+
+    protected function afterCreate(Request $request, $model): void
+    {
+        $database = $model->getAttribute('database');
+        if (empty($database)) {
+            return;
+        }
+        app(TenantDatabaseManager::class)->ensureDatabaseAndRunMigrations(
+            $database,
+            $this->tenantMigrationPaths(),
+            $model
+        );
+    }
+
+    protected function afterUpdate(Request $request, $model): void
+    {
+        $database = $model->getAttribute('database');
+        if (empty($database)) {
+            return;
+        }
+        app(TenantDatabaseManager::class)->ensureDatabaseAndRunMigrations(
+            $database,
+            $this->tenantMigrationPaths(),
+            $model
+        );
+    }
+
+    protected function afterDelete(string $id, $model): void
+    {
+        //
+    }
+
+    protected function afterRestore(string $id, $model): void
+    {
+        $database = $model->getAttribute('database');
+        if (empty($database)) {
+            return;
+        }
+        app(TenantDatabaseManager::class)->ensureDatabaseAndRunMigrations(
+            $database,
+            $this->tenantMigrationPaths(),
+            $model
+        );
+    } 
+
 }

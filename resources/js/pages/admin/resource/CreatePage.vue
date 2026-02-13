@@ -39,7 +39,7 @@ const layoutProps = {
   breadcrumbs: props.breadcrumbs,
 }
 
-// Inicializa o formulário com valores padrão dos campos
+// Inicializa o formulário: input antigo (após erro) > model do backend > defaults das colunas
 const initialData = computed(() => {
   const data: Record<string, any> = {}
 
@@ -47,10 +47,13 @@ const initialData = computed(() => {
     if (column.default !== undefined && column.default !== null) {
       data[column.name] = column.default
     } else if (column.component === 'form-field-repeater') {
-      // RepeaterField sempre deve iniciar como array vazio
       data[column.name] = []
     }
   })
+
+  if (props.form?.model && Object.keys(props.form.model).length > 0) {
+    Object.assign(data, props.form.model)
+  }
 
   return data
 })

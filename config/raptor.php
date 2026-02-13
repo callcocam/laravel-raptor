@@ -22,17 +22,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Custom Domains
-    |--------------------------------------------------------------------------
-    |
-    | Habilita suporte para domínios customizados dos tenants
-    | Se true, tenants podem ter seus próprios domínios (ex: cliente.com.br)
-    |
-    */
-    'enable_custom_domains' => env('RAPTOR_ENABLE_CUSTOM_DOMAINS', false),
-
-    /*
-    |--------------------------------------------------------------------------
     | Landlord Configuration
     |--------------------------------------------------------------------------
     |
@@ -93,19 +82,6 @@ return [
 
         // Coluna na tabela de tenants que armazena domínios customizados
         'custom_domain_column' => 'custom_domain',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Site Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configurações para o site principal da aplicação
-    |
-    */
-    'site' => [
-        // Middleware aplicado às rotas do site
-        'middleware' => ['web'],
     ],
 
     /*
@@ -185,64 +161,22 @@ return [
     'database' => [
         // Estratégia de multi-tenancy: 'shared' (único DB) ou 'separate' (DB por tenant)
         'strategy' => env('RAPTOR_DB_STRATEGY', 'shared'),
-
-        // Prefixo para bancos de dados separados (apenas se strategy = 'separate')
-        'prefix' => env('RAPTOR_DB_PREFIX', 'tenant_'),
-
-        // Nome da coluna que identifica o tenant nas tabelas compartilhadas
-        'tenant_column' => 'tenant_id',
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | Cache Configuration
+    | Export / Import
     |--------------------------------------------------------------------------
     |
-    | Configurações de cache por tenant
+    | Disco para arquivos de export e import (Excel, etc.)
     |
     */
-    'cache' => [
-        // Prefixo para chaves de cache dos tenants
-        'prefix' => 'tenant',
-
-        // TTL padrão do cache (em segundos)
-        'ttl' => 3600,
+    'export' => [
+        'disk' => env('RAPTOR_EXPORT_DISK', 'public'),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Storage Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configurações de armazenamento de arquivos por tenant
-    |
-    */
-    'storage' => [
-        // Disco de armazenamento padrão para arquivos dos tenants
-        'disk' => env('RAPTOR_STORAGE_DISK', 'public'),
-
-        // Prefixo do path para arquivos dos tenants
-        'path_prefix' => 'tenants',
-
-        // Organizar por tenant ID automaticamente
-        'organize_by_tenant' => true,
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Security Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Configurações de segurança
-    |
-    */
-    'security' => [
-        // Habilita isolamento estrito entre tenants
-        'strict_isolation' => true,
-
-        // Previne acesso cross-tenant (tenant A acessar dados do tenant B)
-        'prevent_cross_tenant_access' => true,
-    ],
+    // Disco padrão para upload de arquivos (formulários, FileUpload, etc.)
+    'filesystem_disk' => env('RAPTOR_FILESYSTEM_DISK', 'public'),
 
     /*
     |--------------------------------------------------------------------------
@@ -361,53 +295,57 @@ return [
     */
     'migrations' => [
         // Migrations padrões executadas em TODOS os bancos (tenant, client, store)
-        'default' => [
-            // Exemplo: migrations que devem rodar em todos os bancos
-            // '2024_01_01_000000_create_users_table.php',
-            // '2024_01_02_000000_create_products_table.php',
-        ],
+        'default' => 'database/migrations/',
 
         // Migrations específicas para bancos de TENANTS
-        'tenant' => [
-            // Exemplo: migrations específicas para tenants
-            // '2024_01_03_000000_create_tenant_settings_table.php',
-        ],
+        'tenant' => 'database/migrations/tenant/',
 
         // Migrations específicas para bancos de CLIENTS
-        'client' => [
-            // Exemplo: migrations específicas para clients
-            // '2024_01_04_000000_create_client_integrations_table.php',
-        ],
+        'client' => 'database/migrations/client/',
 
         // Migrations específicas para bancos de STORES
-        'store' => [
-            // Exemplo: migrations específicas para stores
-            // '2024_01_05_000000_create_store_inventory_table.php',
-        ],
-
-        // Configurações adicionais
-        'options' => [
-            // Se true, cria o banco de dados automaticamente se não existir
-            'create_database_if_not_exists' => true,
-
-            // Se true, força a execução mesmo se já foi executada
-            'force' => false,
-
-            // Se true, executa em modo dry-run (apenas mostra o que seria executado)
-            'dry_run' => false,
-
-            // Timeout para criação de banco (em segundos)
-            'database_creation_timeout' => 30,
-        ],
+        'store' => 'database/migrations/store/',
 
         // Models customizados (opcional, usa padrão se não especificado)
         'models' => [
+            'tenant' => env('RAPTOR_MIGRATIONS_TENANT_MODEL', 'Callcocam\\LaravelRaptor\\Models\\Tenant'),
             'client' => env('RAPTOR_MIGRATIONS_CLIENT_MODEL', 'App\\Models\\Client'),
             'store' => env('RAPTOR_MIGRATIONS_STORE_MODEL', 'App\\Models\\Store'),
         ],
-    ],
-    'routes' => [
-        'default' => env('RAPTOR_ROUTES_DEFAULT', 'execute'),
+
+        /*
+        |----------------------------------------------------------------------
+        | Models com campo "database" para tenant:migrate
+        |----------------------------------------------------------------------
+        | Para cada entry: busca registros do model com campo database preenchido e
+        | roda as migrations das pastas em "paths". Nunca cria nem apaga banco — só migrate.
+        | Cada item: model, type, paths (array), name_key, id_key (opcionais).
+        */
+        'database_models' => [
+            [
+                'model' => 'raptor.migrations.models.tenant',
+                'type' => 'Tenant',
+                'name_key' => 'name',
+                'paths' => [
+                    'database/migrations/',
+                    'database/migrations/tenant/',
+                ],
+            ],
+            // [
+            //     'model' => 'raptor.migrations.models.client',
+            //     'type' => 'Client',
+            //     'id_key' => 'client_id',
+            //     'name_key' => 'name',
+            //     'paths' => ['database/migrations/', 'database/migrations/client/'],
+            // ],
+            // [
+            //     'model' => 'raptor.migrations.models.store',
+            //     'type' => 'Store',
+            //     'id_key' => 'store_id',
+            //     'name_key' => 'name',
+            //     'paths' => ['database/migrations/', 'database/migrations/store/'],
+            // ],
+        ],
     ],
 
     /*
