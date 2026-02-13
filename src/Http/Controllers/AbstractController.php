@@ -45,7 +45,7 @@ abstract class AbstractController extends ResourceController
     {
         // Verifica autorização via Policy (viewAny)
         $this->authorize('viewAny', $this->model());
-        
+
         $data = $this->table(TableBuilder::make($this->queryBuilder(), 'model'))
             ->request($request)
             ->toArray();
@@ -97,7 +97,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model  = app($this->model());
-            
+
             // Verifica autorização via Policy (create)
             $this->authorize('create', $model);
 
@@ -111,7 +111,7 @@ abstract class AbstractController extends ResourceController
             $preparedData = $form->prepareDataForValidation($request, null);
 
             $validationRules = array_merge(
-                $form->getValidationRules(),
+                $form->getValidationRules(null, $request),
                 $this->rules()
             );
             $validationMessages = $form->getValidationMessages();
@@ -148,7 +148,7 @@ abstract class AbstractController extends ResourceController
     public function show(Request $request, string $record)
     {
         $model = $this->model()::findOrFail($record);
-        
+
         // Verifica autorização via Policy (view)
         $this->authorize('view', $model);
 
@@ -205,7 +205,7 @@ abstract class AbstractController extends ResourceController
 
         try {
             $model = $this->model()::findOrFail($record);
-            
+
             // Verifica autorização via Policy (update)
             $this->authorize('update', $model);
 
@@ -262,7 +262,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::findOrFail($record);
-            
+
             // Verifica autorização via Policy (delete)
             $this->authorize('delete', $model);
 
@@ -291,7 +291,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
-            
+
             // Verifica autorização via Policy (restore)
             $this->authorize('restore', $model);
 
@@ -320,7 +320,7 @@ abstract class AbstractController extends ResourceController
     {
         try {
             $model = $this->model()::withTrashed()->findOrFail($record);
-            
+
             // Verifica autorização via Policy (forceDelete)
             $this->authorize('forceDelete', $model);
 
@@ -389,7 +389,7 @@ abstract class AbstractController extends ResourceController
      */
     public function execute(Request $request): BaseRedirectResponse|JsonResponse|BinaryFileResponse
     {
-        try { 
+        try {
             // Valida os campos básicos da action
             $validated = $request->validate([
                 'actionType' => 'required|string',
@@ -430,7 +430,7 @@ abstract class AbstractController extends ResourceController
                 return redirect()
                     ->back()
                     ->with('error', 'Ação não encontrada.');
-            } 
+            }
             // Extrai as regras de validação dos campos da action
             $validationRules = $callback->getValidationRules();
             $validationMessages = $callback->getValidationMessages();
@@ -467,7 +467,7 @@ abstract class AbstractController extends ResourceController
                     ->back()
                     ->with('error', 'Ação não retornou nenhum resultado.');
             }
-          
+
             // Hook: depois de executar action
             $this->afterExecute($request, $actionName, $model, $result instanceof BaseRedirectResponse ? null : $result);
 
@@ -484,7 +484,7 @@ abstract class AbstractController extends ResourceController
                 $notification = data_get($result, 'notification', []);
                 $type = data_get($notification, 'type', 'success');
                 $message = data_get($notification, 'text') ?? data_get($notification, 'message', 'Ação executada com sucesso.');
-                
+
                 return redirect()->back()->with($type, $message);
             }
             return redirect()->back()

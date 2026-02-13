@@ -40,26 +40,29 @@ class PermissionController extends TenantController
     public function getPages(): array
     {
         return [
-            'index' => Index::route('/permissions')
-                ->label('Permissões')
-                ->name('permissions.index')
-                ->icon('Shield')
-                ->group('Segurança')
-                ->groupCollapsible(true)
-                ->order(15)
-                ->middlewares(['auth', 'verified']),
+            'index' => Index::route(config('raptor.controllers.permissions.index.route', '/permissions'))
+                ->label(config('raptor.controllers.permissions.label', __('Permissões')))
+                ->name(config('raptor.controllers.permissions.index.name', 'permissions.index'))
+                ->icon(config('raptor.controllers.permissions.index.icon', 'Shield'))
+                ->group(config('raptor.controllers.permissions.index.group', 'Segurança'))
+                ->groupCollapsible(config('raptor.controllers.permissions.index.groupCollapsible', true))
+                ->order(config('raptor.controllers.permissions.index.order', 15))
+                ->middlewares(config('raptor.controllers.permissions.index.middlewares', ['auth', 'verified'])),
             'create' => Create::route('/permissions/create')
-                ->label('Criar Permissão')
+                ->label(config('raptor.controllers.permissions.create.label', __('Criar Permissão')))
                 ->name('permissions.create')
-                ->middlewares(['auth', 'verified']),
+                ->icon(config('raptor.controllers.permissions.create.icon', 'ShieldPlus'))
+                ->middlewares(config('raptor.controllers.permissions.create.middlewares', ['auth', 'verified'])),
             'edit' => Edit::route('/permissions/{record}/edit')
-                ->label('Editar Permissão')
+                ->label(config('raptor.controllers.permissions.edit.label', __('Editar Permissão')))
                 ->name('permissions.edit')
-                ->middlewares(['auth', 'verified']),
+                ->icon(config('raptor.controllers.permissions.edit.icon', 'ShieldEdit'))
+                ->middlewares(config('raptor.controllers.permissions.edit.middlewares', ['auth', 'verified'])),
             'execute' => Execute::route('/permissions/execute/actions')
-                ->label('Executar Permissão')
+                ->label(config('raptor.controllers.permissions.execute.label', __('Executar Permissão')))
                 ->name('permissions.execute')
-                ->middlewares(['auth', 'verified']),
+                ->icon(config('raptor.controllers.permissions.execute.icon', 'ShieldExecute'))
+                ->middlewares(config('raptor.controllers.permissions.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 

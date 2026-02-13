@@ -20,10 +20,12 @@ class InconController extends ResourceController
     {
         return [
             'index' => Index::route('/icons')
-                ->label('Icons')
-                ->name('icons.index')
-                ->icon('BrickWallFire')
-                ->order(1)
+                ->label(config('raptor.controllers.icons.label', __('Icons')))
+                ->name(config('raptor.controllers.icons.name', 'icons.index'))
+                ->icon(config('raptor.controllers.icons.icon', 'BrickWallFire'))
+                ->order(config('raptor.controllers.icons.order', 1))
+                ->group(config('raptor.controllers.icons.group', 'Operacional'))
+                ->groupCollapsible(config('raptor.controllers.icons.groupCollapsible', true))
                 ->visible(function () {
                     if (auth()->user()) {
                         return auth()->user()->isAdmin();
