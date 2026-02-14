@@ -73,7 +73,8 @@ class HierarchicalImportService extends DefaultImportService
             }
 
             $lastModel = null;
-            DB::transaction(function () use ($data, $order, &$lastModel): void {
+            $connection = $this->getEffectiveConnection();
+            $runTransaction = function () use ($data, $order, &$lastModel): void {
                 $parentId = null;
                 $valueColumn = $this->sheet->getHierarchicalValueColumn();
                 $parentColumnName = $this->sheet->getParentColumnName();
@@ -103,8 +104,13 @@ class HierarchicalImportService extends DefaultImportService
                         $parentId = $lastModel->getKey();
                     }
                 }
-            });
-
+            };
+            if ($connection) {
+                DB::connection($connection)->transaction($runTransaction);
+            } else {
+                DB::transaction($runTransaction);
+            }
+            
             $dataForCompleted = $data;
             if ($lastModel instanceof Model) {
                 $dataForCompleted['id'] = $lastModel->getKey();

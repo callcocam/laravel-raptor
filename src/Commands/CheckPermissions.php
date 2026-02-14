@@ -18,6 +18,11 @@ class CheckPermissions extends Command
 {
     use GeneratesPermissionIds;
 
+    protected function landlordConnection(): string
+    {
+        return config('raptor.database.landlord_connection_name', 'landlord');
+    }
+
     /**
      * The name and signature of the console command.
      *
@@ -212,9 +217,10 @@ class CheckPermissions extends Command
         if($this->confirm('Deseja resetar as permissões existentes antes de criar as faltantes?')) {
             $permissionModel = config('raptor.shinobi.models.permission');
             
-            // Remove todas as relações permission_role e permission_user primeiro
-            DB::table('permission_role')->delete();
-            DB::table('permission_user')->delete();
+            // Remove todas as relações permission_role e permission_user primeiro (landlord)
+            $conn = $this->landlordConnection();
+            DB::connection($conn)->table('permission_role')->delete();
+            DB::connection($conn)->table('permission_user')->delete();
             
             // Remove todas as permissions usando delete() para respeitar foreign keys
             app($permissionModel)->query()->forceDelete();
@@ -410,8 +416,8 @@ class CheckPermissions extends Command
             try {
                 $id = $this->generateDeterministicId($permission['slug']);
                 
-                // Usa DB::table() para inserir com ID específico
-                DB::table($table)->insert([
+                // Usa DB::table() na conexão landlord para inserir com ID específico
+                DB::connection($this->landlordConnection())->table($table)->insert([
                     'id' => $id,
                     'name' => $permission['name'],
                     'slug' => $permission['slug'],
@@ -452,8 +458,8 @@ class CheckPermissions extends Command
             
             // Só atualiza se o nome ou descrição forem diferentes
             if ($existing->name !== $permission['name'] || $existing->description !== $permission['description']) {
-                // Usa query builder direto para evitar que o HasSlug trait sobrescreva a slug
-                DB::table($table)
+                // Usa query builder na conexão landlord para evitar que o HasSlug trait sobrescreva a slug
+                DB::connection($this->landlordConnection())->table($table)
                     ->where('id', $existing->id)
                     ->update([
                         'name' => $permission['name'],

@@ -49,6 +49,11 @@ class TranslationService
         $this->cacheEnabled = config('raptor.translation.cache_enabled', true);
     }
 
+    protected function landlordConnection(): string
+    {
+        return config('raptor.database.landlord_connection_name', 'landlord');
+    }
+
     /**
      * Obtém a tradução customizada com fallback automático
      *
@@ -350,12 +355,12 @@ class TranslationService
             'tenant_overrides' => TranslationOverride::query()
                 ->whereHas('group', fn($q) => $q->whereNotNull('tenant_id'))
                 ->count(),
-            'locales' => DB::table($groupTable)
+            'locales' => DB::connection($this->landlordConnection())->table($groupTable)
                 ->select('locale')
                 ->distinct()
                 ->pluck('locale')
                 ->toArray(),
-            'groups' => DB::table($groupTable)
+            'groups' => DB::connection($this->landlordConnection())->table($groupTable)
                 ->select('name')
                 ->distinct()
                 ->whereNotNull('name')
@@ -430,7 +435,7 @@ class TranslationService
         $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
         $overrideTable = config('raptor.tables.translation_overrides', 'translation_overrides');
 
-        $query = DB::table($overrideTable)
+        $query = DB::connection($this->landlordConnection())->table($overrideTable)
             ->join($groupTable, "{$groupTable}.id", '=', "{$overrideTable}.translation_group_id")
             ->where("{$groupTable}.locale", $locale)
             ->where("{$groupTable}.tenant_id", $tenantId)
@@ -461,8 +466,8 @@ class TranslationService
     {
         $groupTable = config('raptor.tables.translation_groups', 'translation_groups');
 
-        // Busca todos os locales disponíveis
-        $locales = DB::table($groupTable)
+        // Busca todos os locales disponíveis (tabelas landlord)
+        $locales = DB::connection($this->landlordConnection())->table($groupTable)
             ->where('tenant_id', $tenantId)
             ->distinct()
             ->pluck('locale')

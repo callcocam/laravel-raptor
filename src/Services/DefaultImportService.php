@@ -85,9 +85,16 @@ class DefaultImportService implements ImportServiceInterface
             }
 
             $model = null;
-            DB::transaction(function () use ($data, $existing, &$model): void {
-                $model = $this->persist($data, $existing);
-            });
+            $connection = $this->getEffectiveConnection();
+            if ($connection) {
+                DB::connection($connection)->transaction(function () use ($data, $existing, &$model): void {
+                    $model = $this->persist($data, $existing);
+                });
+            } else {
+                DB::transaction(function () use ($data, $existing, &$model): void {
+                    $model = $this->persist($data, $existing);
+                });
+            }
 
             $dataForCompleted = $data;
             if ($model instanceof Model && ! isset($dataForCompleted['id'])) {
@@ -331,7 +338,7 @@ class DefaultImportService implements ImportServiceInterface
     {
         $dataForSave = $this->filterDataForPersist($data);
 
-        $connection = $this->connection ?? $this->sheet->getConnection();
+        $connection = $this->getEffectiveConnection();
         $tableName = $this->sheet->getTableName(); 
 
         if ($tableName === null) {
@@ -360,9 +367,18 @@ class DefaultImportService implements ImportServiceInterface
             return $instance;
         }
 
-        DB::connection($connection)->table($tableName)->insert($this->prepareDataForInsert($dataForSave));
+        if ($connection) {
+            DB::connection($connection)->table($tableName)->insert($this->prepareDataForInsert($dataForSave));
+        } else {
+            DB::table($tableName)->insert($this->prepareDataForInsert($dataForSave));
+        }
 
         return null;
+    }
+
+    protected function getEffectiveConnection(): ?string
+    {
+        return $this->connection ?? $this->sheet->getConnection();
     }
 
     /**

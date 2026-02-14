@@ -51,6 +51,11 @@ class LaravelRaptorCommand extends Command
     protected ?string $defaultPassword = null;
     protected ?string $baseDomain = null;
 
+    protected function landlordConnection(): string
+    {
+        return config('raptor.database.landlord_connection_name', 'landlord');
+    }
+
     public function handle(): int
     {
         $this->newLine();
@@ -169,11 +174,12 @@ class LaravelRaptorCommand extends Command
     {
         $this->info('Limpando tabelas...');
 
-        $driver = DB::getDriverName();
-        
+        $conn = $this->landlordConnection();
+        $driver = DB::connection($conn)->getDriverName();
+
         // Desabilitar checagem de chaves estrangeiras conforme o driver
         if ($driver === 'mysql') {
-            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+            DB::connection($conn)->statement('SET FOREIGN_KEY_CHECKS=0');
         } elseif ($driver === 'pgsql') {
             // PostgreSQL não precisa desabilitar constraints para TRUNCATE CASCADE
         }
@@ -181,12 +187,12 @@ class LaravelRaptorCommand extends Command
         $tables = ['permission_role', 'role_user', 'permission_user', 'permissions', 'roles', 'users', 'tenants'];
 
         foreach ($tables as $table) {
-            if (Schema::hasTable($table)) {
+            if (Schema::connection($conn)->hasTable($table)) {
                 if ($driver === 'pgsql') {
                     // PostgreSQL usa TRUNCATE CASCADE
-                    DB::statement("TRUNCATE TABLE {$table} RESTART IDENTITY CASCADE");
+                    DB::connection($conn)->statement("TRUNCATE TABLE {$table} RESTART IDENTITY CASCADE");
                 } else {
-                    DB::table($table)->truncate();
+                    DB::connection($conn)->table($table)->truncate();
                 }
                 $this->line("  ✓ {$table}");
             }
@@ -194,7 +200,7 @@ class LaravelRaptorCommand extends Command
 
         // Reabilitar checagem de chaves estrangeiras
         if ($driver === 'mysql') {
-            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+            DB::connection($conn)->statement('SET FOREIGN_KEY_CHECKS=1');
         }
 
         $this->info('Tabelas limpas com sucesso!');
