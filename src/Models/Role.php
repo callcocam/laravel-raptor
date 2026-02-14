@@ -9,8 +9,9 @@
 namespace Callcocam\LaravelRaptor\Models;
 
 use Callcocam\LaravelRaptor\Support\Shinobi\Models\Role as ModelsRole;
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 
 class Role extends ModelsRole
 {
-    
+    use UsesLandlordConnection;
 }

@@ -2,6 +2,7 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,10 @@ use Illuminate\Support\Facades\Storage;
 
 class FileUpload extends Model
 {
-    use HasFactory, HasUlids, SoftDeletes;
+    use HasFactory;
+    use HasUlids;
+    use SoftDeletes;
+    use UsesLandlordConnection;
 
     protected $fillable = [
         'model_type',
@@ -47,16 +51,22 @@ class FileUpload extends Model
      * Status constants
      */
     const STATUS_PENDING = 'pending';
+
     const STATUS_UPLOADING = 'uploading';
+
     const STATUS_PROCESSING = 'processing';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_FAILED = 'failed';
 
     /**
      * Thumbnail sizes
      */
     const THUMBNAIL_SMALL = 'small';   // 300px
+
     const THUMBNAIL_MEDIUM = 'medium'; // 600px
+
     const THUMBNAIL_LARGE = 'large';   // 1200px
 
     /**
@@ -177,7 +187,7 @@ class FileUpload extends Model
      */
     public function getFileUrl(?string $disk = null): ?string
     {
-        if (!$this->final_path) {
+        if (! $this->final_path) {
             return null;
         }
 
@@ -191,7 +201,7 @@ class FileUpload extends Model
      */
     public function getThumbnailUrl(string $size = self::THUMBNAIL_SMALL, ?string $disk = null): ?string
     {
-        if (!$this->thumbnails || !isset($this->thumbnails[$size])) {
+        if (! $this->thumbnails || ! isset($this->thumbnails[$size])) {
             return null;
         }
 
@@ -205,7 +215,7 @@ class FileUpload extends Model
      */
     public function getThumbnailUrls(?string $disk = null): array
     {
-        if (!$this->thumbnails) {
+        if (! $this->thumbnails) {
             return [];
         }
 

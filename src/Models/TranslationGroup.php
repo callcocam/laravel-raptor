@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class TranslationGroup extends Model
 {
     use HasUlids;
+    use UsesLandlordConnection;
 
     protected $fillable = [
         'tenant_id',

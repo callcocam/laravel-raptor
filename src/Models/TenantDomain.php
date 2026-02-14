@@ -12,9 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 
 class TenantDomain extends AbstractModel
 {
+    use UsesLandlordConnection;
+    
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);

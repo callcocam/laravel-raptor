@@ -10,7 +10,7 @@ namespace Callcocam\LaravelRaptor\Models;
 
 use App\Models\User;
 use Callcocam\LaravelRaptor\Support\Concerns\HasCustomScopes;
-use Callcocam\LaravelRaptor\Support\Landlord\BelongsToTenants;
+use Callcocam\LaravelRaptor\Support\Landlord\BelongsToTenants; 
 use Callcocam\LaravelRaptor\Support\Sluggable\HasSlug;
 use Callcocam\LaravelRaptor\Support\Sluggable\SlugOptions;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -18,7 +18,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class AbstractModel extends Model
 {
-    use HasSlug, HasUlids, BelongsToTenants, HasCustomScopes;
+    use BelongsToTenants;
+    use HasCustomScopes;
+    use HasSlug;
+    use HasUlids;
 
     protected $guarded = ['id'];
 
@@ -34,6 +37,7 @@ class AbstractModel extends Model
             'tenant_id'
         );
     }
+
     /**
      * @return SlugOptions
      */

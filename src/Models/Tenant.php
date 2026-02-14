@@ -11,10 +11,12 @@ namespace Callcocam\LaravelRaptor\Models;
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 
 class Tenant extends AbstractModel
 {
     use SoftDeletes;
+    use UsesLandlordConnection;
 
     public function __construct(array $attributes = [])
     {

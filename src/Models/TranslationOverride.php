@@ -8,6 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TranslationOverride extends Model
 {
     use HasUlids;
+    use UsesLandlordConnection;
 
     protected $fillable = [
         'translation_group_id',
@@ -68,6 +70,7 @@ class TranslationOverride extends Model
     public function getFullKeyAttribute(): string
     {
         $group = $this->group?->group;
+
         return $group ? "{$group}.{$this->key}" : $this->key;
     }
 }
