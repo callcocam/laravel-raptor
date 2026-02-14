@@ -19,6 +19,7 @@ use Callcocam\LaravelRaptor\Support\Pages\Create;
 use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
 use Callcocam\LaravelRaptor\Support\Pages\Index;
+use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
@@ -97,9 +98,14 @@ class PermissionController extends TenantController
                 ->searchable()
                 ->sortable(),
 
-            TextColumn::make('description', config('raptor.controllers.permissions.table.description', 'Descrição'))
-                ->searchable(),
-
+            BooleanColumn::make('status')
+                ->trueLabel('Ativo')
+                ->falseLabel('Inativo')
+                ->trueColor('success')
+                ->falseColor('danger')
+                ->sortable()
+                ->columnSpanFull()
+                ->editable()->executeUrl(route('tenant.permissions.execute')),
             DateColumn::make('created_at', config('raptor.controllers.permissions.table.created_at', 'Criado em'))
                 ->format('d/m/Y H:i')
                 ->sortable(),
@@ -107,6 +113,9 @@ class PermissionController extends TenantController
             DateColumn::make('updated_at', config('raptor.controllers.permissions.table.updated_at', 'Atualizado'))
                 ->relative()
                 ->sortable(),
+
+            TextColumn::make('description', config('raptor.controllers.permissions.table.description', 'Descrição'))
+                ->searchable()->columnSpanFull(),
         ])
             ->filters([
                 \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
@@ -129,9 +138,9 @@ class PermissionController extends TenantController
             TextInfolist::make('slug', config('raptor.controllers.permissions.infolist.slug', 'Slug')),
             TextInfolist::make('description', config('raptor.controllers.permissions.infolist.description', 'Descrição')),
             TextInfolist::make('created_at', config('raptor.controllers.permissions.infolist.created_at', 'Criado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.permissions.infolist.updated_at', 'Atualizado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 
