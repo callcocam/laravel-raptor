@@ -71,17 +71,26 @@ class TenantDatabaseManager
     }
 
     /**
-     * Verifica se o banco de dados existe.
+     * Conexão que está sempre em um banco existente (para CREATE DATABASE / checagem).
+     */
+    protected function connectionForCreateDatabase(): string
+    {
+        return config('raptor.database.landlord_connection_name', 'landlord');
+    }
+
+    /**
+     * Verifica se o banco de dados existe (usa conexão landlord para não depender do banco novo).
      */
     public function databaseExists(string $database): bool
     {
         try {
-            $driver = config("database.connections.{$this->defaultConnection}.driver");
+            $conn = $this->connectionForCreateDatabase();
+            $driver = config("database.connections.{$conn}.driver");
             if ($driver === 'pgsql') {
-                $result = DB::connection($this->defaultConnection)
+                $result = DB::connection($conn)
                     ->select('SELECT 1 FROM pg_database WHERE datname = ?', [$database]);
             } else {
-                $result = DB::connection($this->defaultConnection)
+                $result = DB::connection($conn)
                     ->select('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?', [$database]);
             }
 
@@ -92,36 +101,38 @@ class TenantDatabaseManager
     }
 
     /**
-     * Cria o banco de dados se não existir.
+     * Cria o banco de dados (usa conexão landlord, que está em um banco que já existe).
      */
     public function createDatabase(string $database): void
     {
-        $driver = config("database.connections.{$this->defaultConnection}.driver");
-        $charset = config("database.connections.{$this->defaultConnection}.charset", 'utf8');
+        $conn = $this->connectionForCreateDatabase();
+        $driver = config("database.connections.{$conn}.driver");
+        $charset = config("database.connections.{$conn}.charset", 'utf8');
         if ($driver === 'pgsql') {
-            DB::connection($this->defaultConnection)
-                ->statement("CREATE DATABASE \"{$database}\" ENCODING '{$charset}'");
+            DB::connection($conn)->statement("CREATE DATABASE \"{$database}\" ENCODING '{$charset}'");
         } else {
-            DB::connection($this->defaultConnection)
-                ->statement("CREATE DATABASE `{$database}` CHARACTER SET {$charset}");
+            DB::connection($conn)->statement("CREATE DATABASE `{$database}` CHARACTER SET {$charset}");
         }
     }
 
     /**
-     * Cria o banco (se não existir), roda as migrations das pastas informadas e, se passar o model, copia o tenant para a nova base.
+     * Garante que o banco existe, aponta a default para ele, roda as migrations e insere o tenant.
+     * Ordem: 1) verificar/criar banco (via conexão landlord) 2) trocar default para o banco 3) rodar migrations 4) inserir tenant.
      *
      * @param  array<int, string>  $migrationPaths  Pastas de migrations (ex: ['database/migrations/', 'database/migrations/tenant/'])
-     * @param  Model|null  $tenant  Se informado, copia os dados do tenant para a nova base; se null, só roda as migrations (ex: tabelas secundárias)
+     * @param  Model|null  $tenant  Se informado, copia os dados do tenant para a nova base; se null, só roda as migrations
      */
     public function ensureDatabaseAndRunMigrations(string $database, array $migrationPaths, ?Model $tenant = null): void
     {
         if (empty($database)) {
             return;
         }
-        $this->setupConnection($database);
+
         if (! $this->databaseExists($database)) {
             $this->createDatabase($database);
         }
+
+        $this->setupConnection($database);
         $options = ['--database' => $this->defaultConnection, '--realpath' => false];
         foreach ($migrationPaths as $path) {
             Artisan::call('migrate', array_merge($options, ['--path' => $path]));
@@ -187,18 +198,19 @@ class TenantDatabaseManager
     }
 
     /**
-     * Remove o banco de dados do tenant.
+     * Remove o banco de dados do tenant (usa conexão landlord para não estar conectado ao banco que será dropado).
      */
     public function dropDatabase(string $database): void
     {
         if (empty($database)) {
             return;
         }
-        $driver = config("database.connections.{$this->defaultConnection}.driver");
+        $conn = $this->connectionForCreateDatabase();
+        $driver = config("database.connections.{$conn}.driver");
         if ($driver === 'pgsql') {
-            DB::connection($this->defaultConnection)->statement("DROP DATABASE IF EXISTS \"{$database}\"");
+            DB::connection($conn)->statement("DROP DATABASE IF EXISTS \"{$database}\"");
         } else {
-            DB::connection($this->defaultConnection)->statement("DROP DATABASE IF EXISTS `{$database}`");
+            DB::connection($conn)->statement("DROP DATABASE IF EXISTS `{$database}`");
         }
     }
 
