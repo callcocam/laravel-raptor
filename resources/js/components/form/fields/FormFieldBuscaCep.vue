@@ -3,7 +3,7 @@
  *
  * Integrates with ViaCEP API to automatically fill address fields
  -->
-<template>
+ <template>
   <FieldSet orientation="vertical" class="gap-y-4">
     <FieldLegend v-if="column.label">
       {{ column.label }}
@@ -92,7 +92,7 @@ import {
 } from "@/components/ui/field";
 import FieldRenderer from "../FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
-import { createMultiFieldUpdate } from "~/types/form";
+import { createMultiFieldUpdate, isMultiFieldUpdate } from "~/types/form";
 import type { FieldEmitValue } from "~/types/form";
 
 interface AddressField {
@@ -155,14 +155,8 @@ const canSearch = computed(() => {
   return cleaned.length === 8;
 });
 
-// Retorna classe do campo, ajustando para o campo CEP que tem botão
-const getCepFieldClass = (field: AddressField) => {
-  // Se for o campo CEP, não usa a classe de grid pois o flex já controla
-  if (field.name === executeOnChangeField.value) {
-    return getColumnClasses(field);
-  }
-  return getColumnClasses(field);
-};
+// Retorna classe do campo (grid) para cada campo de endereço
+const getCepFieldClass = (field: AddressField) => getColumnClasses(field);
 
 // Inicializa valores dos campos
 watch(
@@ -200,7 +194,6 @@ async function searchCep(cep: string) {
   try {
     const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
     const data = await response.json();
-    console.log("ViaCEP response:", data);
 
     if (data.erro) {
       cepError.value = "CEP não encontrado.";
@@ -209,8 +202,6 @@ async function searchCep(cep: string) {
 
     // Usa o mapeamento definido no backend (obrigatório)
     const fieldMapping = props.column.fieldMapping;
-
-    console.log("Field mapping:", fieldMapping);
 
     if (!fieldMapping) { 
       cepError.value = "Configuração de mapeamento ausente.";
@@ -221,15 +212,13 @@ async function searchCep(cep: string) {
     // Mapeia os campos da API para os campos do formulário
     Object.entries(fieldMapping).forEach(([apiField, formField]) => {
       const value = data[apiField] || "";
-      console.log(`Mapping ${apiField} (${value}) -> ${formField}`);
-
-      // Atualiza fieldValues primeiro
       fieldValues.value[formField] = value;
     });
 
-    const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {};
-    const updatedValues = { ...currentValue, ...fieldValues.value };
-    emit("update:modelValue", createMultiFieldUpdate(updatedValues));
+    emit(
+      "update:modelValue",
+      createMultiFieldUpdate({ [props.column.name]: { ...fieldValues.value } })
+    );
   } catch (error) {
     console.error("Erro ao buscar CEP:", error);
     cepError.value = "Erro ao buscar CEP. Tente novamente.";
@@ -238,31 +227,21 @@ async function searchCep(cep: string) {
   }
 }
 
-function emitValue(fieldName: string, value: any) {
-  const currentValue = typeof props.modelValue === 'object' && props.modelValue !== null ? props.modelValue : {};
-  const updatedValues = { ...currentValue, [fieldName]: value };
-  emit("update:modelValue", createMultiFieldUpdate(updatedValues));
+function emitFormUpdate() {
+  emit(
+    "update:modelValue",
+    createMultiFieldUpdate({ [props.column.name]: { ...fieldValues.value } })
+  );
 }
 
-// Handle update de campo individual
-function handleFieldUpdate(fieldName: string, value: any) {
-  fieldValues.value[fieldName] = value;
-  emitValue(fieldName, value);
-}
-
-// Verifica se campo tem erro
-function hasError(fieldName: string): boolean {
-  return !!(props.error && props.error[fieldName]);
-}
-
-// Retorna array de erros formatado
-function getErrorArray(fieldName: string): Array<{ message: string }> {
-  if (!props.error || !props.error[fieldName]) return [];
-
-  const error = props.error[fieldName];
-  if (Array.isArray(error)) {
-    return error.map((msg) => ({ message: msg }));
+function handleFieldUpdate(fieldName: string, value: FieldEmitValue) {
+  if (isMultiFieldUpdate(value)) {
+    Object.entries(value.fields).forEach(([key, val]) => {
+      fieldValues.value[key] = val;
+    });
+  } else {
+    fieldValues.value[fieldName] = value;
   }
-  return [{ message: error }];
+  emitFormUpdate();
 }
 </script>

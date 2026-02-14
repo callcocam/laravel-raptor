@@ -3,7 +3,7 @@
  *
  * Groups related fields together with an optional collapsible container
  -->
-<template>
+ <template>
   <div class="col-span-12">
     <Collapsible
       v-if="column.collapsible"
@@ -94,9 +94,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import FieldRenderer from "../FieldRenderer.vue";
+import FieldRenderer from "~/components/form/FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
-import { createMultiFieldUpdate } from "~/types/form";
+import { createMultiFieldUpdate, isMultiFieldUpdate } from "~/types/form";
 import type { FieldEmitValue } from "~/types/form";
 
 interface SectionField {
@@ -160,7 +160,7 @@ watch(
       } else {
         fieldValues.value[field.name] = normalizedValue[field.name] || "";
       }
-    });
+    }); 
   },
   { immediate: true }
 );
@@ -187,8 +187,19 @@ function getNestedValue(obj: Record<string, any>, path: string): any {
   return current;
 }
 
-function handleFieldUpdate(fieldName: string, value: any) {
-  fieldValues.value[fieldName] = value;
-  emit("update:modelValue", createMultiFieldUpdate({ ...fieldValues.value }));
+function handleFieldUpdate(fieldName: string, value: FieldEmitValue) {
+  if (isMultiFieldUpdate(value)) {
+    Object.entries(value.fields).forEach(([key, val]) => {
+      fieldValues.value[key] = val;
+    });
+  } else {
+    fieldValues.value[fieldName] = value;
+  }
+  // Emite o objeto da seção sob column.name para o FormRenderer gravar em formData[column.name]
+  const sectionData = { ...fieldValues.value }; 
+  emit(
+    "update:modelValue",
+    createMultiFieldUpdate({ [props.column.name]: sectionData })
+  );
 }
 </script>
