@@ -215,8 +215,7 @@ class TenantDatabaseManager
     }
 
     /**
-     * Cria configuração inicial do tenant quando o banco está vazio (role, permissões, usuário).
-     * Sempre envia email ao endereço do tenant: novas credenciais (banco vazio) ou aviso de atualização.
+     * Cria configuração inicial do tenant (role super-admin, permissões, usuário).
      */
     public function createTenantConfiguration(Model $tenant): void
     {
@@ -234,20 +233,26 @@ class TenantDatabaseManager
     }
 
     /**
-     * Verifica se o banco da conexão tenant está vazio (sem users, roles ou permissions).
+     * Verifica se o banco da conexão default (tenant) está vazio (sem users, roles ou permissions).
+     * Em erro (ex.: tabelas ainda não existem), considera vazio para rodar a configuração.
      */
     protected function tenantDatabaseIsEmpty(): bool
     {
-        $userModelClass = config('raptor.shinobi.models.user');
-        $usersTable = (new $userModelClass)->getTable();
-        $rolesTable = config('raptor.shinobi.tables.roles');
-        $permissionsTable = config('raptor.shinobi.tables.permissions');
+        try {
+            $userModelClass = config('raptor.shinobi.models.user');
+            $usersTable = (new $userModelClass)->getTable();
+            $rolesTable = config('raptor.shinobi.tables.roles');
+            $permissionsTable = config('raptor.shinobi.tables.permissions');
 
-        $hasUsers = DB::connection($this->defaultConnection)->table($usersTable)->exists();
-        $hasRoles = DB::connection($this->defaultConnection)->table($rolesTable)->exists();
-        $hasPermissions = DB::connection($this->defaultConnection)->table($permissionsTable)->exists();
+            $conn = $this->defaultConnection;
+            $hasUsers = DB::connection($conn)->table($usersTable)->exists();
+            $hasRoles = DB::connection($conn)->table($rolesTable)->exists();
+            $hasPermissions = DB::connection($conn)->table($permissionsTable)->exists();
 
-        return ! $hasUsers && ! $hasRoles && ! $hasPermissions;
+            return ! $hasUsers && ! $hasRoles && ! $hasPermissions;
+        } catch (\Throwable $e) {
+            return true;
+        }
     }
 
     /**

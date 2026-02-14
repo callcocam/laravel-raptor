@@ -23,12 +23,11 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
         $user = null;
         $plainPassword = null;
 
-        $landlordConnection = config('raptor.database.landlord_connection_name', 'landlord');
         $tenantConnection = config('database.default');
         $roleModelClass = config('raptor.shinobi.models.role');
 
-        // 1. Role: cria só se não existir (firstOrCreate)
-        $roleModel = $this->ensureRoleExists($tenant, $roleModelClass, $landlordConnection, $tenantConnection);
+        // 1. Role: cria super-admin (special) se não existir
+        $roleModel = $this->ensureSuperAdminRoleExists($tenant, $roleModelClass, $tenantConnection);
         if (! $roleModel) {
             return;
         }
@@ -57,33 +56,20 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
     }
 
     /**
-     * Garante que a role existe no tenant (copia do landlord se necessário). Retorna a role ou null em erro.
+     * Garante que a role super-admin (special) existe no tenant. Cria se não existir.
      */
-    protected function ensureRoleExists(Model $tenant, string $roleModelClass, string $landlordConnection, string $tenantConnection): ?Model
+    protected function ensureSuperAdminRoleExists(Model $tenant, string $roleModelClass, string $tenantConnection): ?Model
     {
         try {
-            $sourceRole = $roleModelClass::on($landlordConnection)
-                ->where(function ($q) {
-                    $q->orWhereNotNull('special');
-                })
-                ->first();
-
-            if ($sourceRole) {
-                $roleName = $sourceRole->getAttribute('name');
-                $roleSlug = $sourceRole->getAttribute('slug') ?: Str::slug($roleName);
-                $special = $sourceRole->getAttribute('special');
-            } else {
-                $roleName = 'Super Administrador';
-                $roleSlug = 'super-administrador';
-                $special = true;
-            }
-
             return $roleModelClass::on($tenantConnection)->firstOrCreate(
-                ['slug' => $roleSlug],
-                ['name' => $roleName, 'special' => $special ?? true]
+                ['slug' => 'super-admin'],
+                [
+                    'name' => 'Super Admin',
+                    'special' => true,
+                ]
             );
         } catch (\Throwable $e) {
-            Log::warning('DefaultTenantConfiguration: falha ao garantir role.', [
+            Log::warning('DefaultTenantConfiguration: falha ao criar role super-admin no tenant.', [
                 'tenant_id' => $tenant->getKey(),
                 'error' => $e->getMessage(),
             ]);

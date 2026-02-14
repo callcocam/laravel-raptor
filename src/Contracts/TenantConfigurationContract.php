@@ -17,10 +17,10 @@ use Illuminate\Database\Eloquent\Model;
 interface TenantConfigurationContract
 {
     /**
-     * Configura o tenant quando o banco está vazio; sempre envia email (credenciais ou atualização).
+     * Configura o tenant (role super-admin, permissões, usuário). Envia email quando houver email.
      *
      * @param  Model  $tenant  Model do tenant (ex.: Tenant) com atributos database, email, name
-     * @param  bool  $databaseWasEmpty  true se o banco estava vazio (criou user/role/permissions)
+     * @param  bool  $databaseWasEmpty  true se o banco estava vazio
      */
     public function run(Model $tenant, bool $databaseWasEmpty): void;
 }
