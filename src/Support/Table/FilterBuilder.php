@@ -17,26 +17,26 @@ use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToId;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToLabel;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToName;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToVisible;
-use Callcocam\LaravelRaptor\Support\Table\Strategies\FilterStrategy;
-use Callcocam\LaravelRaptor\Support\Table\Strategies\LikeFilterStrategy;
-use Callcocam\LaravelRaptor\Support\Table\Strategies\ExactFilterStrategy;
-use Callcocam\LaravelRaptor\Support\Table\Strategies\InFilterStrategy;
-use Callcocam\LaravelRaptor\Support\Table\Strategies\RangeFilterStrategy;
-use Callcocam\LaravelRaptor\Support\Table\Strategies\DateFilterStrategy;
 use Callcocam\LaravelRaptor\Support\Table\Strategies\BooleanFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\DateFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\ExactFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\FilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\InFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\LikeFilterStrategy;
+use Callcocam\LaravelRaptor\Support\Table\Strategies\RangeFilterStrategy;
 use Closure;
 
 class FilterBuilder
 {
-    use  BelongsToContext;
-    use  BelongsToIcon;
-    use  BelongsToId;
-    use  BelongsToLabel;
-    use  BelongsToName;
+    use BelongsToContext;
+    use BelongsToHelpers;
+    use BelongsToIcon;
+    use BelongsToId;
+    use BelongsToLabel;
+    use BelongsToName;
+    use BelongsToVisible;
     use EvaluatesClosures;
     use FactoryPattern;
-    use BelongsToHelpers;
-    use BelongsToVisible;
 
     protected string $component = 'filter-text';
 
@@ -80,7 +80,7 @@ class FilterBuilder
         if ($applyCallback) {
             return $this->evaluate($applyCallback, [
                 'query' => $query,
-                'value' => $this->getValue()
+                'value' => $this->getValue(),
             ]);
         }
 
@@ -93,7 +93,7 @@ class FilterBuilder
         if ($applyCallback) {
             $this->evaluate($applyCallback, [
                 'query' => $query,
-                'value' => $value
+                'value' => $value,
             ]);
         }
 
@@ -120,7 +120,7 @@ class FilterBuilder
      */
     public function getStrategy(): FilterStrategy
     {
-        return $this->filterStrategy ?? new LikeFilterStrategy();
+        return $this->filterStrategy ?? new LikeFilterStrategy;
     }
 
     /**
@@ -128,28 +128,28 @@ class FilterBuilder
      */
     public function exact(): static
     {
-        return $this->strategy(new ExactFilterStrategy());
+        return $this->strategy(new ExactFilterStrategy);
     }
 
     public function like(): static
     {
-        return $this->strategy(new LikeFilterStrategy());
+        return $this->strategy(new LikeFilterStrategy);
     }
 
     public function in(): static
     {
-        return $this->strategy(new InFilterStrategy());
+        return $this->strategy(new InFilterStrategy);
     }
 
     public function range(mixed $min = null, mixed $max = null): static
     {
-        $strategy = new RangeFilterStrategy();
+        $strategy = new RangeFilterStrategy;
 
         if ($min !== null || $max !== null) {
             $this->value = array_filter([
                 'min' => $min,
                 'max' => $max,
-            ], fn($v) => $v !== null);
+            ], fn ($v) => $v !== null);
         }
 
         return $this->strategy($strategy);
@@ -157,12 +157,12 @@ class FilterBuilder
 
     public function date(): static
     {
-        return $this->strategy(new DateFilterStrategy());
+        return $this->strategy(new DateFilterStrategy);
     }
 
     public function boolean(): static
     {
-        return $this->strategy(new BooleanFilterStrategy());
+        return $this->strategy(new BooleanFilterStrategy);
     }
 
     protected function setUp(): void
@@ -181,7 +181,7 @@ class FilterBuilder
             'context' => $this->getContext(),
             'strategy' => $this->filterStrategy?->getName(),
             'visible' => $this->isVisible(),
-            'placeholder' => $this->getPlaceholder()
+            'placeholder' => $this->getPlaceholder(),
         ];
     }
 }

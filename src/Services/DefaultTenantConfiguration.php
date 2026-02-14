@@ -24,7 +24,7 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
         $plainPassword = null;
 
         $landlordConnection = config('raptor.database.landlord_connection_name', 'landlord');
-        $tenantConnection = config('raptor.database.tenant_connection_name', 'default');
+        $tenantConnection = config('database.default');
         $roleModelClass = config('raptor.shinobi.models.role');
 
         // 1. Role: cria só se não existir (firstOrCreate)

@@ -12,7 +12,6 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
 
 trait InteractWithForm
 {
-
     use WithColumns;
 
     /**
@@ -38,31 +37,32 @@ trait InteractWithForm
 
         foreach ($this->getColumns() as $column) {
             // Ignora colunas invisíveis
-            if (method_exists($column, 'isVisible') && !$column->isVisible()) {
+            if (method_exists($column, 'isVisible') && ! $column->isVisible()) {
                 continue;
             }
-            if (method_exists($column, 'isSheet') &&  $column->isSheet()) {
+            if (method_exists($column, 'isSheet') && $column->isSheet()) {
                 continue;
             }
 
             $columnRules = $column->getRules($record);
 
-            if (!empty($columnRules)) {
+            if (! empty($columnRules)) {
                 if (method_exists($column, 'getFieldsUsing')) {
-                    // Para campos que possuem fieldsUsing (ex: CascadingField), aplica regras em ambos os campos 
+                    // Para campos que possuem fieldsUsing (ex: CascadingField), aplica regras em ambos os campos
                     $rules[$column->getFieldsUsing()] = $columnRules;
                 }
-                if (!in_array($column->getType(), ['password'])) {
-                    $rules[$column->getName()] =  $columnRules;
+                if (! in_array($column->getType(), ['password'])) {
+                    $rules[$column->getName()] = $columnRules;
                 } else {
                     if ($request && $request->filled($column->getName())) {
                         // Se for um novo registro ou o campo de senha está vazio, aplica as regras
-                        $rules[$column->getName()] =  $columnRules;
+                        $rules[$column->getName()] = $columnRules;
                     }
                 }
             } else {
-                if (!in_array($column->getType(), ['password']))
-                    $rules[$column->getName()] =  ['nullable'];
+                if (! in_array($column->getType(), ['password'])) {
+                    $rules[$column->getName()] = ['nullable'];
+                }
             }
         }
 
@@ -71,11 +71,11 @@ trait InteractWithForm
 
     /**
      * Prepara os dados do request ANTES da validação
-     * 
+     *
      * Converte valores formatados (ex: money) para formato validável
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param mixed $model Modelo existente (para edição)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $model  Modelo existente (para edição)
      * @return array Dados preparados para validação
      */
     public function prepareDataForValidation($request, $model = null): array
@@ -87,7 +87,7 @@ trait InteractWithForm
             $columnName = $column->getName();
 
             // Verifica se o campo está presente no request
-            if (!array_key_exists($columnName, $data)) {
+            if (! array_key_exists($columnName, $data)) {
                 continue;
             }
 
@@ -103,7 +103,7 @@ trait InteractWithForm
                     }
                 }
             } catch (\Throwable $e) {
-                logger()->warning("Error preparing field '{$columnName}' for validation: " . $e->getMessage());
+                logger()->warning("Error preparing field '{$columnName}' for validation: ".$e->getMessage());
                 // Mantém o valor original
             }
         }
@@ -121,7 +121,7 @@ trait InteractWithForm
         foreach ($this->getColumns() as $column) {
             $columnMessages = $column->getMessages();
 
-            if (!empty($columnMessages)) {
+            if (! empty($columnMessages)) {
                 foreach ($columnMessages as $rule => $message) {
                     $messages["{$column->getName()}.{$rule}"] = $message;
                 }
@@ -133,12 +133,12 @@ trait InteractWithForm
 
     /**
      * Extrai dados do formulário do request de forma segura
-     * 
+     *
      * Preserva TODOS os campos do request e apenas aplica customização
      * quando o campo tiver um getValueUsing() definido.
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @param mixed $model Modelo existente (para edição)
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $model  Modelo existente (para edição)
      * @return array Dados do formulário
      */
     public function getFormData($data, $model = null): array
@@ -165,21 +165,21 @@ trait InteractWithForm
                 }
             } catch (\Throwable $e) {
                 // Log error mas mantém valor original do request
-                logger()->warning("Error processing form field '{$columnName}': " . $e->getMessage());
+                logger()->warning("Error processing form field '{$columnName}': ".$e->getMessage());
                 // Não faz nada - mantém o valor original do request
             }
         }
 
         return $data;
     }
+
     /**
      * Retorna apenas os campos obrigatórios
      */
     public function getRequiredFields(): array
     {
-        return array_filter($this->getColumns(), fn($column) => $column->isRequired());
+        return array_filter($this->getColumns(), fn ($column) => $column->isRequired());
     }
-
 
     /**
      * Salva dados relacionados após salvar o modelo principal
@@ -191,13 +191,14 @@ trait InteractWithForm
             $valueUsing = data_get($column->getValueUsing($data, $model), $columnName, data_get($data, $columnName));
 
             // Verifica se há dados para este campo
-            if (!$valueUsing) {
+            if (! $valueUsing) {
                 continue;
             }
             // Se o campo tem relacionamento definido explicitamente
             if ($column->hasRelationship()) {
                 $relationship = $column->getRelationship();
                 $this->handleExplicitRelationship($model, $relationship, $columnName, $valueUsing);
+
                 continue;
             }
 
@@ -218,7 +219,7 @@ trait InteractWithForm
             $valueUsing = data_get($column->getValueUsing($data, $model), $columnName, data_get($data, $columnName));
 
             // Verifica se há dados para este campo
-            if (!$valueUsing) {
+            if (! $valueUsing) {
                 continue;
             }
 
@@ -226,6 +227,7 @@ trait InteractWithForm
             if ($column->hasRelationship()) {
                 $relationship = $column->getRelationship();
                 $this->handleExplicitRelationship($model, $relationship, $columnName, $valueUsing);
+
                 continue;
             }
 
@@ -241,7 +243,7 @@ trait InteractWithForm
      */
     protected function handleExplicitRelationship($model, string $relationship, string $columnName, $value): void
     {
-        if (!method_exists($model, $relationship)) {
+        if (! method_exists($model, $relationship)) {
             return;
         }
 
@@ -287,10 +289,11 @@ trait InteractWithForm
             $relationInstance = $model->$methodName();
 
             // Verifica se é realmente um relacionamento Eloquent
-            if (!$relationInstance instanceof \Illuminate\Database\Eloquent\Relations\Relation) {
+            if (! $relationInstance instanceof \Illuminate\Database\Eloquent\Relations\Relation) {
                 // Não é um relacionamento, pode ser método customizado
                 // Chama como método customizado passando valor e request
                 $model->$methodName($value, $request);
+
                 return;
             }
 
@@ -330,7 +333,7 @@ trait InteractWithForm
             }
         } catch (\Throwable $e) {
             // Se der erro ao obter relacionamento, loga e continua
-            logger()->warning("Error handling relationship '{$methodName}': " . $e->getMessage());
+            logger()->warning("Error handling relationship '{$methodName}': ".$e->getMessage());
         }
     }
 
@@ -360,7 +363,7 @@ trait InteractWithForm
         }
 
         // Remove itens que não estão mais presentes
-        if (!empty($existingIds)) {
+        if (! empty($existingIds)) {
             $model->$relationship()->whereNotIn('id', $existingIds)->delete();
         } else {
             $model->$relationship()->delete();
@@ -416,7 +419,7 @@ trait InteractWithForm
         }
 
         // Remove itens que não estão mais presentes
-        if (!empty($existingIds)) {
+        if (! empty($existingIds)) {
             $model->$relationship()->whereNotIn('id', $existingIds)->delete();
         } else {
             // Se não há IDs, remove todos

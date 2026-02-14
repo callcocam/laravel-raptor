@@ -5,6 +5,7 @@
  * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Info\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Info\Column;
@@ -20,6 +21,6 @@ class TextColumn extends Column
         $prefix = $this->getPrefix();
         $suffix = $this->getSuffix();
 
-        return ($prefix ? $prefix . ' ' : '') . $value . ($suffix ? ' ' . $suffix : '');
+        return ($prefix ? $prefix.' ' : '').$value.($suffix ? ' '.$suffix : '');
     }
 }

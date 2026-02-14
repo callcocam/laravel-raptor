@@ -13,27 +13,27 @@ use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 
 /**
  * Helper para gerenciar contexto do tenant em qualquer lugar
- * 
+ *
  * Útil para Jobs, Commands, Listeners, ou qualquer código que
  * precisa restaurar o contexto do tenant fora de uma requisição HTTP.
- * 
+ *
  * @example
  * ```php
  * use Callcocam\LaravelRaptor\Support\TenantContext;
- * 
+ *
  * // Configura tenant por ID
  * TenantContext::set($tenantId);
- * 
+ *
  * // Executa código no contexto de um tenant
  * TenantContext::run($tenantId, function ($tenant) {
  *     // Seu código aqui
  * });
- * 
+ *
  * // Executa para todos os tenants
  * TenantContext::forAll(function ($tenant) {
  *     // Seu código aqui - contexto já configurado
  * });
- * 
+ *
  * // Obtém dados do contexto atual
  * $tenant = TenantContext::current();
  * $tenantId = TenantContext::id();
@@ -49,11 +49,12 @@ class TenantContext
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
         $tenant = $tenantModel::find($tenantId);
 
-        if (!$tenant) {
+        if (! $tenant) {
             return false;
         }
 
         static::setFromModel($tenant, $domainableType, $domainableId);
+
         return true;
     }
 
@@ -88,13 +89,13 @@ class TenantContext
      */
     public static function setDomainable(string $type, string $id): bool
     {
-        if (!class_exists($type)) {
+        if (! class_exists($type)) {
             return false;
         }
 
         $domainable = $type::find($id);
 
-        if (!$domainable) {
+        if (! $domainable) {
             return false;
         }
 
@@ -132,16 +133,17 @@ class TenantContext
 
         try {
             // Configura novo contexto
-            if (!static::set($tenantId, $domainableType, $domainableId)) {
+            if (! static::set($tenantId, $domainableType, $domainableId)) {
                 throw new \RuntimeException("Tenant não encontrado: {$tenantId}");
             }
 
             $tenant = static::current();
+
             return $callback($tenant);
         } finally {
             // Restaura contexto anterior
             static::clear();
-            
+
             if ($previousTenantId) {
                 static::set($previousTenantId, $previousDomainableType, $previousDomainableId);
             }
@@ -253,7 +255,7 @@ class TenantContext
             return;
         }
 
-        if (!class_exists(\Callcocam\LaravelRaptor\Services\TenantConnectionService::class)) {
+        if (! class_exists(\Callcocam\LaravelRaptor\Services\TenantConnectionService::class)) {
             return;
         }
 
@@ -263,7 +265,7 @@ class TenantContext
 
     /**
      * Serializa o contexto atual para uso em Jobs
-     * 
+     *
      * @return array Dados serializáveis
      */
     public static function serialize(): array

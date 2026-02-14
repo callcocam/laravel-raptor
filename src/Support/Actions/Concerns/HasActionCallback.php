@@ -34,8 +34,8 @@ trait HasActionCallback
      */
     public function executeCallback(Request $request, ?Model $model = null): mixed
     {
-       
-        if (!$this->callback) {
+
+        if (! $this->callback) {
             return null;
         }
 
@@ -57,7 +57,7 @@ trait HasActionCallback
      */
     protected function getEvaluatedCallback($model = null): mixed
     {
-        if (!$this->callback) {
+        if (! $this->callback) {
             return null;
         }
 
@@ -71,7 +71,6 @@ trait HasActionCallback
         return $this->callback;
     }
 
-
     public function confirm(array|Closure|Confirm $confirm): self
     {
         $this->confirm = $confirm;
@@ -84,6 +83,7 @@ trait HasActionCallback
         if ($this->confirm instanceof Confirm) {
             return $this->confirm->toArray();
         }
+
         return $this->evaluate($this->confirm, $params);
     }
 }

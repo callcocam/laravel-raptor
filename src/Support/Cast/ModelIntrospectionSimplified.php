@@ -105,8 +105,8 @@ class ModelIntrospectionSimplified
             $hints[] = [
                 'type' => 'N+1 Query Prevention',
                 'severity' => 'medium',
-                'message' => 'Consider adding eager loading for: ' . implode(', ', $unused),
-                'suggestion' => 'protected $with = [\'' . implode('\', \'', array_slice($unused, 0, 3)) . '\'];',
+                'message' => 'Consider adding eager loading for: '.implode(', ', $unused),
+                'suggestion' => 'protected $with = [\''.implode('\', \'', array_slice($unused, 0, 3)).'\'];',
             ];
         }
 
@@ -125,7 +125,7 @@ class ModelIntrospectionSimplified
             $hints[] = [
                 'type' => 'Model Complexity',
                 'severity' => 'medium',
-                'message' => 'Model has ' . count($relationships) . ' relationships',
+                'message' => 'Model has '.count($relationships).' relationships',
                 'suggestion' => 'Consider splitting into smaller models or using traits',
             ];
         }
@@ -203,7 +203,7 @@ class ModelIntrospectionSimplified
         foreach ($casts as $field => $cast) {
             $code .= "    '{$field}' => '{$cast}',\n";
         }
-        $code .= "];";
+        $code .= '];';
 
         return $code;
     }

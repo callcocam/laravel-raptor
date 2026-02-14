@@ -8,21 +8,22 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 
 class TenantDomain extends AbstractModel
 {
     use UsesLandlordConnection;
-    
+
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
         static::$landlord->disable();
     }
+
     /**
      * The table associated with the model.
      *
@@ -90,7 +91,7 @@ class TenantDomain extends AbstractModel
 
     /**
      * Relacionamento polimórfico: Domínio pode pertencer a Client, Store, etc.
-     * 
+     *
      * Quando NULL: domínio principal do tenant
      * Quando preenchido: domínio secundário vinculado a um modelo específico
      */
@@ -112,7 +113,7 @@ class TenantDomain extends AbstractModel
      */
     public function hasDomainable(): bool
     {
-        return !is_null($this->domainable_type) && !is_null($this->domainable_id);
+        return ! is_null($this->domainable_type) && ! is_null($this->domainable_id);
     }
 
     /**
@@ -131,7 +132,7 @@ class TenantDomain extends AbstractModel
                     function ($attribute, $value, $fail) {
                         // Verifica unicidade ignorando o próprio registro
                         $exists = static::where('domain', $value)
-                            ->when($this->exists, fn($q) => $q->where('id', '!=', $this->id))
+                            ->when($this->exists, fn ($q) => $q->where('id', '!=', $this->id))
                             ->exists();
 
                         if ($exists) {
@@ -153,7 +154,7 @@ class TenantDomain extends AbstractModel
 
     /**
      * Garante que apenas um domínio seja primário por tenant.
-     * 
+     *
      * Apenas domínios sem domainable podem ser primários
      */
     protected function ensureSinglePrimaryDomain(): void
@@ -162,6 +163,7 @@ class TenantDomain extends AbstractModel
         if ($this->is_primary) {
             if ($this->hasDomainable()) {
                 $this->is_primary = false;
+
                 return;
             }
 
@@ -194,7 +196,7 @@ class TenantDomain extends AbstractModel
     {
         return $query->where(function ($q) {
             $q->where('is_primary', false)
-              ->orWhereNotNull('domainable_type');
+                ->orWhereNotNull('domainable_type');
         });
     }
 

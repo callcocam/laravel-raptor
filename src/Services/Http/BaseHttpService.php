@@ -15,10 +15,15 @@ use Illuminate\Support\Facades\Http;
 abstract class BaseHttpService
 {
     protected string $baseUrl;
+
     protected int $timeout = 30;
+
     protected int $retryTimes = 3;
+
     protected int $retryDelay = 100; // milliseconds
+
     protected array $headers = [];
+
     protected array $options = [];
 
     public function __construct(?string $baseUrl = null)
@@ -88,11 +93,11 @@ abstract class BaseHttpService
             ->timeout($this->timeout)
             ->retry($this->retryTimes, $this->retryDelay);
 
-        if (!empty($this->headers)) {
+        if (! empty($this->headers)) {
             $request->withHeaders($this->headers);
         }
 
-        if (!empty($this->options)) {
+        if (! empty($this->options)) {
             $request->withOptions($this->options);
         }
 

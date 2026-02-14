@@ -11,14 +11,14 @@ namespace Callcocam\LaravelRaptor\Enums;
 enum AddressStatus: string
 {
     case Draft = 'draft';
-    case Published = 'published'; 
+    case Published = 'published';
     case IsDefault = 'is_default';
 
     public function label(): string
     {
         return match ($this) {
             self::Draft => 'Rascunho',
-            self::Published => 'Publicado', 
+            self::Published => 'Publicado',
             self::IsDefault => 'Padrão',
         };
     }
@@ -27,7 +27,7 @@ enum AddressStatus: string
     {
         return match ($this) {
             self::Draft => 'gray',
-            self::Published => 'green', 
+            self::Published => 'green',
             self::IsDefault => 'blue',
         };
     }

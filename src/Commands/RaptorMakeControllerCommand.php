@@ -23,20 +23,20 @@ class RaptorMakeControllerCommand extends GeneratorCommand
 
     protected function getStub(): string
     {
-        return __DIR__ . '/../../stubs/controller.plain.stub';
+        return __DIR__.'/../../stubs/controller.plain.stub';
     }
 
     protected function getDefaultNamespace($rootNamespace): string
     {
         $context = $this->option('context') ?: 'Tenant';
-        
-        return $rootNamespace . '\Http\Controllers\\' . $context;
+
+        return $rootNamespace.'\Http\Controllers\\'.$context;
     }
 
     protected function qualifyClass($name): string
     {
         // Adiciona 'Controller' ao final se não estiver presente
-        if (!str_ends_with($name, 'Controller')) {
+        if (! str_ends_with($name, 'Controller')) {
             $name .= 'Controller';
         }
 
@@ -53,7 +53,7 @@ class RaptorMakeControllerCommand extends GeneratorCommand
         $resourceTitle = Str::title(str_replace('_', ' ', $resourceName));
         $resourcePluralTitle = Str::plural($resourceTitle);
         $context = strtolower($this->option('context') ?: 'tenant');
-        $routePrefix = $context === 'tenant' ? '' : $context . '.';
+        $routePrefix = $context === 'tenant' ? '' : $context.'.';
 
         // Substitui placeholders customizados
         $stub = str_replace('{{ resourceName }}', $resourceName, $stub);
@@ -76,20 +76,20 @@ class RaptorMakeControllerCommand extends GeneratorCommand
     protected function generateColumnsFromTable(string $stub, string $table): string
     {
         $columns = Schema::getColumns($table);
-        
+
         // Filtra colunas que não devem aparecer nos forms
         $excludeFromForm = ['id', 'created_at', 'updated_at', 'deleted_at', 'tenant_id'];
-        $formColumns = array_filter($columns, fn($col) => !in_array($col['name'], $excludeFromForm));
+        $formColumns = array_filter($columns, fn ($col) => ! in_array($col['name'], $excludeFromForm));
 
         // Gera campos do form
         $formFields = $this->generateFormFields($formColumns);
-        
+
         // Gera colunas da tabela
         $tableColumns = $this->generateTableColumns($columns);
 
         // Substitui no stub (se houver placeholders)
         // Nota: Você pode adicionar {{ formFields }} e {{ tableColumns }} no stub se quiser
-        
+
         return $stub;
     }
 
@@ -162,12 +162,12 @@ class RaptorMakeControllerCommand extends GeneratorCommand
     {
         $rules = [];
 
-        if (!$column['nullable']) {
+        if (! $column['nullable']) {
             $rules[] = "'required'";
         }
 
         $type = $column['type_name'];
-        
+
         if (in_array($type, ['varchar', 'string', 'text'])) {
             $rules[] = "'string'";
             if (isset($column['length'])) {
@@ -187,7 +187,7 @@ class RaptorMakeControllerCommand extends GeneratorCommand
             $rules[] = "'email'";
         }
 
-        return '[' . implode(', ', $rules) . ']';
+        return '['.implode(', ', $rules).']';
     }
 
     protected function getOptions(): array

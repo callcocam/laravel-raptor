@@ -9,16 +9,15 @@
 namespace Callcocam\LaravelRaptor\Support\Table\Filters;
 
 use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
- 
 
 /**
  * Filtro toggle para valores null/not null
- * 
+ *
  * Comportamento:
  * - false: Filtra apenas registros NULL (whereNull)
  * - true: Filtra apenas registros NOT NULL (whereNotNull)
  * - null/undefined: Não aplica filtro (todos registros)
- * 
+ *
  * Uso:
  * NullableFilter::make('status')
  * NullableFilter::make('deleted_at')->labels('Ativo', 'Deletado')
@@ -29,6 +28,7 @@ class NullableFilter extends FilterBuilder
     protected string $component = 'filter-nullable';
 
     protected string $trueLabel = 'Not Null';
+
     protected string $falseLabel = 'Null';
 
     protected function setUp(): void
@@ -58,16 +58,18 @@ class NullableFilter extends FilterBuilder
                 : $query->whereNull($column);
         });
     }
+
     /**
      * Define labels customizados para true/false
-     * 
-     * @param string $trueLabel Label quando true (whereNotNull)
-     * @param string $falseLabel Label quando false (whereNull)
+     *
+     * @param  string  $trueLabel  Label quando true (whereNotNull)
+     * @param  string  $falseLabel  Label quando false (whereNull)
      */
     public function labels(string $trueLabel, string $falseLabel): static
     {
         $this->trueLabel = $trueLabel;
         $this->falseLabel = $falseLabel;
+
         return $this;
     }
 
@@ -78,7 +80,8 @@ class NullableFilter extends FilterBuilder
     {
         $array = parent::toArray();
         $array['trueLabel'] = $this->trueLabel;
-        $array['falseLabel'] = $this->falseLabel; 
+        $array['falseLabel'] = $this->falseLabel;
+
         return $array;
     }
 }

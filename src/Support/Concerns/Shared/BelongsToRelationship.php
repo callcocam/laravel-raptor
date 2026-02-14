@@ -44,14 +44,13 @@ trait BelongsToRelationship
 
     public function hasRelationship(): bool
     {
-        return !empty($this->relationship);
+        return ! empty($this->relationship);
     }
 
     public function getRelationship()
     {
         return $this->evaluate($this->relationship);
     }
-
 
     public function relationshipName(?string $relationshipName): static
     {
@@ -74,27 +73,29 @@ trait BelongsToRelationship
             $record = $this->getRecord();
 
             // Validar que record não é null antes de chamar method_exists
-            if (!$record || !is_object($record)) {
+            if (! $record || ! is_object($record)) {
                 return null;
-            } elseif (!method_exists($record, $relationship)) {
+            } elseif (! method_exists($record, $relationship)) {
                 throw new \InvalidArgumentException("Relationship '{$relationship}' does not exist.");
             } else {
                 // 2. Verificar se é realmente um relacionamento válido
                 try {
                     $relationInstance = $record->$relationship();
 
-                    if (!$relationInstance instanceof \Illuminate\Database\Eloquent\Relations\Relation) {
+                    if (! $relationInstance instanceof \Illuminate\Database\Eloquent\Relations\Relation) {
                         throw new \InvalidArgumentException("'{$relationship}' is not a valid relationship.");
                     }
 
                     // 3. Pegar o model relacionado de forma segura
                     $relatedModel = $this->getUsingRelationshipQuery($relationInstance->getRelated());
+
                     return $relatedModel;
                 } catch (\Throwable $e) {
                     return null;
                 }
             }
         }
+
         return null;
     }
 
@@ -116,7 +117,7 @@ trait BelongsToRelationship
                     $dependencyValue = $request->query($dependsOn);
                 } else {
                     $dependencyValue = request()->query($dependsOn);
-                } 
+                }
 
                 // Aplica o filtro de dependência no query
                 if ($dependencyValue !== null) {
@@ -125,7 +126,7 @@ trait BelongsToRelationship
             }
         }
 
-        if (!$this->usingRelationshipQuery) {
+        if (! $this->usingRelationshipQuery) {
             return $query;
         }
 

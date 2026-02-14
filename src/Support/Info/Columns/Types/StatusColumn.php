@@ -5,6 +5,7 @@
  * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Info\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Info\Column;
@@ -45,12 +46,12 @@ class StatusColumn extends Column
     public function render(mixed $value, $row = null): array
     {
         $columnName = $this->getName();
-        
+
         // Converte enum para string se necessário
         if ($value instanceof \BackedEnum) {
             $value = $value->value;
         }
-        
+
         $statusKey = strtolower($value ?? '');
 
         // Busca no mapa de status

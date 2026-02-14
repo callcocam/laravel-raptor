@@ -18,7 +18,6 @@ use Illuminate\Translation\Translator;
  * Intercepta o sistema de tradução do Laravel para aplicar overrides do banco de dados
  * com prioridade: Tenant > Global DB > Laravel Lang Files
  *
- * @package Callcocam\LaravelRaptor\Support\Translation
  * @author Claudio Campos <callcocam@gmail.com>
  */
 class TranslationServiceProvider extends ServiceProvider
@@ -28,7 +27,7 @@ class TranslationServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (!config('raptor.translation.enabled', true)) {
+        if (! config('raptor.translation.enabled', true)) {
             return;
         }
 
@@ -95,6 +94,7 @@ class TranslationServiceProvider extends ServiceProvider
             return new class($translator, $app) extends Translator
             {
                 private Translator $originalTranslator;
+
                 private $app;
 
                 public function __construct(Translator $translator, $app)

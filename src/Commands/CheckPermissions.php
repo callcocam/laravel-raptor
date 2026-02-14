@@ -44,7 +44,7 @@ class CheckPermissions extends Command
 
     /**
      * Mapeamento de ações técnicas para nomes amigáveis em português.
-     * 
+     *
      * @var array<string, array{name: string, description: string}>
      */
     protected array $actionLabels = [
@@ -92,7 +92,7 @@ class CheckPermissions extends Command
 
     /**
      * Mapeamento de recursos para nomes amigáveis em português.
-     * 
+     *
      * @var array<string, string>
      */
     protected array $resourceLabels = [
@@ -121,49 +121,49 @@ class CheckPermissions extends Command
 
         // Buscar todos os controllers
         $controllers = $this->getControllers();
-        
+
         // Gerar permissões esperadas
         $expectedPermissions = $this->generateExpectedPermissions($controllers);
-        
+
         // Filtrar por tipo se solicitado
         if ($this->option('only-raptor')) {
             $expectedPermissions = $expectedPermissions->filter(function ($perm) {
                 return $perm['context'] !== null; // Apenas permissões com contexto (tenant/landlord)
             });
         }
-        
+
         // Filtrar por contexto se solicitado
         if ($context = $this->option('context')) {
             $expectedPermissions = $expectedPermissions->filter(function ($perm) use ($context) {
                 return $perm['context'] === $context;
             });
         }
-        
+
         // Buscar permissões existentes no banco
         $existingPermissions = $this->getExistingPermissions();
-        
+
         // Extrair apenas os slugs para comparação
         $expectedSlugs = $expectedPermissions->pluck('slug');
-        
+
         // Comparar
         $missing = $expectedPermissions->filter(function ($perm) use ($existingPermissions) {
-            return !$existingPermissions->contains($perm['slug']);
+            return ! $existingPermissions->contains($perm['slug']);
         });
-        
+
         $extra = $existingPermissions->diff($expectedSlugs);
-        
+
         // Mostrar resultados
         if ($this->option('missing')) {
             $this->showMissingPermissions($missing);
         } else {
             $this->showFullReport($expectedPermissions, $existingPermissions, $missing, $extra);
         }
-        
+
         // Criar permissões faltantes se solicitado
         if ($this->option('create') && $missing->isNotEmpty()) {
             $this->createMissingPermissions($missing);
         }
-        
+
         // Atualizar nomes e descrições se solicitado
         if ($this->option('update-names')) {
             $this->updatePermissionNames($expectedPermissions);
@@ -187,7 +187,7 @@ class CheckPermissions extends Command
             );
 
             // Ignorar controllers que não estão em Tenant/ ou Landlord/
-            if (!str_contains($relativePath, 'Tenant/') && !str_contains($relativePath, 'Landlord/')) {
+            if (! str_contains($relativePath, 'Tenant/') && ! str_contains($relativePath, 'Landlord/')) {
                 continue;
             }
 
@@ -197,7 +197,7 @@ class CheckPermissions extends Command
             }
 
             $className = str_replace('/', '\\', $relativePath);
-            $fullClassName = 'App\\Http\\Controllers\\' . $className;
+            $fullClassName = 'App\\Http\\Controllers\\'.$className;
 
             if (class_exists($fullClassName)) {
                 $controllers[] = [
@@ -213,57 +213,56 @@ class CheckPermissions extends Command
 
     protected function generateExpectedPermissions($controllers): \Illuminate\Support\Collection
     {
-        
-        if($this->confirm('Deseja resetar as permissões existentes antes de criar as faltantes?')) {
+
+        if ($this->confirm('Deseja resetar as permissões existentes antes de criar as faltantes?')) {
             $permissionModel = config('raptor.shinobi.models.permission');
-            
+
             // Remove todas as relações permission_role e permission_user primeiro (landlord)
             $conn = $this->landlordConnection();
             DB::connection($conn)->table('permission_role')->delete();
             DB::connection($conn)->table('permission_user')->delete();
-            
+
             // Remove todas as permissions usando delete() para respeitar foreign keys
             app($permissionModel)->query()->forceDelete();
-            
+
             $this->info('🗑️ Permissões e suas relações foram removidas.');
         }
 
-        
         $permissions = collect();
-        
+
         // Todas as ações necessárias (sem duplicatas)
         $actions = [
             // Ações da UI (Raptor)
-            'index', 
-            'edit', 
+            'index',
+            'edit',
             'execute',
             // Ações CRUD (Policies)
-            'viewAny', 
-            'view', 
-            'create', 
-            'update', 
-            'delete', 
-            'restore', 
-            'forceDelete'
+            'viewAny',
+            'view',
+            'create',
+            'update',
+            'delete',
+            'restore',
+            'forceDelete',
         ];
 
         foreach ($controllers as $controller) {
             // Extrair o nome do resource do controller
             $resourceName = $this->getResourceName($controller['name']);
-            
-            if (!$resourceName) {
+
+            if (! $resourceName) {
                 continue;
             }
-            
+
             // Detectar contexto (landlord ou tenant) baseado no namespace
             $context = str_contains($controller['path'], 'Tenant/') ? 'tenant' : 'landlord';
 
             // Gerar permissões para todas as ações
             foreach ($actions as $action) {
                 $slug = "{$context}.{$resourceName}.{$action}";
-                
+
                 // Evita duplicatas
-                if (!$permissions->contains('slug', $slug)) {
+                if (! $permissions->contains('slug', $slug)) {
                     $permissions->push([
                         'slug' => $slug,
                         'name' => $this->getFriendlyName($action, $resourceName),
@@ -287,7 +286,7 @@ class CheckPermissions extends Command
     {
         $actionLabel = $this->actionLabels[$action]['name'] ?? Str::title($action);
         $resourceLabel = $this->getResourceLabel($resource);
-        
+
         return "{$actionLabel} {$resourceLabel}";
     }
 
@@ -298,7 +297,7 @@ class CheckPermissions extends Command
     {
         $actionDescription = $this->actionLabels[$action]['description'] ?? "Permite {$action} em";
         $resourceLabel = $this->getResourceLabel($resource);
-        
+
         return "{$actionDescription} {$resourceLabel}";
     }
 
@@ -311,7 +310,7 @@ class CheckPermissions extends Command
         if (isset($this->resourceLabels[$resource])) {
             return $this->resourceLabels[$resource];
         }
-        
+
         // Caso contrário, formata automaticamente: kebab-case -> Title Case
         return Str::title(str_replace('-', ' ', $resource));
     }
@@ -320,20 +319,21 @@ class CheckPermissions extends Command
     {
         // Remove 'Controller' do final
         $name = str_replace('Controller', '', $controllerName);
-        
+
         // Converte para plural e kebab-case
         $plural = Str::plural($name);
         $kebab = Str::kebab($plural);
-        
+
         return $kebab;
     }
 
     protected function getExistingPermissions(): \Illuminate\Support\Collection
     {
         $permissionModel = config('raptor.shinobi.models.permission');
-        
-        if (!class_exists($permissionModel)) {
-            $this->error('❌ Modelo de Permission não encontrado: ' . $permissionModel);
+
+        if (! class_exists($permissionModel)) {
+            $this->error('❌ Modelo de Permission não encontrado: '.$permissionModel);
+
             return collect();
         }
 
@@ -356,9 +356,9 @@ class CheckPermissions extends Command
         if ($missing->isNotEmpty()) {
             $this->warn('🔴 PERMISSÕES FALTANDO:');
             $this->newLine();
-            
+
             $grouped = $missing->groupBy('resource');
-            
+
             foreach ($grouped as $resource => $perms) {
                 $this->line("  <fg=yellow>📁 {$resource}</>");
                 foreach ($perms as $perm) {
@@ -366,7 +366,7 @@ class CheckPermissions extends Command
                 }
                 $this->newLine();
             }
-            
+
             $this->info('💡 Para criar as permissões faltantes, execute:');
             $this->line('   <fg=green>php artisan permissions:check --create</>');
             $this->newLine();
@@ -385,6 +385,7 @@ class CheckPermissions extends Command
     {
         if ($missing->isEmpty()) {
             $this->info('✅ Todas as permissões estão definidas!');
+
             return;
         }
 
@@ -404,7 +405,7 @@ class CheckPermissions extends Command
 
     protected function createMissingPermissions($missing): void
     {
-        if (!$this->confirm('Criar ' . $missing->count() . ' permissões faltantes?', true)) {
+        if (! $this->confirm('Criar '.$missing->count().' permissões faltantes?', true)) {
             return;
         }
 
@@ -415,7 +416,7 @@ class CheckPermissions extends Command
         foreach ($missing as $permission) {
             try {
                 $id = $this->generateDeterministicId($permission['slug']);
-                
+
                 // Usa DB::table() na conexão landlord para inserir com ID específico
                 DB::connection($this->landlordConnection())->table($table)->insert([
                     'id' => $id,
@@ -436,7 +437,7 @@ class CheckPermissions extends Command
 
     /**
      * Atualiza os nomes e descrições das permissões existentes.
-     * 
+     *
      * IMPORTANTE: Usa query builder direto para evitar que o HasSlug trait
      * sobrescreva a slug ao atualizar o name.
      */
@@ -451,11 +452,11 @@ class CheckPermissions extends Command
 
         foreach ($expectedPermissions as $permission) {
             $existing = app($permissionModel)->where('slug', $permission['slug'])->first();
-            
-            if (!$existing) {
+
+            if (! $existing) {
                 continue;
             }
-            
+
             // Só atualiza se o nome ou descrição forem diferentes
             if ($existing->name !== $permission['name'] || $existing->description !== $permission['description']) {
                 // Usa query builder na conexão landlord para evitar que o HasSlug trait sobrescreva a slug
@@ -466,14 +467,14 @@ class CheckPermissions extends Command
                         'description' => $permission['description'],
                         'updated_at' => now(),
                     ]);
-                
+
                 $this->line("  ✓ <fg=green>{$permission['slug']}</> → {$permission['name']}");
                 $updated++;
             }
         }
 
         $this->newLine();
-        
+
         if ($updated > 0) {
             $this->info("✅ {$updated} permissões atualizadas com sucesso!");
         } else {

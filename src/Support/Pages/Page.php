@@ -12,21 +12,27 @@ use Callcocam\LaravelRaptor\Support\Concerns;
 
 abstract class Page
 {
-    use Concerns\Shared\BelongsToVisible;
     use Concerns\Shared\BelongsToIcon;
-    use  Concerns\Shared\BelongsToLabel;
-    use  Concerns\Shared\BelongsToName;
-    use  Concerns\Shared\BelongsToId;
-
+    use Concerns\Shared\BelongsToId;
+    use Concerns\Shared\BelongsToLabel;
+    use Concerns\Shared\BelongsToName;
+    use Concerns\Shared\BelongsToVisible;
 
     public string $path;
+
     public array $middlewares = [];
+
     public string $method = 'GET';
+
     public string $action = '';
+
     public string $group = 'Geral';
+
     public bool $groupCollapsible = false;
+
     public int $order = 50;
-    public ?string $badge = null; 
+
+    public ?string $badge = null;
 
     public function __construct(string $path)
     {
@@ -41,51 +47,56 @@ abstract class Page
     public function middlewares(array $middlewares): static
     {
         $this->middlewares = $middlewares;
+
         return $this;
     }
 
     public function method(string $method): static
     {
         $this->method = strtoupper($method);
+
         return $this;
     }
 
     public function action(string $action): static
     {
         $this->action = $action;
+
         return $this;
     }
-
 
     public function group(string $group): static
     {
         $this->group = $group;
+
         return $this;
     }
 
     public function groupCollapsible(bool $collapsible = true): static
     {
         $this->groupCollapsible = $collapsible;
+
         return $this;
     }
 
     public function order(int $order): static
     {
         $this->order = $order;
+
         return $this;
     }
 
     public function badge(?string $badge): static
     {
         $this->badge = $badge;
+
         return $this;
     }
- 
 
     public function getPath(): string
     {
         return $this->path;
-    } 
+    }
 
     public function getMiddlewares(): array
     {
@@ -126,5 +137,4 @@ abstract class Page
     {
         return $this->badge;
     }
- 
 }

@@ -8,9 +8,10 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
-use Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission as ModelsPermission;
 use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
+use Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission as ModelsPermission;
 
-class Permission extends ModelsPermission {
+class Permission extends ModelsPermission
+{
     use UsesLandlordConnection;
 }

@@ -13,10 +13,10 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 
 /**
  * SectionField - Campo de seção para agrupamento de campos relacionados
- * 
+ *
  * @example
  * SectionField::make('settings')
- *     ->label('Configurações (JSON)') 
+ *     ->label('Configurações (JSON)')
  *     ->fields([
  *         TextField::make('key')
  *             ->label('Chave')
@@ -33,22 +33,24 @@ class SectionField extends Column
     use BelongsToFields;
 
     protected bool $collapsible = false;
+
     protected bool $defaultOpen = false;
 
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
         $this->component('form-field-section');
-        $this->setUp(); 
- 
+        $this->setUp();
+
     }
-  
+
     /**
      * Define se a seção é colapsável (accordion)
      */
     public function collapsible(bool $collapsible = true): self
     {
         $this->collapsible = $collapsible;
+
         return $this;
     }
 
@@ -58,6 +60,7 @@ class SectionField extends Column
     public function defaultOpen(bool $defaultOpen = true): self
     {
         $this->defaultOpen = $defaultOpen;
+
         return $this;
     }
 
@@ -74,16 +77,16 @@ class SectionField extends Column
     public function toArray($model = null): array
     {
         $baseArray = parent::toArray($model);
-          // Converte cada field para array
+        // Converte cada field para array
         $fieldsArray = array_map(function ($field) use ($model) {
             return $field->toArray($model);
         }, $this->getFields());
-        
-        // Adiciona o mapeamento de campos ao array 
-        $baseArray['fields'] = $fieldsArray; 
+
+        // Adiciona o mapeamento de campos ao array
+        $baseArray['fields'] = $fieldsArray;
         $baseArray['collapsible'] = $this->isCollapsible();
         $baseArray['defaultOpen'] = $this->isDefaultOpen();
-        
+
         return $baseArray;
     }
 }

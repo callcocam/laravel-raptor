@@ -24,9 +24,9 @@ class NavigationController extends Controller
         $context = $request->get('context', 'tenant');
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
-                'error' => 'Não autenticado'
+                'error' => 'Não autenticado',
             ], 401);
         }
 
@@ -34,13 +34,13 @@ class NavigationController extends Controller
 
         return response()->json([
             'navigation' => [
-                $context => $navigation
+                $context => $navigation,
             ],
             'meta' => [
                 'context' => $context,
                 'timestamp' => now()->toIso8601String(),
                 'user_id' => $user->id,
-            ]
+            ],
         ]);
     }
 

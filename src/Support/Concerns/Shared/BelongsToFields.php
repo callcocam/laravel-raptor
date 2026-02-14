@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
@@ -21,6 +22,7 @@ trait BelongsToFields
         foreach ($fields as $order => $field) {
             $this->addField($field, $order);
         }
+
         return $this;
     }
 
@@ -32,6 +34,7 @@ trait BelongsToFields
     public function addField(AbstractColumn $field, $order = 0): static
     {
         $this->fields[] = $field->order($order)->relationshipName($this->getRelationshipName() ?? $this->getName());
+
         return $this;
     }
 
@@ -42,12 +45,12 @@ trait BelongsToFields
 
     public function hasFields(): bool
     {
-        return !empty($this->fields);
+        return ! empty($this->fields);
     }
 
     public function getFieldsForForm(): array
     {
-        return array_map(fn(AbstractColumn $field) => $field->toArray(), $this->fields);
+        return array_map(fn (AbstractColumn $field) => $field->toArray(), $this->fields);
     }
 
     public function fieldsUsing(Closure|string|null $callback): static
@@ -58,7 +61,7 @@ trait BelongsToFields
     }
 
     public function getFieldsUsing(): Closure|string|null
-    { 
+    {
         return $this->evaluate($this->fieldsUsing);
     }
 }

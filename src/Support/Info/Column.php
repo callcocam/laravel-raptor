@@ -16,8 +16,8 @@ use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 abstract class Column extends AbstractColumn
 {
     use BelongsToHelpers;
-    use HasGridLayout;
     use HasCastCallbackFormatter;
+    use HasGridLayout;
 
     protected string $type = 'text';
 
@@ -29,7 +29,7 @@ abstract class Column extends AbstractColumn
         $this->id($name);
         $this->label($label ?? ucfirst($name));
     }
-    
+
     abstract public function render(mixed $value, $row = null): mixed;
 
     public function toArray(): array
@@ -50,5 +50,4 @@ abstract class Column extends AbstractColumn
             'hint' => $this->getHint(),
         ];
     }
-    
 }

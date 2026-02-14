@@ -110,7 +110,7 @@ class HierarchicalImportService extends DefaultImportService
             } else {
                 DB::transaction($runTransaction);
             }
-            
+
             $dataForCompleted = $data;
             if ($lastModel instanceof Model) {
                 $dataForCompleted['id'] = $lastModel->getKey();

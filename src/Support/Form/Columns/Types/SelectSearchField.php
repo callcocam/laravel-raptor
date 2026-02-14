@@ -14,7 +14,6 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -59,7 +58,7 @@ class SelectSearchField extends Column
         parent::__construct($name, $label);
         // $this->component('form-field-search-select');
         $this->component('form-field-search-combobox');
-        $this->setUp(); 
+        $this->setUp();
     }
 
     public function searchable(bool $searchable = true): self
@@ -80,14 +79,14 @@ class SelectSearchField extends Column
     {
         return $this->evaluate($this->dependsOn);
     }
+
     /**
      * Define a query para busca dinâmica
      *
-     * @param Builder|Closure|string|Model $query Classe do model ou instância
-     * @param string|null $label Coluna para exibir (padrão: 'name')
-     * @param string|null $value Coluna para valor (padrão: 'id')
-     * @param array|null $select Colunas para seleção (padrão: ['id', 'name'])
-     * @return self
+     * @param  Builder|Closure|string|Model  $query  Classe do model ou instância
+     * @param  string|null  $label  Coluna para exibir (padrão: 'name')
+     * @param  string|null  $value  Coluna para valor (padrão: 'id')
+     * @param  array|null  $select  Colunas para seleção (padrão: ['id', 'name'])
      */
     public function query(Builder|Closure|string|Model $query, ?string $label = null, ?string $value = null, ?array $select = ['id', 'name']): self
     {
@@ -97,11 +96,10 @@ class SelectSearchField extends Column
     /**
      * Define a query para busca dinâmica
      *
-     * @param Builder|Closure|string|Model $query Classe do model ou instância
-     * @param string|null $label Coluna para exibir (padrão: 'name')
-     * @param string|null $value Coluna para valor (padrão: 'id')
-     * @param array|null $select Colunas para seleção (padrão: ['id', 'name'])
-     * @return self
+     * @param  Builder|Closure|string|Model  $query  Classe do model ou instância
+     * @param  string|null  $label  Coluna para exibir (padrão: 'name')
+     * @param  string|null  $value  Coluna para valor (padrão: 'id')
+     * @param  array|null  $select  Colunas para seleção (padrão: ['id', 'name'])
      */
     public function baseQuery(Builder|Closure|string|Model $query, ?string $label = null, ?string $value = null, ?array $select = ['id', 'name']): self
     {
@@ -113,7 +111,7 @@ class SelectSearchField extends Column
         } elseif ($query instanceof Model) {
             $this->baseQuery = $query->newQuery()->select($select);
         } elseif (is_string($query)) {
-            $this->baseQuery = (new $query())->newQuery()->select($select);
+            $this->baseQuery = (new $query)->newQuery()->select($select);
         }
 
         if ($select) {
@@ -125,6 +123,7 @@ class SelectSearchField extends Column
         if ($value) {
             $this->autoCompleteValue($value);
         }
+
         return $this;
     }
 
@@ -133,6 +132,7 @@ class SelectSearchField extends Column
         if ($this->hasRelationship()) {
             return $this->processRelationshipOptions()->newQuery();
         }
+
         return $this->baseQuery;
     }
 
@@ -173,6 +173,7 @@ class SelectSearchField extends Column
 
         return $this;
     }
+
     public function getWhere(): array
     {
         return $this->where;
@@ -186,16 +187,17 @@ class SelectSearchField extends Column
                 ->when($this->getWhere(), function ($query) {
                     $query->whereIn($this->getOptionKey(), $this->getWhere());
                 })
-                ->when(request()->has($this->getName()), function ($query) { 
+                ->when(request()->has($this->getName()), function ($query) {
                     Log::info('index', [$this->getIndex(), $this->getName()]);
-                    $searchableFields = implode(', ', $this->getSearchableFields()); 
+                    $searchableFields = implode(', ', $this->getSearchableFields());
                     $search = request()->input($this->getName());
-                    $where = "CONCAT({$searchableFields}) LIKE '%" . $search . "%'"; 
+                    $where = "CONCAT({$searchableFields}) LIKE '%".$search."%'";
                     $query->orWhereRaw($where);
                 })
                 ->select($this->getSelectFields())
                 ->limit($this->limit)->get()->toArray();
         }
+
         return [];
     }
 
@@ -228,7 +230,7 @@ class SelectSearchField extends Column
         $optionKey = $this->getOptionKey();
         $optionLabel = $this->getOptionLabel();
         if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) {
-            // Pega as opções brutas (antes de normalizar) 
+            // Pega as opções brutas (antes de normalizar)
             $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
             $optionsData = $processed['optionsData'];
         }

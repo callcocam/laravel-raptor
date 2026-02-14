@@ -4,17 +4,17 @@
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
- * 
+ *
  * Rotas exclusivas do contexto LANDLORD
- * 
+ *
  * Este arquivo é carregado apenas quando o contexto é landlord.
  * O TenantRouteInjector escaneia dinamicamente os controllers em:
  * - app/Http/Controllers/Landlord (aplicação - dinâmico)
  * - package/src/Http/Controllers/Landlord (pacote)
  */
 
-use Illuminate\Support\Facades\Route;
 use Callcocam\LaravelRaptor\Services\TenantRouteInjector;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
 // Registra rotas dinâmicas dos controllers Landlord usando a configuração
@@ -22,9 +22,9 @@ TenantRouteInjector::forContext('landlord')->registerRoutes();
 
 // Rota de download de exportações
 Route::get('download-export/{filename}', function ($filename) {
-    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('exports/' . $filename);
+    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('exports/'.$filename);
 
-    if (!file_exists($path)) {
+    if (! file_exists($path)) {
         abort(404);
     }
 
@@ -36,7 +36,7 @@ Route::get('download-import-failed/{filename}', function (string $filename) {
     if (! str_starts_with($filename, 'failed-') || ! str_ends_with($filename, '.xlsx')) {
         abort(404);
     }
-    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('imports/' . $filename);
+    $path = Storage::disk(config('raptor.export.disk', 'public'))->path('imports/'.$filename);
     if (! file_exists($path)) {
         abort(404);
     }
@@ -49,7 +49,7 @@ Route::put('/tenant/update-theme', [\Callcocam\LaravelRaptor\Http\Controllers\Te
     ->name('tenant.update-theme');
 
 // Rota de execução genérica
-Route::post('/execute', config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class) )
+Route::post('/execute', config('laravel-raptor.execute_controller', \Callcocam\LaravelRaptor\Http\Controllers\ExecuteController::class))
     ->name('execute');
 
 // Rotas de notificações

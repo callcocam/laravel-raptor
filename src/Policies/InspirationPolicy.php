@@ -13,8 +13,8 @@ use Callcocam\LaravelRaptor\Models\Inspiration;
 
 class InspirationPolicy
 {
+    protected $permission = 'inspirations';
 
-    protected $permission = "inspirations";
     /**
      * Determine whether the user can view any models.
      */

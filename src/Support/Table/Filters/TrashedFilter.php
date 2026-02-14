@@ -17,8 +17,6 @@ class TrashedFilter extends FilterBuilder
 
     protected string $component = 'filter-trashed';
 
-
-
     public function __construct(string $name = 'trashed', ?string $label = null)
     {
         parent::__construct($name, $label ?? 'Lixeira');
@@ -29,7 +27,6 @@ class TrashedFilter extends FilterBuilder
             ['value' => 'only', 'label' => 'Somente Lixeira'],
         ];
     }
-
 
     protected function setUp(): void
     {

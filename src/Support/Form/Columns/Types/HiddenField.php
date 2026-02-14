@@ -23,7 +23,6 @@ class HiddenField extends Column
         $this->defaultValue = $value;
         $this->setUp();
     }
- 
 
     public function toArray($model = null): array
     {

@@ -15,8 +15,11 @@ class ImportCompleted implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public ?string $tenantId;
+
     public ?string $tenantName;
+
     public ?string $clientId;
+
     public ?string $clientName;
 
     /**
@@ -45,20 +48,22 @@ class ImportCompleted implements ShouldBroadcastNow
         $this->clientId = $clientId ?? config('app.current_client_id');
         $this->clientName = $clientName ?? $this->resolveClientName();
     }
-    
+
     protected function resolveTenantName(): ?string
     {
         if (app()->bound('tenant') && $tenant = app('tenant')) {
             return $tenant->name ?? null;
         }
+
         return null;
     }
-    
+
     protected function resolveClientName(): ?string
     {
         if (app()->bound('current.client') && $client = app('current.client')) {
             return $client->name ?? null;
         }
+
         return null;
     }
 
@@ -71,7 +76,7 @@ class ImportCompleted implements ShouldBroadcastNow
             }
         }
 
-        return url('download-import-failed/' . $filename);
+        return url('download-import-failed/'.$filename);
     }
 
     /**
@@ -83,12 +88,12 @@ class ImportCompleted implements ShouldBroadcastNow
     {
         Log::info('[ImportCompleted] Broadcasting to channel', [
             'userId' => $this->userId,
-            'channel' => 'users.' . $this->userId,
+            'channel' => 'users.'.$this->userId,
             'event' => 'import.completed',
         ]);
-        
+
         return [
-            new PrivateChannel('users.' . $this->userId),
+            new PrivateChannel('users.'.$this->userId),
         ];
     }
 

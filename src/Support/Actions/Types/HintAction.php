@@ -9,11 +9,10 @@
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
 use Callcocam\LaravelRaptor\Support\Actions\Action as BaseAction;
-use Illuminate\Http\Request;
 
 class HintAction extends BaseAction
 {
-    protected string $actionType = 'field'; 
+    protected string $actionType = 'field';
 
     public function __construct(?string $name)
     {
@@ -21,11 +20,11 @@ class HintAction extends BaseAction
         $this->name($name) // ✅ Sempre define o name
             ->label('Visualizar')
             ->icon('DocumentText')
-            ->variant('link') 
+            ->variant('link')
             ->color('blue')
             ->component('action-link')->executeUrlCallback();
 
-            $this->actionType('field'); 
+        $this->actionType('field');
         $this->setUp();
     }
 }

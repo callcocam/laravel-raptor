@@ -1,9 +1,11 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Table\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Table\Columns\Column;
@@ -11,19 +13,23 @@ use Carbon\Carbon;
 
 class DateColumn extends Column
 {
-    protected ?string $component = "table-column-date";
+    protected ?string $component = 'table-column-date';
+
     protected ?string $format = null;
+
     protected bool $relative = false;
 
     public function format(string $format): self
     {
         $this->format = $format;
+
         return $this;
     }
 
     public function relative(bool $relative = true): self
     {
         $this->relative = $relative;
+
         return $this;
     }
 

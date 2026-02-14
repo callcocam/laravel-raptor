@@ -18,13 +18,13 @@ trait HasAuthorization
      */
     protected function canView(?Model $model = null): bool
     {
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 
         // Se não houver usuário autenticado, nega acesso
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -43,7 +43,7 @@ trait HasAuthorization
     protected function canCreate(string $modelClass): bool
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -59,12 +59,12 @@ trait HasAuthorization
      */
     protected function canUpdate(?Model $model = null): bool
     {
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -88,12 +88,12 @@ trait HasAuthorization
      */
     protected function canDelete(?Model $model = null): bool
     {
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -109,17 +109,17 @@ trait HasAuthorization
      */
     protected function canRestore(?Model $model = null): bool
     {
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         // Verifica se o modelo usa SoftDeletes
-        if (!method_exists($model, 'trashed')) {
+        if (! method_exists($model, 'trashed')) {
             return false;
         }
 
@@ -135,17 +135,17 @@ trait HasAuthorization
      */
     protected function canForceDelete(?Model $model = null): bool
     {
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         // Verifica se o modelo usa SoftDeletes
-        if (!method_exists($model, 'trashed')) {
+        if (! method_exists($model, 'trashed')) {
             return false;
         }
 
@@ -161,24 +161,24 @@ trait HasAuthorization
      */
     protected function canBulkAction(?Model $model = null, string $action = 'delete'): bool
     {
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         // Verifica permissão específica para bulk action se existir
-        $bulkAbility = "bulk" . ucfirst($action);
-        
+        $bulkAbility = 'bulk'.ucfirst($action);
+
         if (Gate::getPolicyFor($model) && method_exists(Gate::getPolicyFor($model), $bulkAbility)) {
             return $user->can($bulkAbility, $model);
         }
 
         // Fallback para a permissão individual da ação
-        return match($action) {
+        return match ($action) {
             'delete' => $this->canDelete($model),
             'restore' => $this->canRestore($model),
             'forceDelete' => $this->canForceDelete($model),
@@ -192,7 +192,7 @@ trait HasAuthorization
     protected function canExport(string $modelClass): bool
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -212,7 +212,7 @@ trait HasAuthorization
     protected function canImport(string $modelClass): bool
     {
         $user = auth()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -228,9 +228,8 @@ trait HasAuthorization
 
     /**
      * Verifica múltiplas permissões de uma vez
-     * 
-     * @param Model|null $model
-     * @param array $abilities ['view', 'update', 'delete']
+     *
+     * @param  array  $abilities  ['view', 'update', 'delete']
      * @return array ['view' => true, 'update' => false, 'delete' => false]
      */
     protected function checkAbilities(?Model $model, array $abilities): array
@@ -238,8 +237,8 @@ trait HasAuthorization
         $results = [];
 
         foreach ($abilities as $ability) {
-            $method = 'can' . ucfirst($ability);
-            
+            $method = 'can'.ucfirst($ability);
+
             if (method_exists($this, $method)) {
                 $results[$ability] = $this->$method($model);
             } else {
@@ -252,10 +251,8 @@ trait HasAuthorization
 
     /**
      * Retorna a permissão padrão quando não há policy definida
-     * 
+     *
      * Pode ser sobrescrito em controllers específicos para mudar o comportamento padrão
-     * 
-     * @return bool
      */
     protected function defaultPermission(): bool
     {
@@ -270,9 +267,9 @@ trait HasAuthorization
      */
     protected function authorizeOrFail(string $ability, ?Model $model = null): void
     {
-        $method = 'can' . ucfirst($ability);
+        $method = 'can'.ucfirst($ability);
 
-        if (method_exists($this, $method) && !$this->$method($model)) {
+        if (method_exists($this, $method) && ! $this->$method($model)) {
             abort(403, 'Você não tem permissão para realizar esta ação.');
         }
     }
@@ -283,7 +280,7 @@ trait HasAuthorization
      */
     protected function getModelAbilities(?Model $model = null): array
     {
-        if (!$model) {
+        if (! $model) {
             return [];
         }
 

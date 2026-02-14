@@ -149,9 +149,7 @@ class AdvancedImport implements SkipsUnknownSheets, WithMultipleSheets
      *
      * @param  int|string  $sheetName  Índice ou nome da aba
      */
-    public function onUnknownSheet($sheetName): void
-    {
-    }
+    public function onUnknownSheet($sheetName): void {}
 
     /**
      * Executa após Excel::import(): mescla principal + relatedSheets e chama o service por linha.

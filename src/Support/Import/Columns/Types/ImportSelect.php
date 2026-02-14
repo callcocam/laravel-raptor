@@ -13,8 +13,6 @@ use Closure;
 
 class ImportSelect extends Column
 {
-
-
     protected string $delimiter = ',';
 
     public function render(mixed $value, $row = null): mixed
@@ -60,14 +58,15 @@ class ImportSelect extends Column
     public function options(array|Closure $options): self
     {
         $this->options = $options;
+
         return $this;
     }
-
 
     public function multiples(bool $multiple = true, string $delimiter = ','): self
     {
         $this->multiple($multiple);
         $this->delimiter = $delimiter;
+
         return $this;
     }
 }

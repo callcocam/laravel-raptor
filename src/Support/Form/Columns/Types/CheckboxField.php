@@ -116,7 +116,7 @@ class CheckboxField extends Column
 
     public function toArray($model = null): array
     {
-      
+
         $attributes = parent::toArray($model);
         $options = [];
         // Usa componente diferente se for checkbox group

@@ -27,6 +27,7 @@ class PercentageDetectionStrategy extends AbstractDetectionStrategy
         // Número que parece percentual
         if (is_numeric($value)) {
             $num = (float) $value;
+
             // Entre 0 e 1 (decimal) ou 0 e 100 (inteiro)
             return $this->isBetween($num, 0, 1) ||
                    ($this->isBetween($num, 0, 100) && $num == round($num));

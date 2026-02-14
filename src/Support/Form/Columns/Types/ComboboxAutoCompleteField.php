@@ -36,19 +36,19 @@ class ComboboxAutoCompleteField extends ComboboxField
     }
 
     public function toArray($model = null): array
-    { 
+    {
         $optionsData = (object) [];
 
         // Processa as opções BRUTAS antes da normalização
         $optionKey = $this->getOptionKey();
         $optionLabel = $this->getOptionLabel();
-        if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) { 
-            // Pega as opções brutas (antes de normalizar) 
-            $processed = $this->processOptionsForAutoComplete($this->getRawOptions()); 
-            $optionsData = $processed['optionsData']; 
+        if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) {
+            // Pega as opções brutas (antes de normalizar)
+            $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
+            $optionsData = $processed['optionsData'];
         }
- 
-        $baseArray = parent::toArray($model); 
+
+        $baseArray = parent::toArray($model);
         $baseArray['optionsData'] = $optionsData;
 
         return array_merge($baseArray, $this->autoCompleteToArray());

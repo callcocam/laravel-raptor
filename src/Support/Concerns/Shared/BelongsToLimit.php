@@ -43,7 +43,7 @@ trait BelongsToLimit
      */
     protected function applyLimit(string $value): string
     {
-        if (!$this->hasLimit()) {
+        if (! $this->hasLimit()) {
             return $value;
         }
 
@@ -51,6 +51,6 @@ trait BelongsToLimit
             return $value;
         }
 
-        return mb_substr($value, 0, $this->characterLimit) . '...';
+        return mb_substr($value, 0, $this->characterLimit).'...';
     }
 }

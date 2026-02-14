@@ -13,7 +13,8 @@ use Callcocam\LaravelRaptor\Models\Role;
 
 class RolePolicy
 {
-    protected $permission = "roles";
+    protected $permission = 'roles';
+
     /**
      * Determine whether the user can view any models.
      */

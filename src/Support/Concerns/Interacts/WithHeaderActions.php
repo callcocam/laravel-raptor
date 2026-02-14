@@ -35,9 +35,9 @@ trait WithHeaderActions
 
     /**
      * Retorna header actions renderizadas e filtradas por visibilidade
-     * 
-     * @param mixed $model Modelo para verificação de visibilidade
-     * @param mixed $request Request para contexto
+     *
+     * @param  mixed  $model  Modelo para verificação de visibilidade
+     * @param  mixed  $request  Request para contexto
      * @return array Header actions visíveis renderizadas
      */
     public function getRenderedHeaderActions($model = null, $request = null): array

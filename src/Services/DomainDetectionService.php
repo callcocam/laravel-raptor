@@ -12,11 +12,10 @@ use Illuminate\Http\Request;
 
 /**
  * Service responsável pela detecção de domínio e contexto de tenant/landlord.
- * 
+ *
  * Este service otimiza a detecção de contexto cachando resultados por request
  * e evitando múltiplas chamadas de configuração e processamento de strings.
- * 
- * @package Callcocam\LaravelRaptor\Services
+ *
  * @author Claudio Campos <callcocam@gmail.com>
  */
 class DomainDetectionService
@@ -39,7 +38,7 @@ class DomainDetectionService
      * - O host não é o domínio base da aplicação
      * - O host não está na lista de domínios locais configurados
      *
-     * @param Request|null $request Request a ser analisado (null usa o request atual)
+     * @param  Request|null  $request  Request a ser analisado (null usa o request atual)
      * @return bool True se for um tenant, false caso contrário
      */
     public function isTenant(?Request $request = null): bool
@@ -48,11 +47,11 @@ class DomainDetectionService
 
         // Se não houver request disponível (ex: durante boot do service provider),
         // retorna false como fallback seguro
-        if (!$request) {
+        if (! $request) {
             return false;
         }
 
-        $cacheKey = 'is_tenant_' . $request->getHost();
+        $cacheKey = 'is_tenant_'.$request->getHost();
 
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
@@ -82,7 +81,7 @@ class DomainDetectionService
     /**
      * Detecta se o request atual é do landlord.
      *
-     * @param Request|null $request Request a ser analisado (null usa o request atual)
+     * @param  Request|null  $request  Request a ser analisado (null usa o request atual)
      * @return bool True se for landlord, false caso contrário
      */
     public function isLandlord(?Request $request = null): bool
@@ -91,11 +90,11 @@ class DomainDetectionService
 
         // Se não houver request disponível (ex: durante boot do service provider),
         // retorna false como fallback seguro
-        if (!$request) {
+        if (! $request) {
             return false;
         }
 
-        $cacheKey = 'is_landlord_' . $request->getHost();
+        $cacheKey = 'is_landlord_'.$request->getHost();
 
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
@@ -109,14 +108,14 @@ class DomainDetectionService
 
     /**
      * Detecta se o request atual não é de um subdomínio.
-     * 
-     * @param Request|null $request Request a ser analisado (null usa o request atual)
+     *
+     * @param  Request|null  $request  Request a ser analisado (null usa o request atual)
      * @return bool True se não for subdomínio, false caso contrário
      */
     public function isNotSubdomain(?Request $request = null): bool
     {
         $request = $request ?: request();
-        $cacheKey = 'is_not_subdomain_' . $request->getHost();
+        $cacheKey = 'is_not_subdomain_'.$request->getHost();
 
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
@@ -136,25 +135,25 @@ class DomainDetectionService
 
     /**
      * Detecta se o request atual é de um subdomínio.
-     * 
-     * @param Request|null $request Request a ser analisado (null usa o request atual)
+     *
+     * @param  Request|null  $request  Request a ser analisado (null usa o request atual)
      * @return bool True se for subdomínio, false caso contrário
      */
     public function isSubdomain(?Request $request = null): bool
     {
-        return !$this->isNotSubdomain($request);
+        return ! $this->isNotSubdomain($request);
     }
 
     /**
      * Obtém o contexto atual (tenant, landlord ou base).
-     * 
-     * @param Request|null $request Request a ser analisado (null usa o request atual)
+     *
+     * @param  Request|null  $request  Request a ser analisado (null usa o request atual)
      * @return string Contexto: 'tenant', 'landlord' ou 'base'
      */
     public function getContext(?Request $request = null): string
     {
         $request = $request ?: request();
-        $cacheKey = 'context_' . $request->getHost();
+        $cacheKey = 'context_'.$request->getHost();
 
         if (isset(self::$requestCache[$cacheKey])) {
             return self::$requestCache[$cacheKey];
@@ -173,8 +172,8 @@ class DomainDetectionService
 
     /**
      * Extrai o hostname do host removendo protocolos e www.
-     * 
-     * @param string $host Host completo
+     *
+     * @param  string  $host  Host completo
      * @return string Hostname limpo
      */
     private function extractHostname(string $host): string
@@ -187,7 +186,7 @@ class DomainDetectionService
 
     /**
      * Obtém e cacheia as configurações necessárias para evitar múltiplas chamadas config().
-     * 
+     *
      * @return array Configurações cachadas
      */
     private function getConfigCache(): array
@@ -211,8 +210,6 @@ class DomainDetectionService
 
     /**
      * Limpa o cache interno (útil para testes).
-     * 
-     * @return void
      */
     public static function clearCache(): void
     {
@@ -222,14 +219,14 @@ class DomainDetectionService
 
     /**
      * Obtém informações de debug sobre o domínio atual.
-     * 
-     * @param Request|null $request Request a ser analisado (null usa o request atual)
+     *
+     * @param  Request|null  $request  Request a ser analisado (null usa o request atual)
      * @return array Informações de debug
      */
     public function getDebugInfo(?Request $request = null): array
     {
         $request = $request ?: request();
-        
+
         return [
             'host' => $request->getHost(),
             'hostname' => $this->extractHostname($request->getHost()),

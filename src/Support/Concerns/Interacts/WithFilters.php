@@ -6,7 +6,6 @@
  * https://www.sigasmart.com.br
  */
 
-
 namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
@@ -36,6 +35,7 @@ trait WithFilters
                 if (data_get($filter, 'visible', true) === false) {
                     return null;
                 }
+
                 return $filter;
             }, $this->getCollectionAsArray('filters'))
         ));

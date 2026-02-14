@@ -8,11 +8,11 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
-use Callcocam\LaravelRaptor\Models\AbstractModel;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Image extends AbstractModel {
+class Image extends AbstractModel
+{
     use SoftDeletes;
     use UsesLandlordConnection;
 }

@@ -31,13 +31,13 @@ class StrategyManager
      */
     protected function registerDefaultStrategies(): void
     {
-        $this->register(new BooleanDetectionStrategy());
-        $this->register(new DateDetectionStrategy());
-        $this->register(new PercentageDetectionStrategy());
-        $this->register(new MoneyDetectionStrategy());
-        $this->register(new FilesizeDetectionStrategy());
-        $this->register(new JsonDetectionStrategy());
-        $this->register(new NumericDetectionStrategy()); // Baixa prioridade, genérico
+        $this->register(new BooleanDetectionStrategy);
+        $this->register(new DateDetectionStrategy);
+        $this->register(new PercentageDetectionStrategy);
+        $this->register(new MoneyDetectionStrategy);
+        $this->register(new FilesizeDetectionStrategy);
+        $this->register(new JsonDetectionStrategy);
+        $this->register(new NumericDetectionStrategy); // Baixa prioridade, genérico
     }
 
     /**

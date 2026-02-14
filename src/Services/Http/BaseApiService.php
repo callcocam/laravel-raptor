@@ -8,14 +8,14 @@
 
 namespace Callcocam\LaravelRaptor\Services\Http;
 
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Client\Response;
-use Illuminate\Http\Client\PendingRequest; 
 
 /**
  * Serviço base para integração com APIs externas
- * 
+ *
  * Fornece funcionalidades comuns para todos os serviços de API:
  * - Configuração de autenticação
  * - Tratamento de erros
@@ -75,11 +75,11 @@ abstract class BaseApiService
      */
     abstract protected function extractPagination(array $response): ?array;
 
-    public function discoverPagination($type,  array $params = []): ?array
+    public function discoverPagination($type, array $params = []): ?array
     {
-        $response = $this->makeRequest($this->getEndpoint($type),   $params);
+        $response = $this->makeRequest($this->getEndpoint($type), $params);
 
-        if (!$response) {
+        if (! $response) {
             return null;
         }
 
@@ -103,9 +103,9 @@ abstract class BaseApiService
                     'message' => $exception->getMessage(),
                     'integration' => $this->integration->identifier,
                 ]);
+
                 return true; // Retry on any exception
             });
-
 
         $client->withHeaders($this->getHeaders());
         /**

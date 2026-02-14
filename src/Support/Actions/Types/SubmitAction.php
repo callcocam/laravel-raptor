@@ -19,7 +19,7 @@ class SubmitAction extends Action
     protected function setUp(): void
     {
         parent::setUp();
-        $this->policy("store");
+        $this->policy('store');
         $this->label('Salvar');
         $this->icon('Save');
         $this->variant('default');

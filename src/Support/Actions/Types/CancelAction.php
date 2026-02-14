@@ -22,7 +22,7 @@ class CancelAction extends Action
 
         $this->label('Cancelar');
         $this->icon('X');
-        $this->variant('secondary'); 
+        $this->variant('secondary');
         $this->size('default');
         $this->component('action-button-link');
         $this->url(function ($target, $request) {
@@ -31,6 +31,7 @@ class CancelAction extends Action
             if (\Illuminate\Support\Facades\Route::has($name)) {
                 return route($name, [], false);
             }
+
             return 'javascript:window.history.back()';
         });
     }

@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 abstract class TenantController extends AbstractController
 {
     //
-    
+
     protected function form(Form $form): Form
     {
         $form->columns([
@@ -23,9 +23,9 @@ abstract class TenantController extends AbstractController
 
         return $form;
     }
-    
+
     protected function queryBuilder(): Builder
-    { 
+    {
         return app($this->model())->newQuery()->where(function (Builder $query) {
             $query->where('tenant_id', tenant_id())->orWhereNull('tenant_id');
         });
@@ -37,6 +37,7 @@ abstract class TenantController extends AbstractController
     protected function beforeExtraStore(array $data, \Illuminate\Http\Request $request)
     {
         $data['tenant_id'] = tenant_id();
+
         return $data;
     }
 
@@ -47,7 +48,7 @@ abstract class TenantController extends AbstractController
     {
         // Remove tenant_id dos dados caso alguém tente alterar
         unset($data['tenant_id']);
+
         return $data;
     }
-
 }

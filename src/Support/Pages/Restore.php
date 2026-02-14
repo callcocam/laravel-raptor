@@ -11,5 +11,6 @@ namespace Callcocam\LaravelRaptor\Support\Pages;
 class Restore extends Page
 {
     public string $method = 'PUT';
+
     public string $action = 'restore';
 }

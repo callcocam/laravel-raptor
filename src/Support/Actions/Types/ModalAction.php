@@ -57,7 +57,6 @@ class ModalAction extends ExecuteAction
             ->modalSize('md');
     }
 
-
     public function modalTitle(string|Closure|null $modalTitle): self
     {
         $this->modalTitle = $modalTitle;
@@ -143,7 +142,7 @@ class ModalAction extends ExecuteAction
     public function render($model, $request = null): array
     {
         $this->request($request)->column(HiddenField::make('actionType', $this->getActionType()))
-            ->column(HiddenField::make('actionName',  $this->getName()));
+            ->column(HiddenField::make('actionName', $this->getName()));
         $result = [
             'type' => 'action',
             'actionType' => $this->getActionType(),
@@ -186,7 +185,6 @@ class ModalAction extends ExecuteAction
             'preserveState' => $this->preserveState,
             'only' => $this->onlyProps,
         ];
-
 
         if ($this->modalSize) {
             $result['modalSize'] = $this->modalSize;

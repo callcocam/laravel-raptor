@@ -18,10 +18,10 @@ class LandlordMiddleware
     public function __construct(
         protected DomainDetectionService $domainDetection
     ) {}
-    
+
     /**
      * Handle an incoming request.
-     * 
+     *
      * Valida se a request é do contexto landlord.
      * Se não for, retorna 404 para evitar acesso às rotas de landlord.
      *
@@ -30,10 +30,10 @@ class LandlordMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         // Verifica se é realmente o contexto landlord
-        if (!$this->domainDetection->isLandlord($request)) {
+        if (! $this->domainDetection->isLandlord($request)) {
             abort(404);
         }
-        
+
         // Define o contexto como landlord
         app()->instance('landlord.context', true);
         config(['app.context' => 'landlord']);

@@ -5,6 +5,7 @@
  * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Info\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Info\Column;

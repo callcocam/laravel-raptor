@@ -13,9 +13,11 @@ use Closure;
 trait HasMak
 {
     protected Closure|string|null $mask = null;
+
     /**
      * Define a máscara para o campo de entrada
-     * @param string $mask A máscara a ser aplicada
+     *
+     * @param  string  $mask  A máscara a ser aplicada
      * @return static
      */
     public function phone($mask = null): self
@@ -26,34 +28,38 @@ trait HasMak
             $this->mask = '(##) #####-####';
         }
         $this->component('form-field-mask');
+
         return $this;
     }
 
     /**
      * Define a máscara para o campo de entrada como CPF
+     *
      * @return static
      */
     public function cpf(): self
     {
         $this->mask = '###.###.###-##';
         $this->component('form-field-mask');
+
         return $this;
     }
 
     /**
      * Define a máscara para o campo de entrada como CNPJ
+     *
      * @return static
      */
     public function cnpj(): self
     {
         $this->mask = '##.###.###/####-##';
         $this->component('form-field-mask');
+
         return $this;
     }
 
     /**
      * Obtém a máscara definida para o campo
-     * @return Closure|string|null
      */
     public function getMask(): Closure|string|null
     {
@@ -62,16 +68,16 @@ trait HasMak
 
     /**
      * Verifica se uma máscara foi definida para o campo
-     * @return bool
      */
     public function hasMak(): bool
     {
-        return !is_null($this->mask);
+        return ! is_null($this->mask);
     }
 
     /**
      * Limpa a máscara do valor fornecido
-     * @param string|null $value O valor a ser limpo
+     *
+     * @param  string|null  $value  O valor a ser limpo
      * @return string|null O valor limpo ou null se o valor for nulo
      */
     public function clearMak(?string $value): ?string
@@ -79,6 +85,7 @@ trait HasMak
         if (is_null($value)) {
             return null;
         }
+
         return preg_replace('/\D/', '', $value);
     }
 }

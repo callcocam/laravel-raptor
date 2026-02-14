@@ -11,5 +11,6 @@ namespace Callcocam\LaravelRaptor\Support\Pages;
 class Create extends Page
 {
     public string $method = 'GET';
+
     public string $action = 'create';
 }

@@ -14,6 +14,7 @@ use Illuminate\Http\Client\PendingRequest;
 class TokenAuthService extends BaseHttpService
 {
     protected string $token;
+
     protected string $tokenType = 'Bearer';
 
     public function __construct(?string $baseUrl = null, ?string $token = null)
@@ -41,7 +42,7 @@ class TokenAuthService extends BaseHttpService
      */
     protected function authenticate(PendingRequest $request): PendingRequest
     {
-        if (!empty($this->token)) {
+        if (! empty($this->token)) {
             $request->withToken($this->token, $this->tokenType);
         }
 
@@ -57,11 +58,11 @@ class TokenAuthService extends BaseHttpService
 
         if ($response->successful()) {
             $data = $response->json();
-            
+
             // Tenta encontrar o token na resposta (padrões comuns)
-            $this->token = $data['access_token'] 
-                ?? $data['token'] 
-                ?? $data['data']['token'] 
+            $this->token = $data['access_token']
+                ?? $data['token']
+                ?? $data['data']['token']
                 ?? '';
 
             return $data;
@@ -93,6 +94,6 @@ class TokenAuthService extends BaseHttpService
      */
     public function hasToken(): bool
     {
-        return !empty($this->token);
+        return ! empty($this->token);
     }
 }

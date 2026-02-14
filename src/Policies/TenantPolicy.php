@@ -13,7 +13,8 @@ use Callcocam\LaravelRaptor\Models\Tenant;
 
 class TenantPolicy
 {
-    protected $permission = "tenants";
+    protected $permission = 'tenants';
+
     /**
      * Determine whether the user can view any models.
      */

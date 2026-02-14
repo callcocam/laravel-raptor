@@ -8,7 +8,6 @@
 
 namespace Callcocam\LaravelRaptor\Support;
 
-use Callcocam\LaravelRaptor\Support\Concerns;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared;
 
 abstract class AbstractColumn
@@ -20,14 +19,12 @@ abstract class AbstractColumn
     use Shared\BelongsToLabel;
     use Shared\BelongsToName;
     use Shared\BelongsToOptions;
+    use Shared\BelongsToRecord;
+    use Shared\BelongsToRelationship;
     use Shared\BelongsToTooltip;
     use Shared\BelongsToType;
     use Shared\BelongsToValidation;
     use Shared\BelongsToVisible;
-    use Shared\BelongsToRelationship;
-    use Shared\BelongsToRecord;
-
-
 
     protected ?string $component = null;
 
@@ -55,5 +52,5 @@ abstract class AbstractColumn
     public function getComponent(): ?string
     {
         return $this->component;
-    } 
+    }
 }

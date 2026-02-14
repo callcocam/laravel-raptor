@@ -18,12 +18,12 @@ class NotificationController extends Controller
             $notifications = $request->user()->notifications()
                 ->latest()
                 ->take(50)
-                ->when(config('app.current_tenant_id'), function ($query, $tenantId) use ($request) {
+                ->when(config('app.current_tenant_id'), function ($query, $tenantId) {
                     if ($tenantId) {
                         $query->where('tenant_id', $tenantId);
                     }
                 })
-                ->when(config('app.current_client_id'), function ($query, $clientId) use ($request) {
+                ->when(config('app.current_client_id'), function ($query, $clientId) {
                     if ($clientId) {
                         $query->where('client_id', $clientId);
                     }
@@ -65,7 +65,7 @@ class NotificationController extends Controller
         try {
             $notification = $request->user()->notifications()->find($id);
 
-            if (!$notification) {
+            if (! $notification) {
                 return back()->with('error', 'Notificação não encontrada.');
             }
 
@@ -110,7 +110,7 @@ class NotificationController extends Controller
         try {
             $notification = $request->user()->notifications()->find($id);
 
-            if (!$notification) {
+            if (! $notification) {
                 return back()->with('error', 'Notificação não encontrada.');
             }
 

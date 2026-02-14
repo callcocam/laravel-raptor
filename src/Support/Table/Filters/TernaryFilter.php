@@ -23,11 +23,15 @@ class TernaryFilter extends FilterBuilder
     protected string $component = 'filter-select';
 
     protected ?string $placeholderLabel = null;
+
     protected ?string $trueLabel = null;
+
     protected ?string $falseLabel = null;
 
     protected ?Closure $trueQuery = null;
+
     protected ?Closure $falseQuery = null;
+
     protected ?Closure $nullQuery = null;
 
     public function __construct(string $name, ?string $label = null)
@@ -103,6 +107,7 @@ class TernaryFilter extends FilterBuilder
                 if ($this->nullQuery) {
                     return call_user_func($this->nullQuery, $query);
                 }
+
                 return;
             }
 
@@ -111,6 +116,7 @@ class TernaryFilter extends FilterBuilder
                 if ($this->trueQuery) {
                     return call_user_func($this->trueQuery, $query);
                 }
+
                 return;
             }
 
@@ -119,6 +125,7 @@ class TernaryFilter extends FilterBuilder
                 if ($this->falseQuery) {
                     return call_user_func($this->falseQuery, $query);
                 }
+
                 return;
             }
         });

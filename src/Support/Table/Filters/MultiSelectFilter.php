@@ -17,7 +17,6 @@ class MultiSelectFilter extends FilterBuilder
 
     protected string $component = 'filter-multi-select';
 
-
     protected bool $searchable = true;
 
     public function searchable(bool $searchable = true): static

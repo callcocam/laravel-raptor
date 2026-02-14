@@ -15,7 +15,7 @@ use Closure;
 class SelectField extends Column
 {
     use HasAutoComplete;
-    
+
     protected bool $isRequired = false;
 
     protected ?string $placeholder = null;
@@ -30,7 +30,6 @@ class SelectField extends Column
         $this->component('form-field-select');
         $this->setUp();
     }
-
 
     public function searchable(bool $searchable = true): self
     {
@@ -60,7 +59,7 @@ class SelectField extends Column
         $optionKey = $this->getOptionKey();
         $optionLabel = $this->getOptionLabel();
         if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) {
-            // Pega as opções brutas (antes de normalizar) 
+            // Pega as opções brutas (antes de normalizar)
             $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
             $optionsData = $processed['optionsData'];
         }

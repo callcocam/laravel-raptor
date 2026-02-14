@@ -45,7 +45,7 @@ class SuggestionEngine
         $suggestion = match ($category) {
             'datetime', 'date' => [
                 'formatter' => 'DateFormatter::relative()',
-                'reason' => 'Column type is ' . $type,
+                'reason' => 'Column type is '.$type,
             ],
             'time' => [
                 'formatter' => 'DateFormatter::time()',
@@ -208,12 +208,12 @@ class SuggestionEngine
 
             // Tamanho máximo
             if (isset($columnInfo['length']) && $columnInfo['length'] > 0) {
-                $rules[] = 'max:' . $columnInfo['length'];
+                $rules[] = 'max:'.$columnInfo['length'];
             }
 
             // Unique para campos de index único
             if (($columnInfo['key'] ?? '') === 'UNI') {
-                $rules[] = 'unique:table,' . $fieldName;
+                $rules[] = 'unique:table,'.$fieldName;
             }
         }
 
@@ -249,7 +249,7 @@ class SuggestionEngine
             'system_columns' => array_intersect($columns, $systemColumns),
             'fillable_count' => count($fillable),
             'suggestion' => count($missingFromFillable) > 0
-                ? 'Consider adding these columns to $fillable: ' . implode(', ', $missingFromFillable)
+                ? 'Consider adding these columns to $fillable: '.implode(', ', $missingFromFillable)
                 : 'All non-system columns are fillable',
         ];
     }

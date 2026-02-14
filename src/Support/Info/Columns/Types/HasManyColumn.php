@@ -5,6 +5,7 @@
  * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Info\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Info\Column;
@@ -13,7 +14,7 @@ class HasManyColumn extends Column
 {
     protected string $type = 'has-many';
 
-    protected ?string $component = 'info-column-has-many'; 
+    protected ?string $component = 'info-column-has-many';
 
     protected ?string $displayField = 'name';
 
@@ -27,8 +28,6 @@ class HasManyColumn extends Column
 
         $this->icon('List');
     }
-
-    
 
     /**
      * Define qual campo será exibido dos itens relacionados
@@ -62,23 +61,22 @@ class HasManyColumn extends Column
 
     public function render(mixed $value, $row = null): array
     {
-        $items = []; 
-       
-        
+        $items = [];
+
         // Se value é uma coleção ou array
         if (is_iterable($value)) {
             foreach ($value as $item) {
                 if (is_object($item)) {
                     // Processa as ações para cada item individualmente
                     $itemActions = [];
-                    foreach ($this->actions as $action) { 
-                        if (method_exists($action, 'toArray')) { 
-                            $actionArray = $action->render($item); 
-                            
+                    foreach ($this->actions as $action) {
+                        if (method_exists($action, 'toArray')) {
+                            $actionArray = $action->render($item);
+
                             $itemActions[] = $actionArray;
                         }
                     }
-                    
+
                     $items[] = [
                         'id' => $item->id ?? null,
                         'display' => $item->{$this->displayField} ?? (string) $item,

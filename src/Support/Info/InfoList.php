@@ -16,15 +16,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class InfoList
 {
-    use WithColumns;
-    use WithActions;
     use FactoryPattern;
+    use WithActions;
+    use WithColumns;
 
     public function __construct()
     {
         CastRegistry::initialize(); // Carrega formatadores padrão
     }
-
 
     public function render(Model $data): array
     {
@@ -94,7 +93,7 @@ class InfoList
     {
         // Se tem castCallback customizado, usa ele
         if ($column->hasCastCallback()) {
-            return  $column->getCastCallback($value, $data);
+            return $column->getCastCallback($value, $data);
         }
 
         // Detecta o tipo de cast baseado no tipo da coluna

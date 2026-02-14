@@ -227,7 +227,7 @@ class TenantMigrateCommand extends Command
                 return false;
             }
 
-            $mainOptions = ['--database' => config('raptor.database.tenant_connection_name', 'default'), '--realpath' => false];
+            $mainOptions = ['--database' => config('database.default'), '--realpath' => false];
             $first = true;
 
             foreach ($paths as $path) {
@@ -237,6 +237,7 @@ class TenantMigrateCommand extends Command
                 }
                 if (! is_dir($fullPath)) {
                     $this->warn("      Pasta não encontrada: {$path}");
+
                     continue;
                 }
                 $this->info("      📁 Migrando {$path}...");
@@ -251,7 +252,7 @@ class TenantMigrateCommand extends Command
 
             if ($seed) {
                 $this->info('      🌱 Executando seeders...');
-                Artisan::call('db:seed', ['--database' => config('raptor.database.tenant_connection_name', 'default')]);
+                Artisan::call('db:seed', ['--database' => config('database.default')]);
             }
 
             $this->info('      ✅ Migrado com sucesso!');
@@ -270,7 +271,7 @@ class TenantMigrateCommand extends Command
      */
     protected function setupTenantConnection(string $database): void
     {
-        $connectionName = config('raptor.database.tenant_connection_name', 'default');
+        $connectionName = config('database.default');
         Config::set("database.connections.{$connectionName}.database", $database);
         DB::purge($connectionName);
     }
@@ -297,5 +298,4 @@ class TenantMigrateCommand extends Command
             return false;
         }
     }
-
 }

@@ -79,7 +79,7 @@ class ThemeSetupCommand extends Command
                 );
             }
 
-            $this->line('  ✓ Copied ' . count($colorFiles) . ' color files');
+            $this->line('  ✓ Copied '.count($colorFiles).' color files');
         }
     }
 
@@ -121,6 +121,7 @@ class ThemeSetupCommand extends Command
 
         if (! $this->files->exists($mainCssPath)) {
             $this->warn('  ⚠ main.css not found, skipping');
+
             return;
         }
 
@@ -132,6 +133,7 @@ class ThemeSetupCommand extends Command
 
         if ($hasColorsImport && $hasThemesImport) {
             $this->line('  ✓ Already configured');
+
             return;
         }
 
@@ -172,6 +174,7 @@ class ThemeSetupCommand extends Command
 
         if (! $this->files->exists($appTsPath)) {
             $this->warn('  ⚠ app.ts not found, skipping');
+
             return;
         }
 
@@ -180,6 +183,7 @@ class ThemeSetupCommand extends Command
         // Check if already configured
         if (str_contains($content, 'initializeThemeSystem')) {
             $this->line('  ✓ Already configured');
+
             return;
         }
 

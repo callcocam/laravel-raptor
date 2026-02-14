@@ -25,7 +25,7 @@ class ShareRaptorData
         // Compartilha dados do Raptor apenas quando há usuário autenticado
         Inertia::share([
             'raptor' => function () use ($request) {
-                if (!$request->user()) {
+                if (! $request->user()) {
                     return [
                         'navigation' => [],
                         'context' => null,
@@ -34,7 +34,7 @@ class ShareRaptorData
 
                 $context = $this->detectContext($request);
                 $navigationService = app(NavigationService::class);
-                
+
                 return [
                     'navigation' => $navigationService->buildNavigation($request->user(), $context),
                     'context' => $context,

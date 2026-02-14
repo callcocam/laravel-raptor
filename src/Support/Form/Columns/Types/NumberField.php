@@ -31,7 +31,6 @@ class NumberField extends Column
         $this->component('form-field-number');
         $this->setUp();
     }
- 
 
     public function min(float $min): self
     {
@@ -63,9 +62,9 @@ class NumberField extends Column
             'type' => 'sum',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -79,9 +78,9 @@ class NumberField extends Column
             'minuend' => $minuend,
             'subtrahends' => $subtrahends,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -94,9 +93,9 @@ class NumberField extends Column
             'type' => 'multiply',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -110,9 +109,9 @@ class NumberField extends Column
             'dividend' => $dividend,
             'divisor' => $divisor,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -125,9 +124,9 @@ class NumberField extends Column
             'type' => 'average',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -140,9 +139,9 @@ class NumberField extends Column
             'type' => 'min',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -155,9 +154,9 @@ class NumberField extends Column
             'type' => 'max',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -171,9 +170,9 @@ class NumberField extends Column
             'value' => $value,
             'percentage' => $percentage,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
@@ -187,9 +186,9 @@ class NumberField extends Column
             'expression' => $expression,
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 

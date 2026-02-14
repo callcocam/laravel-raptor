@@ -8,8 +8,8 @@
 
 namespace Callcocam\LaravelRaptor\Models;
 
-use Callcocam\LaravelRaptor\Support\Shinobi\Models\Role as ModelsRole;
 use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
+use Callcocam\LaravelRaptor\Support\Shinobi\Models\Role as ModelsRole;
 
 class Role extends ModelsRole
 {

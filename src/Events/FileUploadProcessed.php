@@ -3,7 +3,6 @@
 namespace Callcocam\LaravelRaptor\Events;
 
 use Callcocam\LaravelRaptor\Models\FileUpload;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -33,7 +32,7 @@ class FileUploadProcessed implements ShouldBroadcast
     {
         // Broadcast para o canal privado do usuário que fez o upload
         return [
-            new PrivateChannel('App.Models.User.' . $this->fileUpload->user_id),
+            new PrivateChannel('App.Models.User.'.$this->fileUpload->user_id),
         ];
     }
 

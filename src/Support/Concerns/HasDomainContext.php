@@ -12,19 +12,19 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Trait HasDomainContext
- * 
+ *
  * Facilita o acesso ao contexto de domínio polimórfico (tenant + domainable)
- * 
+ *
  * @example
  * class OrderController extends Controller
  * {
  *     use HasDomainContext;
- *     
+ *
  *     public function index()
  *     {
  *         $tenant = $this->getCurrentTenant();
  *         $client = $this->getCurrentDomainable(); // Client ou Store
- *         
+ *
  *         if ($this->hasDomainable()) {
  *             // Filtrar por client/store
  *             $orders = Order::where('client_id', $client->id)->get();
@@ -58,8 +58,8 @@ trait HasDomainContext
      */
     protected function getCurrentDomainable(): ?Model
     {
-        return app()->has('current.domainable') 
-            ? app('current.domainable') 
+        return app()->has('current.domainable')
+            ? app('current.domainable')
             : null;
     }
 
@@ -84,7 +84,7 @@ trait HasDomainContext
      */
     protected function hasDomainable(): bool
     {
-        return !is_null($this->getCurrentDomainable());
+        return ! is_null($this->getCurrentDomainable());
     }
 
     /**
@@ -93,6 +93,7 @@ trait HasDomainContext
     protected function isDominableType(string $type): bool
     {
         $currentType = $this->getCurrentDominableType();
+
         return $currentType && $currentType === $type;
     }
 
@@ -104,6 +105,7 @@ trait HasDomainContext
         if ($this->isDominableType('App\\Models\\Client')) {
             return $this->getCurrentDomainable();
         }
+
         return null;
     }
 
@@ -115,6 +117,7 @@ trait HasDomainContext
         if ($this->isDominableType('App\\Models\\Store')) {
             return $this->getCurrentDomainable();
         }
+
         return null;
     }
 

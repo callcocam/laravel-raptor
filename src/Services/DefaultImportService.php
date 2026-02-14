@@ -16,7 +16,6 @@ use Callcocam\LaravelRaptor\Support\Import\Contracts\GeneratesImportId;
 use Callcocam\LaravelRaptor\Support\Import\Contracts\ImportServiceInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -339,7 +338,7 @@ class DefaultImportService implements ImportServiceInterface
         $dataForSave = $this->filterDataForPersist($data);
 
         $connection = $this->getEffectiveConnection();
-        $tableName = $this->sheet->getTableName(); 
+        $tableName = $this->sheet->getTableName();
 
         if ($tableName === null) {
             return null;

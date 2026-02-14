@@ -1,21 +1,25 @@
 <?php
+
 /**
  * Created by Claudio Campos.
  * User: callcocam@gmail.com, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Table\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Table\Columns\Column;
 
 class PhoneColumn extends Column
 {
-    protected ?string $component = "table-column-phone";
+    protected ?string $component = 'table-column-phone';
+
     protected bool $maskEnabled = true;
 
     public function mask(bool $enabled = true): self
     {
         $this->maskEnabled = $enabled;
+
         return $this;
     }
 
@@ -25,7 +29,7 @@ class PhoneColumn extends Column
             return null;
         }
 
-        if (!$this->maskEnabled) {
+        if (! $this->maskEnabled) {
             return $value;
         }
 

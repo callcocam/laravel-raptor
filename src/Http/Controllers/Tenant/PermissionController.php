@@ -138,9 +138,9 @@ class PermissionController extends TenantController
             TextInfolist::make('slug', config('raptor.controllers.permissions.infolist.slug', 'Slug')),
             TextInfolist::make('description', config('raptor.controllers.permissions.infolist.description', 'Descrição')),
             TextInfolist::make('created_at', config('raptor.controllers.permissions.infolist.created_at', 'Criado em'))
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.permissions.infolist.updated_at', 'Atualizado em'))
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

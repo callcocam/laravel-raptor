@@ -79,7 +79,7 @@ class ChunkedUploadController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to upload chunk: ' . $e->getMessage(),
+                'message' => 'Failed to upload chunk: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -113,7 +113,7 @@ class ChunkedUploadController extends Controller
             // Verifica se todos os chunks foram enviados
             for ($i = 0; $i < $totalChunks; $i++) {
                 $chunkPath = "{$tempDir}/chunk_{$i}";
-                if (!Storage::disk($disk)->exists($chunkPath)) {
+                if (! Storage::disk($disk)->exists($chunkPath)) {
                     return response()->json([
                         'success' => false,
                         'message' => "Missing chunk {$i}",
@@ -123,7 +123,7 @@ class ChunkedUploadController extends Controller
 
             // Combina todos os chunks em um arquivo único
             $extension = pathinfo($originalName, PATHINFO_EXTENSION);
-            $tempFilename = Str::ulid() . '.' . $extension;
+            $tempFilename = Str::ulid().'.'.$extension;
             $tempPath = "temp/{$tempFilename}";
 
             $combinedContent = '';
@@ -139,7 +139,7 @@ class ChunkedUploadController extends Controller
 
             // Recupera o FileUpload do cache
             $fileUploadId = cache()->get("upload:{$uploadId}");
-            if (!$fileUploadId) {
+            if (! $fileUploadId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Upload record not found',
@@ -147,7 +147,7 @@ class ChunkedUploadController extends Controller
             }
 
             $fileUpload = FileUpload::find($fileUploadId);
-            if (!$fileUpload) {
+            if (! $fileUpload) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Upload record not found',
@@ -176,7 +176,7 @@ class ChunkedUploadController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to complete upload: ' . $e->getMessage(),
+                'message' => 'Failed to complete upload: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -270,7 +270,7 @@ class ChunkedUploadController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to cancel upload: ' . $e->getMessage(),
+                'message' => 'Failed to cancel upload: '.$e->getMessage(),
             ], 500);
         }
     }

@@ -12,28 +12,36 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Column;
 
 class ImageColumn extends Column
 {
-    protected ?string $component = "table-column-image";
+    protected ?string $component = 'table-column-image';
+
     protected bool $rounded = false;
+
     protected bool $clickable = false;
+
     protected ?string $defaultImage = null;
+
     protected ?int $width = 40;
+
     protected ?int $height = 40;
 
     public function rounded(bool $rounded = true): self
     {
         $this->rounded = $rounded;
+
         return $this;
     }
 
     public function clickable(bool $clickable = true): self
     {
         $this->clickable = $clickable;
+
         return $this;
     }
 
     public function defaultImage(string $url): self
     {
         $this->defaultImage = $url;
+
         return $this;
     }
 
@@ -41,6 +49,7 @@ class ImageColumn extends Column
     {
         $this->width = $width;
         $this->height = $height ?? $width;
+
         return $this;
     }
 

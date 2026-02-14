@@ -12,20 +12,20 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Trait HasCustomScopes
- * 
+ *
  * Permite aplicar scopes personalizados automaticamente em queries
- * 
+ *
  * @example
  * class Order extends AbstractModel
  * {
  *     use HasCustomScopes;
- *     
+ *
  *     // Scope aplicado automaticamente
  *     protected function applyScopes(Builder $query): Builder
  *     {
  *         return $query->where('status', 'active');
  *     }
- *     
+ *
  *     // Scope baseado em contexto de domínio
  *     protected function applyDomainContext(Builder $query): Builder
  *     {
@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\Builder;
  *         return $query;
  *     }
  * }
- * 
+ *
  * // Uso:
  * Order::query() // Automaticamente aplica scopes
  * Order::withoutScopes()->get() // Ignora scopes
@@ -49,7 +49,7 @@ trait HasCustomScopes
     {
         static::addGlobalScope('custom_scopes', function (Builder $builder) {
             $model = $builder->getModel();
-            
+
             // Aplica todos os métodos apply*
             $model->applyCustomScopes($builder);
         });
@@ -61,14 +61,14 @@ trait HasCustomScopes
     protected function applyCustomScopes(Builder $query): Builder
     {
         $methods = get_class_methods($this);
-        
+
         foreach ($methods as $method) {
             // Busca métodos que começam com 'apply' (exceto applyCustomScopes)
             if (str_starts_with($method, 'apply') && $method !== 'applyCustomScopes') {
                 $query = $this->$method($query);
             }
         }
-        
+
         return $query;
     }
 
@@ -94,13 +94,13 @@ trait HasCustomScopes
     public function scopeOnlyScope(Builder $query, string $scopeName): Builder
     {
         $query->withoutCustomScopes();
-        
-        $method = 'apply' . ucfirst($scopeName);
-        
+
+        $method = 'apply'.ucfirst($scopeName);
+
         if (method_exists($this, $method)) {
             return $this->$method($query);
         }
-        
+
         return $query;
     }
 }

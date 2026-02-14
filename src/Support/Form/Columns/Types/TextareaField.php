@@ -41,7 +41,6 @@ class TextareaField extends Column
         return $this;
     }
 
-
     public function toArray($model = null): array
     {
         return array_merge(parent::toArray($model), [

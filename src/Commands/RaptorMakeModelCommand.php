@@ -23,12 +23,12 @@ class RaptorMakeModelCommand extends GeneratorCommand
 
     protected function getStub(): string
     {
-        return __DIR__ . '/../../stubs/model.stub';
+        return __DIR__.'/../../stubs/model.stub';
     }
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        return $rootNamespace . '\Models';
+        return $rootNamespace.'\Models';
     }
 
     protected function buildClass($name): string
@@ -39,7 +39,7 @@ class RaptorMakeModelCommand extends GeneratorCommand
 
         // Determina se deve usar factory
         $useFactory = $this->hasFactory($name);
-        
+
         if ($useFactory) {
             $stub = str_replace(
                 '{{ factoryImport }}',
@@ -77,19 +77,19 @@ class RaptorMakeModelCommand extends GeneratorCommand
 
     protected function hasFactory(string $name): bool
     {
-        $factoryName = class_basename($name) . 'Factory';
+        $factoryName = class_basename($name).'Factory';
         $factoryPath = database_path("factories/{$factoryName}.php");
-        
+
         return file_exists($factoryPath);
     }
 
     protected function getFillableColumns(string $table): array
     {
         $columns = Schema::getColumnListing($table);
-        
+
         // Remove colunas padrão que não devem ser fillable
         $exclude = ['id', 'created_at', 'updated_at', 'deleted_at'];
-        
+
         return array_diff($columns, $exclude);
     }
 
@@ -113,7 +113,7 @@ class RaptorMakeModelCommand extends GeneratorCommand
                 default => null
             };
 
-            if ($castType && !in_array($name, ['created_at', 'updated_at', 'deleted_at'])) {
+            if ($castType && ! in_array($name, ['created_at', 'updated_at', 'deleted_at'])) {
                 $casts[$name] = $castType;
             }
         }
@@ -127,9 +127,9 @@ class RaptorMakeModelCommand extends GeneratorCommand
             return '[]';
         }
 
-        $items = array_map(fn($item) => "'{$item}'", $fillable);
-        
-        return "[\n        " . implode(",\n        ", $items) . ",\n    ]";
+        $items = array_map(fn ($item) => "'{$item}'", $fillable);
+
+        return "[\n        ".implode(",\n        ", $items).",\n    ]";
     }
 
     protected function generateCastsMethod(array $casts): string
@@ -143,8 +143,8 @@ class RaptorMakeModelCommand extends GeneratorCommand
             $lines[] = "            '{$field}' => '{$type}',";
         }
 
-        return "\n\n    protected function casts(): array\n    {\n        return [\n" . 
-               implode("\n", $lines) . 
+        return "\n\n    protected function casts(): array\n    {\n        return [\n".
+               implode("\n", $lines).
                "\n        ];\n    }";
     }
 

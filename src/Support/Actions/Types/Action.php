@@ -9,7 +9,6 @@
 namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
 use Callcocam\LaravelRaptor\Support\Actions\Action as BaseAction;
-use Illuminate\Http\Request;
 
 class Action extends BaseAction
 {

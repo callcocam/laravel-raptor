@@ -24,14 +24,14 @@ class RestoreAction extends Action
             ->icon('RotateCcw')
             ->color('blue')
             ->tooltip('Restaurar registro excluído')
-            ->policy("restore")
+            ->policy('restore')
             ->confirm([
                 'title' => 'Confirmar restauração',
                 'message' => 'Tem certeza que deseja restaurar este registro?',
                 'confirmText' => 'Sim, restaurar',
                 'cancelText' => 'Cancelar',
             ])
-            ->hidden(fn($record) => empty($record->deleted_at));
+            ->hidden(fn ($record) => empty($record->deleted_at));
         $this->setUp();
     }
 

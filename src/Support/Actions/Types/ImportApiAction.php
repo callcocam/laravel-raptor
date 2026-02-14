@@ -12,7 +12,6 @@ use Callcocam\LaravelRaptor\Support\Table\Confirm;
 
 class ImportApiAction extends ExecuteAction
 {
-
     protected string $method = 'POST';
 
     public function __construct(?string $name)
@@ -27,6 +26,7 @@ class ImportApiAction extends ExecuteAction
             ->policy('import')
             ->callback(function ($request) {
                 sleep(5); // Simula um processo demorado
+
                 return redirect()->back()->with('success', 'Importação iniciada com sucesso, assim que terminarmos avisaremos você!');
             })
             ->confirm(Confirm::make(

@@ -11,7 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
 use Closure;
-use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 class RelationshipField extends Column
@@ -22,7 +22,7 @@ class RelationshipField extends Column
 
     protected ?string $placeholder = null;
 
-    protected bool $searchable = true; 
+    protected bool $searchable = true;
 
     protected Closure|string|Builder|null $queryUsing = null;
 
@@ -42,7 +42,6 @@ class RelationshipField extends Column
         $this->component('form-field-relationship');
         $this->setUp();
     }
- 
 
     /**
      * Retorna o nome do relacionamento
@@ -86,7 +85,6 @@ class RelationshipField extends Column
 
         return $this;
     }
- 
 
     /**
      * Retorna se é múltiplo
@@ -167,13 +165,13 @@ class RelationshipField extends Column
         // Tenta buscar pelo relacionamento
         try {
             $relationshipMethod = $this->getRelationship();
-            
+
             if (! method_exists($model, $relationshipMethod)) {
                 return [];
             }
 
             $relation = $model->{$relationshipMethod}();
-            
+
             if (! $relation instanceof Relation) {
                 return [];
             }
@@ -196,6 +194,7 @@ class RelationshipField extends Column
                         ->toArray();
                 } else {
                     $record = $relation->getRelated()->find($selectedValue);
+
                     return $record ? [$record->{$this->keyAttribute} => $record->{$this->titleAttribute}] : [];
                 }
             }

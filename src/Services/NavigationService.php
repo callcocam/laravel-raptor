@@ -8,19 +8,22 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use App\Models\User;
 use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Pages\Page;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
-use App\Models\User;
 use ReflectionClass;
 
 class NavigationService
 {
     protected array $contexts;
+
     protected int $cacheTtl;
+
     protected string $cacheKeyPrefix;
+
     protected array $controllerDirectories;
 
     public function __construct()
@@ -38,13 +41,13 @@ class NavigationService
     {
         // Usa a config completa do route_injector.directories
         $allDirectories = config('raptor.route_injector.directories', []);
-        
+
         // Se não houver config, usa os defaults
         if (empty($allDirectories)) {
             $allDirectories = [
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__ . '/../Http/Controllers/Landlord',
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__.'/../Http/Controllers/Landlord',
                 'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__ . '/../Http/Controllers/Tenant',
+                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__.'/../Http/Controllers/Tenant',
             ];
         }
 
@@ -57,6 +60,7 @@ class NavigationService
     public function addDirectory(string $namespace, string $path): self
     {
         $this->controllerDirectories[$namespace] = $path;
+
         return $this;
     }
 
@@ -79,7 +83,7 @@ class NavigationService
             $navigationItems = array_merge($navigationItems, $items);
         }
 
-        usort($navigationItems, fn($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
+        usort($navigationItems, fn ($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
 
         return $navigationItems;
     }
@@ -101,18 +105,18 @@ class NavigationService
 
         $requiredNamespace = $contextNamespaceMap[$context] ?? null;
 
-        if (!$requiredNamespace) {
+        if (! $requiredNamespace) {
             return [];
         }
 
         // Escaneia todos os diretórios configurados
         foreach ($this->controllerDirectories as $namespace => $path) {
             // Filtra apenas namespaces que correspondem ao contexto
-            if (!str_contains($namespace, $requiredNamespace)) {
+            if (! str_contains($namespace, $requiredNamespace)) {
                 continue;
             }
 
-            if (!File::isDirectory($path)) {
+            if (! File::isDirectory($path)) {
                 continue;
             }
 
@@ -132,9 +136,9 @@ class NavigationService
 
     protected function getClassNameFromFile($file, string $basePath, string $namespace): ?string
     {
-        $relativePath = str_replace($basePath . '/', '', $file->getPathname());
+        $relativePath = str_replace($basePath.'/', '', $file->getPathname());
         $className = str_replace(['/', '.php'], ['\\', ''], $relativePath);
-        $fullClassName = $namespace . '\\' . $className;
+        $fullClassName = $namespace.'\\'.$className;
 
         return class_exists($fullClassName) ? $fullClassName : null;
     }
@@ -143,6 +147,7 @@ class NavigationService
     {
         try {
             $reflection = new ReflectionClass($className);
+
             return $reflection->hasMethod('getPages') &&
                 $reflection->getMethod('getPages')->isPublic();
         } catch (\Exception) {
@@ -153,16 +158,16 @@ class NavigationService
     protected function processController(string $controllerClass, User $user): array
     {
         try {
-            $controller = new $controllerClass();
+            $controller = new $controllerClass;
             $pages = $controller->getPages();
 
-            if (!is_array($pages)) {
+            if (! is_array($pages)) {
                 return [];
             }
 
             $modelClass = $this->getModelFromController($controller);
 
-            if ($modelClass && !$this->checkPermissions($user, $modelClass)) {
+            if ($modelClass && ! $this->checkPermissions($user, $modelClass)) {
                 return [];
             }
 
@@ -180,22 +185,23 @@ class NavigationService
             return $items;
         } catch (\Exception $e) {
             if (app()->hasDebugModeEnabled()) {
-                logger()->warning("Erro ao processar controller {$controllerClass}: " . $e->getMessage());
+                logger()->warning("Erro ao processar controller {$controllerClass}: ".$e->getMessage());
             }
+
             return [];
         }
     }
 
     public function filterIndexPages(array $pages): array
     {
-        return array_filter($pages, function($page) {   
+        return array_filter($pages, function ($page) {
             return $page instanceof Index;
         });
     }
 
     public function checkPermissions(User $user, string $modelClass): bool
     {
-        try { 
+        try {
             return Gate::forUser($user)->allows('viewAny', $modelClass);
         } catch (\Exception) {
             return config('raptor.navigation.default_permission', true);
@@ -205,7 +211,7 @@ class NavigationService
     public function generateNavigationItem(Page $page, ?string $modelClass): array
     {
 
-        $title = $page->getLabel() ?: ($modelClass ? (new $modelClass())->getTable() : $this->generateLabelFromPath($page->getPath()));
+        $title = $page->getLabel() ?: ($modelClass ? (new $modelClass)->getTable() : $this->generateLabelFromPath($page->getPath()));
 
         return [
             'title' => __($title),
@@ -220,7 +226,6 @@ class NavigationService
             'isActive' => false,
         ];
     }
-
 
     protected function getModelFromController($controller): ?string
     {
@@ -239,6 +244,7 @@ class NavigationService
     {
         $segments = explode('/', trim($path, '/'));
         $lastSegment = end($segments);
+
         return str($lastSegment)->title()->toString();
     }
 

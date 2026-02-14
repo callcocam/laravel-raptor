@@ -22,18 +22,18 @@ class RaptorMakePolicyCommand extends GeneratorCommand
 
     protected function getStub(): string
     {
-        return __DIR__ . '/../../stubs/policy.stub';
+        return __DIR__.'/../../stubs/policy.stub';
     }
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        return $rootNamespace . '\Policies';
+        return $rootNamespace.'\Policies';
     }
 
     protected function qualifyClass($name): string
     {
         // Adiciona 'Policy' ao final se não estiver presente
-        if (!str_ends_with($name, 'Policy')) {
+        if (! str_ends_with($name, 'Policy')) {
             $name .= 'Policy';
         }
 
@@ -46,7 +46,7 @@ class RaptorMakePolicyCommand extends GeneratorCommand
 
         $model = $this->option('model');
 
-        if (!$model) {
+        if (! $model) {
             $model = str_replace('Policy', '', class_basename($name));
         }
 
@@ -72,7 +72,7 @@ class RaptorMakePolicyCommand extends GeneratorCommand
     {
         $config = $this->laravel['config'];
 
-        $provider = $config->get('auth.guards.' . $config->get('auth.defaults.guard') . '.provider');
+        $provider = $config->get('auth.guards.'.$config->get('auth.defaults.guard').'.provider');
 
         return $config->get("auth.providers.{$provider}.model");
     }
@@ -89,7 +89,7 @@ class RaptorMakePolicyCommand extends GeneratorCommand
             return $model;
         }
 
-        return $rootNamespace . 'Models\\' . $model;
+        return $rootNamespace.'Models\\'.$model;
     }
 
     protected function getOptions(): array

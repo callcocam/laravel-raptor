@@ -13,13 +13,13 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithTable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearch;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSorting;
 use Callcocam\LaravelRaptor\Support\Table\Sources\ModelSource;
-use Illuminate\Database\Eloquent\Builder; 
+use Illuminate\Database\Eloquent\Builder;
 
 class TableBuilder
 {
-    use WithTable;
     use HasSearch;
     use HasSorting;
+    use WithTable;
 
     protected $dataSource;
 
@@ -50,10 +50,12 @@ class TableBuilder
     {
         if ($model instanceof Builder) {
             $this->model = $model->getModel();
+
             return ModelSource::makeForQuery($model, $this->config)
                 ->context($this);
         } else {
             $this->model = $model;
+
             return ModelSource::makeForModel($model, $this->config)
                 ->context($this);
         }

@@ -19,11 +19,11 @@ use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSortable;
 abstract class Column extends AbstractColumn
 {
     use BelongsToHelpers;
+    use HasActionCallback;
     use HasEditable;
+    use HasGridLayout;
     use HasSearchable;
     use HasSortable;
-    use HasActionCallback;
-    use HasGridLayout;
 
     protected ?string $component = 'table-column-text';
 
@@ -35,7 +35,7 @@ abstract class Column extends AbstractColumn
         $this->setUp();
     }
 
-    abstract public function render(mixed $value,  $row = null): mixed;
+    abstract public function render(mixed $value, $row = null): mixed;
 
     public function toArray(): array
     {

@@ -62,6 +62,7 @@ class UploadField extends Column
         // Configuração padrão segura
         $this->valueUsing(function ($data, $model) {
             $url = $this->handleUpload($data, $model);
+
             return [
                 $this->getName() => $url,
                 $this->getRealName() ?? $this->getName() => $url,
@@ -88,7 +89,7 @@ class UploadField extends Column
     {
         $uploadedFiles = data_get($data, $this->getName());
         // Se não há arquivos, retorna os valores existentes
-        if (!$uploadedFiles) {
+        if (! $uploadedFiles) {
             return data_get($data, $this->getName());
         }
 
@@ -111,14 +112,14 @@ class UploadField extends Column
         $processedIds = [];
 
         foreach ($ids as $id) {
-            if (!$id) {
+            if (! $id) {
                 continue;
             }
 
             // Verifica se o FileUpload existe e está completo
             $fileUpload = \Callcocam\LaravelRaptor\Models\FileUpload::find($id);
 
-            if (!$fileUpload || !$fileUpload->isCompleted()) {
+            if (! $fileUpload || ! $fileUpload->isCompleted()) {
                 continue;
             }
 
@@ -144,7 +145,7 @@ class UploadField extends Column
         }
 
         // Retorna string se for upload único, array se múltiplo
-        if (!$this->multiple && count($processedIds) === 1) {
+        if (! $this->multiple && count($processedIds) === 1) {
             return $processedIds[0];
         }
 
@@ -162,7 +163,7 @@ class UploadField extends Column
 
         foreach ($files as $file) {
             // Valida o arquivo
-            if (!$this->validateFile($file)) {
+            if (! $this->validateFile($file)) {
                 continue;
             }
 
@@ -198,7 +199,7 @@ class UploadField extends Column
         }
 
         // Retorna string se for upload único, array se múltiplo
-        if (!$this->multiple && count($processedFiles) === 1) {
+        if (! $this->multiple && count($processedFiles) === 1) {
             return $processedFiles[0];
         }
 
@@ -210,29 +211,29 @@ class UploadField extends Column
      */
     protected function validateFile($file): bool
     {
-        if (!$file instanceof UploadedFile) {
+        if (! $file instanceof UploadedFile) {
             return false;
         }
 
-        if (!$file->isValid()) {
+        if (! $file->isValid()) {
             return false;
         }
 
         $rules = [];
 
         // Validação de MIME types
-        if (!empty($this->acceptedMimeTypes)) {
-            $rules['mimetypes'] = 'mimetypes:' . implode(',', $this->acceptedMimeTypes);
+        if (! empty($this->acceptedMimeTypes)) {
+            $rules['mimetypes'] = 'mimetypes:'.implode(',', $this->acceptedMimeTypes);
         }
 
         // Validação de extensões
-        if (!empty($this->acceptedExtensions)) {
-            $rules['extensions'] = 'mimes:' . implode(',', $this->acceptedExtensions);
+        if (! empty($this->acceptedExtensions)) {
+            $rules['extensions'] = 'mimes:'.implode(',', $this->acceptedExtensions);
         }
 
         // Validação de tamanho (em KB)
         if ($this->maxSize) {
-            $rules['max'] = 'max:' . ($this->maxSize * 1024);
+            $rules['max'] = 'max:'.($this->maxSize * 1024);
         }
 
         if (empty($rules)) {
@@ -257,6 +258,7 @@ class UploadField extends Column
         // Gera nome do arquivo (usa callback customizado se existir)
         if ($this->filenameGenerator) {
             $filename = call_user_func($this->filenameGenerator, $file, $model);
+
             return $file->storeAs($this->directory, $filename, $disk);
         }
 
@@ -268,19 +270,19 @@ class UploadField extends Column
      */
     protected function uploadAndSaveAsAttachment(UploadedFile $file, $model)
     {
-        if (!$this->attachmentModel || !class_exists($this->attachmentModel)) {
+        if (! $this->attachmentModel || ! class_exists($this->attachmentModel)) {
             return null;
         }
 
         // Primeiro armazena o arquivo
         $path = $this->storeFile($file, $model);
 
-        if (!$path) {
+        if (! $path) {
             return null;
         }
 
         // Cria o registro do attachment
-        $attachment = new $this->attachmentModel();
+        $attachment = new $this->attachmentModel;
         $attachment->file_path = $path;
         $attachment->file_name = $file->getClientOriginalName();
         $attachment->mime_type = $file->getMimeType();
@@ -303,7 +305,7 @@ class UploadField extends Column
     {
         $oldValue = $model->getOriginal($this->getName());
 
-        if (!$oldValue) {
+        if (! $oldValue) {
             return;
         }
 
@@ -323,6 +325,7 @@ class UploadField extends Column
     public function acceptedFileTypes(array $types): self
     {
         $this->acceptedFileTypes = $types;
+
         return $this;
     }
 
@@ -333,6 +336,7 @@ class UploadField extends Column
     public function acceptedMimeTypes(array $mimeTypes): self
     {
         $this->acceptedMimeTypes = $mimeTypes;
+
         return $this;
     }
 
@@ -343,6 +347,7 @@ class UploadField extends Column
     public function acceptedExtensions(array $extensions): self
     {
         $this->acceptedExtensions = $extensions;
+
         return $this;
     }
 
@@ -352,6 +357,7 @@ class UploadField extends Column
     public function maxSize(int $sizeInMB): self
     {
         $this->maxSize = $sizeInMB;
+
         return $this;
     }
 
@@ -361,6 +367,7 @@ class UploadField extends Column
     public function directory(string $directory): self
     {
         $this->directory = $directory;
+
         return $this;
     }
 
@@ -370,11 +377,13 @@ class UploadField extends Column
     public function disk(string $disk): self
     {
         $this->disk = $disk;
+
         return $this;
     }
 
     /**
      * Permite upload múltiplo
+     *
      * @override Sobrescreve o método da trait para aceitar apenas bool
      */
     public function multiple(bool|Closure $multiple = true): static
@@ -385,6 +394,7 @@ class UploadField extends Column
         } else {
             $this->multiple = $multiple;
         }
+
         return $this;
     }
 
@@ -394,6 +404,7 @@ class UploadField extends Column
     public function deleteOldFiles(bool $delete = true): self
     {
         $this->deleteOldFiles = $delete;
+
         return $this;
     }
 
@@ -404,6 +415,7 @@ class UploadField extends Column
     public function storeAsAttachment(string $modelClass): self
     {
         $this->attachmentModel = $modelClass;
+
         return $this;
     }
 
@@ -414,6 +426,7 @@ class UploadField extends Column
     public function beforeUpload(Closure $callback): self
     {
         $this->beforeUpload = $callback;
+
         return $this;
     }
 
@@ -423,6 +436,7 @@ class UploadField extends Column
     public function afterUpload(Closure $callback): self
     {
         $this->afterUpload = $callback;
+
         return $this;
     }
 
@@ -433,6 +447,7 @@ class UploadField extends Column
     public function filenameGenerator(Closure $callback): self
     {
         $this->filenameGenerator = $callback;
+
         return $this;
     }
 
@@ -468,6 +483,7 @@ class UploadField extends Column
     {
         $this->async = $async;
         $this->updateComponent();
+
         return $this;
     }
 
@@ -478,6 +494,7 @@ class UploadField extends Column
     public function chunkSize(int $sizeInMB): self
     {
         $this->chunkSize = $sizeInMB * 1024 * 1024; // Converte para bytes
+
         return $this;
     }
 
@@ -488,6 +505,7 @@ class UploadField extends Column
     {
         $this->modelType = $modelType;
         $this->modelId = $modelId;
+
         return $this;
     }
 
@@ -547,6 +565,7 @@ class UploadField extends Column
     public function realName(?string $realName): self
     {
         $this->realName = $realName;
+
         return $this;
     }
 }

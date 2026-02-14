@@ -23,7 +23,6 @@ class EmailField extends Column
         $this->component('form-field-email');
         $this->setUp();
     }
- 
 
     public function toArray($model = null): array
     {

@@ -14,6 +14,7 @@ use Illuminate\Http\Client\PendingRequest;
 class BasicAuthService extends BaseHttpService
 {
     protected string $username;
+
     protected string $password;
 
     public function __construct(?string $baseUrl = null, ?string $username = null, ?string $password = null)
@@ -45,7 +46,7 @@ class BasicAuthService extends BaseHttpService
      */
     protected function authenticate(PendingRequest $request): PendingRequest
     {
-        if (!empty($this->username) && !empty($this->password)) {
+        if (! empty($this->username) && ! empty($this->password)) {
             $request->withBasicAuth($this->username, $this->password);
         }
 
@@ -59,6 +60,7 @@ class BasicAuthService extends BaseHttpService
     {
         try {
             $response = $this->get($endpoint);
+
             return $response->successful();
         } catch (\Exception $e) {
             return false;
@@ -70,6 +72,6 @@ class BasicAuthService extends BaseHttpService
      */
     public function hasCredentials(): bool
     {
-        return !empty($this->username) && !empty($this->password);
+        return ! empty($this->username) && ! empty($this->password);
     }
 }

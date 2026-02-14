@@ -21,7 +21,7 @@ trait WithActions
     }
 
     public function action(AbstractColumn $action): static
-    {        
+    {
         return $this->addToCollection($action, 'actions');
     }
 
@@ -35,9 +35,9 @@ trait WithActions
 
     /**
      * Retorna actions renderizadas e filtradas por visibilidade
-     * 
-     * @param mixed $model Modelo para verificação de visibilidade
-     * @param mixed $request Request para contexto
+     *
+     * @param  mixed  $model  Modelo para verificação de visibilidade
+     * @param  mixed  $request  Request para contexto
      * @return array Actions visíveis renderizadas
      */
     public function getRenderedActions($model = null, $request = null): array

@@ -89,9 +89,8 @@ trait BelongsToHelpers
      * - String simples: texto de ajuda
      * - Array: lista de actions a serem renderizadas
      * - Closure: função que retorna string ou array de actions
-     * 
-     * @param string|array|Closure|AbstractColumn $hint Texto ou array de actions
-     * @return static
+     *
+     * @param  string|array|Closure|AbstractColumn  $hint  Texto ou array de actions
      */
     public function hint(string|array|Closure|AbstractColumn $hint): static
     {
@@ -100,11 +99,9 @@ trait BelongsToHelpers
         return $this;
     }
 
-
     /**     * Define actions como hint (alias mais semântico para hint com array)
-     * 
-     * @param array|Closure $actions Array de actions ou Closure que retorna array
-     * @return static
+     *
+     * @param  array|Closure  $actions  Array de actions ou Closure que retorna array
      */
     public function hintActions(array|Closure $actions): static
     {
@@ -182,8 +179,6 @@ trait BelongsToHelpers
 
     /**
      * Retorna a dica (pode ser string ou array de actions)
-     * 
-     * @return string|array|null|AbstractColumn
      */
     public function getHint(): string|array|AbstractColumn|null
     {
@@ -196,8 +191,10 @@ trait BelongsToHelpers
                     $hints[] = $this->evaluate($hint);
                 }
             }
+
             return $hints;
         }
+
         return $this->evaluate($this->hint);
     }
 
@@ -235,8 +232,6 @@ trait BelongsToHelpers
 
     /**
      * Retorna o placeholder
-     * 
-     * @return string|null
      */
     public function getPlaceholder(): ?string
     {

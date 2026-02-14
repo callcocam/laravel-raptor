@@ -21,7 +21,7 @@ interface BeforePersistHookInterface
      *
      * @param  array<string, mixed>  $data  Dados da linha (inclui campos exclude)
      * @param  int  $rowNumber  Número da linha na planilha
-     * @return array<string, mixed>|null  Dados para persistir, ou null para pular a linha
+     * @return array<string, mixed>|null Dados para persistir, ou null para pular a linha
      */
     public function beforePersist(array $data, int $rowNumber, ?Model $existing): ?array;
 }

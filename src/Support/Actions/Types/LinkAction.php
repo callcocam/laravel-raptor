@@ -31,5 +31,4 @@ class LinkAction extends Action
         $this->component('action-link');
         $this->policy('viewAny');
     }
-
 }

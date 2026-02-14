@@ -32,7 +32,7 @@ trait WithRequests
 
     /**
      * Ações disponíveis na página Show
-     * 
+     *
      * Nota: As actions usam BelongsToVisible trait para controlar sua visibilidade.
      * Você pode customizar a visibilidade de cada action usando:
      * - ->policy('update') - Usa Laravel Policy
@@ -41,7 +41,7 @@ trait WithRequests
      */
     protected function getShowPageActions(?Model $model = null): array
     {
-        if (!$model) {
+        if (! $model) {
             return [];
         }
 
@@ -78,12 +78,12 @@ trait WithRequests
 
     /**
      * Ações disponíveis na página Edit
-     * 
+     *
      * Nota: As actions usam BelongsToVisible trait para controlar sua visibilidade.
      */
     protected function getEditPageActions(?Model $model = null): array
     {
-        if (!$model) {
+        if (! $model) {
             return [];
         }
 
@@ -133,16 +133,17 @@ trait WithRequests
     public function getFormActions(): array
     {
         $resourceName = $this->getResourcePluralName();
+
         return [
             // Ações para o formulário
             \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make("{$resourceName}.index")
-                ->color('gray') 
+                ->color('gray')
                 ->size('sm')
-                ->label(sprintf("Voltar %s", $this->getResourcePluralLabel())),
+                ->label(sprintf('Voltar %s', $this->getResourcePluralLabel())),
             \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
                 ->variant('default')
                 ->size('sm')
-                ->label(sprintf("Salvar %s", $this->getResourceLabel()))
+                ->label(sprintf('Salvar %s', $this->getResourceLabel())),
         ];
     }
 

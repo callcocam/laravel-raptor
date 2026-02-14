@@ -137,7 +137,7 @@ trait HasPermissions
         }
 
         // Busca todas as permissions de uma vez (1 query em vez de N)
-        if (!empty($slugs)) {
+        if (! empty($slugs)) {
             if ($permissionModel instanceof \Illuminate\Database\Eloquent\Collection) {
                 // Cache habilitado: busca in-memory
                 $found = $permissionModel->whereIn('slug', $slugs)->pluck('id')->toArray();
@@ -159,7 +159,7 @@ trait HasPermissions
     protected function hasPermission($permission): bool
     {
         // Garante que permissions estão carregadas (evita N+1)
-        if (!$this->relationLoaded('permissions')) {
+        if (! $this->relationLoaded('permissions')) {
             $this->load('permissions');
         }
 

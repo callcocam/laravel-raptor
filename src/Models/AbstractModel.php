@@ -10,7 +10,7 @@ namespace Callcocam\LaravelRaptor\Models;
 
 use App\Models\User;
 use Callcocam\LaravelRaptor\Support\Concerns\HasCustomScopes;
-use Callcocam\LaravelRaptor\Support\Landlord\BelongsToTenants; 
+use Callcocam\LaravelRaptor\Support\Landlord\BelongsToTenants;
 use Callcocam\LaravelRaptor\Support\Sluggable\HasSlug;
 use Callcocam\LaravelRaptor\Support\Sluggable\SlugOptions;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;

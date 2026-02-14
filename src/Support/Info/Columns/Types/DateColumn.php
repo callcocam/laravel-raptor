@@ -5,6 +5,7 @@
  * User: callcocam, contato@sigasmart.com.br
  * https://www.sigasmart.com.br
  */
+
 namespace Callcocam\LaravelRaptor\Support\Info\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Info\Column;
@@ -34,7 +35,7 @@ class DateColumn extends Column
         if ($value === null) {
             return $this->getDefault() ?? '-';
         }
-        
+
         // Se tem castCallback customizado, usa ele
         if ($this->castCallback && is_callable($this->castCallback)) {
             $value = call_user_func($this->castCallback, $value, $row);

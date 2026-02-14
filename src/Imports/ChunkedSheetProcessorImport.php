@@ -39,7 +39,7 @@ class ChunkedSheetProcessorImport implements ToModel, WithChunkReading, WithHead
         protected ?array $context = null
     ) {}
 
-    public function model(array $row): Model|null
+    public function model(array $row): ?Model
     {
         $rowNumber = $this->getRowNumber() ?? 2;
 

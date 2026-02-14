@@ -20,7 +20,7 @@ class CreateAction extends Action
     {
         parent::__construct($name ?? 'create');
         $this->name($name)
-            ->policy("create")
+            ->policy('create')
             ->label('Criar Novo')
             ->icon('PlusCircle')
             ->color('green')

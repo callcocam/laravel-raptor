@@ -90,6 +90,7 @@ class QueryBuilder
             if ($this->hasCustomFilterQuery($filter)) {
                 $filter->setValue($value);
                 $filter->applyUserQuery($query);
+
                 continue;
             }
 

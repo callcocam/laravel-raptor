@@ -13,8 +13,8 @@ use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Concerns\HasMak;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithActions;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
-use Illuminate\Database\Eloquent\Builder;
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 
 abstract class Column extends AbstractColumn
 {
@@ -27,14 +27,13 @@ abstract class Column extends AbstractColumn
 
     protected ?string $component = 'form-field-text';
 
-    protected Closure|null $valueUsing = null;
+    protected ?Closure $valueUsing = null;
 
     protected ?Closure $defaultUsing = null;
 
     protected Closure|string|Builder|\Illuminate\Database\Query\Builder|null $queryUsing = null;
 
     protected int $index = 0;
-
 
     public function __construct($name, $label = null)
     {
@@ -49,10 +48,10 @@ abstract class Column extends AbstractColumn
                     $this->getName() => $this->clearMak(data_get($request, $this->getName())),
                 ];
             }
+
             return null;
         });
     }
-
 
     public function valueUsing(Closure $callback): static
     {
@@ -88,7 +87,7 @@ abstract class Column extends AbstractColumn
 
     public function hasDefaultUsing(): bool
     {
-        return !is_null($this->defaultUsing);
+        return ! is_null($this->defaultUsing);
     }
 
     public function queryUsing(Closure|string|Builder|\Illuminate\Database\Query\Builder|null $queryUsing): self
@@ -97,7 +96,6 @@ abstract class Column extends AbstractColumn
 
         return $this;
     }
-
 
     public function getQueryUsing(): Closure|string|Builder|\Illuminate\Database\Query\Builder|null
     {
@@ -110,6 +108,7 @@ abstract class Column extends AbstractColumn
         if ($this->queryUsing instanceof \Illuminate\Database\Query\Builder) {
             return $this->queryUsing;
         }
+
         return $this->evaluate($this->queryUsing);
     }
 
@@ -124,7 +123,6 @@ abstract class Column extends AbstractColumn
     {
         return $this->index;
     }
-
 
     public function iconRight(string|Closure|null $icon): static
     {
@@ -141,6 +139,7 @@ abstract class Column extends AbstractColumn
         if ($model) {
             $this->record($model);
         }
+
         return array_merge([
             'name' => $this->getName(),
             'type' => $this->getType(),

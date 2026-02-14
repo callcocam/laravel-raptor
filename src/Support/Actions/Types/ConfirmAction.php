@@ -10,10 +10,8 @@ namespace Callcocam\LaravelRaptor\Support\Actions\Types;
 
 use Illuminate\Http\Request;
 
-
 class ConfirmAction extends ExecuteAction
 {
-
     public function __construct(?string $name = null)
     {
         parent::__construct($name);

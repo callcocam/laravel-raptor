@@ -16,8 +16,8 @@ namespace Callcocam\LaravelRaptor\Support\Concerns;
  */
 trait HasGridLayout
 {
-
     use HasColSpan;
+
     /**
      * Número de colunas do grid interno
      */
@@ -79,7 +79,6 @@ trait HasGridLayout
 
     /**
      * Define como full
-     * 
      */
     public function columnSpanFull(): self
     {
@@ -175,7 +174,6 @@ trait HasGridLayout
 
         return $this;
     }
-    
 
     /**
      * Retorna as configurações de grid como array

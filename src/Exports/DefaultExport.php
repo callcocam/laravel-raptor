@@ -6,16 +6,19 @@ use Callcocam\LaravelRaptor\Events\ExportCompleted;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Events\AfterSheet;
-use Maatwebsite\Excel\Concerns\WithEvents;
 
-class DefaultExport implements FromQuery, WithHeadings, WithMapping, WithEvents
+class DefaultExport implements FromQuery, WithEvents, WithHeadings, WithMapping
 {
     protected Builder $query;
+
     protected array $columns;
+
     protected ?string $filePath = null;
+
     protected ?string $fileName = null;
 
     public function __construct(Builder $query, array $columns, ?string $filePath = null, ?string $fileName = null)

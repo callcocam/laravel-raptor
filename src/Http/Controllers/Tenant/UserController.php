@@ -104,7 +104,7 @@ class UserController extends TenantController
             CheckboxField::make('roles', config('raptor.controllers.users.form.roles.label', __('Papéis')))
                 ->relationship('roles', 'name')
                 ->multiple()
-                ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
+                ->defaultUsing(fn ($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
                 ->helpText(config('raptor.controllers.users.form.roles.helpText', __('Atribua papéis ao usuário'))),
             // CheckboxField::make(
             //     'email_verified_at',
@@ -162,7 +162,7 @@ class UserController extends TenantController
                         return auth()->check() && method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin();
                     })
                     ->color('secondary')
-                    ->url(fn($record) => route('tenant.loginAs', ['token' => $record->id]))
+                    ->url(fn ($record) => route('tenant.loginAs', ['token' => $record->id]))
                     ->actionAlink()
                     ->tooltip(config('raptor.controllers.users.actions.login_as_tooltip', 'Faça login como este usuário')),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make(config('raptor.controllers.users.actions.restore', 'users.restore')),
@@ -179,11 +179,11 @@ class UserController extends TenantController
             TextInfolist::make('name', config('raptor.controllers.users.infolist.name', 'Nome')),
             TextInfolist::make('email', config('raptor.controllers.users.infolist.email', 'E-mail')),
             TextInfolist::make('email_verified_at', config('raptor.controllers.users.infolist.email_verified_at', 'E-mail Verificado'))
-                ->value(fn($value) => $value ? 'Sim - ' . \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
+                ->value(fn ($value) => $value ? 'Sim - '.\Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
             TextInfolist::make('created_at', config('raptor.controllers.users.infolist.created_at', 'Criado em'))
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.users.infolist.updated_at', 'Atualizado em'))
-                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

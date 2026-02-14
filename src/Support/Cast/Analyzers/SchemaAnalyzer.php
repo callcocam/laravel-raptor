@@ -77,7 +77,7 @@ class SchemaAnalyzer
             return $schema;
         } catch (\Exception $e) {
             return [
-                'error' => 'Could not retrieve schema: ' . $e->getMessage(),
+                'error' => 'Could not retrieve schema: '.$e->getMessage(),
                 'table_name' => $tableName,
             ];
         }
@@ -90,13 +90,13 @@ class SchemaAnalyzer
     {
         try {
             if (! Schema::hasColumn($tableName, $columnName)) {
-                return ['error' => "Column does not exist"];
+                return ['error' => 'Column does not exist'];
             }
 
             $connection = Schema::getConnection();
             $database = $connection->getDatabaseName();
 
-            $columnInfo = $connection->selectOne("
+            $columnInfo = $connection->selectOne('
                 SELECT
                     COLUMN_NAME,
                     DATA_TYPE,
@@ -109,7 +109,7 @@ class SchemaAnalyzer
                     EXTRA
                 FROM INFORMATION_SCHEMA.COLUMNS
                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ?
-            ", [$database, $tableName, $columnName]);
+            ', [$database, $tableName, $columnName]);
 
             if (! $columnInfo) {
                 return ['name' => $columnName, 'type' => 'unknown'];
@@ -145,7 +145,7 @@ class SchemaAnalyzer
             $connection = Schema::getConnection();
             $database = $connection->getDatabaseName();
 
-            $indexes = $connection->select("
+            $indexes = $connection->select('
                 SELECT
                     INDEX_NAME,
                     COLUMN_NAME,
@@ -154,7 +154,7 @@ class SchemaAnalyzer
                 FROM INFORMATION_SCHEMA.STATISTICS
                 WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?
                 ORDER BY INDEX_NAME, SEQ_IN_INDEX
-            ", [$database, $tableName]);
+            ', [$database, $tableName]);
 
             $groupedIndexes = [];
             foreach ($indexes as $index) {
@@ -184,7 +184,7 @@ class SchemaAnalyzer
             $connection = Schema::getConnection();
             $database = $connection->getDatabaseName();
 
-            $foreignKeys = $connection->select("
+            $foreignKeys = $connection->select('
                 SELECT
                     CONSTRAINT_NAME,
                     COLUMN_NAME,
@@ -194,7 +194,7 @@ class SchemaAnalyzer
                 WHERE TABLE_SCHEMA = ?
                   AND TABLE_NAME = ?
                   AND REFERENCED_TABLE_NAME IS NOT NULL
-            ", [$database, $tableName]);
+            ', [$database, $tableName]);
 
             return array_map(fn ($fk) => [
                 'constraint' => $fk->CONSTRAINT_NAME,

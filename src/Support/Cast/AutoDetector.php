@@ -27,6 +27,7 @@ class AutoDetector
      * Strategy Manager para detecção por padrões
      */
     protected static ?StrategyManager $strategyManager = null;
+
     /**
      * Padrões para detecção de tipos
      */
@@ -184,7 +185,7 @@ class AutoDetector
     protected static function getStrategyManager(): StrategyManager
     {
         if (! static::$strategyManager) {
-            static::$strategyManager = new StrategyManager();
+            static::$strategyManager = new StrategyManager;
         }
 
         return static::$strategyManager;
@@ -218,7 +219,6 @@ class AutoDetector
         // String comum
         return null;
     }
-
 
     /**
      * Verifica se um campo pertence a uma categoria
@@ -295,7 +295,6 @@ class AutoDetector
 
         return json_last_error() === JSON_ERROR_NONE;
     }
-
 
     /**
      * Detecta múltiplos valores e retorna formatadores sugeridos

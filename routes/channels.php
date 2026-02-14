@@ -16,6 +16,7 @@ Broadcast::channel('users.{userId}', function ($user, $userId) {
         'requested_user_id' => $userId,
         'authorized' => $authorized,
     ]);
+
     return $authorized;
 });
 
@@ -28,6 +29,7 @@ Broadcast::channel('sync.user.{id}', function ($user, $id) {
         'requested_id' => $id,
         'authorized' => $authorized,
     ]);
+
     return $authorized;
 });
 
@@ -43,5 +45,6 @@ Broadcast::channel('sync.client.{id}', function ($user, $id) {
         'requested_client_id' => $id,
         'authorized' => $authorized,
     ]);
+
     return $authorized;
 });

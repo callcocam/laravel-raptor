@@ -9,7 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Table;
 
 use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
-use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern; 
+use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
 
 class Confirm
 {
@@ -17,7 +17,6 @@ class Confirm
     use FactoryPattern;
 
     /**
-     * 
      * 'title' => 'Importar Registros',
      * 'text' => 'Tem certeza que deseja importar os registros?',
      *  'confirmButtonText' => 'Sim, Importar',

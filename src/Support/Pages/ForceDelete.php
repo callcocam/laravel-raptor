@@ -11,5 +11,6 @@ namespace Callcocam\LaravelRaptor\Support\Pages;
 class ForceDelete extends Page
 {
     public string $method = 'DELETE';
+
     public string $action = 'forceDelete';
 }

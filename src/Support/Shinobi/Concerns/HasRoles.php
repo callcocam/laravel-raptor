@@ -32,7 +32,7 @@ trait HasRoles
     public function hasRole($role): bool
     {
         // Garante que roles estão carregadas (evita N+1)
-        if (!$this->relationLoaded('roles')) {
+        if (! $this->relationLoaded('roles')) {
             $this->load('roles');
         }
 
@@ -148,7 +148,7 @@ trait HasRoles
         }
 
         // Busca todas as roles de uma vez (1 query em vez de N)
-        if (!empty($slugs)) {
+        if (! empty($slugs)) {
             $found = $roleModel->whereIn('slug', $slugs)->pluck('id')->toArray();
             $ids = array_merge($ids, $found);
         }
@@ -160,7 +160,7 @@ trait HasRoles
     {
         if ($this->hasRoles()) {
             // Garante que as roles estão carregadas
-            if (!$this->relationLoaded('roles')) {
+            if (! $this->relationLoaded('roles')) {
                 $this->load('roles');
             }
 
@@ -180,14 +180,16 @@ trait HasRoles
     {
         if ($this->hasRoles()) {
             // Garante que as roles estão carregadas
-            if (!$this->relationLoaded('roles')) {
+            if (! $this->relationLoaded('roles')) {
                 $this->load('roles');
             }
+
             return $this->roles
                 ->filter(function ($role) {
                     return $role->special;
                 })->count() >= 1;
         }
+
         return false;
     }
 

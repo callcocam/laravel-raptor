@@ -67,7 +67,7 @@ class CascadingField extends Column
             }
 
             // Adiciona o último valor selecionado no campo fieldsUsing
-            if ($lastValue) { 
+            if ($lastValue) {
                 return [
                     $this->getFieldsUsing() => $lastValue,
                     $this->getName() => $currentValue,
@@ -84,7 +84,6 @@ class CascadingField extends Column
         });
     }
 
-
     public function searchable(bool $searchable = true): self
     {
         $this->searchable = $searchable;
@@ -98,7 +97,6 @@ class CascadingField extends Column
 
         return $this;
     }
-
 
     public function preserveScroll(bool $preserve = true): self
     {
@@ -140,10 +138,11 @@ class CascadingField extends Column
         }
         $queryUsing = $this->getQueryUsing();
 
-        if (!$queryUsing instanceof Builder) {
-            foreach ($fields as  $field) {
+        if (! $queryUsing instanceof Builder) {
+            foreach ($fields as $field) {
                 $cascadingFields[] = $field;
             }
+
             return $cascadingFields;
         }
 
@@ -154,8 +153,8 @@ class CascadingField extends Column
             $cascadingData = $model->{$cascadingAttribute} ?? [];
         }
 
-        foreach ($fields as  $field) {
-            $query =  null;
+        foreach ($fields as $field) {
+            $query = null;
             if (method_exists($field, 'getQueryUsing')) {
                 $fieldQueryUsing = $field->getQueryUsing();
                 if ($fieldQueryUsing instanceof Builder) {
@@ -173,7 +172,7 @@ class CascadingField extends Column
                 $dependencyValue = request()->query($dependency);
 
                 // Prioridade 2: pega do modelo (quando está carregando a página de edição)
-                if (!$dependencyValue && $cascadingData && isset($cascadingData[$dependency])) {
+                if (! $dependencyValue && $cascadingData && isset($cascadingData[$dependency])) {
                     $dependencyValue = $cascadingData[$dependency];
                 }
 
@@ -184,7 +183,7 @@ class CascadingField extends Column
                     } else {
                         $query->where($dependency, $dependencyValue);
                     }
-                    $field->options($query->pluck($this->getOptionLabel(),  $this->getOptionKey())->toArray());
+                    $field->options($query->pluck($this->getOptionLabel(), $this->getOptionKey())->toArray());
                 } else {
                     // Se não tem valor do campo pai, deixa vazio
                     $field->options([]);
@@ -194,7 +193,7 @@ class CascadingField extends Column
                 if ($fieldUsing = $this->getFieldsUsing()) {
                     $query->whereNull($fieldUsing);
                 }
-                $field->options($query->pluck($this->getOptionLabel(),  $this->getOptionKey())->toArray());
+                $field->options($query->pluck($this->getOptionLabel(), $this->getOptionKey())->toArray());
             }
 
             $cascadingFields[] = $field;
@@ -212,7 +211,7 @@ class CascadingField extends Column
             return $field->toArray($model);
         }, $cascadingFields);
 
-        return  array_merge([
+        return array_merge([
             'name' => $this->getName(),
             'label' => $this->getLabel(),
             'default' => $this->getDefault(),

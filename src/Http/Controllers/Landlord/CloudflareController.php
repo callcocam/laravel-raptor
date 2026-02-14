@@ -8,7 +8,6 @@
 
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
-use App\Http\Controllers\Controller;
 use Callcocam\LaravelRaptor\Http\Controllers\ResourceController;
 use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Illuminate\Http\Request;
@@ -22,7 +21,6 @@ use Inertia\Response;
  */
 class CloudflareController extends ResourceController
 {
-
     public function getPages(): array
     {
         return [
@@ -32,6 +30,7 @@ class CloudflareController extends ResourceController
                 ->middlewares(['auth', 'verified']),
         ];
     }
+
     /**
      * Exibe a página Cloudflare DNS (configuração do componente na própria página).
      */

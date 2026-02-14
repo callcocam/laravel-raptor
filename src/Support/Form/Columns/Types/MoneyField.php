@@ -13,13 +13,13 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 class MoneyField extends Column
 {
     protected string $currency = 'BRL';
-    
+
     protected string $locale = 'pt_BR';
-    
+
     protected int $decimals = 2;
-    
+
     protected string $decimalSeparator = ',';
-    
+
     protected string $thousandsSeparator = '.';
 
     protected ?array $calculation = null;
@@ -46,7 +46,7 @@ class MoneyField extends Column
             // Remove separadores de milhares e substitui separador decimal
             $normalized = str_replace($this->thousandsSeparator, '', $currentValue);
             $normalized = str_replace($this->decimalSeparator, '.', $normalized);
-            
+
             // Remove qualquer caractere que não seja número, ponto ou sinal negativo
             $normalized = preg_replace('/[^\d.\-]/', '', $normalized);
 
@@ -58,12 +58,13 @@ class MoneyField extends Column
 
             if (is_null($currentValue)) {
                 return null;
-            } 
+            }
+
             // Converte para float e formata de acordo com a configuração
             return number_format(
-                 $currentValue, 
-                $this->decimals, 
-                $this->decimalSeparator, 
+                $currentValue,
+                $this->decimals,
+                $this->decimalSeparator,
                 $this->thousandsSeparator
             );
         });
@@ -75,15 +76,15 @@ class MoneyField extends Column
     public function currency(string $currency): static
     {
         $this->currency = strtoupper($currency);
-        
+
         // Configurações padrão para moedas comuns
-        match($this->currency) {
+        match ($this->currency) {
             'BRL' => $this->configureBRL(),
             'USD' => $this->configureUSD(),
             'EUR' => $this->configureEUR(),
             default => null,
         };
-        
+
         return $this;
     }
 
@@ -93,7 +94,7 @@ class MoneyField extends Column
     public function locale(string $locale): static
     {
         $this->locale = $locale;
-        
+
         return $this;
     }
 
@@ -103,7 +104,7 @@ class MoneyField extends Column
     public function decimals(int $decimals): static
     {
         $this->decimals = $decimals;
-        
+
         return $this;
     }
 
@@ -113,7 +114,7 @@ class MoneyField extends Column
     public function decimalSeparator(string $separator): static
     {
         $this->decimalSeparator = $separator;
-        
+
         return $this;
     }
 
@@ -123,7 +124,7 @@ class MoneyField extends Column
     public function thousandsSeparator(string $separator): static
     {
         $this->thousandsSeparator = $separator;
-        
+
         return $this;
     }
 
@@ -136,7 +137,7 @@ class MoneyField extends Column
         $this->decimalSeparator = ',';
         $this->thousandsSeparator = '.';
         $this->decimals = 2;
-        
+
         return $this;
     }
 
@@ -149,7 +150,7 @@ class MoneyField extends Column
         $this->decimalSeparator = '.';
         $this->thousandsSeparator = ',';
         $this->decimals = 2;
-        
+
         return $this;
     }
 
@@ -162,7 +163,7 @@ class MoneyField extends Column
         $this->decimalSeparator = ',';
         $this->thousandsSeparator = '.';
         $this->decimals = 2;
-        
+
         return $this;
     }
 
@@ -208,9 +209,8 @@ class MoneyField extends Column
 
     /**
      * Define uma soma de campos
-     * 
-     * @param array $fields Campos que serão somados
-     * @return static
+     *
+     * @param  array  $fields  Campos que serão somados
      */
     public function sum(array $fields): static
     {
@@ -218,18 +218,17 @@ class MoneyField extends Column
             'type' => 'sum',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define uma subtração de campos
-     * 
-     * @param string $minuend Campo minuendo (de onde subtrai)
-     * @param array $subtrahends Campos subtraendos (o que será subtraído)
-     * @return static
+     *
+     * @param  string  $minuend  Campo minuendo (de onde subtrai)
+     * @param  array  $subtrahends  Campos subtraendos (o que será subtraído)
      */
     public function subtract(string $minuend, array $subtrahends): static
     {
@@ -238,17 +237,16 @@ class MoneyField extends Column
             'minuend' => $minuend,
             'subtrahends' => $subtrahends,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define uma multiplicação de campos
-     * 
-     * @param array $fields Campos que serão multiplicados
-     * @return static
+     *
+     * @param  array  $fields  Campos que serão multiplicados
      */
     public function multiply(array $fields): static
     {
@@ -256,18 +254,17 @@ class MoneyField extends Column
             'type' => 'multiply',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define uma divisão de campos
-     * 
-     * @param string $dividend Campo dividendo (numerador)
-     * @param string $divisor Campo divisor (denominador)
-     * @return static
+     *
+     * @param  string  $dividend  Campo dividendo (numerador)
+     * @param  string  $divisor  Campo divisor (denominador)
      */
     public function divide(string $dividend, string $divisor): static
     {
@@ -276,17 +273,16 @@ class MoneyField extends Column
             'dividend' => $dividend,
             'divisor' => $divisor,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define uma média de campos
-     * 
-     * @param array $fields Campos para calcular a média
-     * @return static
+     *
+     * @param  array  $fields  Campos para calcular a média
      */
     public function average(array $fields): static
     {
@@ -294,17 +290,16 @@ class MoneyField extends Column
             'type' => 'average',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define valor mínimo entre campos
-     * 
-     * @param array $fields Campos para comparar
-     * @return static
+     *
+     * @param  array  $fields  Campos para comparar
      */
     public function min(array $fields): static
     {
@@ -312,17 +307,16 @@ class MoneyField extends Column
             'type' => 'min',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define valor máximo entre campos
-     * 
-     * @param array $fields Campos para comparar
-     * @return static
+     *
+     * @param  array  $fields  Campos para comparar
      */
     public function max(array $fields): static
     {
@@ -330,18 +324,17 @@ class MoneyField extends Column
             'type' => 'max',
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define cálculo de porcentagem
-     * 
-     * @param string $value Campo do valor base
-     * @param float|string $percentage Porcentagem ou nome do campo com a porcentagem
-     * @return static
+     *
+     * @param  string  $value  Campo do valor base
+     * @param  float|string  $percentage  Porcentagem ou nome do campo com a porcentagem
      */
     public function percentage(string $value, float|string $percentage): static
     {
@@ -350,18 +343,17 @@ class MoneyField extends Column
             'value' => $value,
             'percentage' => $percentage,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 
     /**
      * Define um cálculo customizado usando expressão
-     * 
-     * @param string $expression Expressão de cálculo (ex: "field1 + field2 * 0.1")
-     * @param array $fields Campos usados na expressão
-     * @return static
+     *
+     * @param  string  $expression  Expressão de cálculo (ex: "field1 + field2 * 0.1")
+     * @param  array  $fields  Campos usados na expressão
      */
     public function calculate(string $expression, array $fields = []): static
     {
@@ -370,9 +362,9 @@ class MoneyField extends Column
             'expression' => $expression,
             'fields' => $fields,
         ];
-        
+
         $this->readonly();
-        
+
         return $this;
     }
 

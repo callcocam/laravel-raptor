@@ -28,8 +28,8 @@ class DateField extends Column
         $this->type('date');
         $this->component('form-column-date');
         $this->setUp();
-    } 
-    
+    }
+
     public function minDate(string $date): self
     {
         $this->minDate = $date;

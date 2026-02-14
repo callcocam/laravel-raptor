@@ -7,7 +7,7 @@
  */
 
 namespace Callcocam\LaravelRaptor\Support\Concerns\Shared;
- 
+
 use Illuminate\Database\Eloquent\Model;
 
 trait BelongsToRecord

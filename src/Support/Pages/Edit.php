@@ -11,5 +11,6 @@ namespace Callcocam\LaravelRaptor\Support\Pages;
 class Edit extends Page
 {
     public string $method = 'GET';
+
     public string $action = 'edit';
 }

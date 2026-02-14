@@ -15,15 +15,14 @@ use Illuminate\Support\Collection;
 
 trait WithTable
 {
-
-    use Concerns\Interacts\WithColumns,
-        Concerns\Interacts\WithActions,
+    use Concerns\EvaluatesClosures;
+    use Concerns\FactoryPattern;
+    use Concerns\Interacts\WithActions,
         Concerns\Interacts\WithBulkActions,
+        Concerns\Interacts\WithColumns,
         Concerns\Interacts\WithFilters,
         Concerns\Interacts\WithHeaderActions;
     use Concerns\Shared\BelongToRequest;
-    use Concerns\EvaluatesClosures;
-    use Concerns\FactoryPattern;
     // use HasSearch;
 
     public function toArray(): array
@@ -136,8 +135,8 @@ trait WithTable
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
             if ($value = data_get($item, $columnName)) {
-                $formattedColumn = $column->render($value, $item); 
-                $item[$columnName . '_formatted'] = $formattedColumn;
+                $formattedColumn = $column->render($value, $item);
+                $item[$columnName.'_formatted'] = $formattedColumn;
             }
         }
         $item->actions = $this->evaluateActionsAuthorization($item);
@@ -148,7 +147,7 @@ trait WithTable
     /**
      * Avalia quais actions o usuário pode executar neste registro
      * Delega para a própria action a responsabilidade de renderização e validação
-     * 
+     *
      * A visibilidade é controlada por cada action via BelongsToVisible trait:
      * - ->policy('update') - Usa Laravel Policy
      * - ->visible(fn($item) => ...) - Callback customizado

@@ -12,7 +12,6 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 
 class DocumentField extends Column
 {
-
     protected array $fieldMapping = [];
 
     public function __construct(string $name, ?string $label = null)
@@ -22,6 +21,7 @@ class DocumentField extends Column
         $this->valueUsing(function ($model, $data = []) {
 
             $value = data_get($data, $this->getName());
+
             return [
                 $this->getName() => preg_replace('/\D/', '', $value),
             ];
@@ -33,6 +33,7 @@ class DocumentField extends Column
     public function documentType(string $type): self
     {
         $this->component($type);
+
         return $this;
     }
 
@@ -44,18 +45,21 @@ class DocumentField extends Column
     public function cpf(): self
     {
         $this->component('form-field-cpf');
+
         return $this;
     }
 
     public function cnpj(): self
     {
         $this->component('form-field-cnpj');
+
         return $this;
     }
 
     public function fieldMapping(array $mapping): self
     {
         $this->fieldMapping = $mapping;
+
         return $this;
     }
 

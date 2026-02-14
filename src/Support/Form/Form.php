@@ -11,16 +11,16 @@ namespace Callcocam\LaravelRaptor\Support\Form;
 use Callcocam\LaravelRaptor\Support\Concerns;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
 use Callcocam\LaravelRaptor\Support\Form\Concerns\InteractWithForm;
-use Illuminate\Database\Eloquent\Model; 
+use Illuminate\Database\Eloquent\Model;
 
 class Form
 {
-    use Concerns\FactoryPattern;
     use Concerns\EvaluatesClosures;
+    use Concerns\FactoryPattern;
     use Concerns\Interacts\WithActions;
     use Concerns\Shared\BelongToRequest;
-    use InteractWithForm;
     use HasGridLayout;
+    use InteractWithForm;
 
     protected ?Model $model = null;
 
@@ -57,6 +57,7 @@ class Form
         foreach ($actions as $action) {
             $this->action($action);
         }
+
         return $this;
     }
 
@@ -69,7 +70,7 @@ class Form
         if ($model) {
             $this->model($model);
         }
-        
+
         return $this->toArray();
     }
 
@@ -79,7 +80,7 @@ class Form
     public function toArray(): array
     {
         $data = array_merge($this->getGridLayoutConfig(), [
-            'columns' => $this->getArrayColumns( $this->model),
+            'columns' => $this->getArrayColumns($this->model),
             // Usa getRenderedActions para filtrar por visibilidade
             'formActions' => $this->getRenderedActions($this->model, $this->getRequest()),
         ]);
@@ -87,7 +88,8 @@ class Form
         // Se houver um modelo, inclui os valores
         if ($this->model) {
             $data['model'] = array_merge($this->model->toArray(), $this->values);
-        } 
+        }
+
         return $data;
     }
 }

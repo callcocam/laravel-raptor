@@ -49,6 +49,7 @@ class LaravelRaptorCommand extends Command
     ];
 
     protected ?string $defaultPassword = null;
+
     protected ?string $baseDomain = null;
 
     protected function landlordConnection(): string
@@ -66,7 +67,7 @@ class LaravelRaptorCommand extends Command
 
         // Verifica se deve rodar em modo fresh
         if ($this->option('fresh')) {
-            if (!$this->confirmFreshMode()) {
+            if (! $this->confirmFreshMode()) {
                 return self::SUCCESS;
             }
         }
@@ -77,10 +78,10 @@ class LaravelRaptorCommand extends Command
         $onlyRoles = $this->option('roles');
         $onlyPermissions = $this->option('permissions');
 
-        $runAll = !($onlyTenants || $onlyUsers || $onlyRoles || $onlyPermissions);
+        $runAll = ! ($onlyTenants || $onlyUsers || $onlyRoles || $onlyPermissions);
 
         if ($runAll) {
-            if (!$this->confirm('Deseja executar a configuração completa?', true)) {
+            if (! $this->confirm('Deseja executar a configuração completa?', true)) {
                 return self::SUCCESS;
             }
 
@@ -105,10 +106,10 @@ class LaravelRaptorCommand extends Command
         // Gerenciamento de Usuários
         if ($runAll || $onlyUsers) {
             $this->section('👥 Gerenciamento de Usuários');
-            if (!$tenant && $runAll) {
+            if (! $tenant && $runAll) {
                 $tenant = $this->selectTenant();
             }
-            if ($tenant && !$user) {
+            if ($tenant && ! $user) {
                 $user = $this->manageUser($tenant);
             }
         }
@@ -153,17 +154,20 @@ class LaravelRaptorCommand extends Command
         $this->line('  - Permissions');
         $this->newLine();
 
-        if (!$this->confirm('Tem certeza que deseja continuar?', false)) {
+        if (! $this->confirm('Tem certeza que deseja continuar?', false)) {
             $this->info('Operação cancelada.');
+
             return false;
         }
 
-        if (!$this->confirm('CONFIRMA que deseja DELETAR todos os dados?', false)) {
+        if (! $this->confirm('CONFIRMA que deseja DELETAR todos os dados?', false)) {
             $this->info('Operação cancelada.');
+
             return false;
         }
 
         $this->truncateTables();
+
         return true;
     }
 
@@ -213,9 +217,9 @@ class LaravelRaptorCommand extends Command
     protected function section(string $title): void
     {
         $this->newLine();
-        $this->line("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->line("  {$title}");
-        $this->line("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->newLine();
     }
 
@@ -231,16 +235,16 @@ class LaravelRaptorCommand extends Command
             $this->comment('   Publicando migrações do pacote...');
             Artisan::call('vendor:publish', [
                 '--tag' => 'raptor-migrations',
-                '--force' => true
+                '--force' => true,
             ]);
             $this->comment('   ✓ Migrações publicadas');
-            
+
             // Executar migrações
             $this->comment('   Executando migrações...');
             Artisan::call('migrate', ['--force' => true, '--fresh' => true]);
             $this->comment('   ✓ Migrações executadas');
         } catch (\Exception $e) {
-            $this->error('   ✗ Erro ao executar migrações: ' . $e->getMessage());
+            $this->error('   ✗ Erro ao executar migrações: '.$e->getMessage());
         }
     }
 
@@ -256,16 +260,16 @@ class LaravelRaptorCommand extends Command
             $this->info("Tenants existentes encontrados: {$tenants->count()}");
             $this->table(
                 ['ID', 'Nome', 'Slug', 'Status'],
-                $tenants->map(fn($t) => [
+                $tenants->map(fn ($t) => [
                     $t->id,
                     $t->name,
                     $t->slug ?? $t->domain,
-                    $t->status instanceof \BackedEnum ? $t->status->value : $t->status
+                    $t->status instanceof \BackedEnum ? $t->status->value : $t->status,
                 ])
             );
             $this->newLine();
 
-            if (!$this->confirm('Deseja criar novos tenants?')) {
+            if (! $this->confirm('Deseja criar novos tenants?')) {
                 return $this->selectTenant();
             }
         } else {
@@ -277,6 +281,7 @@ class LaravelRaptorCommand extends Command
 
         if ($createDefault) {
             $landlordUser = $this->createDefaultTenants();
+
             // Retorna o usuário landlord para poder associá-lo ao super-admin
             return ['tenant' => $tenantClass::first(), 'user' => $landlordUser];
         }
@@ -339,7 +344,7 @@ class LaravelRaptorCommand extends Command
 
         $this->newLine();
         $this->info('Tenants e usuários padrão criados com sucesso!');
-        
+
         // Retorna o usuário landlord para ser associado ao super-admin
         return $landlordUser;
     }
@@ -354,6 +359,7 @@ class LaravelRaptorCommand extends Command
 
         if ($tenants->isEmpty()) {
             $this->error('Nenhum tenant encontrado.');
+
             return null;
         }
 
@@ -373,7 +379,7 @@ class LaravelRaptorCommand extends Command
         $name = $this->ask('Qual o nome do tenant?', 'Minha Empresa');
         $slug = $this->ask('Qual o slug do tenant?', str($name)->slug());
 
-        if (!$this->baseDomain) {
+        if (! $this->baseDomain) {
             $this->baseDomain = $this->ask('Qual o domínio base?', $this->getBaseHost());
         }
 
@@ -404,9 +410,10 @@ class LaravelRaptorCommand extends Command
         if ($users->count()) {
             $this->info("Usuários existentes encontrados para este tenant: {$users->count()}");
 
-            if (!$this->confirm('Deseja criar um novo usuário?')) {
+            if (! $this->confirm('Deseja criar um novo usuário?')) {
                 $choices = $users->pluck('name', 'id')->toArray();
                 $userId = $this->choice('Qual usuário você deseja utilizar?', $choices);
+
                 return $userClass::find($userId);
             }
         } else {
@@ -430,10 +437,11 @@ class LaravelRaptorCommand extends Command
 
         if ($userClass::where('email', $email)->exists()) {
             $this->error('Usuário com este email já existe');
+
             return $this->manageUser($tenant);
         }
 
-        if (!$this->defaultPassword) {
+        if (! $this->defaultPassword) {
             $this->defaultPassword = $this->secret('Qual a senha do usuário?') ?: 'password';
         }
 
@@ -462,14 +470,15 @@ class LaravelRaptorCommand extends Command
             $this->info("Roles existentes encontradas: {$roles->count()}");
             $this->table(
                 ['ID', 'Nome', 'Slug', 'Descrição'],
-                $roles->map(fn($r) => [$r->id, $r->name, $r->slug, $r->description ?? '-'])
+                $roles->map(fn ($r) => [$r->id, $r->name, $r->slug, $r->description ?? '-'])
             );
             $this->newLine();
 
-            if (!$this->confirm('Deseja criar novas roles?')) {
+            if (! $this->confirm('Deseja criar novas roles?')) {
                 if ($user && $this->confirm('Deseja associar o usuário a uma role existente?')) {
                     $this->associateUserToRole($user);
                 }
+
                 return;
             }
         } else {
@@ -497,6 +506,7 @@ class LaravelRaptorCommand extends Command
         foreach ($this->defaultRoles as $slug => $roleData) {
             if ($roleClass::where('slug', $slug)->exists()) {
                 $this->line("  ⊗ Role '{$roleData['name']}' já existe, pulando...");
+
                 continue;
             }
 
@@ -512,7 +522,7 @@ class LaravelRaptorCommand extends Command
         }
 
         $this->newLine();
-        $this->info(count($createdRoles) . ' roles criadas com sucesso!');
+        $this->info(count($createdRoles).' roles criadas com sucesso!');
 
         // Associa automaticamente o usuário landlord ao super-admin
         if ($user) {
@@ -544,6 +554,7 @@ class LaravelRaptorCommand extends Command
 
         if ($roleClass::where('slug', $slug)->exists()) {
             $this->error("Role com slug '{$slug}' já existe.");
+
             return;
         }
 
@@ -635,7 +646,7 @@ class LaravelRaptorCommand extends Command
 
             $this->comment('   ✓ Caches limpos');
         } catch (\Exception $e) {
-            $this->error('   ✗ Erro ao limpar caches: ' . $e->getMessage());
+            $this->error('   ✗ Erro ao limpar caches: '.$e->getMessage());
         }
     }
 
@@ -651,14 +662,14 @@ class LaravelRaptorCommand extends Command
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->newLine();
         $this->line('  <fg=cyan>Landlord (Administrador Principal)</>');
-        $this->line('  URL:   <fg=yellow>http://landlord.' . $domain . '</>');
-        $this->line('  Email: <fg=yellow>landlord@' . $domain . '</>');
-        $this->line('  Senha: <fg=yellow>' . ($this->defaultPassword ?? 'password') . '</>');
+        $this->line('  URL:   <fg=yellow>http://landlord.'.$domain.'</>');
+        $this->line('  Email: <fg=yellow>landlord@'.$domain.'</>');
+        $this->line('  Senha: <fg=yellow>'.($this->defaultPassword ?? 'password').'</>');
         $this->newLine();
         $this->line('  <fg=cyan>Tenant (Cliente)</>');
-        $this->line('  URL:   <fg=yellow>http://tenant.' . $domain . '</>');
-        $this->line('  Email: <fg=yellow>tenant@' . $domain . '</>');
-        $this->line('  Senha: <fg=yellow>' . ($this->defaultPassword ?? 'password') . '</>');
+        $this->line('  URL:   <fg=yellow>http://tenant.'.$domain.'</>');
+        $this->line('  Email: <fg=yellow>tenant@'.$domain.'</>');
+        $this->line('  Senha: <fg=yellow>'.($this->defaultPassword ?? 'password').'</>');
         $this->newLine();
         $this->line('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->newLine();

@@ -28,6 +28,7 @@ class RaptorGenerateCommand extends Command
     protected $description = 'Generate Raptor resources (Model, Controller, Policy) with optional database introspection';
 
     protected array $tableColumns = [];
+
     protected string $tableName = '';
 
     public function handle(): int
@@ -71,8 +72,9 @@ class RaptorGenerateCommand extends Command
             ]);
         }
 
-        if (!$generateAll && !$this->option('model') && !$this->option('controller') && !$this->option('policy')) {
+        if (! $generateAll && ! $this->option('model') && ! $this->option('controller') && ! $this->option('policy')) {
             $this->error('Please specify what to generate: --model, --controller, --policy, or --all');
+
             return self::FAILURE;
         }
 
@@ -88,7 +90,7 @@ class RaptorGenerateCommand extends Command
 
         if ($driver === 'pgsql') {
             // PostgreSQL query to get column information
-            $tableColumns = DB::select("
+            $tableColumns = DB::select('
                 SELECT 
                     column_name as name,
                     data_type as type,
@@ -97,7 +99,7 @@ class RaptorGenerateCommand extends Command
                 FROM information_schema.columns
                 WHERE table_name = ?
                 ORDER BY ordinal_position
-            ", [$table]);
+            ', [$table]);
 
             foreach ($tableColumns as $column) {
                 $columns[] = [

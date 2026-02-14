@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToFields;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 use Illuminate\Support\Facades\Log;
+
 class RepeaterField extends Column
 {
     use BelongsToFields;
@@ -52,7 +53,7 @@ class RepeaterField extends Column
                 $data = [];
                 foreach ($values as $columnName => $value) {
                     $field = collect($fields)->firstWhere('name', $columnName);
-                    if ($field) { 
+                    if ($field) {
                         $field->index($key);
                         $valueUsing = $field->getValueUsing($values, $model);
                         if ($valueUsing !== null) {
@@ -89,7 +90,7 @@ class RepeaterField extends Column
             if (method_exists($currentValue, 'toArray')) {
                 $currentValue = $currentValue->all(); // Pega os modelos da collection
             }
-            
+
             foreach ($currentValue as $key => $item) {
                 $processedData = [];
 
@@ -119,6 +120,7 @@ class RepeaterField extends Column
 
                 $newValue[$key] = $processedData;
             }
+
             return $newValue;
         });
     }

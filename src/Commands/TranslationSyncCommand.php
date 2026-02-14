@@ -31,7 +31,7 @@ class TranslationSyncCommand extends Command
                 // Sincroniza todos os locales
                 $this->info('Syncing all locales...');
                 $locales = ['pt_BR', 'en', 'es', 'fr'];
-                
+
                 $totalStats = [
                     'added' => 0,
                     'updated' => 0,
@@ -40,11 +40,11 @@ class TranslationSyncCommand extends Command
 
                 foreach ($locales as $loc) {
                     $stats = $translationService->syncJsonWithDatabase($loc, $tenantId);
-                    
+
                     $totalStats['added'] += $stats['added'];
                     $totalStats['updated'] += $stats['updated'];
                     $totalStats['unchanged'] += $stats['unchanged'];
-                    
+
                     $this->line("   {$loc}: +{$stats['added']} ~{$stats['updated']} ={$stats['unchanged']}");
                 }
 
@@ -52,28 +52,30 @@ class TranslationSyncCommand extends Command
                 $this->line("   Total Added: {$totalStats['added']}");
                 $this->line("   Total Updated: {$totalStats['updated']}");
                 $this->line("   Total Unchanged: {$totalStats['unchanged']}");
-                
+
                 return self::SUCCESS;
             }
 
-            if (!$locale) {
+            if (! $locale) {
                 $this->error('Please specify --locale or use --all');
+
                 return self::FAILURE;
             }
 
             // Sincroniza um locale específico
             $this->info("Syncing locale: {$locale}");
             $stats = $translationService->syncJsonWithDatabase($locale, $tenantId);
-            
+
             $this->info('✅ Sync completed!');
             $this->line("   Added: {$stats['added']}");
             $this->line("   Updated: {$stats['updated']}");
             $this->line("   Unchanged: {$stats['unchanged']}");
-            
+
             return self::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Error: ' . $e->getMessage());
+            $this->error('❌ Error: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }

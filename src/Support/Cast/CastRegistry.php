@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 class CastRegistry
 {
     use CastDebugging;
+
     /**
      * Casts registrados por tipo
      */

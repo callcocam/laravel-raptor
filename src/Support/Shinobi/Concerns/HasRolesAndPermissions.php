@@ -22,7 +22,7 @@ trait HasRolesAndPermissions
     {
         if ($this->hasRoles()) {
             // Garante que as roles estão carregadas
-            if (!$this->relationLoaded('roles')) {
+            if (! $this->relationLoaded('roles')) {
                 $this->load('roles');
             }
 
@@ -40,7 +40,7 @@ trait HasRolesAndPermissions
     {
         if ($this->hasRoles()) {
             // Garante que as roles estão carregadas
-            if (!$this->relationLoaded('roles')) {
+            if (! $this->relationLoaded('roles')) {
                 $this->load('roles');
             }
 

@@ -36,10 +36,10 @@ trait WithColumns
     public function getArrayColumns($model = null): array
     {
         $result = [];
-        
+
         foreach ($this->getCollection('columns') as $column) {
             // Ignora colunas invisíveis
-            if (method_exists($column, 'isVisible') && !$column->isVisible()) {
+            if (method_exists($column, 'isVisible') && ! $column->isVisible()) {
                 continue;
             }
 
@@ -51,14 +51,14 @@ trait WithColumns
                 }
             }
             if (method_exists($column, 'hasDefaultUsing')) {
-                if ($column->hasDefaultUsing()) { 
+                if ($column->hasDefaultUsing()) {
                     $this->setValue($column->getName(), $column->getDefaultUsing($this->getRequest(), $model));
                 }
             }
-            
+
             $result[] = $column->toArray($model);
         }
-        
+
         return $result;
     }
 
@@ -67,6 +67,7 @@ trait WithColumns
         if (property_exists($this, 'values')) {
             $this->values[$name] = $value;
         }
+
         return $this;
     }
 }

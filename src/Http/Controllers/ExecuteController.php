@@ -21,26 +21,26 @@ class ExecuteController extends Controller
             'actionType' => 'required|string',
             'modelClass' => 'nullable|string',
             'record_id' => 'nullable',
-        ]); 
+        ]);
         $actionType = data_get($validated, 'actionType');
-        $modelClass =data_get($validated, 'modelClass');
+        $modelClass = data_get($validated, 'modelClass');
         $actionName = data_get($validated, 'actionName');
-        $recordId = data_get($validated, 'record_id'); 
+        $recordId = data_get($validated, 'record_id');
 
-        if (!class_exists($modelClass)) {
+        if (! class_exists($modelClass)) {
             return redirect()->back()->with('error', 'Model not found');
         }
 
         $record = $recordId ? $modelClass::find($recordId) : null;
         $controller = $record ? $record->getController() : app($modelClass)->getController();
 
-        if (!$controller) {
+        if (! $controller) {
             return redirect()->back()->with('error', 'Controller not found for the model');
         }
 
         $action = $controller->getAction($actionName);
 
-        if (!$action) {
+        if (! $action) {
             return redirect()->back()->with('error', 'Action not found');
         }
 

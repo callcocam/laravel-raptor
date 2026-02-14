@@ -12,7 +12,6 @@ use Callcocam\LaravelRaptor\Support\Actions\Action;
 
 class DeleteAction extends Action
 {
-
     protected string $method = 'DELETE';
 
     public function __construct(?string $name)
@@ -23,7 +22,7 @@ class DeleteAction extends Action
             ->icon('Trash2')
             ->color('red')
             ->tooltip('Excluir registro')
-            ->policy("delete")
+            ->policy('delete')
             ->confirm([
                 'title' => 'Confirmar exclusão',
                 'message' => 'Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.',
@@ -31,7 +30,7 @@ class DeleteAction extends Action
                 'cancelText' => 'Cancelar',
                 'requiresTypedConfirmation' => false, // Desabilitado por padrão
                 'typedConfirmationWord' => 'EXCLUIR', // Palavra padrão
-            ])->hidden(fn($record) => !empty($record->deleted_at))
+            ])->hidden(fn ($record) => ! empty($record->deleted_at))
             ->requiresTypedConfirmation();
         $this->setUp();
     }
@@ -39,7 +38,7 @@ class DeleteAction extends Action
     /**
      * Ativa a confirmação por digitação
      *
-     * @param string|null $word Palavra que deve ser digitada (padrão: "EXCLUIR")
+     * @param  string|null  $word  Palavra que deve ser digitada (padrão: "EXCLUIR")
      * @return $this
      */
     public function requiresTypedConfirmation(?string $word = null): self
@@ -68,7 +67,7 @@ class DeleteAction extends Action
         return $this->confirm($currentConfirm);
     }
 
-     /**
+    /**
      * Verifica visibilidade geral (todas as camadas)
      *
      * ORDEM DE VALIDAÇÃO:

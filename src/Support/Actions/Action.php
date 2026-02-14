@@ -17,9 +17,9 @@ use Illuminate\Http\Request;
 
 abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 {
-    use InteractWithForm;
     use BelongToRequest;
     use HasActionCallback;
+    use InteractWithForm;
 
     protected $model = null;
 
@@ -39,11 +39,11 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
     protected array $onlyProps = [];
 
-    protected string|null $modalSize = null;
+    protected ?string $modalSize = null;
 
-    protected string|null $variant = null;
+    protected ?string $variant = null;
 
-    protected string|null $size = null;
+    protected ?string $size = null;
 
     protected bool $emptyRecordAllowed = true;
 
@@ -57,9 +57,11 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
                 if ($target instanceof Model) {
                     $parameters['record'] = data_get($target, 'id');
                 }
-                $parameters = array_filter($parameters, fn($value) => $value !== null && $value !== '');
+                $parameters = array_filter($parameters, fn ($value) => $value !== null && $value !== '');
+
                 return route($name, $parameters, false);
             }
+
             return null;
         });
         $this->setUp();
@@ -95,7 +97,7 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         ]);
     }
 
-    public function variant(string|null $variant): self
+    public function variant(?string $variant): self
     {
         $this->variant = $variant;
 
@@ -109,19 +111,19 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
         return $this;
     }
 
-    public function getVariant(): string|null
+    public function getVariant(): ?string
     {
         return $this->variant;
     }
 
-    public function size(string|null $size): self
+    public function size(?string $size): self
     {
         $this->size = $size;
 
         return $this;
     }
 
-    public function getSize(): string|null
+    public function getSize(): ?string
     {
         return $this->size;
     }
@@ -171,40 +173,42 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
 
     /**
      * Define a url de execução automática da action baseado em rotas padrão
-     * 
-     * @param string $action
+     *
+     * @param  string  $action
      */
     protected function executeUrlCallback($action = 'execute'): self
     {
-        $this->url(function ($target = null, Request $request = null) use ($action) {
+        $this->url(function ($target = null, ?Request $request = null) use ($action) {
             $route = sprintf('%s.%s', $request->getContext(), $action);
-            
-            if (!\Illuminate\Support\Facades\Route::has($route)) {
+
+            if (! \Illuminate\Support\Facades\Route::has($route)) {
                 return '#';
             }
-            
+
             $parameters = $request->query();
             if ($target instanceof Model) {
                 $parameters['record'] = data_get($target, 'id');
             }
-            $parameters = array_filter($parameters, fn($value) => $value !== null && $value !== '');
-            
+            $parameters = array_filter($parameters, fn ($value) => $value !== null && $value !== '');
+
             return route($route, $parameters, false);
-        })->callback(function (Request $request, Model $model = null) {
+        })->callback(function (Request $request, ?Model $model = null) {
             return redirect()->back()->with('error', 'Ação padrão não implementada. usando callback padrão.');
         });
+
         return $this;
     }
+
     public function toArray($model = null, $request = null): array
     {
-        if ($model) :
+        if ($model) {
             $this->record($model);
-        endif;
-        if ($request) :
+        }
+        if ($request) {
             $this->request($request);
-        endif;
+        }
 
-        return  [
+        return [
             'actionType' => $this->getActionType(),
             'component' => $this->getComponent(),
             'name' => $this->getName(),
@@ -227,12 +231,12 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
     public function render($model, $request = null): array
     {
 
-        if ($model instanceof Model) :
+        if ($model instanceof Model) {
             $this->record($model);
-        endif;
-        if ($request) :
+        }
+        if ($request) {
             $this->request($request);
-        endif;
+        }
 
         $result = [
             'type' => 'action',
@@ -268,7 +272,6 @@ abstract class Action extends \Callcocam\LaravelRaptor\Support\AbstractColumn
             'preserveState' => $this->preserveState,
             'only' => $this->onlyProps,
         ];
-
 
         if ($this->modalSize) {
             $result['modalSize'] = $this->modalSize;

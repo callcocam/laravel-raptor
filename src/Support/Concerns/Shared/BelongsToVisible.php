@@ -78,8 +78,8 @@ trait BelongsToVisible
 
     /**
      * Oculta o elemento (atalho para visible(false) ou visible com closure invertida)
-     * 
-     * @param bool|Closure|null $hidden Se true, oculta. Se Closure, inverte o resultado.
+     *
+     * @param  bool|Closure|null  $hidden  Se true, oculta. Se Closure, inverte o resultado.
      */
     public function hidden(bool|Closure|null $hidden = true): self
     {
@@ -222,7 +222,7 @@ trait BelongsToVisible
         }
 
         // Camada 2: Laravel Policy (lazy evaluation)
-        if ($this->policyAbility && !$this->checkPolicy($item, $user)) {
+        if ($this->policyAbility && ! $this->checkPolicy($item, $user)) {
             return false;
         }
 
@@ -260,7 +260,6 @@ trait BelongsToVisible
      * MÉTODOS DE CONVENIÊNCIA POR CONTEXTO
      * ========================================
      */
-
     public function isVisibleOnIndex($item = null): bool
     {
         return $this->isVisibleOn('index', $item);
@@ -304,7 +303,7 @@ trait BelongsToVisible
         // Se não tem usuário autenticado, falha
         if (! $user) {
             return false;
-        }  
+        }
         // Verifica policy usando Gate
         try {
             return Gate::forUser($user)->allows($this->policyAbility, $item);

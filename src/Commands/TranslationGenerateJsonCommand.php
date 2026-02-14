@@ -31,34 +31,36 @@ class TranslationGenerateJsonCommand extends Command
                 // Gera para todos os locales
                 $this->info('Generating JSON files for all locales...');
                 $files = $translationService->generateAllJsonFiles($tenantId);
-                
-                $this->info('✅ Generated ' . count($files) . ' files:');
+
+                $this->info('✅ Generated '.count($files).' files:');
                 foreach ($files as $file) {
                     $this->line("   - {$file}");
                 }
-                
+
                 return self::SUCCESS;
             }
 
-            if (!$locale) {
+            if (! $locale) {
                 $this->error('Please specify --locale or use --all');
+
                 return self::FAILURE;
             }
 
             // Gera para um locale específico
             $this->info("Generating JSON file for locale: {$locale}");
             $filePath = $translationService->generateJsonFile($locale, $tenantId);
-            
+
             $this->info("✅ JSON file generated: {$filePath}");
-            
+
             // Mostra estatísticas
             $translations = $translationService->getAllTranslations($locale, $tenantId);
-            $this->line("   Translations: " . count($translations));
-            
+            $this->line('   Translations: '.count($translations));
+
             return self::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error('❌ Error: ' . $e->getMessage());
+            $this->error('❌ Error: '.$e->getMessage());
+
             return self::FAILURE;
         }
     }

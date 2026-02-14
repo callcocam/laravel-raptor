@@ -13,9 +13,9 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 
 /**
  * BuscaCepField - Campo de busca de CEP com preenchimento automático
- * 
+ *
  * Integra com API ViaCEP para buscar endereço automaticamente
- * 
+ *
  * @example
  * BuscaCepField::make('zip_code')
  *     ->label('Endereço')
@@ -41,7 +41,7 @@ class BuscaCepField extends Column
 
     protected array $fieldMapping = [];
 
-    protected  string $exuteOnChange = 'zip_code';
+    protected string $exuteOnChange = 'zip_code';
 
     protected array $requiredFields = [];
 
@@ -50,7 +50,7 @@ class BuscaCepField extends Column
         parent::__construct($name, $label);
         $this->component('form-field-busca-cep');
         $this->setUp();
-        $this->defaultUsing(function ($model, $data=[]) {
+        $this->defaultUsing(function ($model, $data = []) {
             return data_get($model, $this->name, null);
         });
     }
@@ -119,6 +119,7 @@ class BuscaCepField extends Column
     public function executeOnChange(string $fieldName): static
     {
         $this->exuteOnChange = $fieldName;
+
         return $this;
     }
 
@@ -129,10 +130,9 @@ class BuscaCepField extends Column
 
     /**
      * Define o mapeamento dos campos da API para os campos do formulário
-     * 
-     * @param array $mapping Mapeamento ['campo_api' => 'campo_formulario']
-     * @return static
-     * 
+     *
+     * @param  array  $mapping  Mapeamento ['campo_api' => 'campo_formulario']
+     *
      * @example
      * ->fieldMapping([
      *     'logradouro' => 'street',
@@ -150,8 +150,6 @@ class BuscaCepField extends Column
 
     /**
      * Retorna o mapeamento de campos
-     * 
-     * @return array
      */
     public function getFieldMapping(): array
     {

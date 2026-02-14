@@ -35,5 +35,4 @@ class LoginAsController
         // Redirecionar para o painel do cliente
         return redirect()->route('dashboard');
     }
- 
 }

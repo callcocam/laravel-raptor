@@ -65,4 +65,3 @@ class DatabaseConnectionFailed implements ShouldBroadcastNow
         ];
     }
 }
-

@@ -24,7 +24,7 @@ class ViewAction extends Action
             ->icon('Eye')
             ->color('blue')
             ->policy('view')
-            ->component('action-button-link') 
+            ->component('action-button-link')
             ->tooltip('Visualizar detalhes');
         $this->setUp();
     }

@@ -8,8 +8,8 @@
 
 namespace Callcocam\LaravelRaptor\Support\Table\Sources;
 
-use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToContext;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToContext;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -215,7 +215,6 @@ abstract class AbstractSource
      * OUTROS GETTERS/SETTERS
      * ========================================
      */
-
     public function getModel()
     {
         return $this->model;

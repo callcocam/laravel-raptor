@@ -26,7 +26,7 @@ trait BelongsToValidation
         $this->required = $required;
 
         // Adiciona 'required' às rules se não existir
-        if ($required && !$this->hasRule('required')) {
+        if ($required && ! $this->hasRule('required')) {
             $this->addRule('required');
         }
 
@@ -44,7 +44,7 @@ trait BelongsToValidation
                 $this->rules = str_replace('required', '', $this->rules);
                 $this->rules = trim(str_replace('||', '|', $this->rules), '|');
             } elseif (is_array($this->rules)) {
-                $this->rules = array_filter($this->rules, fn($rule) => $rule !== 'required' && $rule !== 'required|string' && $rule !== 'required|array');
+                $this->rules = array_filter($this->rules, fn ($rule) => $rule !== 'required' && $rule !== 'required|string' && $rule !== 'required|array');
             }
         }
 
@@ -67,7 +67,7 @@ trait BelongsToValidation
     public function addRule(string $rule): static
     {
         if (is_string($this->rules)) {
-            $this->rules .= '|' . $rule;
+            $this->rules .= '|'.$rule;
         } elseif (is_array($this->rules)) {
             $this->rules[] = $rule;
         } else {

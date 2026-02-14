@@ -47,8 +47,7 @@ class ComboboxField extends Column
     /**
      * Define o placeholder do campo de busca
      *
-     * @param string $placeholder Texto do placeholder (ex: "Buscar...")
-     * @return self
+     * @param  string  $placeholder  Texto do placeholder (ex: "Buscar...")
      */
     public function searchPlaceholder(string $placeholder): self
     {
@@ -60,8 +59,7 @@ class ComboboxField extends Column
     /**
      * Define o texto exibido quando não há resultados
      *
-     * @param string $text Texto a exibir (ex: "Nenhum resultado encontrado")
-     * @return self
+     * @param  string  $text  Texto a exibir (ex: "Nenhum resultado encontrado")
      */
     public function emptyText(string $text): self
     {
@@ -79,7 +77,7 @@ class ComboboxField extends Column
         $optionKey = $this->getOptionKey();
         $optionLabel = $this->getOptionLabel();
         if (! empty($this->autoCompleteFields) || $optionKey || $optionLabel) {
-            // Pega as opções brutas (antes de normalizar) 
+            // Pega as opções brutas (antes de normalizar)
             $processed = $this->processOptionsForAutoComplete($this->getRawOptions());
             $optionsData = $processed['optionsData'];
         }

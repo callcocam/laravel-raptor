@@ -17,7 +17,6 @@ use Illuminate\Support\Facades\DB;
  *
  * Implementa sistema de prioridade: Tenant Override > Global Override > Laravel Lang Files
  *
- * @package Callcocam\LaravelRaptor\Services
  * @author Claudio Campos <callcocam@gmail.com>
  */
 class TranslationService
@@ -62,10 +61,10 @@ class TranslationService
      * 2. Override global (tenant_id = null) em DB
      * 3. null (permite Laravel usar arquivo de lang)
      *
-     * @param string|null $tenantId ID do tenant atual
-     * @param string|null $name Nome do grupo da tradução (ex: 'products')
-     * @param string $key Chave da tradução (ex: 'product')
-     * @param string $locale Locale (ex: 'pt_BR')
+     * @param  string|null  $tenantId  ID do tenant atual
+     * @param  string|null  $name  Nome do grupo da tradução (ex: 'products')
+     * @param  string  $key  Chave da tradução (ex: 'product')
+     * @param  string  $locale  Locale (ex: 'pt_BR')
      * @return string|null Valor da tradução ou null para usar fallback do Laravel
      */
     public function get(?string $tenantId, ?string $name, string $key, string $locale): ?string
@@ -106,12 +105,6 @@ class TranslationService
 
     /**
      * Busca tradução no banco de dados com prioridade Tenant > Global
-     *
-     * @param string|null $tenantId
-     * @param string|null $name
-     * @param string $key
-     * @param string $locale
-     * @return string|null
      */
     protected function fetchFromDatabase(?string $tenantId, ?string $name, string $key, string $locale): ?string
     {
@@ -129,7 +122,7 @@ class TranslationService
             ->where("{$groupTable}.locale", $locale)
             ->where("{$groupTable}.name", $name)
             ->where("{$overridesTable}.key", $key)
-            ->when($tenantId, fn($q) => $q->where("{$groupTable}.tenant_id", $tenantId))
+            ->when($tenantId, fn ($q) => $q->where("{$groupTable}.tenant_id", $tenantId))
             // Prioriza tenant sobre global
             ->orderByRaw("CASE WHEN {$groupTable}.tenant_id IS NOT NULL THEN 1 ELSE 2 END")
             ->select("{$overridesTable}.value")
@@ -141,8 +134,6 @@ class TranslationService
     /**
      * Carrega todas as traduções de um tenant em batch (otimização)
      *
-     * @param string|null $tenantId
-     * @param string $locale
      * @return array Array associativo ['group.key' => 'value']
      */
     public function loadAllForTenant(?string $tenantId, string $locale): array
@@ -187,7 +178,7 @@ class TranslationService
             $fullKey = $translation->full_key;
 
             // Só adiciona se não foi sobrescrito pelo tenant
-            if (!isset($translations[$fullKey])) {
+            if (! isset($translations[$fullKey])) {
                 $translations[$fullKey] = $translation->value;
             }
         }
@@ -202,22 +193,21 @@ class TranslationService
     /**
      * Invalida cache de um tenant específico
      *
-     * @param string|null $tenantId
-     * @param string|null $locale Locale específico ou null para todos
-     * @return void
+     * @param  string|null  $locale  Locale específico ou null para todos
      */
     public function clearCache(?string $tenantId = null, ?string $locale = null): void
     {
         // Limpa runtime cache
         self::$runtimeCache = [];
 
-        if (!$this->cacheEnabled) {
+        if (! $this->cacheEnabled) {
             return;
         }
 
         if ($tenantId === null && $locale === null) {
             // Limpa todo o cache de traduções
             Cache::flush();
+
             return;
         }
 
@@ -235,13 +225,6 @@ class TranslationService
 
     /**
      * Cria ou atualiza uma tradução override
-     *
-     * @param string|null $tenantId
-     * @param string|null $name
-     * @param string $key
-     * @param string $locale
-     * @param string $value
-     * @return TranslationOverride
      */
     public function setOverride(
         ?string $tenantId,
@@ -278,12 +261,6 @@ class TranslationService
 
     /**
      * Remove uma tradução override
-     *
-     * @param string|null $tenantId
-     * @param string|null $name
-     * @param string $key
-     * @param string $locale
-     * @return bool
      */
     public function deleteOverride(
         ?string $tenantId,
@@ -309,12 +286,6 @@ class TranslationService
 
     /**
      * Gera chave de cache persistente
-     *
-     * @param string|null $tenantId
-     * @param string|null $name
-     * @param string $key
-     * @param string $locale
-     * @return string
      */
     protected function getCacheKey(?string $tenantId, ?string $name, string $key, string $locale): string
     {
@@ -326,12 +297,6 @@ class TranslationService
 
     /**
      * Gera chave de cache em memória (runtime)
-     *
-     * @param string|null $tenantId
-     * @param string|null $name
-     * @param string $key
-     * @param string $locale
-     * @return string
      */
     protected function getRuntimeCacheKey(?string $tenantId, ?string $name, string $key, string $locale): string
     {
@@ -340,8 +305,6 @@ class TranslationService
 
     /**
      * Obtém estatísticas de uso de traduções
-     *
-     * @return array
      */
     public function getStats(): array
     {
@@ -350,10 +313,10 @@ class TranslationService
         return [
             'total_overrides' => TranslationOverride::count(),
             'global_overrides' => TranslationOverride::query()
-                ->whereHas('group', fn($q) => $q->whereNull('tenant_id'))
+                ->whereHas('group', fn ($q) => $q->whereNull('tenant_id'))
                 ->count(),
             'tenant_overrides' => TranslationOverride::query()
-                ->whereHas('group', fn($q) => $q->whereNotNull('tenant_id'))
+                ->whereHas('group', fn ($q) => $q->whereNotNull('tenant_id'))
                 ->count(),
             'locales' => DB::connection($this->landlordConnection())->table($groupTable)
                 ->select('locale')
@@ -373,9 +336,9 @@ class TranslationService
     /**
      * Gera arquivo JSON de tradução para um locale específico
      *
-     * @param string $locale Locale (ex: 'pt_BR', 'en')
-     * @param string|null $tenantId ID do tenant (null para global)
-     * @param string|null $outputPath Caminho de saída customizado (opcional)
+     * @param  string  $locale  Locale (ex: 'pt_BR', 'en')
+     * @param  string|null  $tenantId  ID do tenant (null para global)
+     * @param  string|null  $outputPath  Caminho de saída customizado (opcional)
      * @return string Caminho do arquivo gerado
      */
     public function generateJsonFile(string $locale, ?string $tenantId = null, ?string $outputPath = null): string
@@ -384,7 +347,7 @@ class TranslationService
         $translations = $this->getAllTranslations($locale, $tenantId);
 
         // Define o caminho de saída
-        if (!$outputPath) {
+        if (! $outputPath) {
             $langPath = lang_path();
             $localeFormatted = $locale; // pt_BR -> pt-br
 
@@ -399,14 +362,14 @@ class TranslationService
 
         // Cria o diretório se não existir
         $directory = dirname($outputPath);
-        if (!is_dir($directory)) {
+        if (! is_dir($directory)) {
             mkdir($directory, 0755, true);
         }
 
         // Mescla com traduções existentes do Laravel se for global
         $mergedTranslations = $translations;
 
-        if (!$tenantId && file_exists($outputPath)) {
+        if (! $tenantId && file_exists($outputPath)) {
             $existingTranslations = json_decode(file_get_contents($outputPath), true) ?? [];
             $mergedTranslations = array_merge($existingTranslations, $translations);
         }
@@ -426,8 +389,6 @@ class TranslationService
     /**
      * Obtém todas as traduções de um locale
      *
-     * @param string $locale
-     * @param string|null $tenantId
      * @return array Formato: ['chave' => 'tradução']
      */
     public function getAllTranslations(string $locale, ?string $tenantId = null): array
@@ -459,7 +420,6 @@ class TranslationService
     /**
      * Gera arquivos JSON para todos os locales
      *
-     * @param string|null $tenantId
      * @return array Lista de arquivos gerados
      */
     public function generateAllJsonFiles(?string $tenantId = null): array
@@ -485,22 +445,22 @@ class TranslationService
     /**
      * Importa traduções de um arquivo JSON para o banco de dados
      *
-     * @param string $filePath Caminho do arquivo JSON
-     * @param string $locale Locale das traduções
-     * @param string|null $tenantId ID do tenant (null para global)
-     * @param string|null $defaultGroup Grupo padrão para organização (opcional)
+     * @param  string  $filePath  Caminho do arquivo JSON
+     * @param  string  $locale  Locale das traduções
+     * @param  string|null  $tenantId  ID do tenant (null para global)
+     * @param  string|null  $defaultGroup  Grupo padrão para organização (opcional)
      * @return int Número de traduções importadas
      */
     public function importFromJsonFile(string $filePath, string $locale, ?string $tenantId = null, ?string $defaultGroup = null): int
     {
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             throw new \InvalidArgumentException("Arquivo não encontrado: {$filePath}");
         }
 
         $translations = json_decode(file_get_contents($filePath), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \InvalidArgumentException("Erro ao decodificar JSON: " . json_last_error_msg());
+            throw new \InvalidArgumentException('Erro ao decodificar JSON: '.json_last_error_msg());
         }
 
         $count = 0;
@@ -517,9 +477,7 @@ class TranslationService
 
     /**
      * Sincroniza traduções entre arquivo JSON e banco de dados
-     * 
-     * @param string $locale
-     * @param string|null $tenantId
+     *
      * @return array Estatísticas da sincronização
      */
     public function syncJsonWithDatabase(string $locale, ?string $tenantId = null): array
@@ -539,10 +497,11 @@ class TranslationService
             'unchanged' => 0,
         ];
 
-        if (!file_exists($jsonPath)) {
+        if (! file_exists($jsonPath)) {
             // Se não existe, gera o arquivo
             $this->generateJsonFile($locale, $tenantId, $jsonPath);
             $stats['added'] = count($this->getAllTranslations($locale, $tenantId));
+
             return $stats;
         }
 
@@ -554,7 +513,7 @@ class TranslationService
 
         // Atualiza arquivo com novas traduções do banco
         foreach ($dbTranslations as $key => $value) {
-            if (!isset($fileTranslations[$key])) {
+            if (! isset($fileTranslations[$key])) {
                 $fileTranslations[$key] = $value;
                 $stats['added']++;
             } elseif ($fileTranslations[$key] !== $value) {

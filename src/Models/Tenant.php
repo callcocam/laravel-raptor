@@ -9,9 +9,9 @@
 namespace Callcocam\LaravelRaptor\Models;
 
 use Callcocam\LaravelRaptor\Enums\TenantStatus;
+use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Callcocam\LaravelRaptor\Support\Landlord\UsesLandlordConnection;
 
 class Tenant extends AbstractModel
 {
@@ -54,8 +54,6 @@ class Tenant extends AbstractModel
         'status' => TenantStatus::class,
         'settings' => 'array',
     ];
-
-
 
     /**
      * Relacionamento: Tenant tem muitos usuários
@@ -107,7 +105,6 @@ class Tenant extends AbstractModel
         return $query->where('status', TenantStatus::Published);
     }
 
-
     /**
      * Verifica se o tenant está ativo
      */
@@ -118,7 +115,7 @@ class Tenant extends AbstractModel
 
     /**
      * Verifica se o tenant possui domínio customizado
-     * 
+     *
      * @deprecated Use domains() relationship instead
      */
     public function hasCustomDomain(): bool
@@ -132,13 +129,14 @@ class Tenant extends AbstractModel
     public function getUrl(): string
     {
         $primaryDomain = $this->getPrimaryDomain();
-        
+
         if ($primaryDomain) {
-            return 'https://' . $primaryDomain->domain;
+            return 'https://'.$primaryDomain->domain;
         }
 
         // Fallback para compatibilidade
         $mainDomain = config('raptor.main_domain', 'localhost');
-        return 'https://' . ($this->subdomain ?? $this->slug) . '.' . $mainDomain;
+
+        return 'https://'.($this->subdomain ?? $this->slug).'.'.$mainDomain;
     }
 }
