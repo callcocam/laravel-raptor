@@ -165,9 +165,9 @@ return [
         'configure_in_jobs' => env('RAPTOR_DB_CONFIGURE_IN_JOBS', true),
         // Em commands (TenantAwareCommand): configurar conexão ao usar setupTenantContext/forEachTenant
         'configure_in_commands' => env('RAPTOR_DB_CONFIGURE_IN_COMMANDS', true),
-        // Conexão e banco do landlord (models com UsesLandlordConnection)
+        // Nome da conexão landlord (banco principal). Defina a conexão em config/database.php.
+        // A default é a que muda conforme o tenant; landlord fica fixa no banco principal.
         'landlord_connection_name' => env('RAPTOR_LANDLORD_CONNECTION', 'landlord'),
-        'landlord_database' => env('DB_DATABASE', env('RAPTOR_LANDLORD_DATABASE')),
     ],
 
     /*

@@ -9,11 +9,6 @@
 namespace Callcocam\LaravelRaptor\Support\Landlord;
 
 use Callcocam\LaravelRaptor\Contracts\TenantResolverInterface;
-use Callcocam\LaravelRaptor\Enums\TenantStatus;
-use Callcocam\LaravelRaptor\Services\TenantConnectionService;
-use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -30,7 +25,7 @@ class LandlordServiceProvider extends ServiceProvider
     {
         // Detecta e configura tenant/client durante o boot usando TenantResolver
         $request = request();
-        
+
         if ($request && $request->isTenant()) {
             $resolver = app(TenantResolverInterface::class);
             $resolver->resolve($request);
@@ -50,16 +45,15 @@ class LandlordServiceProvider extends ServiceProvider
         // O TenantResolverInterface é registrado no LaravelRaptorServiceProvider
         $this->app->singleton('tenant', function ($app) {
             $resolver = $app->make(TenantResolverInterface::class);
+
             return $resolver->getTenant();
         });
-        
+
         // Registra helper para tenant atual
         $this->app->bind('current.tenant', function () {
             return app('tenant');
         });
     }
-
-
 
     /**
      * Retorna a classe do modelo de tenant configurada
