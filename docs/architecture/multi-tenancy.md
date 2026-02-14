@@ -39,6 +39,8 @@ O `TenantResolver` é responsável por identificar o tenant a partir da requisi�
 ],
 ```
 
+Para **configurar e implementar um TenantResolver personalizado** (interface, cuidados, exemplos com Client/Store e banco dedicado), veja [Custom TenantResolver](custom-tenant-resolver.md).
+
 ### Resolver Padrão
 
 O resolver padrão é simples e verifica apenas a tabela `tenants`:
