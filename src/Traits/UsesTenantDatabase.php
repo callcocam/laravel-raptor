@@ -24,21 +24,12 @@ trait UsesTenantDatabase
     protected static $connectionErrorNotified = false;
 
     /**
-     * Retorna a conexão a ser usada pelo model.
-     * 
-     * Segue a hierarquia: Store > Client > Tenant > Default
-     * Se a conexão 'tenant' existir (configurada pelo TenantMiddleware), usa ela.
-     * Caso contrário, usa a conexão padrão.
+     * Retorna a conexão a ser usada pelo model (banco do tenant).
+     * Com só landlord + default: usa a conexão default, que é alterada para o banco do tenant no contexto.
      */
     public function getConnectionName(): ?string
     {
-        // Se a conexão 'tenant' foi configurada pelo TenantMiddleware, usa ela
-        if (Config::has('database.connections.tenant')) {
-            return 'tenant';
-        }
-
-        // Usa a conexão padrão do model ou do sistema
-        return parent::getConnectionName() ?? config('database.default');
+        return config('raptor.database.tenant_connection_name', 'default');
     }
 
     /**
@@ -51,8 +42,8 @@ trait UsesTenantDatabase
     {
         $connectionName = $this->getConnectionName();
         
-        // Se for a conexão 'tenant', valida antes de retornar
-        if ($connectionName === 'tenant') {
+        $tenantConnectionName = config('raptor.database.tenant_connection_name', 'default');
+        if ($connectionName === $tenantConnectionName) {
             $this->validateAndNotifyConnection($connectionName);
         }
         

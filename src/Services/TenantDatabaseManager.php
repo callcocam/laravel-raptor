@@ -32,15 +32,20 @@ class TenantDatabaseManager
     }
 
     /**
-     * Configura a conexão "tenant" para o banco informado.
+     * Nome da conexão que aponta para o banco do tenant (só landlord + default: 'default').
+     */
+    protected function tenantConnectionName(): string
+    {
+        return config('raptor.database.tenant_connection_name', 'default');
+    }
+
+    /**
+     * Aponta a conexão do tenant (ex.: default) para o banco informado.
+     * Não cria nova conexão; só altera o database da conexão existente.
      */
     public function setupConnection(string $database): void
     {
-        $defaultConfig = config("database.connections.{$this->defaultConnection}");
-        Config::set('database.connections.tenant', array_merge($defaultConfig, [
-            'database' => $database,
-        ]));
-        DB::purge('tenant');
+        $this->switchConnectionTo($this->tenantConnectionName(), $database);
     }
 
     /**
@@ -62,8 +67,7 @@ class TenantDatabaseManager
     }
 
     /**
-     * Aplica a configuração resolvida do tenant: conexão "tenant" + conexão informada em config.
-     * Resolver customizado pode definir connectionName (ex.: client, store); pacote usa default.
+     * Aplica a configuração resolvida do tenant: altera a conexão (default ou config) para o banco do tenant.
      */
     public function applyConfig(ResolvedTenantConfig $config): void
     {
@@ -72,8 +76,7 @@ class TenantDatabaseManager
         }
 
         $database = (string) $config->database;
-        $this->setupConnection($database);
-        $this->switchConnectionTo($config->connectionName ?? $this->defaultConnection, $database);
+        $this->switchConnectionTo($config->connectionName ?? $this->tenantConnectionName(), $database);
     }
 
     /**
@@ -128,7 +131,7 @@ class TenantDatabaseManager
         if (! $this->databaseExists($database)) {
             $this->createDatabase($database);
         }
-        $options = ['--database' => 'tenant', '--realpath' => false];
+        $options = ['--database' => $this->tenantConnectionName(), '--realpath' => false];
         foreach ($migrationPaths as $path) {
             Artisan::call('migrate', array_merge($options, ['--path' => $path]));
         }
@@ -155,10 +158,11 @@ class TenantDatabaseManager
         $this->setupConnection($database);
         $table = $this->tenantsTable();
         $row = $this->tenantModelToRow($tenant);
-        if (DB::connection('tenant')->table($table)->where('id', $tenant->getKey())->exists()) {
-            DB::connection('tenant')->table($table)->where('id', $tenant->getKey())->update($row);
+        $conn = $this->tenantConnectionName();
+        if (DB::connection($conn)->table($table)->where('id', $tenant->getKey())->exists()) {
+            DB::connection($conn)->table($table)->where('id', $tenant->getKey())->update($row);
         } else {
-            DB::connection('tenant')->table($table)->insert($row);
+            DB::connection($conn)->table($table)->insert($row);
         }
     }
 
@@ -172,7 +176,7 @@ class TenantDatabaseManager
         $this->setupConnection($database);
         $table = $this->tenantsTable();
         $row = $this->tenantModelToRow($tenant);
-        DB::connection('tenant')->table($table)->updateOrInsert(
+        DB::connection($this->tenantConnectionName())->table($table)->updateOrInsert(
             ['id' => $tenant->getKey()],
             $row
         );
@@ -189,7 +193,7 @@ class TenantDatabaseManager
         }
         $this->setupConnection($database);
         $table = $this->tenantsTable();
-        DB::connection('tenant')->table($table)->where('id', $tenant->getKey())->delete();
+        DB::connection($this->tenantConnectionName())->table($table)->where('id', $tenant->getKey())->delete();
     }
 
     /**
@@ -237,9 +241,10 @@ class TenantDatabaseManager
         $rolesTable = config('raptor.shinobi.tables.roles');
         $permissionsTable = config('raptor.shinobi.tables.permissions');
 
-        $hasUsers = DB::connection('tenant')->table($usersTable)->exists();
-        $hasRoles = DB::connection('tenant')->table($rolesTable)->exists();
-        $hasPermissions = DB::connection('tenant')->table($permissionsTable)->exists();
+        $conn = $this->tenantConnectionName();
+        $hasUsers = DB::connection($conn)->table($usersTable)->exists();
+        $hasRoles = DB::connection($conn)->table($rolesTable)->exists();
+        $hasPermissions = DB::connection($conn)->table($permissionsTable)->exists();
 
         return ! $hasUsers && ! $hasRoles && ! $hasPermissions;
     }

@@ -24,9 +24,10 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
 
         if ($databaseWasEmpty) {
             $roleModelClass = config('raptor.shinobi.models.role');
-            $defaultConnection = config('database.default');
+            $landlordConnection = config('raptor.database.landlord_connection_name', 'landlord');
+            $tenantConnection = config('raptor.database.tenant_connection_name', 'default');
 
-            $sourceRole = $roleModelClass::on($defaultConnection)
+            $sourceRole = $roleModelClass::on($landlordConnection)
                 ->where(function ($q) {
                     $q->orWhereNotNull('special');
                 })
@@ -42,7 +43,7 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
                 $special = true;
             }
 
-            $roleModel = $roleModelClass::on('tenant')->firstOrCreate(
+            $roleModel = $roleModelClass::on($tenantConnection)->firstOrCreate(
                 ['slug' => $roleSlug],
                 ['name' => $roleName, 'special' => $special ?? true]
             );
@@ -52,14 +53,14 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
                 config('raptor.route_injector.package_directories.tenant', [])
             );
             PermissionGenerator::generate($tenantDirectories)
-                ->forConnection('tenant')
+                ->forConnection($tenantConnection)
                 ->save(false);
 
             if (! empty($email)) {
                 $userModelClass = config('raptor.shinobi.models.user');
                 $name = $tenant->getAttribute('name') ?: $email ?: 'Administrador';
                 $plainPassword = Str::random(16);
-                $user = $userModelClass::on('tenant')->create([
+                $user = $userModelClass::on($tenantConnection)->create([
                     'name' => $name,
                     'email' => $email,
                     'password' => Hash::make($plainPassword),

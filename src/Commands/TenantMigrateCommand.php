@@ -227,7 +227,7 @@ class TenantMigrateCommand extends Command
                 return false;
             }
 
-            $mainOptions = ['--database' => 'tenant', '--realpath' => false];
+            $mainOptions = ['--database' => config('raptor.database.tenant_connection_name', 'default'), '--realpath' => false];
             $first = true;
 
             foreach ($paths as $path) {
@@ -251,7 +251,7 @@ class TenantMigrateCommand extends Command
 
             if ($seed) {
                 $this->info('      🌱 Executando seeders...');
-                Artisan::call('db:seed', ['--database' => 'tenant']);
+                Artisan::call('db:seed', ['--database' => config('raptor.database.tenant_connection_name', 'default')]);
             }
 
             $this->info('      ✅ Migrado com sucesso!');
@@ -266,18 +266,13 @@ class TenantMigrateCommand extends Command
     }
 
     /**
-     * Configura a conexão "tenant" dinamicamente
+     * Aponta a conexão do tenant (ex.: default) para o banco informado.
      */
     protected function setupTenantConnection(string $database): void
     {
-        $defaultConfig = config("database.connections.{$this->defaultConnection}");
-
-        Config::set('database.connections.tenant', array_merge($defaultConfig, [
-            'database' => $database,
-        ]));
-
-        // Limpa cache de conexão
-        DB::purge('tenant');
+        $connectionName = config('raptor.database.tenant_connection_name', 'default');
+        Config::set("database.connections.{$connectionName}.database", $database);
+        DB::purge($connectionName);
     }
 
     /**

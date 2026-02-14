@@ -168,6 +168,8 @@ return [
         // Nome da conexão landlord (banco principal). Defina a conexão em config/database.php.
         // A default é a que muda conforme o tenant; landlord fica fixa no banco principal.
         'landlord_connection_name' => env('RAPTOR_LANDLORD_CONNECTION', 'landlord'),
+        // Nome da conexão que aponta para o banco do tenant (só landlord + default: use 'default').
+        'tenant_connection_name' => env('RAPTOR_TENANT_CONNECTION', 'default'),
     ],
 
     /*

@@ -31,6 +31,7 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TenantController extends LandlordController
 {
@@ -208,7 +209,14 @@ class TenantController extends LandlordController
                 ->label('Domínio')
                 ->required()
                 ->rules(function ($record) {
-                    return ['required', 'string', 'max:255', 'unique:tenants,domain' . ($record ? ",{$record->id}" : '')];
+                    return [
+                        'required',
+                        'string',
+                        'max:255',
+                        Rule::unique('tenants', 'domain')
+                            ->ignore($record?->id)
+                            ->connection(config('raptor.database.landlord_connection_name', 'landlord')),
+                    ];
                 })
                 ->placeholder('exemplo.com')
                 ->columnSpan('4'),

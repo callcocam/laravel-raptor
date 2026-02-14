@@ -31,26 +31,19 @@ class TenantConnectionService
             return false;
         }
 
-        // Verifica se a conexão 'tenant' já existe
-        $connections = Config::get('database.connections', []);
-        
-        if (!isset($connections['tenant'])) {
-            // Cria a conexão 'tenant' baseada na conexão padrão
+        $connectionName = config('raptor.database.tenant_connection_name', 'default');
+
+        if (! Config::has("database.connections.{$connectionName}")) {
             return $this->createTenantConnection($database);
-        } else {
-            // Atualiza o database da conexão existente se mudou
-            $currentDatabase = Config::get('database.connections.tenant.database');
-            if ($currentDatabase !== $database) {
-                Config::set('database.connections.tenant.database', $database);
-                
-                // Reconecta
-                try {
-                    DB::connection('tenant')->reconnect();
-                    return true;
-                } catch (\Exception $e) {
-                    // Se falhar, recria a conexão
-                    return $this->createTenantConnection($database);
-                }
+        }
+
+        $currentDatabase = Config::get("database.connections.{$connectionName}.database");
+        if ($currentDatabase !== $database) {
+            Config::set("database.connections.{$connectionName}.database", $database);
+            try {
+                DB::connection($connectionName)->reconnect();
+            } catch (\Exception $e) {
+                return $this->createTenantConnection($database);
             }
         }
 
@@ -107,52 +100,51 @@ class TenantConnectionService
     }
 
     /**
-     * Cria a conexão 'tenant' baseada na conexão padrão.
-     * 
+     * Aponta a conexão do tenant (ex.: default) para o banco informado.
+     *
      * @param string $database Nome do banco de dados
-     * @return bool True se a conexão foi criada com sucesso, false caso contrário
+     * @return bool True se a conexão foi configurada com sucesso, false caso contrário
      */
     public function createTenantConnection(string $database): bool
     {
-        $defaultConnection = Config::get('database.default');
-        $defaultConfig = Config::get("database.connections.{$defaultConnection}", []);
+        $connectionName = config('raptor.database.tenant_connection_name', 'default');
 
-        // Cria uma cópia da conexão padrão com o nome do banco do tenant
-        $tenantConfig = array_merge($defaultConfig, [
-            'database' => $database,
-        ]);
-        Config::set('database.connections.tenant', $tenantConfig);
+        if (! Config::has("database.connections.{$connectionName}")) {
+            Log::warning("Conexão '{$connectionName}' não existe em database.connections.");
 
-        // Tenta conectar para validar
+            return false;
+        }
+
+        Config::set("database.connections.{$connectionName}.database", $database);
+        DB::purge($connectionName);
+
         try {
-            DB::connection('tenant')->getPdo();
+            DB::connection($connectionName)->getPdo();
+
             return true;
         } catch (\Exception $e) {
-            // Se falhar, remove a conexão do array de conexões
-            $connections = Config::get('database.connections', []);
-            unset($connections['tenant']);
-            Config::set('database.connections', $connections);
-            
-            // Log do erro
             Log::warning("Não foi possível conectar ao banco de dados do tenant: {$database}. Erro: {$e->getMessage()}");
-            
+
             return false;
         }
     }
 
     /**
-     * Valida se a conexão 'tenant' está disponível e funcional.
-     * 
+     * Valida se a conexão do tenant (ex.: default) está disponível e funcional.
+     *
      * @return bool True se a conexão está disponível, false caso contrário
      */
     public function isConnectionAvailable(): bool
     {
-        if (!Config::has('database.connections.tenant')) {
+        $connectionName = config('raptor.database.tenant_connection_name', 'default');
+
+        if (! Config::has("database.connections.{$connectionName}")) {
             return false;
         }
 
         try {
-            DB::connection('tenant')->getPdo();
+            DB::connection($connectionName)->getPdo();
+
             return true;
         } catch (\Exception $e) {
             return false;
