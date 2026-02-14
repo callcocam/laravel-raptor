@@ -9,7 +9,9 @@
 namespace Callcocam\LaravelRaptor\Services;
 
 use Callcocam\LaravelRaptor\Contracts\TenantConfigurationContract;
+use Callcocam\LaravelRaptor\Enums\RoleStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -24,11 +26,10 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
         $plainPassword = null;
 
         $tenantConnection = config('database.default');
-        $roleModelClass = config('raptor.shinobi.models.role');
 
-        // 1. Role: cria super-admin (special) se não existir
-        $roleModel = $this->ensureSuperAdminRoleExists($tenant, $roleModelClass, $tenantConnection);
-        if (! $roleModel) {
+        // 1. Role: cria super-admin (special) no banco do tenant via DB (model pode forçar landlord)
+        $superAdminRoleId = $this->ensureSuperAdminRoleExists($tenant, $tenantConnection);
+        if ($superAdminRoleId === null) {
             return;
         }
 
@@ -40,7 +41,7 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
             [$user, $plainPassword] = $this->ensureUserExists(
                 $tenant,
                 $email,
-                $roleModel,
+                $superAdminRoleId,
                 $tenantConnection
             );
         }
@@ -56,18 +57,39 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
     }
 
     /**
-     * Garante que a role super-admin (special) existe no tenant. Cria se não existir.
+     * Garante que a role super-admin (special) existe no banco do tenant. Cria via DB para não depender do model (que pode forçar conexão landlord). Retorna o id da role ou null.
      */
-    protected function ensureSuperAdminRoleExists(Model $tenant, string $roleModelClass, string $tenantConnection): ?Model
+    protected function ensureSuperAdminRoleExists(Model $tenant, string $tenantConnection): ?string
     {
+        $rolesTable = config('raptor.shinobi.tables.roles', 'roles');
+
         try {
-            return $roleModelClass::on($tenantConnection)->firstOrCreate(
-                ['slug' => 'super-admin'],
-                [
-                    'name' => 'Super Admin',
-                    'special' => true,
-                ]
-            );
+            $row = DB::connection($tenantConnection)
+                ->table($rolesTable)
+                ->where('slug', 'super-admin')
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($row !== null) {
+                return $row->id;
+            }
+
+            $id = (string) Str::ulid();
+            $now = now();
+
+            DB::connection($tenantConnection)->table($rolesTable)->insert([
+                'id' => $id,
+                'name' => 'Super Admin',
+                'slug' => 'super-admin',
+                'description' => 'Acesso total ao sistema',
+                'status' => RoleStatus::Published->value,
+                'special' => true,
+                'tenant_id' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            return $id;
         } catch (\Throwable $e) {
             Log::warning('DefaultTenantConfiguration: falha ao criar role super-admin no tenant.', [
                 'tenant_id' => $tenant->getKey(),
@@ -102,9 +124,10 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
      * Garante que o usuário existe no tenant para o email. Cria só se não existir.
      * Retorna [user, plainPassword] ou [null, null]. plainPassword só preenchido quando criou o user.
      *
+     * @param  string  $superAdminRoleId  ID da role super-admin (criada via DB no tenant).
      * @return array{0: Model|null, 1: string|null}
      */
-    protected function ensureUserExists(Model $tenant, string $email, Model $roleModel, string $tenantConnection): array
+    protected function ensureUserExists(Model $tenant, string $email, string $superAdminRoleId, string $tenantConnection): array
     {
         $userModelClass = config('raptor.shinobi.models.user');
 
@@ -126,8 +149,21 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
                 'tenant_id' => $tenant->getKey(),
             ]);
 
-            if (! $user->roles()->where($roleModel->getKeyName(), $roleModel->getKey())->exists()) {
-                $user->roles()->attach($roleModel->getKey());
+            $roleUserTable = config('raptor.tables.role_user', 'role_user');
+            $exists = DB::connection($tenantConnection)
+                ->table($roleUserTable)
+                ->where('user_id', $user->getKey())
+                ->where('role_id', $superAdminRoleId)
+                ->exists();
+
+            if (! $exists) {
+                $now = now();
+                DB::connection($tenantConnection)->table($roleUserTable)->insert([
+                    'role_id' => $superAdminRoleId,
+                    'user_id' => $user->getKey(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
             }
 
             return [$user, $plainPassword];
