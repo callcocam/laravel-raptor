@@ -67,7 +67,7 @@ class ProcessExport implements ShouldQueue
         }
 
         // Cria o export
-        $export = new DefaultExport($query, $this->columns);
+        $export = new DefaultExport($query, $this->columns, null, null, $this->resourceName);
 
         // Gera o arquivo
         Excel::store($export, $this->filePath, config('raptor.export.disk', 'public'));

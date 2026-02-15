@@ -9,9 +9,10 @@ use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Events\AfterSheet;
 
-class DefaultExport implements FromQuery, WithEvents, WithHeadings, WithMapping
+class DefaultExport implements FromQuery, WithEvents, WithHeadings, WithMapping, WithTitle
 {
     protected Builder $query;
 
@@ -21,12 +22,25 @@ class DefaultExport implements FromQuery, WithEvents, WithHeadings, WithMapping
 
     protected ?string $fileName = null;
 
-    public function __construct(Builder $query, array $columns, ?string $filePath = null, ?string $fileName = null)
-    {
+    protected ?string $sheetName = null;
+
+    public function __construct(
+        Builder $query,
+        array $columns,
+        ?string $filePath = null,
+        ?string $fileName = null,
+        ?string $sheetName = null
+    ) {
         $this->query = $query;
         $this->columns = $columns;
         $this->filePath = $filePath;
         $this->fileName = $fileName;
+        $this->sheetName = $sheetName;
+    }
+
+    public function title(): string
+    {
+        return $this->sheetName ?? 'Sheet1';
     }
 
     public function query()

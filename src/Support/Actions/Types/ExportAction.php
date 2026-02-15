@@ -37,6 +37,8 @@ class ExportAction extends ExecuteAction
 
     protected ?string $fileName = null;
 
+    protected ?string $sheetName = null;
+
     protected ?Closure $callbackFilter = null;
 
     protected ?string $parameterFiltersName = null;
@@ -69,7 +71,7 @@ class ExportAction extends ExecuteAction
                 $user = $request->user();
                 $fileName = $this->getFileName();
                 $filePath = 'exports/'.$fileName;
-                $resourceName = $this->getResourceName();
+                $resourceName = $this->getSheetName();
 
                 $rawFilters = $this->getRawFilters($request);
                 $filters = array_merge($this->defaultFilters, $this->processFilters($rawFilters));
@@ -100,7 +102,7 @@ class ExportAction extends ExecuteAction
 
                 try {
                     $exportClass = $this->getExportClass();
-                    $export = new $exportClass($query, $this->getExportColumns());
+                    $export = new $exportClass($query, $this->getExportColumns(), null, null, $resourceName);
                     Excel::store($export, $filePath, config('raptor.export.disk', 'public'));
 
                     // Obtém o total de linhas exportadas
@@ -375,6 +377,18 @@ class ExportAction extends ExecuteAction
         $this->callbackFilter = $callback;
 
         return $this;
+    }
+
+    public function sheetName(string $sheetName): self
+    {
+        $this->sheetName = $sheetName;
+
+        return $this;
+    }
+
+    public function getSheetName(): string
+    {
+        return $this->sheetName ?? $this->getResourceName();
     }
 
     protected function getResourceName(): string
