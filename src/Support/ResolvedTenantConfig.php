@@ -8,12 +8,13 @@
 
 namespace Callcocam\LaravelRaptor\Support;
 
+use Callcocam\LaravelRaptor\Services\TenantConnectionService;
 use Illuminate\Database\Eloquent\Model;
 
 /**
  * Configuração única ao carregar o tenant (Model Tenant, ou Client/Store com resolver customizado).
  * Centraliza tenant_id, client_id, store_id (se houver) e qual conexão/banco usar.
- * O pacote usa apenas a conexão default; conexões client/store exigem resolver customizado.
+ * Database resolvido pela hierarquia: Store > Client > Tenant (só muda a default se algum estiver preenchido).
  */
 final class ResolvedTenantConfig
 {
@@ -28,17 +29,22 @@ final class ResolvedTenantConfig
         $this->connectionName ??= config('database.default');
     }
 
-    /** Cria a config a partir do tenant e opcionalmente domainData (domainable_type, domainable_id). */
+    /**
+     * Cria a config a partir do tenant e opcionalmente domainData.
+     * Database segue a hierarquia: Store (se domainable) > Client (se domainable) > Tenant.
+     * Se nenhum tiver database preenchido, database fica null e a conexão default não é alterada.
+     */
     public static function from(Model $tenant, ?object $domainData = null): self
     {
-        $database = $tenant->getAttribute('database');
         $domainableType = $domainData?->domainable_type ?? null;
         $domainableId = $domainData?->domainable_id ?? null;
+
+        $database = app(TenantConnectionService::class)->resolveDatabase($tenant, $domainData);
 
         return new self(
             tenant: $tenant,
             tenantId: (string) $tenant->getKey(),
-            database: is_string($database) ? $database : null,
+            database: $database !== null && $database !== '' ? $database : null,
             connectionName: config('database.default'),
             domainableType: $domainableType,
             domainableId: $domainableId,
@@ -48,6 +54,14 @@ final class ResolvedTenantConfig
     public function hasDedicatedDatabase(): bool
     {
         return ! empty($this->database);
+    }
+
+    /** Banco apenas do tenant (para a conexão landlord). Null se tenant não tiver database. */
+    public function landlordDatabase(): ?string
+    {
+        $db = $this->tenant->getAttribute('database');
+
+        return is_string($db) && $db !== '' ? $db : null;
     }
 
     /** ID do client (quando domainableType for Client). Resolver customizado preenche. */

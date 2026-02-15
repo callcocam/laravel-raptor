@@ -120,6 +120,7 @@ return [
     */
     'tables' => [
         'tenants' => 'tenants',
+        'tenant_domains' => 'tenant_domains',
         'translation_groups' => 'translation_groups',
         'translation_overrides' => 'translation_overrides',
     ],
@@ -331,8 +332,8 @@ return [
         // Models customizados (opcional, usa padrão se não especificado)
         'models' => [
             'tenant' => env('RAPTOR_MIGRATIONS_TENANT_MODEL', 'Callcocam\\LaravelRaptor\\Models\\Tenant'),
-            'client' => env('RAPTOR_MIGRATIONS_CLIENT_MODEL', 'App\\Models\\Client'),
-            'store' => env('RAPTOR_MIGRATIONS_STORE_MODEL', 'App\\Models\\Store'),
+            'client' => env('RAPTOR_MIGRATIONS_CLIENT_MODEL', null),
+            'store' => env('RAPTOR_MIGRATIONS_STORE_MODEL', null),
         ],
 
         /*

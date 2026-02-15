@@ -58,16 +58,29 @@ class TenantDatabaseManager
     }
 
     /**
-     * Aplica a configuração resolvida do tenant: altera a conexão (default ou config) para o banco do tenant.
+     * Aplica a configuração resolvida do tenant:
+     * - Landlord: assume apenas o banco do tenant (tenant->database) ou fica no default do env.
+     * - Default: inicialmente igual ao landlord; se houver Client/Store no domainable com banco, a default assume o banco do Client ou Store.
      */
     public function applyConfig(ResolvedTenantConfig $config): void
     {
-        if (! $config->hasDedicatedDatabase()) {
-            return;
+        $landlordConnection = config('raptor.database.landlord_connection_name', 'landlord');
+
+        // 1. Landlord = banco do tenant (quando preenchido)
+        $tenantDatabase = $config->landlordDatabase();
+        if ($tenantDatabase !== null) {
+            $this->switchConnectionTo($landlordConnection, $tenantDatabase);
         }
 
-        $database = (string) $config->database;
-        $this->switchConnectionTo($config->connectionName ?? $this->defaultConnection, $database);
+        // 2. Default = mesmo que landlord; se houver Client/Store (domainable) com banco, default = banco do Client/Store
+        if ($config->hasDedicatedDatabase()) {
+            $this->switchConnectionTo($this->defaultConnection, (string) $config->database);
+        } else {
+            $landlordDb = config("database.connections.{$landlordConnection}.database");
+            if (is_string($landlordDb) && $landlordDb !== '') {
+                $this->switchConnectionTo($this->defaultConnection, $landlordDb);
+            }
+        }
     }
 
     /**

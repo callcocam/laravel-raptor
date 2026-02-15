@@ -13,13 +13,15 @@ use Callcocam\LaravelRaptor\Enums\TenantStatus;
 use Callcocam\LaravelRaptor\Support\Landlord\Facades\Landlord;
 use Callcocam\LaravelRaptor\Support\ResolvedTenantConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
- * Service padrão para resolver tenant baseado no domínio
+ * Service padrão para resolver tenant baseado no domínio.
  *
- * Esta implementação é simples e focada apenas na tabela de tenants.
- * Para lógicas mais complexas (Client, Store, banco separado, etc),
- * crie sua própria classe implementando TenantResolverInterface.
+ * Fluxo: 1) Na central (landlord), busca o tenant principal por tenants.domain.
+ * 2) Aplica a config do tenant (landlord passa para o banco do tenant se preenchido).
+ * 3) Na conexão atual (banco do tenant), busca em tenant_domains o complemento (domainable: Client A, Client B, etc.).
+ * 4) storeTenantContext(tenant, domainData) aplica banco Store/Client se for o caso.
  *
  * @example Configurar resolver customizado em config/raptor.php:
  * ```php
@@ -39,29 +41,42 @@ class TenantResolver implements TenantResolverInterface
      */
     public function resolve(Request $request): mixed
     {
-        // Cache: se já resolveu nesta requisição, retorna
         if ($this->resolved) {
             return $this->tenant;
         }
 
-        $this->tenant = $this->detectTenant($request);
+        $tenant = $this->detectTenant($request);
         $this->resolved = true;
-        if ($this->tenant) {
-            $this->storeTenantContext($this->tenant);
+
+        if ($tenant === null) {
+            $this->tenant = null;
+
+            return null;
         }
+
+        $this->tenant = $tenant;
+
+        // Troca landlord para o banco do tenant (se preenchido) para poder ler tenant_domains
+        $configOnly = ResolvedTenantConfig::from($tenant, null);
+        app(TenantDatabaseManager::class)->applyConfig($configOnly);
+
+        // tenant_domains está no banco do tenant; busca o complemento (domainable)
+        $domain = str($request->getHost())->replace('www.', '')->toString();
+        $domainData = $this->findByTenantDomains($domain);
+
+        $this->storeTenantContext($tenant, $this->prepareDomainData($domainData));
 
         return $this->tenant;
     }
 
     /**
-     * Detecta tenant baseado no domínio
+     * Busca o tenant principal na central (landlord) pelo domínio (coluna domain da tabela tenants).
      */
     protected function detectTenant(Request $request): mixed
     {
         $host = $request->getHost();
         $domain = str($host)->replace('www.', '')->toString();
 
-        // Verifica se é contexto landlord (não precisa tenant)
         $landlordSubdomain = config('raptor.landlord.subdomain', 'landlord');
         if (str_contains($host, "{$landlordSubdomain}.")) {
             config(['app.context' => 'landlord']);
@@ -72,12 +87,50 @@ class TenantResolver implements TenantResolverInterface
         $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
         $domainColumn = config('raptor.tenant.subdomain_column', 'domain');
 
-        // Busca tenant pelo domínio
-        $tenant = $tenantModel::where($domainColumn, $domain)
+        return $tenantModel::on($this->landlordConnection())
+            ->where($domainColumn, $domain)
             ->where('status', TenantStatus::Published->value)
             ->first();
+    }
 
-        return $tenant;
+    /**
+     * Busca em tenant_domains na conexão atual (já apontando para o banco do tenant).
+     * Retorna domainable_type e domainable_id para complemento (Tenant A + Client A, Client B, etc.).
+     */
+    protected function findByTenantDomains(string $domain): ?object
+    {
+        $conn = $this->landlordConnection();
+        $tenantDomainsTable = config('raptor.tables.tenant_domains', 'tenant_domains');
+
+        try {
+            return DB::connection($conn)
+                ->table($tenantDomainsTable)
+                ->where('domain', $domain)
+                ->select('domainable_type', 'domainable_id', 'is_primary')
+                ->first();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Objeto domainData no formato esperado por ResolvedTenantConfig (domainable_type, domainable_id)
+     */
+    protected function prepareDomainData(?object $domainData): ?object
+    {
+        if (! $domainData || empty($domainData->domainable_type) || empty($domainData->domainable_id)) {
+            return null;
+        }
+
+        return (object) [
+            'domainable_type' => $domainData->domainable_type,
+            'domainable_id' => (string) $domainData->domainable_id,
+        ];
+    }
+
+    protected function landlordConnection(): string
+    {
+        return config('raptor.database.landlord_connection_name', 'landlord');
     }
 
     /**
@@ -100,7 +153,7 @@ class TenantResolver implements TenantResolverInterface
 
     /**
      * {@inheritdoc}
-     * Usa ResolvedTenantConfig para aplicar banco (conexão default; resolver customizado pode usar client/store).
+     * Aplica ResolvedTenantConfig (landlord passa a apontar para o banco do tenant/store/client quando preenchido).
      */
     public function configureTenantDatabase(mixed $tenant, ?object $domainData = null): void
     {
