@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Services;
 
 use Callcocam\LaravelRaptor\Contracts\TenantConfigurationContract;
 use Callcocam\LaravelRaptor\Enums\RoleStatus;
+use Callcocam\LaravelRaptor\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -121,52 +122,55 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
     }
 
     /**
-     * Garante que o usuário existe no tenant para o email. Cria só se não existir.
+     * Garante que o usuário existe no tenant para o email. Cria via DB (model pode forçar landlord).
      * Retorna [user, plainPassword] ou [null, null]. plainPassword só preenchido quando criou o user.
+     * user é um objeto com getAttribute() para compatibilidade com o Mailable/view.
      *
      * @param  string  $superAdminRoleId  ID da role super-admin (criada via DB no tenant).
-     * @return array{0: Model|null, 1: string|null}
+     * @return array{0: object|null, 1: string|null}
      */
     protected function ensureUserExists(Model $tenant, string $email, string $superAdminRoleId, string $tenantConnection): array
     {
-        $userModelClass = config('raptor.shinobi.models.user');
+        $usersTable = config('raptor.tables.users', 'users');
+        $roleUserTable = config('raptor.tables.role_user', 'role_user');
 
         try {
-            $existing = $userModelClass::on($tenantConnection)
+            $existing = DB::connection($tenantConnection)
+                ->table($usersTable)
                 ->where('email', $email)
+                ->whereNull('deleted_at')
                 ->first();
 
-            if ($existing) {
-                return [$existing, null];
+            if ($existing !== null) {
+                return [$this->userLike($existing), null];
             }
 
+            $userId = (string) Str::ulid();
             $name = $tenant->getAttribute('name') ?: $email ?: 'Administrador';
             $plainPassword = Str::random(16);
-            $user = $userModelClass::on($tenantConnection)->create([
+            $now = now();
+
+            DB::connection($tenantConnection)->table($usersTable)->insert([
+                'id' => $userId,
                 'name' => $name,
                 'email' => $email,
+                'slug' => Str::slug($name),
+                'status' => UserStatus::Published->value,
                 'password' => Hash::make($plainPassword),
                 'tenant_id' => $tenant->getKey(),
+                'remember_token' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
 
-            $roleUserTable = config('raptor.tables.role_user', 'role_user');
-            $exists = DB::connection($tenantConnection)
-                ->table($roleUserTable)
-                ->where('user_id', $user->getKey())
-                ->where('role_id', $superAdminRoleId)
-                ->exists();
+            DB::connection($tenantConnection)->table($roleUserTable)->insert([
+                'role_id' => $superAdminRoleId,
+                'user_id' => $userId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
 
-            if (! $exists) {
-                $now = now();
-                DB::connection($tenantConnection)->table($roleUserTable)->insert([
-                    'role_id' => $superAdminRoleId,
-                    'user_id' => $user->getKey(),
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
-            }
-
-            return [$user, $plainPassword];
+            return [$this->userLike((object) ['id' => $userId, 'name' => $name, 'email' => $email]), $plainPassword];
         } catch (\Throwable $e) {
             Log::warning('DefaultTenantConfiguration: falha ao garantir usuário.', [
                 'email' => $email,
@@ -176,5 +180,22 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
 
             return [null, null];
         }
+    }
+
+    /**
+     * Objeto compatível com getAttribute() para o Mailable/view (evita depender do Model User).
+     *
+     * @param  object  $row  stdClass ou objeto com id, name, email
+     */
+    protected function userLike(object $row): object
+    {
+        return new class($row) {
+            public function __construct(private readonly object $row) {}
+
+            public function getAttribute(string $key): mixed
+            {
+                return $this->row->{$key} ?? null;
+            }
+        };
     }
 }
