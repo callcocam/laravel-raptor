@@ -10,19 +10,20 @@ namespace Callcocam\LaravelRaptor\Support\Concerns\Interacts;
 
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Concerns\ManagesCollection;
+use Closure;
 
 trait WithActions
 {
     use ManagesCollection;
 
-    public function actions(array $actions): static
+    public function actions(Closure|array $actions): static
     {
-        return $this->addManyToCollection($actions, 'actions');
+        return $this->addManyToCollection($this->evaluate($actions), 'actions');
     }
 
-    public function action(AbstractColumn $action): static
+    public function action(Closure|AbstractColumn $action): static
     {
-        return $this->addToCollection($action, 'actions');
+        return $this->addToCollection($this->evaluate($action), 'actions');
     }
 
     /**
