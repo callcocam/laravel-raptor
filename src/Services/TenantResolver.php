@@ -48,29 +48,61 @@ class TenantResolver implements TenantResolverInterface
         $tenant = $this->detectTenant($request);
         $this->resolved = true;
 
+        $this->tenant = $tenant;
         if ($tenant === null) {
-            $this->tenant = null;
-
-            return null;
+            $domain = str($request->getHost())->replace('www.', '')->toString();
+            $tenantId = $this->findTenantIdByDomainInCentral($domain);
+            if ($tenantId !== null) {
+                $tenantModel = config('raptor.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class);
+                $this->tenant = $tenantModel::on($this->landlordConnection())->find($tenantId);
+            }
+            if ($this->tenant === null) {
+                return null;
+            }
         }
 
-        $this->tenant = $tenant;
+        $tenant = $this->tenant;
 
         // Troca landlord para o banco do tenant (se preenchido) para poder ler tenant_domains
         $configOnly = ResolvedTenantConfig::from($tenant, null);
         app(TenantDatabaseManager::class)->applyConfig($configOnly);
 
-        // tenant_domains está no banco do tenant; busca o complemento (domainable)
+        // tenant_domains no banco do tenant: complemento (domainable)
         $domain = str($request->getHost())->replace('www.', '')->toString();
         $domainData = $this->findByTenantDomains($domain);
 
-        $this->storeTenantContext($tenant, $this->prepareDomainData($domainData));
+        $this->storeTenantContext($tenant, $domainData);
 
         return $this->tenant;
     }
 
     /**
-     * Busca o tenant principal na central (landlord) pelo domínio (coluna domain da tabela tenants).
+     * Na central (landlord), busca tenant_id em tenant_domains pelo domínio.
+     */
+    protected function findTenantIdByDomainInCentral(string $domain): ?string
+    {
+        $conn = $this->landlordConnection();
+        $tenantsTable = config('raptor.tables.tenants', 'tenants');
+        $tenantDomainsTable = config('raptor.tables.tenant_domains', 'tenant_domains');
+
+        try {
+            $row = DB::connection($conn)
+                ->table($tenantDomainsTable)
+                ->join($tenantsTable, "{$tenantsTable}.id", '=', "{$tenantDomainsTable}.tenant_id")
+                ->where("{$tenantDomainsTable}.domain", $domain)
+                ->where("{$tenantsTable}.status", TenantStatus::Published->value)
+                ->whereNull("{$tenantsTable}.deleted_at")
+                ->select("{$tenantsTable}.id as tenant_id")
+                ->first();
+
+            return $row?->tenant_id;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Passo 1: tenant na central por tenants.domain (principal).
      */
     protected function detectTenant(Request $request): mixed
     {
