@@ -43,7 +43,7 @@ class DateColumn extends Column
             $date = Carbon::parse($value);
 
             if ($this->relative) {
-                return $date->diffForHumans();
+                return $this->getFormattedValue($date->diffForHumans(), $row);
             }
 
             if ($this->format) {

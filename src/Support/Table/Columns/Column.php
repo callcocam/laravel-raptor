@@ -15,6 +15,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Concerns\HasEditable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearchable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSortable;
+use Closure;
 
 abstract class Column extends AbstractColumn
 {
@@ -24,6 +25,8 @@ abstract class Column extends AbstractColumn
     use HasGridLayout;
     use HasSearchable;
     use HasSortable;
+
+    protected ?Closure $formatter = null;
 
     protected ?string $component = 'table-column-text';
 
@@ -36,6 +39,32 @@ abstract class Column extends AbstractColumn
     }
 
     abstract public function render(mixed $value, $row = null): mixed;
+
+
+    public function formatter(Closure $formatter): self
+    {
+        $this->formatter = $formatter;
+
+        return $this;
+    }
+
+    public function getFormatter(): ?Closure
+    {
+        return $this->formatter;
+    }
+
+    public function getFormattedValue(mixed $value, $row = null): mixed
+    {
+        if ($this->getFormatter()) {
+            return $this->evaluate($this->getFormatter(), [
+                'model' => $row,
+                'value' => $value,
+                'row' => $row,
+            ]);
+        }
+
+        return $value;
+    }
 
     public function toArray(): array
     {

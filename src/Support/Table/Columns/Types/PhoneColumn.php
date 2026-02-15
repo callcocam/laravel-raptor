@@ -30,20 +30,20 @@ class PhoneColumn extends Column
         }
 
         if (! $this->maskEnabled) {
-            return $value;
+            return $this->getFormattedValue($value, $row);
         }
 
-        $value = preg_replace('/[^0-9]/', '', $value);
+        $formattedValue = $this->getFormattedValue(preg_replace('/[^0-9]/', '', $value), $row);
 
-        if (strlen($value) === 11) {
-            return preg_replace('/^(\d{2})(\d{5})(\d{4})$/', '($1) $2-$3', $value);
+        if (strlen($formattedValue) === 11) {
+            return preg_replace('/^(\d{2})(\d{5})(\d{4})$/', '($1) $2-$3', $formattedValue);
         }
 
-        if (strlen($value) === 10) {
-            return preg_replace('/^(\d{2})(\d{4})(\d{4})$/', '($1) $2-$3', $value);
+        if (strlen($formattedValue) === 10) {
+            return preg_replace('/^(\d{2})(\d{4})(\d{4})$/', '($1) $2-$3', $formattedValue);
         }
 
-        return $value;
+        return $formattedValue;
     }
 
     public function toArray(): array

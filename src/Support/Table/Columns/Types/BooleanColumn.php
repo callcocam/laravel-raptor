@@ -70,7 +70,7 @@ class BooleanColumn extends Column
 
     public function render(mixed $value, $row = null): mixed
     {
-        return (bool) $value;
+        return $this->getFormattedValue((bool) $value, $row);
     }
 
     public function toArray(): array

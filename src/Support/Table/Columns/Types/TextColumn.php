@@ -20,10 +20,10 @@ class TextColumn extends Column
     public function render(mixed $value, $row = null): mixed
     {
         if (is_string($value) && $this->hasLimit()) {
-            return $this->applyLimit($value);
+            $value = $this->applyLimit($value);
         }
 
-        return $value;
+        return $this->getFormattedValue($value, $row);
     }
 
     public function toArray(): array

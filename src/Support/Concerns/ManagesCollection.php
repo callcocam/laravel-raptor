@@ -73,9 +73,14 @@ trait ManagesCollection
     /**
      * Retorna todos os itens da coleção
      */
-    protected function getCollection(string $key): array
+    protected function getCollection(string $key, $model = null): array
     {
-        return $this->collections[$key] ?? [];
+        $items = $this->collections[$key] ?? [];
+
+        return array_map(fn ($item) => $this->evaluate($item, [
+            'model' => $model,
+            'request' => $this->getRequest(),
+        ]), $items);
     }
 
     /**

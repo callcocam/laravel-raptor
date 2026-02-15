@@ -41,7 +41,7 @@ class BadgeColumn extends Column
 
     public function render(mixed $value, $row = null): mixed
     {
-        return $value;
+        return $this->getFormattedValue($value, $row);
     }
 
     public function toArray(): array

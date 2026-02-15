@@ -55,7 +55,7 @@ class ImageColumn extends Column
 
     public function render(mixed $value, $row = null): mixed
     {
-        return $value ?: $this->defaultImage;
+        return $this->getFormattedValue($value ?: $this->defaultImage, $row);
     }
 
     public function toArray(): array

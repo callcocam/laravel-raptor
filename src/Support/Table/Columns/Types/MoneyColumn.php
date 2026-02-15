@@ -47,7 +47,9 @@ class MoneyColumn extends Column
             return null;
         }
 
-        $value = floatval($value);
+        $formattedValue = $this->getFormattedValue($value, $row);
+
+        $value = floatval($formattedValue);
 
         $formatter = new \NumberFormatter($this->locale, \NumberFormatter::CURRENCY);
 

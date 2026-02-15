@@ -46,8 +46,8 @@ trait WithActions
         return $this->getCollectionRendered('actions', $model, $request);
     }
 
-    public function getActions(): array
+    public function getActions($model = null): array
     {
-        return $this->getCollection('actions');
+        return $this->getCollection('actions', $model);
     }
 }

@@ -35,7 +35,7 @@ trait WithTable
 
         $this->dataSource->initialize();
 
-        $this->data = $this->dataSource->getData();
+        $this->data = $this->dataSource->getData(); 
         // Aplica formatação se configurado
         if ($this->config['auto_detect_casts']) {
             $this->data->getCollection()->transform(function ($item) {
@@ -135,8 +135,8 @@ trait WithTable
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
             if ($value = data_get($item, $columnName)) {
-                $formattedColumn = $column->render($value, $item);
-                $item[$columnName.'_formatted'] = $formattedColumn;
+                $formattedColumn = $column->render($value, $item); 
+                $item[$columnName] = $formattedColumn;
             }
         }
         $item->actions = $this->evaluateActionsAuthorization($item);
@@ -157,7 +157,7 @@ trait WithTable
     {
         $actions = [];
 
-        foreach ($this->getActions() as $action) {
+        foreach ($this->getActions($model) as $action) {
             // A action é responsável por sua própria renderização completa
             $rendered = $action->render($model, $this->getRequest());
             // Filtra apenas actions visíveis e válidas
