@@ -57,6 +57,10 @@ trait ManagesCollection
      */
     protected function addToCollection(mixed $item, string $key): static
     {
+        if ($item === null) {
+            return $this;
+        }
+
         if (! isset($this->collections[$key])) {
             $this->collections[$key] = [];
         }

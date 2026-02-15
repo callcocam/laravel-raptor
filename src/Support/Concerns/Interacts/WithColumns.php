@@ -38,6 +38,10 @@ trait WithColumns
         $result = [];
 
         foreach ($this->getCollection('columns') as $column) {
+            if ($column === null || ! is_object($column)) {
+                continue;
+            }
+
             // Ignora colunas invisíveis
             if (method_exists($column, 'isVisible') && ! $column->isVisible()) {
                 continue;
