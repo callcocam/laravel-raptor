@@ -3,7 +3,7 @@
  *
  * Modern replacement for FormColumnSelect with improved accessibility
  -->
-<template>
+ <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
@@ -64,6 +64,7 @@ interface FormColumn {
   tooltip?: string
   helpText?: string
   hint?: string
+  default?: string | number | null
   autoComplete?: {
     enabled: boolean
     fields: Array<{ source: string, target: string }>
@@ -133,7 +134,7 @@ const getOptionLabel = (option: SelectOption | string): string => {
 }
 
 const internalValue = computed({
-  get: () => props.modelValue ? String(props.modelValue) : undefined,
+  get: () => props.modelValue ? String(props.modelValue) : props.column?.default ?? undefined,
   set: (value) => {
     emit('update:modelValue', value || null)
   },
