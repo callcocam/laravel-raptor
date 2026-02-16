@@ -176,7 +176,7 @@ class ModelSource extends AbstractSource
             return $this->model;
         }
 
-        return is_string($this->model) ? new $this->model : new $this->model;
+        return is_string($this->model) ? app($this->model) : $this->model;
     }
 
     /**

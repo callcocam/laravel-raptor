@@ -23,6 +23,8 @@ class TableBuilder
 
     protected $dataSource;
 
+    protected $data = null;
+
     protected $model;
 
     protected bool $dependenciesInjected = false;

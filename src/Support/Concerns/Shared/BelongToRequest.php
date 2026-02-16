@@ -52,9 +52,9 @@ trait BelongToRequest
      *
      * @return mixed
      */
-    public function getRequestValue(string $key)
+    public function getRequestValue(string $key, mixed $default = null): mixed
     {
-        return $this->getRequest()->input($key);
+        return $this->getRequest()->input($key, $default);
     }
 
     /**

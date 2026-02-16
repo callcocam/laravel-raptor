@@ -27,17 +27,17 @@ trait WithTable
 
     public function toArray(): array
     {
-        // Inicializa o data source
+        $dataSource = $this->getDataSource();
 
-        if (method_exists($this->dataSource, 'detectModelConfiguration')) {
-            $this->dataSource->detectModelConfiguration();
+        if (method_exists($dataSource, 'detectModelConfiguration')) {
+            $dataSource->detectModelConfiguration();
         }
 
-        $this->dataSource->initialize();
+        $dataSource->initialize();
 
-        $this->data = $this->dataSource->getData(); 
-        // Aplica formatação se configurado
-        if ($this->config['auto_detect_casts']) {
+        $this->data = $dataSource->getData();
+
+        if ($this->config['auto_detect_casts'] && $this->data && method_exists($this->data, 'getCollection')) {
             $this->data->getCollection()->transform(function ($item) {
                 return $this->applyItemFormatting($item);
             });
