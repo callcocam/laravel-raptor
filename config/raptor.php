@@ -130,21 +130,14 @@ return [
     | Navigation Configuration
     |--------------------------------------------------------------------------
     |
-    | Configurações para o sistema de navegação automática
+    | Diretórios de controllers vêm de raptor.route_injector (contexts/directories).
+    | Aqui só o que é específico da navegação: contextos (para cache) e opções.
     |
     */
     'navigation' => [
         'contexts' => [
-            'tenant' => [
-                'controllers_path' => app_path('Http/Controllers/Tenant'),
-                'controllers_namespace' => 'App\\Http\\Controllers\\Tenant',
-                'default_group' => 'Aplicação',
-            ],
-            'landlord' => [
-                'controllers_path' => base_path('packages/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
-                'controllers_namespace' => 'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord',
-                'default_group' => 'Administração',
-            ],
+            'tenant' => ['default_group' => 'Aplicação'],
+            'landlord' => ['default_group' => 'Administração'],
         ],
         'default_permission' => true,
         'cache_ttl' => 3600,
@@ -206,56 +199,29 @@ return [
     | Route Injector Configuration
     |--------------------------------------------------------------------------
     |
-    | Configurações para o TenantRouteInjector
-    | Define quais diretórios de controllers serão escaneados para
-    | registrar rotas automaticamente, SEPARADOS POR CONTEXTO.
+    | Configurações para o TenantRouteInjector e NavigationService.
+    | Diretórios separados por contexto (tenant / landlord); cada um é
+    | namespace => path. O pacote mescla seus controllers em tempo de boot.
+    | A chave 'directories' é preenchida pelo ServiceProvider (merge de todos).
     |
     */
     'route_injector' => [
-        /*
-        |----------------------------------------------------------------------
-        | Habilitar cache de rotas descobertas
-        |----------------------------------------------------------------------
-        | Se true, as rotas descobertas são cacheadas para melhor performance.
-        | Em desenvolvimento, pode ser false para refletir mudanças imediatamente.
-        */
         'cache_enabled' => env('RAPTOR_ROUTE_CACHE', false),
-        'cache_ttl' => 3600, // segundos
+        'cache_ttl' => 3600,
 
         /*
         |----------------------------------------------------------------------
-        | Diretórios por Contexto
+        | Diretórios por contexto (namespace => path)
         |----------------------------------------------------------------------
-        | Cada contexto (tenant, landlord) tem seus próprios diretórios.
-        | Controllers da aplicação são escaneados dinamicamente.
-        | Controllers do pacote são fixos.
+        | Usado por TenantRouteInjector e DefaultTenantConfiguration.
+        | NavigationService usa 'directories' (merge feito no ServiceProvider).
         */
         'contexts' => [
             'tenant' => [
-                // Controllers da aplicação (dinâmico - escaneia automaticamente)
                 'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-                // Adicione mais diretórios de tenant conforme necessário:
-                // 'Seu\\Namespace\\Tenant\\Controllers' => base_path('caminho/para/controllers'),
             ],
             'landlord' => [
-                // Controllers da aplicação (dinâmico - escaneia automaticamente)
                 'App\\Http\\Controllers\\Landlord' => app_path('Http/Controllers/Landlord'),
-                // Adicione mais diretórios de landlord conforme necessário:
-                // 'Seu\\Namespace\\Landlord\\Controllers' => base_path('caminho/para/controllers'),
-            ],
-        ],
-
-        /*
-        |----------------------------------------------------------------------
-        | Diretórios do Pacote (internos - não modificar)
-        |----------------------------------------------------------------------
-        */
-        'package_directories' => [
-            'tenant' => [
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Tenant'),
-            ],
-            'landlord' => [
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => base_path('vendor/callcocam/laravel-raptor/src/Http/Controllers/Landlord'),
             ],
         ],
     ],

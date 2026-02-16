@@ -70,39 +70,23 @@ class TenantRouteInjector
 
     /**
      * Carrega os diretórios baseado nos parâmetros passados ou na configuração.
+     * Usa raptor.route_injector.contexts.{context} (separado por contexto, sem filtrar por string).
      */
     protected function loadDirectories(array $directories = [], ?string $context = null): void
     {
-        // Se diretórios foram passados explicitamente, usa APENAS eles
         if (! empty($directories)) {
             $this->controllerDirectories = $directories;
 
             return;
         }
 
-        // Se um contexto foi especificado, carrega da nova configuração
         if ($context) {
-            $this->controllerDirectories = $this->getDirectoriesForContext($context);
+            $this->controllerDirectories = config("raptor.route_injector.contexts.{$context}", []);
 
             return;
         }
 
-        // Fallback para configuração legada (retrocompatibilidade)
         $this->controllerDirectories = config('raptor.route_injector.directories', []);
-    }
-
-    /**
-     * Obtém os diretórios para um contexto específico da configuração.
-     */
-    protected function getDirectoriesForContext(string $context): array
-    {
-        // Diretórios da aplicação (customizáveis pelo usuário)
-        $appDirectories = config("raptor.route_injector.contexts.{$context}", []);
-
-        // Diretórios do pacote (internos)
-        $packageDirectories = config("raptor.route_injector.package_directories.{$context}", []);
-
-        return array_merge($appDirectories, $packageDirectories);
     }
 
     /**

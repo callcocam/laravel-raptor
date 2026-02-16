@@ -107,10 +107,7 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
     protected function ensurePermissionsExist(string $tenantConnection): void
     {
         try {
-            $tenantDirectories = array_merge(
-                config('raptor.route_injector.contexts.tenant', []),
-                config('raptor.route_injector.package_directories.tenant', [])
-            );
+            $tenantDirectories = config('raptor.route_injector.contexts.tenant', []);
             PermissionGenerator::generate($tenantDirectories)
                 ->forConnection($tenantConnection)
                 ->save(false);
@@ -189,7 +186,8 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
      */
     protected function userLike(object $row): object
     {
-        return new class($row) {
+        return new class($row)
+        {
             public function __construct(private readonly object $row) {}
 
             public function getAttribute(string $key): mixed

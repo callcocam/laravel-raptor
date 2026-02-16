@@ -150,6 +150,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'laravel-raptor');
 
+        $this->mergeRouteInjectorDirectories();
+
         // Registra os middlewares
         $this->registerMiddleware();
 
@@ -220,6 +222,26 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
         // Adiciona o middleware ao grupo 'web' para compartilhar dados automaticamente
         $router->pushMiddlewareToGroup('web', ShareRaptorData::class);
+    }
+
+    /**
+     * Mescla os diretórios do pacote em cada contexto e monta 'directories' (todos).
+     * Mantém separação por contexto; NavigationService usa 'directories'.
+     */
+    protected function mergeRouteInjectorDirectories(): void
+    {
+        $packageBase = realpath(__DIR__.'/..') ?: __DIR__.'/..';
+        $packageTenant = ['Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => $packageBase.'/Http/Controllers/Tenant'];
+        $packageLandlord = ['Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => $packageBase.'/Http/Controllers/Landlord'];
+
+        $tenant = array_merge(config('raptor.route_injector.contexts.tenant', []), $packageTenant);
+        $landlord = array_merge(config('raptor.route_injector.contexts.landlord', []), $packageLandlord);
+
+        config([
+            'raptor.route_injector.contexts.tenant' => $tenant,
+            'raptor.route_injector.contexts.landlord' => $landlord,
+            'raptor.route_injector.directories' => array_merge($tenant, $landlord),
+        ]);
     }
 
     /**

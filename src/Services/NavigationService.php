@@ -35,23 +35,12 @@ class NavigationService
     }
 
     /**
-     * Carrega diretórios de controllers a partir da config
+     * Carrega diretórios de controllers a partir da config (namespace => path).
+     * Mesma chave usada pelo TenantRouteInjector: raptor.route_injector.directories.
      */
     protected function loadControllerDirectories(): void
     {
-        // Usa a config completa do route_injector.directories
-        $allDirectories = config('raptor.route_injector.directories', []);
-
-        // Se não houver config, usa os defaults
-        if (empty($allDirectories)) {
-            $allDirectories = [
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => __DIR__.'/../Http/Controllers/Landlord',
-                'App\\Http\\Controllers\\Tenant' => app_path('Http/Controllers/Tenant'),
-                'Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => __DIR__.'/../Http/Controllers/Tenant',
-            ];
-        }
-
-        $this->controllerDirectories = $allDirectories;
+        $this->controllerDirectories = config('raptor.route_injector.directories', []);
     }
 
     /**
