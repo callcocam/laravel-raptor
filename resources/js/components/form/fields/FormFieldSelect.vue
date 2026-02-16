@@ -3,7 +3,7 @@
  *
  * Modern replacement for FormColumnSelect with improved accessibility
  -->
- <template>
+<template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
@@ -11,15 +11,11 @@
     </FieldLabel>
 
     <Select v-model="internalValue" :required="column.required" :disabled="column.disabled">
-      <SelectTrigger  class="h-9 w-full" :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
+      <SelectTrigger class="h-9 w-full" :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
         <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
       </SelectTrigger>
       <SelectContent class="w-full">
-        <SelectItem
-          v-for="option in options"
-          :key="getOptionValue(option)"
-          :value="getOptionValue(option)"
-        >
+        <SelectItem v-for="option in options" :key="getOptionValue(option)" :value="getOptionValue(option)">
           {{ getOptionLabel(option) }}
         </SelectItem>
       </SelectContent>
@@ -34,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import {
   Select,
@@ -99,7 +95,7 @@ const errorArray = computed(() => {
   return [{ message: props.error }]
 })
 
-const options = computed(() => { 
+const options = computed(() => {
   if (!props.column.options) return []
 
   // Comportamento padrão - normaliza options para formato consistente
@@ -138,5 +134,10 @@ const internalValue = computed({
   set: (value) => {
     emit('update:modelValue', value || null)
   },
+})
+onMounted(() => {
+  if (props.modelValue === null && props.column.default) {
+    emit('update:modelValue', props.column.default)
+  }
 })
 </script>
