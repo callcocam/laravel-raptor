@@ -18,12 +18,12 @@ trait WithActions
 
     public function actions(Closure|array $actions): static
     {
-        return $this->addManyToCollection($this->evaluate($actions), 'actions');
+        return $this->addManyToCollection($actions, 'actions');
     }
 
     public function action(Closure|AbstractColumn $action): static
     {
-        return $this->addToCollection($this->evaluate($action), 'actions');
+        return $this->addToCollection($action, 'actions');
     }
 
     /**
