@@ -18,6 +18,10 @@ trait WithActions
 
     public function actions(Closure|array $actions): static
     {
+        if ($actions instanceof Closure) {
+            return $this->addToCollection($actions, 'actions');
+        }
+
         return $this->addManyToCollection($actions, 'actions');
     }
 
@@ -48,6 +52,24 @@ trait WithActions
 
     public function getActions($model = null): array
     {
-        return $this->getCollection('actions', $model);
+        $items = $this->collections['actions'] ?? [];
+        $flat = [];
+
+        foreach ($items as $item) {
+            if ($item instanceof Closure) {
+                if ($model !== null) {
+                    $resolved = $this->evaluate($item, ['model' => $model, 'request' => $this->getRequest()]);
+                    $resolved = is_array($resolved) ? $resolved : [$resolved];
+                    $flat = array_merge($flat, array_filter($resolved));
+                }
+            } else {
+                $resolved = $this->evaluate($item, ['model' => $model, 'request' => $this->getRequest()]);
+                if ($resolved !== null) {
+                    $flat[] = $resolved;
+                }
+            }
+        }
+
+        return $flat;
     }
 }
