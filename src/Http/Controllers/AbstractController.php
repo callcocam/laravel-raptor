@@ -414,7 +414,7 @@ abstract class AbstractController extends ResourceController
             $actions = match ($type) {
                 'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
-                'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions()),
+                'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions($model)),
                 'column' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getColumns())->filter(fn ($column) => $column->getName() === $fieldName),
                 'form' => collect($this->form(Form::make($model))->getActions()),
                 'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn ($column) => $column->getName() === $fieldName)->flatMap(function ($column) {

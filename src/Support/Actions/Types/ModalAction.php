@@ -174,7 +174,7 @@ class ModalAction extends ExecuteAction
 
         // Sempre incluir columnType se houver colunas
         if (! empty($this->getColumns())) {
-            $result['columns'] = $this->getArrayColumns();
+            $result['columns'] = $this->getArrayColumns($model);
         }
 
         // Incluir columnType (detectado ou padrão)

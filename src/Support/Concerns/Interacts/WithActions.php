@@ -57,11 +57,11 @@ trait WithActions
 
         foreach ($items as $item) {
             if ($item instanceof Closure) {
-                if ($model !== null) {
+                // if ($model !== null) {
                     $resolved = $this->evaluate($item, ['model' => $model, 'request' => $this->getRequest()]);
                     $resolved = is_array($resolved) ? $resolved : [$resolved];
                     $flat = array_merge($flat, array_filter($resolved));
-                }
+                // }
             } else {
                 $resolved = $this->evaluate($item, ['model' => $model, 'request' => $this->getRequest()]);
                 if ($resolved !== null) {
