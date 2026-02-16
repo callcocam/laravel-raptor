@@ -231,8 +231,8 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
     protected function mergeRouteInjectorDirectories(): void
     {
         $packageBase = realpath(__DIR__.'/..') ?: __DIR__.'/..';
-        $packageTenant = ['Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => $packageBase.'/Http/Controllers/Tenant'];
-        $packageLandlord = ['Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => $packageBase.'/Http/Controllers/Landlord'];
+        $packageTenant = ['Callcocam\\LaravelRaptor\\Http\\Controllers\\Tenant' => $packageBase.'/src/Http/Controllers/Tenant'];
+        $packageLandlord = ['Callcocam\\LaravelRaptor\\Http\\Controllers\\Landlord' => $packageBase.'/src/Http/Controllers/Landlord'];
 
         $tenant = array_merge(config('raptor.route_injector.contexts.tenant', []), $packageTenant);
         $landlord = array_merge(config('raptor.route_injector.contexts.landlord', []), $packageLandlord);
