@@ -132,16 +132,21 @@ trait WithTable
 
     protected function applyItemFormatting($item)
     {
+        $row = $item instanceof Model ? $item->toArray() : (array) $item;
+
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
-            if ($value = data_get($item, $columnName)) {
-                $formattedColumn = $column->render($value, $item); 
-                $item[$columnName] = $formattedColumn;
+            $value = data_get($item, $columnName);
+            if ($value !== null && $value !== '') {
+                $row[$columnName] = $column->render($value, $item);
             }
         }
-        $item->actions = $this->evaluateActionsAuthorization($item);
 
-        return $item->toArray();
+        $row['actions'] = $item instanceof Model
+            ? $this->evaluateActionsAuthorization($item)
+            : [];
+
+        return $row;
     }
 
     /**
