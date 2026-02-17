@@ -16,7 +16,7 @@ class ConfirmAction extends ExecuteAction
     {
         parent::__construct($name);
 
-        $this->component('confirm-action')
+        $this->component('action-confirm')
             ->actionType('actions')
             ->method('POST')
             ->confirm([
