@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Info;
 
 use Callcocam\LaravelRaptor\Support\Cast\CastRegistry;
+use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithActions;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
@@ -19,6 +20,7 @@ class InfoList
     use FactoryPattern;
     use WithActions;
     use WithColumns;
+    use EvaluatesClosures;
 
     public function __construct()
     {
