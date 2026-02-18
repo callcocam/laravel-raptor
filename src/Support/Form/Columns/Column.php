@@ -136,7 +136,7 @@ abstract class Column extends AbstractColumn
 
     public function toArray($model = null): array
     {
-        if ($model) {
+        if ($model instanceof \Illuminate\Database\Eloquent\Model) {
             $this->record($model);
         }
 
