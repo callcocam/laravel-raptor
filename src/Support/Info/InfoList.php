@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\EvaluatesClosures;
 use Callcocam\LaravelRaptor\Support\Concerns\FactoryPattern;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithActions;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongToRequest;
 use Illuminate\Database\Eloquent\Model;
 
 class InfoList
@@ -21,6 +22,7 @@ class InfoList
     use WithActions;
     use WithColumns;
     use EvaluatesClosures;
+    use BelongToRequest;
 
     public function __construct()
     {
