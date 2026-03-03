@@ -16,23 +16,48 @@
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select v-model="internalValue" :required="column.required" :disabled="isDisabled">
-      <SelectTrigger
-        :class="hasError ? 'border-destructive' : ''"
-        :aria-invalid="hasError"
-      >
-        <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem
-          v-for="option in options"
-          :key="getOptionValue(option)"
-          :value="getOptionValue(option)"
+    <div class="relative">
+      <Select v-model="internalValue" :required="column.required" :disabled="isDisabled">
+        <SelectTrigger
+          :class="hasError ? 'border-destructive' : ''"
+          :aria-invalid="hasError"
         >
-          {{ getOptionLabel(option) }}
-        </SelectItem>
-      </SelectContent>
-    </Select>
+          <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="option in options"
+            :key="getOptionValue(option)"
+            :value="getOptionValue(option)"
+          >
+            {{ getOptionLabel(option) }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+
+      <button
+        v-if="internalValue"
+        type="button"
+        @click="clearSelection"
+        class="absolute right-8 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
+        :aria-label="`Limpar seleção de ${column.label || column.name}`"
+        title="Limpar seleção"
+      >
+        <svg
+          class="w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
 
     <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
       {{ column.helpText || column.hint || column.tooltip }}
@@ -184,6 +209,14 @@ const internalValue = computed({
     reloadWithCascadingValues(value)
   },
 })
+
+/**
+ * Clears the current field selection
+ */
+const clearSelection = () => {
+  emit('update:modelValue', null)
+  reloadWithCascadingValues(null)
+}
 
 /**
  * Reloads the page with all cascading field values as query parameters
