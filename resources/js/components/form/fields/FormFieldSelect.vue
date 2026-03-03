@@ -10,16 +10,31 @@
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <Select v-model="internalValue" :required="column.required" :disabled="column.disabled">
-      <SelectTrigger class="h-9 w-full" :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
-        <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
-      </SelectTrigger>
-      <SelectContent class="w-full">
-        <SelectItem v-for="option in options" :key="getOptionValue(option)" :value="getOptionValue(option)">
-          {{ getOptionLabel(option) }}
-        </SelectItem>
-      </SelectContent>
-    </Select>
+    <div class="relative">
+      <Select v-model="internalValue" :required="column.required" :disabled="column.disabled">
+        <SelectTrigger class="h-9 w-full" :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError">
+          <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
+        </SelectTrigger>
+        <SelectContent class="w-full">
+          <SelectItem v-for="option in options" :key="getOptionValue(option)" :value="getOptionValue(option)">
+            {{ getOptionLabel(option) }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      
+      <!-- Clear button -->
+      <button
+        v-if="internalValue"
+        type="button"
+        @click="clearSelection"
+        class="absolute right-10 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+        title="Limpar seleção"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+      </button>
+    </div>
 
     <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
       {{ column.helpText || column.hint || column.tooltip }}
@@ -135,6 +150,11 @@ const internalValue = computed({
     emit('update:modelValue', value || null)
   },
 })
+
+const clearSelection = () => {
+  emit('update:modelValue', null)
+}
+
 onMounted(() => {
   if (props.modelValue === null && props.column.default) {
     emit('update:modelValue', props.column.default)
