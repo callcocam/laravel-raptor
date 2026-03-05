@@ -82,6 +82,7 @@ ComponentRegistry.registerBulk({
     'form-field-mask': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMask.vue')),
     'form-field-relationship': defineAsyncComponent(() => import('~/components/form/fields/FormFieldRelationship.vue')),
     'form-field-section': defineAsyncComponent(() => import('~/components/form/fields/FormFieldSection.vue')),
+    'form-field-multi-select': defineAsyncComponent(() => import('~/components/form/fields/FormFieldMultiSelect.vue')),
 })
 
 ComponentRegistry.markAsInitialized()
