@@ -29,7 +29,7 @@ trait InteractWithForm
     }
 
     /**
-     * Extrai as regras de validação de todos os campos
+     * Extrai as regras de validação de todos os campos (incluindo items de repeater)
      */
     public function getValidationRules($record = null, $request = null): array
     {
@@ -42,6 +42,13 @@ trait InteractWithForm
             }
             if (method_exists($column, 'isSheet') && $column->isSheet()) {
                 continue;
+            }
+
+            // Trata RepeaterField especialmente para coletar regras dos items
+            if (method_exists($column, 'getItemsValidationRules')) {
+                $itemRules = $column->getItemsValidationRules($record);
+                $rules = array_merge($rules, $itemRules);
+                // Continua para processar também as regras do repeater em si
             }
 
             $columnRules = $column->getRules($record);
@@ -73,6 +80,7 @@ trait InteractWithForm
      * Prepara os dados do request ANTES da validação
      *
      * Converte valores formatados (ex: money) para formato validável
+     * Processa dados dos items do repeater com prepareItemsForValidation
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  mixed  $model  Modelo existente (para edição)
@@ -92,6 +100,12 @@ trait InteractWithForm
             }
 
             try {
+                // Trata RepeaterField especialmente para preparar items
+                if (method_exists($column, 'prepareItemsForValidation')) {
+                    $data = $column->prepareItemsForValidation($data, $model);
+                    // Continua para processar também o valueUsing do repeater em si
+                }
+
                 // Aplica valueUsing se existir (converte dados formatados)
                 $valueUsing = $column->getValueUsing($data, $model);
 
@@ -112,13 +126,19 @@ trait InteractWithForm
     }
 
     /**
-     * Extrai as mensagens de validação customizadas
+     * Extrai as mensagens de validação customizadas (incluindo items de repeater)
      */
     public function getValidationMessages(): array
     {
         $messages = [];
 
         foreach ($this->getColumns() as $column) {
+            // Coleta mensagens dos items do repeater se disponível
+            if (method_exists($column, 'getItemsValidationMessages')) {
+                $itemMessages = $column->getItemsValidationMessages();
+                $messages = array_merge($messages, $itemMessages);
+            }
+
             $columnMessages = $column->getMessages();
 
             if (! empty($columnMessages)) {

@@ -110,9 +110,8 @@ abstract class AbstractController extends ResourceController
             $validationRules = array_merge(
                 $form->getValidationRules(null, $request),
                 $this->rules()
-            );
-            $validationMessages = $form->getValidationMessages();
-
+            ); 
+            $validationMessages = $form->getValidationMessages(); 
             // Valida os dados já preparados
             $validator = \Illuminate\Support\Facades\Validator::make(
                 $preparedData,

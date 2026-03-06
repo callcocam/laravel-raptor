@@ -285,6 +285,114 @@ class RepeaterField extends Column
         return $this;
     }
 
+    /**
+     * Retorna as regras de validação dos items do repeater
+     * 
+     * Converte regras de fields internos para notação Laravel array: items.*.fieldName
+     * 
+     * @param  string|null  $record
+     * @return array Regras formatadas para validação
+     */
+    public function getItemsValidationRules($record = null): array
+    {
+        $rules = [];
+        $repeaterName = $this->getName();
+
+        foreach ($this->getFields() as $field) {
+            $fieldName = $field->getName();
+            $fieldRules = $field->getRules($record);
+
+            if (! empty($fieldRules)) {
+                // Transforma 'quantity' => ['required', 'numeric'] 
+                // em 'items.*.quantity' => ['required', 'numeric']
+                $key = "{$repeaterName}.*.{$fieldName}";
+                $rules[$key] = $fieldRules;
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Retorna as mensagens de validação dos items do repeater
+     * 
+     * @return array Mensagens formatadas para validação
+     */
+    public function getItemsValidationMessages(): array
+    {
+        $messages = [];
+        $repeaterName = $this->getName();
+
+        foreach ($this->getFields() as $field) {
+            $fieldName = $field->getName();
+            $fieldMessages = $field->getMessages();
+
+            if (! empty($fieldMessages)) {
+                foreach ($fieldMessages as $rule => $message) {
+                    $key = "{$repeaterName}.*.{$fieldName}.{$rule}";
+                    $messages[$key] = $message;
+                }
+            }
+        }
+
+        return $messages;
+    }
+
+    /**
+     * Prepara dados dos items para validação
+     * 
+     * Aplica valueUsing de cada field interno para converter dados formatados
+     * 
+     * @param  array  $data
+     * @param  mixed  $model
+     * @return array Dados preparados
+     */
+    public function prepareItemsForValidation(array $data, $model = null): array
+    {
+        $repeaterName = $this->getName();
+        $items = data_get($data, $repeaterName, []);
+
+        if (! is_array($items) || empty($items)) {
+            return $data;
+        }
+
+        $preparedItems = [];
+
+        foreach ($items as $index => $item) {
+            $preparedItem = $item;
+
+            foreach ($this->getFields() as $field) {
+                $fieldName = $field->getName();
+
+                if (! array_key_exists($fieldName, $preparedItem)) {
+                    continue;
+                }
+
+                try {
+                    // Aplica valueUsing de cada field para converter dados formatados
+                    $valueUsing = $field->getValueUsing($preparedItem, $model);
+
+                    if ($valueUsing !== null) {
+                        if (is_array($valueUsing)) {
+                            $preparedItem = array_merge($preparedItem, $valueUsing);
+                        } else {
+                            $preparedItem[$fieldName] = $valueUsing;
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    logger()->warning("Error preparing repeater item[{$index}].{$fieldName} for validation: ".$e->getMessage());
+                    // Mantém valor original
+                }
+            }
+
+            $preparedItems[$index] = $preparedItem;
+        }
+
+        $data[$repeaterName] = $preparedItems;
+
+        return $data;
+    }
+
     public function toArray($model = null): array
     {
         // Converte cada field para array
