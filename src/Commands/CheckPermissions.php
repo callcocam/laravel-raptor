@@ -12,11 +12,22 @@ use Callcocam\LaravelRaptor\Concerns\GeneratesPermissionIds;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
 class CheckPermissions extends Command
 {
     use GeneratesPermissionIds;
+
+    /**
+     * Ações cuja permissão deve ser criada somente se a rota nomeada existir.
+     *
+     * @var array<int, string>
+     */
+    protected array $routeDependentActions = [
+        'create',
+        'execute',
+    ];
 
     /**
      * Ações equivalentes para evitar duplicação de permissões.
@@ -219,6 +230,10 @@ class CheckPermissions extends Command
             $fullClassName = 'App\\Http\\Controllers\\'.$className;
 
             if (class_exists($fullClassName)) {
+                if (! $this->isPermissionManagedController($fullClassName)) {
+                    continue;
+                }
+
                 $controllers[] = [
                     'class' => $fullClassName,
                     'name' => basename($file, '.php'),
@@ -228,6 +243,12 @@ class CheckPermissions extends Command
         }
 
         return $controllers;
+    }
+
+    protected function isPermissionManagedController(string $controllerClass): bool
+    {
+        return is_subclass_of($controllerClass, \Callcocam\LaravelRaptor\Http\Controllers\AbstractController::class)
+            || is_subclass_of($controllerClass, \Callcocam\LaravelRaptor\Http\Controllers\ResourceController::class);
     }
 
     protected function generateExpectedPermissions($controllers): \Illuminate\Support\Collection
@@ -282,6 +303,10 @@ class CheckPermissions extends Command
                 $normalizedAction = $this->normalizeAction($action);
                 $slug = "{$context}.{$resourceName}.{$normalizedAction}";
 
+                if (! $this->shouldExpectPermission($slug, $normalizedAction)) {
+                    continue;
+                }
+
                 // Evita duplicatas
                 if (! $permissions->contains('slug', $slug)) {
                     $permissions->push([
@@ -298,6 +323,15 @@ class CheckPermissions extends Command
         }
 
         return $permissions;
+    }
+
+    protected function shouldExpectPermission(string $slug, string $action): bool
+    {
+        if (! in_array($action, $this->routeDependentActions, true)) {
+            return true;
+        }
+
+        return Route::has($slug);
     }
 
     protected function normalizeAction(string $action): string
@@ -441,6 +475,12 @@ class CheckPermissions extends Command
 
         foreach ($missing as $permission) {
             try {
+                if (! $this->shouldCreatePermission($permission)) {
+                    $this->warn("Pulando {$permission['slug']} (rota não encontrada)");
+
+                    continue;
+                }
+
                 $id = $this->generateDeterministicId($permission['slug']);
 
                 // Usa DB::table() na conexão landlord para inserir com ID específico
@@ -459,6 +499,22 @@ class CheckPermissions extends Command
         }
 
         $this->info("✅ {$created} permissões criadas com sucesso!");
+    }
+
+    /**
+     * Decide se a permissão pode ser criada.
+     * Para ações de UI, exige que a rota nomeada exista.
+     * Para ações de policy, mantém criação sem depender de rota.
+     *
+     * @param  array{slug:string, action:string}  $permission
+     */
+    protected function shouldCreatePermission(array $permission): bool
+    {
+        if (! in_array($permission['action'], $this->routeDependentActions, true)) {
+            return true;
+        }
+
+        return Route::has($permission['slug']);
     }
 
     /**
