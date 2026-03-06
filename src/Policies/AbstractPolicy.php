@@ -17,6 +17,29 @@ abstract class AbstractPolicy
 
     protected ?string $context = null;
 
+    protected function generatePermissionName(string $action): array
+    {
+        return [
+            sprintf('%s.%s.%s', $this->context ?? request()->getContext(), $this->permission, $action),
+            sprintf('%s.%s', $this->permission, $action),
+            sprintf('admin.%s.%s', $this->permission, $action),
+        ];
+    }
+
+    /**
+     * Verifica se o usuário tem qualquer uma das permissões possíveis
+     */
+    protected function hasAnyPermission(User $user, array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($user->can($permission)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Determine whether the user can view any models.
      */
@@ -26,7 +49,7 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can(sprintf('%s.%s.index', $this->context ?? request()->getContext(), $this->permission));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('index'));
     }
 
     /**
@@ -38,7 +61,7 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can(sprintf('%s.%s.view', $this->context ?? request()->getContext(), $this->permission));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('view'));
     }
 
     /**
@@ -50,7 +73,7 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can(sprintf('%s.%s.create', $this->context ?? request()->getContext(), $this->permission));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('create'));
     }
 
     /**
@@ -62,10 +85,8 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can([
-            sprintf('%s.%s.edit', $this->context ?? request()->getContext(), $this->permission),
-            sprintf('%s.%s.update', $this->context ?? request()->getContext(), $this->permission),
-        ]);
+        return $this->hasAnyPermission($user, $this->generatePermissionName('update'))
+            || $this->hasAnyPermission($user, $this->generatePermissionName('edit'));
     }
 
     /**
@@ -77,7 +98,7 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can(sprintf('%s.%s.delete', $this->context ?? request()->getContext(), $this->permission));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('delete'));
     }
 
     /**
@@ -89,7 +110,7 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can(sprintf('%s.%s.restore', $this->context ?? request()->getContext(), $this->permission));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('restore'));
     }
 
     /**
@@ -101,6 +122,6 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $user->can(sprintf('%s.%s.forceDelete', $this->context ?? request()->getContext(), $this->permission));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('forceDelete'));
     }
 }

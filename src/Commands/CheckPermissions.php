@@ -18,6 +18,21 @@ class CheckPermissions extends Command
 {
     use GeneratesPermissionIds;
 
+    /**
+     * Ações equivalentes para evitar duplicação de permissões.
+     *
+     * store -> create
+     * update -> edit
+     * viewAny -> index
+     *
+     * @var array<string, string>
+     */
+    protected array $actionAliases = [
+        'store' => 'create',
+        'update' => 'edit',
+        'viewAny' => 'index',
+    ];
+
     protected function landlordConnection(): string
     {
         return config('raptor.database.landlord_connection_name', 'landlord');
@@ -102,6 +117,10 @@ class CheckPermissions extends Command
         'orders' => 'Pedidos',
         'planograms' => 'Planogramas',
         'products' => 'Produtos',
+        'product-images' => 'Imagens de Produtos',
+        'product-dimensions' => 'Dimensões de Produtos',
+        'product-sales' => 'Vendas de Produtos',
+        'product-details' => 'Detalhes de Produtos',
         'stores' => 'Lojas',
         'users' => 'Usuários',
         'roles' => 'Perfis',
@@ -235,12 +254,13 @@ class CheckPermissions extends Command
             // Ações da UI (Raptor)
             'index',
             'edit',
+            // 'store',
             'execute',
             // Ações CRUD (Policies)
             'viewAny',
             'view',
             'create',
-            'update',
+            // 'update',
             'delete',
             'restore',
             'forceDelete',
@@ -259,16 +279,17 @@ class CheckPermissions extends Command
 
             // Gerar permissões para todas as ações
             foreach ($actions as $action) {
-                $slug = "{$context}.{$resourceName}.{$action}";
+                $normalizedAction = $this->normalizeAction($action);
+                $slug = "{$context}.{$resourceName}.{$normalizedAction}";
 
                 // Evita duplicatas
                 if (! $permissions->contains('slug', $slug)) {
                     $permissions->push([
                         'slug' => $slug,
-                        'name' => $this->getFriendlyName($action, $resourceName),
-                        'description' => $this->getFriendlyDescription($action, $resourceName),
+                        'name' => $this->getFriendlyName($normalizedAction, $resourceName),
+                        'description' => $this->getFriendlyDescription($normalizedAction, $resourceName),
                         'resource' => $resourceName,
-                        'action' => $action,
+                        'action' => $normalizedAction,
                         'context' => $context,
                         'controller' => $controller['class'],
                     ]);
@@ -277,6 +298,11 @@ class CheckPermissions extends Command
         }
 
         return $permissions;
+    }
+
+    protected function normalizeAction(string $action): string
+    {
+        return $this->actionAliases[$action] ?? $action;
     }
 
     /**
