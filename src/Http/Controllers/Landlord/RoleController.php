@@ -39,19 +39,8 @@ class RoleController extends LandlordController
                 ->group(config('raptor.controllers.roles.index.group', 'Segurança'))
                 ->groupCollapsible(config('raptor.controllers.roles.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.roles.index.order', 10))
+                ->resource(config('raptor.shinobi.models.role', \Callcocam\LaravelRaptor\Models\Role::class))
                 ->middlewares(config('raptor.controllers.roles.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/roles/create')
-                ->label(config('raptor.controllers.roles.create.label', __('Criar Role')))
-                ->name(config('raptor.controllers.roles.create.name', 'roles.create'))
-                ->middlewares(config('raptor.controllers.roles.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/roles/{record}/edit')
-                ->label(config('raptor.controllers.roles.edit.label', __('Editar Role')))
-                ->name(config('raptor.controllers.roles.edit.name', 'roles.edit'))
-                ->middlewares(config('raptor.controllers.roles.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/roles/execute/actions')
-                ->label(config('raptor.controllers.roles.execute.label', __('Executar Role')))
-                ->name(config('raptor.controllers.roles.execute.name', 'roles.execute'))
-                ->middlewares(config('raptor.controllers.roles.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -90,7 +79,7 @@ class RoleController extends LandlordController
                 ->columns(2)
                 ->searchable()
                 ->showSelectAll(true)
-                ->defaultUsing(fn ($request, $model) => $model ? $model->permissions->pluck('id')->toArray() : [])
+                ->defaultUsing(fn($request, $model) => $model ? $model->permissions->pluck('id')->toArray() : [])
                 ->helpText(config('raptor.controllers.roles.form.permissions.helpText', __('Selecione as permissões associadas a esta role'))),
         ]);
 
@@ -155,11 +144,11 @@ class RoleController extends LandlordController
             TextInfolist::make('slug', config('raptor.controllers.roles.infolist.slug', 'Slug')),
             TextInfolist::make('description', config('raptor.controllers.roles.infolist.description', 'Descrição')),
             TextInfolist::make('special', config('raptor.controllers.roles.infolist.special', 'Permissões Especiais'))
-                ->value(fn ($value) => $value ? 'Sim' : 'Não'),
+                ->value(fn($value) => $value ? 'Sim' : 'Não'),
             TextInfolist::make('created_at', config('raptor.controllers.roles.infolist.created_at', 'Criado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.roles.infolist.updated_at', 'Atualizado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

@@ -8,8 +8,7 @@
 
 namespace Callcocam\LaravelRaptor\Policies;
 
-use App\Models\User;
-use Callcocam\LaravelRaptor\Models\AbstractModel;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 
 abstract class AbstractPolicy
 {
@@ -29,7 +28,7 @@ abstract class AbstractPolicy
     /**
      * Verifica se o usuário tem qualquer uma das permissões possíveis
      */
-    protected function hasAnyPermission(User $user, array $permissions): bool
+    protected function hasAnyPermission(Authorizable $user, array $permissions): bool
     {
         foreach ($permissions as $permission) {
             if ($user->can($permission)) {
@@ -43,7 +42,7 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(Authorizable $user): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -53,9 +52,17 @@ abstract class AbstractPolicy
     }
 
     /**
+     * Alias para viewAny. Permite usar a habilidade index de forma consistente.
+     */
+    public function index(Authorizable $user): bool
+    {
+        return $this->viewAny($user);
+    }
+
+    /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, AbstractModel $model): bool
+    public function view(Authorizable $user, object $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -65,9 +72,17 @@ abstract class AbstractPolicy
     }
 
     /**
+     * Alias para view. Permite usar a habilidade show de forma consistente.
+     */
+    public function show(Authorizable $user, object $model): bool
+    {
+        return $this->view($user, $model);
+    }
+
+    /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(Authorizable $user): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -77,9 +92,17 @@ abstract class AbstractPolicy
     }
 
     /**
+     * Alias para create. Permite usar a habilidade store de forma consistente.
+     */
+    public function store(Authorizable $user): bool
+    {
+        return $this->create($user);
+    }
+
+    /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, AbstractModel $model): bool
+    public function update(Authorizable $user, object $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -90,9 +113,17 @@ abstract class AbstractPolicy
     }
 
     /**
+     * Alias para update. Permite usar a habilidade edit de forma consistente.
+     */
+    public function edit(Authorizable $user, object $model): bool
+    {
+        return $this->update($user, $model);
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, AbstractModel $model): bool
+    public function delete(Authorizable $user, object $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -104,7 +135,7 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can restore the model.
      */
-    public function restore(User $user, AbstractModel $model): bool
+    public function restore(Authorizable $user, object $model): bool
     {
         if (is_null($this->permission)) {
             return false;
@@ -116,12 +147,13 @@ abstract class AbstractPolicy
     /**
      * Determine whether the user can permanently delete the model.
      */
-    public function forceDelete(User $user, AbstractModel $model): bool
+    public function forceDelete(Authorizable $user, object $model): bool
     {
         if (is_null($this->permission)) {
             return false;
         }
 
-        return $this->hasAnyPermission($user, $this->generatePermissionName('forceDelete'));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('forceDelete'))
+            || $this->hasAnyPermission($user, $this->generatePermissionName('force-delete'));
     }
 }

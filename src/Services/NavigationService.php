@@ -74,7 +74,7 @@ class NavigationService
 
         usort($navigationItems, fn ($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
 
-        return $navigationItems;
+        return $this->applyGroupIconFallback($navigationItems);
     }
 
     /**
@@ -209,11 +209,43 @@ class NavigationService
             'routeName' => $page->getName(),
             'icon' => $page->getIcon(),
             'group' => $page->getGroup(),
+            'groupIcon' => $page->getGroupIcon(),
             'groupCollapsible' => $page->isGroupCollapsible(),
             'order' => $page->getOrder(),
             'badge' => $page->getBadge(),
             'isActive' => false,
         ];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $navigationItems
+     * @return array<int, array<string, mixed>>
+     */
+    protected function applyGroupIconFallback(array $navigationItems): array
+    {
+        $groupIcons = [];
+
+        foreach ($navigationItems as $item) {
+            $groupName = $item['group'] ?? 'Geral';
+            $explicitGroupIcon = $item['groupIcon'] ?? null;
+            $itemIcon = $item['icon'] ?? null;
+
+            if (! isset($groupIcons[$groupName])) {
+                $groupIcons[$groupName] = $explicitGroupIcon ?: $itemIcon;
+                continue;
+            }
+
+            if ($explicitGroupIcon) {
+                $groupIcons[$groupName] = $explicitGroupIcon;
+            }
+        }
+
+        foreach ($navigationItems as $index => $item) {
+            $groupName = $item['group'] ?? 'Geral';
+            $navigationItems[$index]['groupIcon'] = $item['groupIcon'] ?? ($groupIcons[$groupName] ?? $item['icon'] ?? null);
+        }
+
+        return $navigationItems;
     }
 
     protected function getModelFromController($controller): ?string

@@ -47,19 +47,8 @@ class RoleController extends TenantController
                 ->group(config('raptor.controllers.roles.index.group', 'Segurança'))
                 ->groupCollapsible(config('raptor.controllers.roles.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.roles.index.order', 10))
-                ->middlewares(config('raptor.controllers.roles.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/roles/create')
-                ->label(config('raptor.controllers.roles.create.label', __('Criar Role')))
-                ->name(config('raptor.controllers.roles.create.name', 'roles.create'))
-                ->middlewares(config('raptor.controllers.roles.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/roles/{record}/edit')
-                ->label(config('raptor.controllers.roles.edit.label', __('Editar Role')))
-                ->name(config('raptor.controllers.roles.edit.name', 'roles.edit'))
-                ->middlewares(config('raptor.controllers.roles.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/roles/execute/actions')
-                ->label(config('raptor.controllers.roles.execute.label', __('Executar Role')))
-                ->name(config('raptor.controllers.roles.execute.name', 'roles.execute'))
-                ->middlewares(config('raptor.controllers.roles.execute.middlewares', ['auth', 'verified'])),
+                ->resource(config('raptor.shinobi.models.role', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Role::class))
+                ->middlewares(config('raptor.controllers.roles.index.middlewares', ['auth', 'verified'])), 
         ];
     }
 

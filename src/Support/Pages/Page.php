@@ -30,6 +30,8 @@ abstract class Page
 
     public bool $groupCollapsible = false;
 
+    public ?string $groupIcon = null;
+
     public int $order = 50;
 
     public ?string $badge = null;
@@ -75,6 +77,13 @@ abstract class Page
     public function groupCollapsible(bool $collapsible = true): static
     {
         $this->groupCollapsible = $collapsible;
+
+        return $this;
+    }
+
+    public function groupIcon(?string $icon): static
+    {
+        $this->groupIcon = $icon;
 
         return $this;
     }
@@ -126,6 +135,11 @@ abstract class Page
     public function isGroupCollapsible(): bool
     {
         return $this->groupCollapsible;
+    }
+
+    public function getGroupIcon(): ?string
+    {
+        return $this->groupIcon;
     }
 
     public function getOrder(): int

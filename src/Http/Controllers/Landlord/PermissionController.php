@@ -38,22 +38,8 @@ class PermissionController extends LandlordController
                 ->group(config('raptor.controllers.permissions.index.group', 'Segurança'))
                 ->groupCollapsible(config('raptor.controllers.permissions.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.permissions.index.order', 15))
-                ->middlewares(config('raptor.controllers.permissions.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/permissions/create')
-                ->label(config('raptor.controllers.permissions.create.label', __('Criar Permissão')))
-                ->name(config('raptor.controllers.permissions.create.name', 'permissions.create'))
-                ->icon(config('raptor.controllers.permissions.create.icon', 'ShieldPlus'))
-                ->middlewares(config('raptor.controllers.permissions.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/permissions/{record}/edit')
-                ->label(config('raptor.controllers.permissions.edit.label', __('Editar Permissão')))
-                ->name(config('raptor.controllers.permissions.edit.name', 'permissions.edit'))
-                ->icon(config('raptor.controllers.permissions.edit.icon', 'ShieldEdit'))
-                ->middlewares(config('raptor.controllers.permissions.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/permissions/execute/actions')
-                ->label(config('raptor.controllers.permissions.execute.label', __('Executar Permissão')))
-                ->name(config('raptor.controllers.permissions.execute.name', 'permissions.execute'))
-                ->icon(config('raptor.controllers.permissions.execute.icon', 'ShieldExecute'))
-                ->middlewares(config('raptor.controllers.permissions.execute.middlewares', ['auth', 'verified'])),
+                ->resource(config('raptor.shinobi.models.permission', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class))
+                ->middlewares(config('raptor.controllers.permissions.index.middlewares', ['auth', 'verified'])), 
         ];
     }
 

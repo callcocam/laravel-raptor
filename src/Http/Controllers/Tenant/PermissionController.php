@@ -46,22 +46,8 @@ class PermissionController extends TenantController
                 ->group(config('raptor.controllers.permissions.index.group', 'Segurança'))
                 ->groupCollapsible(config('raptor.controllers.permissions.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.permissions.index.order', 15))
+                ->resource(config('raptor.shinobi.models.permission', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class))
                 ->middlewares(config('raptor.controllers.permissions.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/permissions/create')
-                ->label(config('raptor.controllers.permissions.create.label', __('Criar Permissão')))
-                ->name('permissions.create')
-                ->icon(config('raptor.controllers.permissions.create.icon', 'ShieldPlus'))
-                ->middlewares(config('raptor.controllers.permissions.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/permissions/{record}/edit')
-                ->label(config('raptor.controllers.permissions.edit.label', __('Editar Permissão')))
-                ->name('permissions.edit')
-                ->icon(config('raptor.controllers.permissions.edit.icon', 'ShieldEdit'))
-                ->middlewares(config('raptor.controllers.permissions.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/permissions/execute/actions')
-                ->label(config('raptor.controllers.permissions.execute.label', __('Executar Permissão')))
-                ->name('permissions.execute')
-                ->icon(config('raptor.controllers.permissions.execute.icon', 'ShieldExecute'))
-                ->middlewares(config('raptor.controllers.permissions.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -138,9 +124,9 @@ class PermissionController extends TenantController
             TextInfolist::make('slug', config('raptor.controllers.permissions.infolist.slug', 'Slug')),
             TextInfolist::make('description', config('raptor.controllers.permissions.infolist.description', 'Descrição')),
             TextInfolist::make('created_at', config('raptor.controllers.permissions.infolist.created_at', 'Criado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.permissions.infolist.updated_at', 'Atualizado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

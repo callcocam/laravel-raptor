@@ -43,6 +43,9 @@ const navigationItems = computed(() => {
         icon: typeof item.icon === 'string'
             ? getIconComponent(item.icon)
             : item.icon,
+        groupIcon: typeof (item as any).groupIcon === 'string'
+            ? getIconComponent((item as any).groupIcon)
+            : (item as any).groupIcon,
     }));
 });
 
@@ -81,13 +84,15 @@ const groupedNavigation = computed(() => {
         if (isCollapsible) {
             // Renderiza como menu collapsible: cria item principal com TODOS como children
             const firstItem = items[0];
+            const groupIcon = items.find(item => (item as any).groupIcon)?.groupIcon || firstItem.icon;
+
             return {
                 name,
                 items: [{
                     title: name,
                     label: name,
                     href: firstItem.href, // usa href do primeiro como fallback
-                    icon: firstItem.icon,
+                    icon: groupIcon,
                     children: items, // TODOS os items viram children
                 }],
                 collapsible: true,

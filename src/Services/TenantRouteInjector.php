@@ -8,7 +8,10 @@
 
 namespace Callcocam\LaravelRaptor\Services;
 
+use Callcocam\LaravelRaptor\Support\Pages\Create;
+use Callcocam\LaravelRaptor\Support\Pages\Edit;
 use Callcocam\LaravelRaptor\Support\Pages\Execute;
+use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Pages\Page;
 use Callcocam\LaravelRaptor\Support\Pages\Show;
 use Illuminate\Filesystem\Filesystem;
@@ -269,22 +272,45 @@ class TenantRouteInjector
         $complementary = [];
         $pageKeys = array_keys($pages);
 
-        // Adiciona 'store' se 'create' existir e 'store' não estiver definido
-        if (in_array('create', $pageKeys) && ! in_array('store', $pageKeys)) {
-            $complementary['store'] = $this->createComplementaryRoute($pages['create'], 'store', 'POST', '/create', 'Criar', 'Salvar');
-        }
-
-        // Adiciona 'update' se 'edit' existir e 'update' não estiver definido
-        if (in_array('edit', $pageKeys) && ! in_array('update', $pageKeys)) {
-            $complementary['update'] = $this->createComplementaryRoute($pages['edit'], 'update', 'PUT', '/edit', 'Editar', 'Atualizar', '');
-        }
-
         // Adiciona rotas de resource se 'index' existir
         if (in_array('index', $pageKeys)) {
             $indexPage = $pages['index'];
             $basePath = $indexPage->getPath();
 
-            if (! in_array('show', $pageKeys)) {
+            // Quando index declara resource(), cria automaticamente as páginas base de CRUD.
+            if ($indexPage instanceof Index && $indexPage->hasResource()) {
+                if (! in_array('create', $pageKeys)) {
+                    $createPage = Create::route($basePath.'/create');
+                    $createPage->label = sprintf('Criar %s', $indexPage->getLabel() ?? '');
+                    $createPage->name = Str::replace('.index', '.create', $indexPage->getName() ?? '');
+                    $createPage->middlewares = $indexPage->getMiddlewares();
+                    $complementary['create'] = $createPage;
+                }
+
+                if (! in_array('edit', $pageKeys)) {
+                    $editPage = Edit::route($basePath.'/{record}/edit');
+                    $editPage->label = sprintf('Editar %s', $indexPage->getLabel() ?? '');
+                    $editPage->name = Str::replace('.index', '.edit', $indexPage->getName() ?? '');
+                    $editPage->middlewares = $indexPage->getMiddlewares();
+                    $complementary['edit'] = $editPage;
+                }
+            }
+
+            $availableKeys = array_unique(array_merge($pageKeys, array_keys($complementary)));
+
+            // Adiciona 'store' se 'create' existir e 'store' não estiver definido
+            if (in_array('create', $availableKeys) && ! in_array('store', $availableKeys)) {
+                $createPage = $complementary['create'] ?? $pages['create'];
+                $complementary['store'] = $this->createComplementaryRoute($createPage, 'store', 'POST', '/create', 'Criar', 'Salvar');
+            }
+
+            // Adiciona 'update' se 'edit' existir e 'update' não estiver definido
+            if (in_array('edit', $availableKeys) && ! in_array('update', $availableKeys)) {
+                $editPage = $complementary['edit'] ?? $pages['edit'];
+                $complementary['update'] = $this->createComplementaryRoute($editPage, 'update', 'PUT', '/edit', 'Editar', 'Atualizar', '');
+            }
+
+            if (! in_array('show', $availableKeys)) {
                 $showPage = Show::route($basePath.'/{record}');
                 $showPage->label = Str::replace('Lista', 'Visualizar', $indexPage->getLabel() ?? '');
                 $showPage->name = Str::replace('.index', '.show', $indexPage->getName() ?? '');
@@ -292,17 +318,17 @@ class TenantRouteInjector
                 $complementary['show'] = $showPage;
             }
 
-            if (! in_array('destroy', $pageKeys)) {
+            if (! in_array('destroy', $availableKeys)) {
                 $complementary['destroy'] = $this->createComplementaryRoute($indexPage, 'destroy', 'DELETE', '', 'Lista', 'Excluir', '/{record}');
             }
-            if (! in_array('restore', $pageKeys)) {
+            if (! in_array('restore', $availableKeys)) {
                 $complementary['restore'] = $this->createComplementaryRoute($indexPage, 'restore', 'POST', '', 'Lista', 'Restaurar', '/{record}/restore');
             }
-            if (! in_array('forceDelete', $pageKeys)) {
+            if (! in_array('forceDelete', $availableKeys)) {
                 $complementary['forceDelete'] = $this->createComplementaryRoute($indexPage, 'forceDelete', 'DELETE', '', 'Lista', 'Excluir Definitivamente', '/{record}/force-delete');
             }
             // Adiciona 'execute' se 'index' existir e 'execute' não estiver definido
-            if (! in_array('execute', $pageKeys)) {
+            if (! in_array('execute', $availableKeys)) {
                 $executePage = Execute::route(sprintf('%s/execute/actions', $basePath));
                 $executePage->label = sprintf('Executar %s', $indexPage->getLabel() ?? '');
                 $executePage->name = Str::replace('.index', '.execute', $indexPage->getName() ?? '');

@@ -41,7 +41,7 @@ abstract class AbstractController extends ResourceController
     public function index(Request $request)
     {
         // Verifica autorização via Policy (viewAny)
-        $this->authorize('viewAny', $this->model());
+        $this->authorizeResourceAction('index', $this->model());
 
         $data = $this->table(TableBuilder::make($this->queryBuilder(), 'model'))
             ->request($request)
@@ -64,7 +64,7 @@ abstract class AbstractController extends ResourceController
     public function create(Request $request)
     {
         // Verifica autorização via Policy (create)
-        $this->authorize('create', $this->model());
+        $this->authorizeResourceAction('create', $this->model());
 
         $model = app($this->model());
         if ($request->session()->has('_old_input')) {
@@ -96,7 +96,7 @@ abstract class AbstractController extends ResourceController
             $model = app($this->model());
 
             // Verifica autorização via Policy (create)
-            $this->authorize('create', $model);
+            $this->authorizeResourceAction('store', $model);
 
             // Hook: antes de criar
             $this->beforeCreate($request);
@@ -148,7 +148,7 @@ abstract class AbstractController extends ResourceController
         $model = $this->model()::findOrFail($record);
 
         // Verifica autorização via Policy (view)
-        $this->authorize('view', $model);
+        $this->authorizeResourceAction('show', $model);
 
         return Inertia::render(sprintf('admin/%s/show', $this->resourcePath()), [
             'message' => $this->getSubtitle('show'),
@@ -176,7 +176,7 @@ abstract class AbstractController extends ResourceController
             $model->fill($request->session()->get('_old_input'));
         }
         // Verifica autorização via Policy (update)
-        $this->authorize('update', $model);
+        $this->authorizeResourceAction('edit', $model);
 
         return Inertia::render(sprintf('admin/%s/edit', $this->resourcePath()), [
             'message' => $this->getSubtitle('edit'),
@@ -205,7 +205,7 @@ abstract class AbstractController extends ResourceController
             $model = $this->model()::findOrFail($record);
 
             // Verifica autorização via Policy (update)
-            $this->authorize('update', $model);
+            $this->authorizeResourceAction('update', $model);
 
             // Hook: antes de atualizar
             $this->beforeUpdate($request, $record);
@@ -262,7 +262,7 @@ abstract class AbstractController extends ResourceController
             $model = $this->model()::findOrFail($record);
 
             // Verifica autorização via Policy (delete)
-            $this->authorize('delete', $model);
+            $this->authorizeResourceAction('destroy', $model);
 
             // Hook: antes de deletar
             $this->beforeDelete($record);
@@ -291,7 +291,7 @@ abstract class AbstractController extends ResourceController
             $model = $this->model()::withTrashed()->findOrFail($record);
 
             // Verifica autorização via Policy (restore)
-            $this->authorize('restore', $model);
+            $this->authorizeResourceAction('restore', $model);
 
             // Hook: antes de restaurar
             $this->beforeRestore($record);
@@ -320,7 +320,7 @@ abstract class AbstractController extends ResourceController
             $model = $this->model()::withTrashed()->findOrFail($record);
 
             // Verifica autorização via Policy (forceDelete)
-            $this->authorize('forceDelete', $model);
+            $this->authorizeResourceAction('forceDelete', $model);
 
             // Hook: antes de deletar permanentemente
             $this->beforeForceDelete($record);
@@ -793,5 +793,19 @@ abstract class AbstractController extends ResourceController
         return redirect()
             ->back()
             ->with('error', app()->environment('local') ? $e->getMessage() : 'Erro ao exportar o item.');
+    }
+
+    protected function authorizeResourceAction(string $action, Model|string|null $subject = null): void
+    {
+        $ability = match ($action) {
+            'index' => 'viewAny',
+            'show' => 'view',
+            'store' => 'create',
+            'edit' => 'update',
+            'destroy' => 'delete',
+            default => $action,
+        };
+
+        $this->authorize($ability, $subject ?? $this->model());
     }
 }

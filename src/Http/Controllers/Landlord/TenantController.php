@@ -52,19 +52,8 @@ class TenantController extends LandlordController
                 ->group(config('raptor.controllers.tenants.index.group', 'Segurança'))
                 ->groupCollapsible(config('raptor.controllers.tenants.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.tenants.index.order', 15))
-                ->middlewares(config('raptor.controllers.tenants.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/tenants/create')
-                ->label(config('raptor.controllers.tenants.create.label', __('Criar Inquilino')))
-                ->name(config('raptor.controllers.tenants.create.name', 'tenants.create'))
-                ->middlewares(config('raptor.controllers.tenants.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/tenants/{record}/edit')
-                ->label(config('raptor.controllers.tenants.edit.label', __('Editar Inquilino')))
-                ->name(config('raptor.controllers.tenants.edit.name', 'tenants.edit'))
-                ->middlewares(config('raptor.controllers.tenants.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/tenants/execute/actions')
-                ->label(config('raptor.controllers.tenants.execute.label', __('Executar Inquilinos')))
-                ->name(config('raptor.controllers.tenants.execute.name', 'tenants.execute'))
-                ->middlewares(config('raptor.controllers.tenants.execute.middlewares', ['auth', 'verified'])),
+                ->resource(config('raptor.landlord.models.tenant', \Callcocam\LaravelRaptor\Models\Tenant::class))
+                ->middlewares(config('raptor.controllers.tenants.index.middlewares', ['auth', 'verified'])), 
         ];
     }
 

@@ -39,34 +39,12 @@ class UserController extends LandlordController
                 ->label(config('raptor.controllers.users.index.label', __('Usuários')))
                 ->name(config('raptor.controllers.users.index.name', 'users.index'))
                 ->icon(config('raptor.controllers.users.index.icon', 'Users'))
+                ->groupIcon(config('raptor.controllers.users.index.groupIcon', 'Shield'))
                 ->group(config('raptor.controllers.users.index.group', 'Segurança'))
                 ->groupCollapsible(config('raptor.controllers.users.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.users.index.order', 5))
+                ->resource(config('raptor.landlord.models.user', \App\Models\User::class))
                 ->middlewares(config('raptor.controllers.users.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/users/create')
-                ->label(config('raptor.controllers.users.create.label', __('Criar Usuário')))
-                ->name(config('raptor.controllers.users.create.name', 'users.create'))
-                ->icon(config('raptor.controllers.users.create.icon', 'Users'))
-                ->group(config('raptor.controllers.users.create.group', 'Segurança'))
-                ->groupCollapsible(config('raptor.controllers.users.create.groupCollapsible', true))
-                ->order(config('raptor.controllers.users.create.order', 5))
-                ->middlewares(config('raptor.controllers.users.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/users/{record}/edit')
-                ->label(config('raptor.controllers.users.edit.label', __('Editar Usuário')))
-                ->name(config('raptor.controllers.users.edit.name', 'users.edit'))
-                ->icon(config('raptor.controllers.users.edit.icon', 'Users'))
-                ->group(config('raptor.controllers.users.edit.group', 'Segurança'))
-                ->groupCollapsible(config('raptor.controllers.users.edit.groupCollapsible', true))
-                ->order(config('raptor.controllers.users.edit.order', 5))
-                ->middlewares(config('raptor.controllers.users.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/users/execute/actions')
-                ->label(config('raptor.controllers.users.execute.label', __('Executar Usuário')))
-                ->name(config('raptor.controllers.users.execute.name', 'users.execute'))
-                ->icon(config('raptor.controllers.users.execute.icon', 'Users'))
-                ->group(config('raptor.controllers.users.execute.group', 'Segurança'))
-                ->groupCollapsible(config('raptor.controllers.users.execute.groupCollapsible', true))
-                ->order(config('raptor.controllers.users.execute.order', 5))
-                ->middlewares(config('raptor.controllers.users.execute.middlewares', ['auth', 'verified'])),
         ];
     }
 
@@ -98,7 +76,7 @@ class UserController extends LandlordController
                 ->required()
                 ->columnSpan('5')
                 ->rules(function ($record) {
-                    return ['required', 'string', 'max:255', 'unique:users,email'.($record ? ",{$record->id}" : '')];
+                    return ['required', 'string', 'max:255', 'unique:users,email' . ($record ? ",{$record->id}" : '')];
                 })
                 ->placeholder(config('raptor.controllers.users.form.email.placeholder', __('email@exemplo.com')))
                 ->helpText(config('raptor.controllers.users.form.email.helpText', __('E-mail único para login'))),
@@ -120,7 +98,7 @@ class UserController extends LandlordController
             CheckboxField::make('roles', config('raptor.controllers.users.form.roles.label', __('Papéis')))
                 ->relationship('roles', 'name')
                 ->multiple()
-                ->defaultUsing(fn ($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
+                ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
                 ->helpText(config('raptor.controllers.users.form.roles.helpText', __('Atribua papéis ao usuário'))),
         ]);
 
@@ -173,11 +151,11 @@ class UserController extends LandlordController
             TextInfolist::make('name', config('raptor.controllers.users.infolist.name', 'Nome')),
             TextInfolist::make('email', config('raptor.controllers.users.infolist.email', 'E-mail')),
             TextInfolist::make('email_verified_at', config('raptor.controllers.users.infolist.email_verified_at', 'E-mail Verificado'))
-                ->castFormat(fn ($value) => $value ? 'Sim - '.\Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
+                ->castFormat(fn($value) => $value ? 'Sim - ' . \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
             TextInfolist::make('created_at', config('raptor.controllers.users.infolist.created_at', 'Criado em'))
-                ->castFormat(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->castFormat(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.users.infolist.updated_at', 'Atualizado em'))
-                ->castFormat(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->castFormat(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 
