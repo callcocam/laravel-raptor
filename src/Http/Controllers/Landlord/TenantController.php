@@ -20,16 +20,12 @@ use Callcocam\LaravelRaptor\Support\Info\Columns\Types\CardColumn;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\HasManyColumn;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\StatusColumn as StatusColumnInfolist;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
-use Callcocam\LaravelRaptor\Support\Pages\Create;
-use Callcocam\LaravelRaptor\Support\Pages\Edit;
-use Callcocam\LaravelRaptor\Support\Pages\Execute;
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder; 
 use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
-use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
-use Illuminate\Database\Eloquent\Model;
+use Callcocam\LaravelRaptor\Support\Table\TableBuilder; 
 use Illuminate\Http\Request;
 
 class TenantController extends LandlordController
