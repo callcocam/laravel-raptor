@@ -214,11 +214,9 @@ trait BelongsToVisible
                 'record' => $item,
                 'user' => $user,
                 'auth' => $user,
-            ]);
+            ]); 
 
-            if ($result === false) {
-                return false;
-            }
+             return (bool) $result;
         }
 
         // Camada 2: Laravel Policy (lazy evaluation)

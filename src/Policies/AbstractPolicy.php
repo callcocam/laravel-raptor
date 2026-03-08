@@ -88,7 +88,10 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $this->hasAnyPermission($user, $this->generatePermissionName('create'));
+        return $this->hasAnyPermission($user, array_merge(
+            $this->generatePermissionName('create'),
+            $this->generatePermissionName('execute')
+        ));
     }
 
     /**

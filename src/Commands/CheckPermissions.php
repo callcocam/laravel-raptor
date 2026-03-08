@@ -25,7 +25,6 @@ class CheckPermissions extends Command
      * @var array<int, string>
      */
     protected array $routeDependentActions = [
-        'create',
         'execute',
     ];
 
@@ -139,6 +138,7 @@ class CheckPermissions extends Command
         'tenants' => 'Empresas',
         'inspirations' => 'Inspirações',
         'addresses' => 'Endereços',
+        'mercadologicos' => 'Mercadológicos',
     ];
 
     /**
