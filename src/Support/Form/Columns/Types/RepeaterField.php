@@ -101,8 +101,7 @@ class RepeaterField extends Column
 
                 foreach ($fields as $field) {
                     $columnName = $field->getName();
-                    $rawValue = $itemData[$columnName] ?? null;
-                    Log::info('key', [$key]);
+                    $rawValue = $itemData[$columnName] ?? null; 
                     // Aplica defaultUsing de cada campo interno
                     // Passa os dados do item para o campo processar
                     $field->index($key);
