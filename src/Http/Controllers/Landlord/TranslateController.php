@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Controllers\Landlord;
 
 use Callcocam\LaravelRaptor\Http\Controllers\LandlordController;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\HiddenField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\RepeaterField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
@@ -45,19 +46,8 @@ class TranslateController extends LandlordController
                 ->group(config('raptor.controllers.translates.index.group', 'Sistema'))
                 ->groupCollapsible(config('raptor.controllers.translates.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.translates.index.order', 30))
-                ->middlewares(config('raptor.controllers.translates.index.middlewares', ['auth', 'verified'])),
-            'create' => Create::route('/translates/create')
-                ->label(config('raptor.controllers.translates.create.label', __('Criar Tradução')))
-                ->name(config('raptor.controllers.translates.create.name', 'translates.create'))
-                ->middlewares(config('raptor.controllers.translates.create.middlewares', ['auth', 'verified'])),
-            'edit' => Edit::route('/translates/{record}/edit')
-                ->label(config('raptor.controllers.translates.edit.label', __('Editar Tradução')))
-                ->name(config('raptor.controllers.translates.edit.name', 'translates.edit'))
-                ->middlewares(config('raptor.controllers.translates.edit.middlewares', ['auth', 'verified'])),
-            'execute' => Execute::route('/translates/execute/actions')
-                ->label(config('raptor.controllers.translates.execute.label', __('Executar Ações')))
-                ->name(config('raptor.controllers.translates.execute.name', 'translates.execute'))
-                ->middlewares(config('raptor.controllers.translates.execute.middlewares', ['auth', 'verified'])),
+                ->middlewares(config('raptor.controllers.translates.index.middlewares', ['auth', 'verified']))
+                ->resource(config('raptor.landlord.models.translation_group', \Callcocam\LaravelRaptor\Models\TranslationGroup::class))
         ];
     }
 
@@ -226,7 +216,7 @@ class TranslateController extends LandlordController
                 ->columnSpanFull()
                 ->fields([
 
-                    TextField::make('id')->hidden(),
+                    HiddenField::make('id'),
                     TextField::make('key')
                         ->label('Chave')
                         ->helperText('Ex: product, add_to_cart, title')

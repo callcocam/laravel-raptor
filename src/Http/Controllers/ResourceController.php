@@ -100,7 +100,7 @@ abstract class ResourceController extends Controller
 
         $value = $this->evaluate($this->resourcePluralName);
 
-        return is_null($value) ? null : (string) $value;
+        return is_null($value) ? null : __($value);
     }
 
     /**
@@ -113,7 +113,7 @@ abstract class ResourceController extends Controller
         }
         $value = $this->evaluate($this->resourceLabel);
 
-        return is_null($value) ? null : (string) $value;
+        return is_null($value) ? null : __($value);
     }
 
     /**
@@ -126,7 +126,7 @@ abstract class ResourceController extends Controller
         }
         $value = $this->evaluate($this->resourcePluralLabel);
 
-        return is_null($value) ? null : (string) $value;
+        return is_null($value) ? null : __($value);
     }
 
     /**
@@ -139,7 +139,7 @@ abstract class ResourceController extends Controller
         }
         $value = $this->evaluate($this->resourceSlug);
 
-        return is_null($value) ? null : (string) $value;
+        return is_null($value) ? null : __($value);
     }
 
     /**
@@ -149,7 +149,7 @@ abstract class ResourceController extends Controller
     {
         $value = $this->evaluate($this->maxWidth);
 
-        return is_null($value) ? '7xl' : (string) $value;
+        return is_null($value) ? '7xl' : __($value);
     }
 
     /**
@@ -159,7 +159,7 @@ abstract class ResourceController extends Controller
     {
         $value = $this->evaluate($this->resourcePath());
 
-        return is_null($value) ? null : (string) $value;
+        return is_null($value) ? null : __($value);
     }
 
     /**

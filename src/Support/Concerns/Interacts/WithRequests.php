@@ -139,11 +139,11 @@ trait WithRequests
             \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make("{$resourceName}.index")
                 ->color('gray')
                 ->size('sm')
-                ->label(sprintf('Voltar %s', $this->getResourcePluralLabel())),
+                ->label(__('Back :resource'  , ['resource' => $this->getResourceLabel()])),
             \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
                 ->variant('default')
                 ->size('sm')
-                ->label(sprintf('Salvar %s', $this->getResourceLabel())),
+                ->label(__('Save :resource', ['resource' => $this->getResourceLabel()])),
         ];
     }
 

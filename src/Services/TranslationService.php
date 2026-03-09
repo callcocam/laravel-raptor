@@ -349,7 +349,7 @@ class TranslationService
         // Define o caminho de saída
         if (! $outputPath) {
             $langPath = lang_path();
-            $localeFormatted = $locale; // pt_BR -> pt-br
+            $localeFormatted = $locale;
 
             if ($tenantId) {
                 // Para tenant específico: lang/tenants/{tenant_id}/pt-br.json
@@ -360,11 +360,7 @@ class TranslationService
             }
         }
 
-        // Cria o diretório se não existir
-        $directory = dirname($outputPath);
-        if (! is_dir($directory)) {
-            mkdir($directory, 0755, true);
-        }
+        $this->ensureWritablePath($outputPath);
 
         // Mescla com traduções existentes do Laravel se for global
         $mergedTranslations = $translations;
@@ -377,11 +373,7 @@ class TranslationService
         // Ordena as chaves alfabeticamente
         ksort($mergedTranslations);
 
-        // Escreve o arquivo JSON
-        file_put_contents(
-            $outputPath,
-            json_encode($mergedTranslations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-        );
+        $this->writeJsonToFile($outputPath, $mergedTranslations);
 
         return $outputPath;
     }
@@ -526,11 +518,63 @@ class TranslationService
 
         // Salva arquivo atualizado
         ksort($fileTranslations);
-        file_put_contents(
-            $jsonPath,
-            json_encode($fileTranslations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-        );
+
+        $this->ensureWritablePath($jsonPath);
+        $this->writeJsonToFile($jsonPath, $fileTranslations);
 
         return $stats;
+    }
+
+    protected function ensureWritablePath(string $path): void
+    {
+        $directory = dirname($path);
+
+        if (! is_dir($directory)) {
+            $created = @mkdir($directory, 0755, true);
+
+            if (! $created && ! is_dir($directory)) {
+                throw new \RuntimeException("Não foi possível criar o diretório de tradução: {$directory}");
+            }
+        }
+
+        if (! is_writable($directory)) {
+            @chmod($directory, 0755);
+            clearstatcache(true, $directory);
+
+            if (! is_writable($directory)) {
+                throw new \RuntimeException("Diretório sem permissão de escrita: {$directory}");
+            }
+        }
+
+        if (file_exists($path) && ! is_writable($path)) {
+            @chmod($path, 0644);
+            clearstatcache(true, $path);
+
+            if (! is_writable($path)) {
+                throw new \RuntimeException("Arquivo sem permissão de escrita: {$path}");
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, string>  $translations
+     */
+    protected function writeJsonToFile(string $path, array $translations): void
+    {
+        $payload = json_encode(
+            $translations,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
+
+        if ($payload === false) {
+            throw new \RuntimeException('Falha ao codificar traduções em JSON.');
+        }
+
+        $result = @file_put_contents($path, $payload, LOCK_EX);
+
+        if ($result === false) {
+            $error = error_get_last()['message'] ?? 'erro desconhecido';
+            throw new \RuntimeException("Falha ao escrever o arquivo de tradução {$path}: {$error}");
+        }
     }
 }
