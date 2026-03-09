@@ -4,7 +4,7 @@ import { ref, computed, onUnmounted, Ref } from 'vue'
 let Echo: any = null
 try {
   Echo = (window as any).Echo
-} catch (e) {
+} catch {
   console.warn('Laravel Echo not available. WebSocket features will be disabled.')
 }
 

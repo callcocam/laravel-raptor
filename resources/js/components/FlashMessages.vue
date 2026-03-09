@@ -37,5 +37,5 @@ watch(
 </script>
 
 <template>
-  <!-- Este componente não renderiza nada, apenas gerencia flash messages -->
+    <span class="sr-only" aria-hidden="true"></span>
 </template>

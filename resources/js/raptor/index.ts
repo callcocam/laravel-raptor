@@ -109,6 +109,9 @@ BreadcrumbRegistry.markAsInitialized()
 
 TableRegistry.registerBulk({
     'table-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')),
+    'table-advanced': defineAsyncComponent(() => import('~/components/table/AdvancedTable.vue')),
+    'table-legacy-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')),
+    'table-advancy': defineAsyncComponent(() => import('~/components/table/AdvancyTable.vue')),
 })
 
 TableRegistry.markAsInitialized()
@@ -161,7 +164,7 @@ FilterRegistry.markAsInitialized()
  * Opções do RaptorPlugin
  */
 export interface RaptorPluginOptions {
-    customFormatters?: Record<string, Function>
+    customFormatters?: Record<string, (...args: unknown[]) => unknown>
     customComponents?: Record<string, Component>
     overrideComponents?: {
         actions?: Record<string, Component>
@@ -234,7 +237,7 @@ const install = (app: App, options: RaptorPluginOptions = {}): void => {
 
     // Registra formatadores personalizados
     if (options.customFormatters) {
-        Object.entries(options.customFormatters).forEach(([name, func]) => {
+        Object.entries(options.customFormatters).forEach(() => {
             // Futuro: FormattersRegistry.register(name, func);
         })
     }

@@ -56,6 +56,7 @@ trait WithTable
             'isSearcheable' => $this->isSearcheable(),
             'hasBulkActions' => $this->hasBulkActions(), // Indica se tem bulk actions
             'queryParams' => $this->getQueryParams(),
+            'component' => $this->getComponent(),
         ]);
 
         return $result;

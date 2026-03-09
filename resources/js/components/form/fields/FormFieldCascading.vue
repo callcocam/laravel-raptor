@@ -163,7 +163,6 @@ const updateCascadingValue = (fieldName: string, value: any) => {
  * Get the modelValue for a specific field
  */
 const getFieldValue = (fieldName: string) => {
-  const fullObject = cascadingValues.value;
   const fieldValue = cascadingValues.value[fieldName];
 
   return fieldValue || null;

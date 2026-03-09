@@ -89,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -99,7 +99,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import * as LucideIcons from 'lucide-vue-next'
 import ModalForm from '../modal/ModalForm.vue'
 import ModalTable from '../modal/ModalTable.vue'
 import ModalInfo from '../modal/ModalInfo.vue'

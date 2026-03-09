@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, inject, handleError } from 'vue'
+import { computed, ref, watch, inject } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import Draggable from 'vuedraggable'
 import RepeaterItem from './repeater/RepeaterItem.vue'
@@ -195,7 +195,12 @@ watch(
     }
 
     // Only update if the values actually changed
-    const currentData = items.value.map(({ _id, ...rest }) => rest)
+    const currentData = items.value.map((item) => {
+      const normalizedItem = { ...item }
+      delete normalizedItem._id
+
+      return normalizedItem
+    })
     if (JSON.stringify(currentData) !== JSON.stringify(newValue)) {
       items.value = newValue.map((item, index) => ({
         ...item,
@@ -380,7 +385,12 @@ function expandAll(): void {
 
 function emitValue(): void {
   // Remove _id before emitting
-  const cleanItems = items.value.map(({ _id, ...rest }) => rest)
+  const cleanItems = items.value.map((item) => {
+    const normalizedItem = { ...item }
+    delete normalizedItem._id
+
+    return normalizedItem
+  })
   emit('update:modelValue', cleanItems)
 }
 

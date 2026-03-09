@@ -87,7 +87,6 @@ const emit = defineEmits<{
 const formData = inject<any>('formData', ref({}))
 
 const displayValue = ref('')
-const cursorPosition = ref(0)
 
 // Configurações de cálculo
 const { calculateFieldValue } = useFieldCalculations(formData)
@@ -239,8 +238,7 @@ const handleBlur = () => {
 }
 
 // Handler de focus - seleciona tudo para facilitar edição
-const handleFocus = (event: Event) => {
-  const target = event.target as HTMLInputElement
+const handleFocus = () => {
   // Opcional: selecionar todo o texto ao focar
   // target.select()
 }

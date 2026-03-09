@@ -1,5 +1,4 @@
 import { ref, computed, Ref } from 'vue'
-import { router } from '@inertiajs/vue3'
 import axios, { AxiosProgressEvent } from 'axios'
 
 export interface ChunkedUploadOptions {

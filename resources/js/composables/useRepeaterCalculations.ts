@@ -136,6 +136,8 @@ function executeCalculation(
   values: (number | null)[],
   options?: Record<string, any>
 ): number | null {
+  void options
+
   switch (type) {
     case 'sum':
       return calculateSum(values)

@@ -207,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useChunkedUpload } from '../composables/useChunkedUpload'
 import { useFileUploadProgress } from '../composables/useFileUploadProgress'
 

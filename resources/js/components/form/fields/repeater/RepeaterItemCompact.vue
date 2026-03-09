@@ -103,6 +103,8 @@ const hasErrors = computed(() => {
 });
 
 const getFieldColumnClass = (field: FormColumn, hasOrderable: boolean) => {
+  void hasOrderable
+
    const span = field.columnSpan || 'full'
   
   if (span === 'full') {

@@ -109,8 +109,9 @@
           ]"
           :preserve-state="true"
           :preserve-scroll="true"
-          v-html="link.label"
-        />
+        >
+          <span v-html="link.label"></span>
+        </Link>
       </div>
     </div>
 

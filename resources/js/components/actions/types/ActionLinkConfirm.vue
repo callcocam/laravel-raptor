@@ -89,7 +89,7 @@ import {
 import * as LucideIcons from "lucide-vue-next";
 import { useActionUI } from "~/composables/useActionUI";
 import type { TableAction } from "~/types/table"; 
-import { Link, router } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 
 interface Props {
   action: TableAction;

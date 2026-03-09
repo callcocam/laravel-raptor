@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import {
@@ -143,7 +143,6 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number | null): void
 }>()
 
-const page = usePage()
 const open = ref(false)
 const searchQuery = ref('')
 const isSearching = ref(false)

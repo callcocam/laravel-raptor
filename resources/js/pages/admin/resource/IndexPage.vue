@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import TableRegistry from '~/utils/TableRegistry'
 import ResourceLayout from "~/layouts/ResourceLayout.vue";
-import DefaultTable from "~/components/table/DefaultTable.vue";
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
 import HeaderActions from "~/components/table/HeaderActions.vue";
@@ -23,7 +24,17 @@ const layoutProps = {
   resourceLabel: props.resourceLabel,
   resourcePluralLabel: props.resourcePluralLabel,
   breadcrumbs: props.breadcrumbs,
-}; 
+};  
+const getComponent = computed(() => {
+  const componentName = props.table?.component || 'table-default'
+
+  const registeredComponent = TableRegistry.get(componentName)
+  if (registeredComponent) {
+    return registeredComponent
+  }
+
+  return TableRegistry.get('table-default')
+})
 </script>
 
 <template>
@@ -50,8 +61,8 @@ const layoutProps = {
       </div>
     </template>
     <template #content>
-      <div class="space-y-4"> 
-        <DefaultTable />
+      <div class="space-y-4">  
+         <component :is="getComponent" v-bind="table.props" /> 
       </div>
     </template>
   </ResourceLayout>

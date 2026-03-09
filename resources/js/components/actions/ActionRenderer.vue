@@ -39,7 +39,6 @@ const emit = defineEmits<{
  */
 const component = computed(() => {
   let componentName = props.action.component
-
   // 1. Prioridade: componente especificado explicitamente
   if (componentName) {
     const registeredComponent = ActionRegistry.get(componentName)
@@ -47,6 +46,7 @@ const component = computed(() => {
       return registeredComponent
     }
   }
+  console.log('Determining component for action:', componentName)
 
   // 2. Usa actionType se disponível (nova arquitetura)
   if (props.action.actionType) {

@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from "vue";
+import { ref, computed, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import SlideoverBase from "../slideover/SlideoverBase.vue";
 import SlideoverForm from "../slideover/SlideoverForm.vue";

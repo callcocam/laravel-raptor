@@ -16,7 +16,7 @@
  */
 
 import { ref, computed, watch } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { router } from '@inertiajs/vue3'
 
 export interface ThemeConfig {
   color?: string

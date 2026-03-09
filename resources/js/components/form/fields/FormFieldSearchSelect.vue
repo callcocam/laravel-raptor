@@ -223,6 +223,7 @@ const selectedOption = computed(() => {
 
   // Atualiza o cache sempre que encontrar a opção
   if (option) {
+    // eslint-disable-next-line vue/no-side-effects-in-computed-properties
     selectedOptionCache.value = option
   }
 

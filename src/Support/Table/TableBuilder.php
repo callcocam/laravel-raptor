@@ -13,6 +13,7 @@ use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithTable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearch;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSorting;
 use Callcocam\LaravelRaptor\Support\Table\Sources\ModelSource;
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 
 class TableBuilder
@@ -32,6 +33,8 @@ class TableBuilder
     protected array $config = [
         'auto_detect_casts' => true,
     ];
+
+    protected Closure|string|null $component = 'table-default';
 
     public function __construct($model = null, $type = 'model')
     {
@@ -153,5 +156,17 @@ class TableBuilder
         $request = $this->getRequest();
 
         return $request?->input('search');
+    }
+
+    public function component(Closure|string|null $component): self
+    {
+        $this->component = $component;
+
+        return $this;
+    }
+
+    public function getComponent(): mixed
+    {
+        return $this->evaluate($this->component);
     }
 }
