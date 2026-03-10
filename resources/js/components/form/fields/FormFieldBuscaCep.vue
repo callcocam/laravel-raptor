@@ -89,7 +89,7 @@ import {
   FieldLegend,
   FieldSet,
   FieldDescription,
-} from "@/components/ui/field";
+} from "~/components/ui/field";
 import FieldRenderer from "../FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
 import { createMultiFieldUpdate, isMultiFieldUpdate } from "~/types/form";

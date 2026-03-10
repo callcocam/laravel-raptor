@@ -29,6 +29,7 @@
                 v-for="z in zones"
                 :key="z.id"
                 :value="z.id"
+                :label="`${z.name} (${z.status})`"
               >
                 {{ z.name }} ({{ z.status }})
               </SelectItem>
@@ -55,7 +56,7 @@
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="t in dnsTypes" :key="t" :value="t">{{ t }}</SelectItem>
+                <SelectItem v-for="t in dnsTypes" :key="t" :value="t" :label="t">{{ t }}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -136,17 +137,17 @@ import {
   FieldSet,
   FieldLegend,
   FieldDescription,
-} from '@/components/ui/field'
+} from '~/components/ui/field'
 import { Button } from '~/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Input } from '~/components/ui/input'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
+} from '~/components/ui/select'
+import { Checkbox } from '~/components/ui/checkbox'
 
 interface FormColumn {
   name: string

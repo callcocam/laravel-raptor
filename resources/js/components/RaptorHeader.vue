@@ -5,7 +5,7 @@ import type { BreadcrumbItem } from '@/types';
 import { SidebarTrigger } from '~/components/ui/sidebar';
 import NotificationDropdown from '~/components/NotificationDropdown.vue';
 import { ChevronRight, Sun, Moon } from 'lucide-vue-next';
-import { cn } from '@/lib/utils';
+import { cn } from '~/lib/utils';
 
 interface Props {
     breadcrumbs?: BreadcrumbItem[];

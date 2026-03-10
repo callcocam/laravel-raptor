@@ -16,7 +16,12 @@
           <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
         </SelectTrigger>
         <SelectContent class="w-full">
-          <SelectItem v-for="option in options" :key="getOptionValue(option)" :value="getOptionValue(option)">
+          <SelectItem
+            v-for="option in options"
+            :key="getOptionValue(option)"
+            :value="getOptionValue(option)"
+            :label="getOptionLabel(option)"
+          >
             {{ getOptionLabel(option) }}
           </SelectItem>
         </SelectContent>
@@ -46,14 +51,14 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '~/components/ui/select'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
 
 interface SelectOption {

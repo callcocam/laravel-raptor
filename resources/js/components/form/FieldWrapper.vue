@@ -83,7 +83,7 @@
 
 <script setup lang="ts">
 import { computed, h } from 'vue'
-import { Label } from '@/components/ui/label'
+import { Label } from '~/components/ui/label'
 import * as LucideIcons from 'lucide-vue-next'
 
 interface Props {

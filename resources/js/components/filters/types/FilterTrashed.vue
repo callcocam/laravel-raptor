@@ -13,8 +13,8 @@
       <SelectValue :placeholder="filter.placeholder || filter.label" />
     </SelectTrigger>
     <SelectContent> 
-      <SelectItem value="only">Apenas deletados</SelectItem>
-      <SelectItem value="with">Incluir deletados</SelectItem>
+      <SelectItem value="only" label="Apenas deletados">Apenas deletados</SelectItem>
+      <SelectItem value="with" label="Incluir deletados">Incluir deletados</SelectItem>
     </SelectContent>
   </Select>
 </template>
@@ -26,7 +26,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '~/components/ui/select'
 
 interface Props {
   filter: {

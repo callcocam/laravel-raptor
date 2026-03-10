@@ -1,0 +1,3 @@
+<template>
+    <div role="separator" class="-mx-1 my-1 h-px bg-muted" />
+</template>

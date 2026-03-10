@@ -74,13 +74,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Button } from '~/components/ui/button'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
+} from '~/components/ui/popover'
 import {
   Command,
   CommandEmpty,
@@ -88,7 +88,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command'
+} from '~/components/ui/command'
 import { Check, ChevronsUpDown } from 'lucide-vue-next'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
 import { useDebounceFn } from '@vueuse/core'

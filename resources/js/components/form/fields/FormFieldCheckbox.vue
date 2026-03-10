@@ -26,8 +26,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import { Checkbox } from '@/components/ui/checkbox'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
+import { Checkbox } from '~/components/ui/checkbox'
 
 interface FormColumn {
   name: string

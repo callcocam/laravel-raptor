@@ -6,7 +6,7 @@
 import type { HTMLAttributes, Ref } from 'vue'
 import { inject } from 'vue'
 import { X } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
+import { cn } from '~/lib/utils'
 
 const props = defineProps<{
     class?: HTMLAttributes['class']

@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Button } from '~/components/ui/button'
 import { Upload, FileIcon, X } from 'lucide-vue-next'
 

@@ -46,8 +46,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, inject } from 'vue'
-import { Input } from '@/components/ui/input'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Input } from '~/components/ui/input'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { useFieldCalculations, type FieldCalculation } from '~/composables/useFieldCalculations'
 
 interface FormColumn {

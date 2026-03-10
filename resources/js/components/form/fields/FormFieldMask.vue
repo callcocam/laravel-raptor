@@ -36,8 +36,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { Input } from "@/components/ui/input";
-import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
+import { Input } from "~/components/ui/input";
+import { Field, FieldLabel, FieldDescription, FieldError } from "~/components/ui/field";
 
 interface FormColumn {
   name: string;

@@ -6,7 +6,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from './ui/sidebar';
-import { toUrl } from '@/lib/utils';
+import { toUrl } from '~/lib/utils';
 import { type NavItem } from '@/types';
 
 interface Props {

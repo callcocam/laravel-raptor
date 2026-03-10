@@ -10,7 +10,7 @@ import {
     SidebarMenuSubItem,
     useSidebar,
 } from './ui/sidebar';
-import { urlIsActive } from '@/lib/utils';
+import { urlIsActive } from '~/lib/utils';
 import { type NavItem } from '@/types';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { ChevronRight } from 'lucide-vue-next';

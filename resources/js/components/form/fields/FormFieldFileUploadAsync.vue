@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import FileUploadWithProgress from '../../FileUploadWithProgress.vue'
 
 interface FormColumn {

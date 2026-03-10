@@ -119,15 +119,15 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldDescription, FieldError } from "~/components/ui/field";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleTrigger,
   CollapsibleContent,
-} from "@/components/ui/collapsible";
+} from "~/components/ui/collapsible";
 import { Search, ChevronDown, Loader2 } from "lucide-vue-next";
 
 interface CheckboxOption {

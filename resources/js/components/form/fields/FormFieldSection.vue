@@ -93,7 +93,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "~/components/ui/collapsible";
 import FieldRenderer from "~/components/form/FieldRenderer.vue";
 import { useGridLayout } from "~/composables/useGridLayout";
 import { createMultiFieldUpdate, isMultiFieldUpdate } from "~/types/form";

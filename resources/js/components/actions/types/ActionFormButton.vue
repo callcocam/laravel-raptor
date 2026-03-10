@@ -39,7 +39,7 @@ import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Button } from '~/components/ui/button'
 import ActionIconBox from '~/components/ui/ActionIconBox.vue'
-import { cn } from '@/lib/utils'
+import { cn } from '~/lib/utils'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
 

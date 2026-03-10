@@ -44,8 +44,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import { Textarea } from '@/components/ui/textarea/index'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
+import { Textarea } from '~/components/ui/textarea/index'
 
 interface FormColumn {
   name: string

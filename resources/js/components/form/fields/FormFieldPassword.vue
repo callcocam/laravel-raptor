@@ -49,8 +49,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
+import { Input } from '~/components/ui/input'
 import { Eye, EyeOff } from 'lucide-vue-next'
 
 interface FormColumn {

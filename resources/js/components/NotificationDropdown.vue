@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGlobalNotifications, type GlobalNotification } from '../composables/useGlobalNotifications';
-import { cn } from '@/lib/utils';
+import { cn } from '~/lib/utils';
 import {
     Bell,
     CheckCheck,

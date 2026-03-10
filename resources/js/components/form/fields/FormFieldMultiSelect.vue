@@ -124,21 +124,21 @@
 </template>
 
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Checkbox } from '~/components/ui/checkbox';
 import {
     Field,
     FieldDescription,
     FieldError,
     FieldLabel,
-} from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+} from '~/components/ui/field';
+import { Input } from '~/components/ui/input';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from '@/components/ui/popover';
+} from '~/components/ui/popover';
 import { ChevronDown, Loader2, X } from 'lucide-vue-next';
 import { computed, onMounted, ref, watch } from 'vue';
 

@@ -78,7 +78,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, inject } from 'vue'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import Draggable from 'vuedraggable'
 import RepeaterItem from './repeater/RepeaterItem.vue'
 import RepeaterItemCompact from './repeater/RepeaterItemCompact.vue'

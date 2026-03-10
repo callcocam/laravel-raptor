@@ -15,7 +15,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from '@/components/ui/select';
+} from '~/components/ui/select';
 
 interface Props {
     message?: string;
@@ -222,10 +222,11 @@ const copyIconName = (iconName: string) => {
                 <SelectValue placeholder="Categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem 
-                  v-for="category in categories" 
-                  :key="category.value" 
+                <SelectItem
+                  v-for="category in categories"
+                  :key="category.value"
                   :value="category.value"
+                  :label="category.label"
                 >
                   {{ category.label }}
                 </SelectItem>

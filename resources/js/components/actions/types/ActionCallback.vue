@@ -34,7 +34,7 @@
 <script setup lang="ts">
 import { Button } from '~/components/ui/button'
 import ActionIconBox from '~/components/ui/ActionIconBox.vue'
-import { cn } from '@/lib/utils'
+import { cn } from '~/lib/utils'
 import { useAction } from '~/composables/useAction'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'

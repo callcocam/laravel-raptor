@@ -72,9 +72,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
+import { cn } from '~/lib/utils'
 import { Button } from '~/components/ui/button'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import {
   Command,
   CommandEmpty,
@@ -82,8 +82,8 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@/components/ui/command'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+} from '~/components/ui/command'
+import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
 
 interface ComboboxOption {

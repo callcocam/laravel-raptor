@@ -29,6 +29,7 @@
             v-for="option in options"
             :key="getOptionValue(option)"
             :value="getOptionValue(option)"
+            :label="getOptionLabel(option)"
           >
             {{ getOptionLabel(option) }}
           </SelectItem>
@@ -70,14 +71,14 @@
 <script setup lang="ts">
 import { computed, inject, watch, type ComputedRef } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '~/components/ui/select'
 
 interface SelectOption {
   label?: string

@@ -12,7 +12,7 @@
  */
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { ChevronDown, X, Check, Search } from 'lucide-vue-next';
-import { cn } from '@/lib/utils';
+import { cn } from '~/lib/utils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

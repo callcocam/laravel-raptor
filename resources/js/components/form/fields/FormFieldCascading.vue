@@ -10,7 +10,7 @@ import {
   FieldGroup,
   FieldLegend,
   FieldSet,
-} from "@/components/ui/field";
+} from "~/components/ui/field";
 
 import { computed, provide, ref, watch } from "vue";
 import { usePage } from "@inertiajs/vue3";
