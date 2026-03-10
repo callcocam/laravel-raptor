@@ -22,7 +22,7 @@ class TextColumn extends Column
         if (is_string($value) && $this->hasLimit()) {
             $value = $this->applyLimit($value);
         }
-
+        
         return $this->getFormattedValue($value, $row);
     }
 

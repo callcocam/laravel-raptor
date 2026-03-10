@@ -50,13 +50,7 @@ const getComponent = computed(() => {
               resourceLabel: resourceLabel,
               message: message,
             }"
-          >
-            <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
-            <HeaderActions
-              v-if="table.headerActions && table.headerActions.length"
-              :actions="table.headerActions"
-            />
-          </BreadcrumbRenderer>
+         />
         </div>
       </div>
     </template>

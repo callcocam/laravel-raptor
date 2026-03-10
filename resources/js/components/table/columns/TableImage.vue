@@ -71,7 +71,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog'
+} from '~/components/ui/dialog'
 
 const props = defineProps<{
     record: Record<string, any>

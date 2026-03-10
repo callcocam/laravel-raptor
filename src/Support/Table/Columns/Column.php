@@ -11,6 +11,7 @@ namespace Callcocam\LaravelRaptor\Support\Table\Columns;
 use Callcocam\LaravelRaptor\Support\AbstractColumn;
 use Callcocam\LaravelRaptor\Support\Actions\Concerns\HasActionCallback;
 use Callcocam\LaravelRaptor\Support\Concerns\HasGridLayout;
+use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToHelpers;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Concerns\HasEditable;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearchable;
@@ -25,10 +26,13 @@ abstract class Column extends AbstractColumn
     use HasGridLayout;
     use HasSearchable;
     use HasSortable;
+    use WithColumns;
 
     protected ?Closure $formatter = null;
 
     protected ?string $component = 'table-column-text';
+
+    protected bool $primary = false;
 
     public function __construct(string $name, ?string $label = null)
     {
@@ -39,6 +43,18 @@ abstract class Column extends AbstractColumn
     }
 
     abstract public function render(mixed $value, $row = null): mixed;
+
+    public function primary(bool $value = true): static
+    {
+        $this->primary = $value;
+
+        return $this;
+    }
+
+    public function isPrimary(): bool
+    {
+        return $this->primary;
+    }
 
 
     public function formatter(Closure $formatter): self
@@ -81,6 +97,8 @@ abstract class Column extends AbstractColumn
             'icon' => $this->getIcon(),
             'prefix' => $this->getPrefix(),
             'suffix' => $this->getSuffix(),
+            'primary' => $this->isPrimary(),
+            'columns' => $this->getArrayColumns(),
         ], $this->getEditableToArray(), $this->getGridLayoutConfig());
     }
 }

@@ -2,8 +2,8 @@
   <div class="space-y-4">
     <!-- Filtros e Header Actions -->
     <div class="flex flex-col space-y-4">
-      <TableFilters v-if="table.filters.value.length" :filters="table.filters.value"
-        :searchable="table.searchable.value" @apply="table.filter" @clear="table.reset" class="flex-1" />
+      <TableFilters v-if="table.filters.value.length || table.searchable.value"
+        :filters="table.filters.value" :searchable="table.searchable.value" class="flex-1" />
     </div>
 
     <div v-if="table.records.value.length" class="space-y-6">
@@ -22,10 +22,7 @@
 
         <!-- Conteúdo: colunas sem rowSpan -->
         <div class="flex min-w-0 flex-1 flex-col">
-          <CardContent :class="[
-            'grid flex-1 grid-cols-1 gap-2 pt-4',
-            contentGridClasses,
-          ]">
+          <CardContent :class="['grid flex-1 grid-cols-1 gap-2', contentGridClasses]">
             <div v-for="column in contentColumns" :key="column.name" :class="getColumnClasses(column)"
               :style="getColumnStyles(column)" class="flex flex-col mb-4">
               <span class="mb-1 text-[10px] font-bold uppercase text-muted-foreground">
@@ -33,6 +30,19 @@
               </span>
               <div class="text-sm font-semibold text-card-foreground">
                 <TableColumnRenderer :record="record" :column="column" />
+              </div>
+              <!-- Colunas filhas: info secundária abaixo do valor principal -->
+              <div v-if="column.columns?.length" class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                <div
+                  v-for="childCol in column.columns"
+                  :key="childCol.name"
+                  class="inline-flex items-center text-xs text-muted-foreground"
+                >
+                  <span v-if="childCol.label" class="mr-1 font-medium text-muted-foreground/60">
+                    {{ childCol.label }}:
+                  </span>
+                  <TableColumnRenderer :record="record" :column="childCol" />
+                </div>
               </div>
             </div>
           </CardContent>
@@ -50,8 +60,7 @@
       Nenhum registro encontrado
     </div>
 
-    <TablePagination v-if="table.meta.value.total > 0" :meta="table.meta.value" @page-change="table.page"
-      @per-page-change="table.perPage" />
+    <TablePagination v-if="table.meta.value?.total > 0" :meta="table.meta.value" />
   </div>
 </template>
 
@@ -59,7 +68,7 @@
 import { computed } from "vue";
 import { useInertiaTable } from "~/composables/useInertiaTable";
 import { useGridLayout } from "~/composables/useGridLayout";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from '~/components/ui/card';
 import TableFilters from "../filters/TableFilters.vue";
 import TablePagination from "./TablePagination.vue";
 import ActionRenderer from "../actions/ActionRenderer.vue";

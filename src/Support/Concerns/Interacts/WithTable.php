@@ -141,6 +141,18 @@ trait WithTable
             if ($value !== null && $value !== '') {
                 $row[$columnName] = $column->render($value, $item);
             }
+
+            // Renderiza colunas filhas no mesmo $row (valores achatados)
+            // O frontend os referencia via column.columns[].name
+            if ($column->hasColumns()) {
+                foreach ($column->getColumns() as $childColumn) {
+                    $childName = $childColumn->getName();
+                    $childValue = data_get($item, $childName);
+                    if ($childValue !== null && $childValue !== '') {
+                        $row[$childName] = $childColumn->render($childValue, $item);
+                    }
+                }
+            }
         }
 
         $row['actions'] = $item instanceof Model

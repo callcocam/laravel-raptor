@@ -115,16 +115,13 @@
     <!-- Seletor de itens por página -->
     <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
       <span class="text-sm text-muted-foreground">Por página</span>
-      <Select :model-value="String(meta.per_page)" @update:model-value="changePerPage">
-        <SelectTrigger class="h-8 w-[70px]">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem v-for="size in [10, 15, 25, 50, 100]" :key="size" :value="String(size)">
-            {{ size }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
+      <select
+        :value="meta.per_page"
+        class="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 cursor-pointer"
+        @change="changePerPage(($event.target as HTMLSelectElement).value)"
+      >
+        <option v-for="size in [10, 15, 25, 50, 100]" :key="size" :value="size">{{ size }}</option>
+      </select>
     </div>
   </div>
 </template>
@@ -133,7 +130,6 @@
 import { computed } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { TableMeta } from '~/types/table';
 
