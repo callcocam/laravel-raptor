@@ -98,8 +98,7 @@ trait WithRequests
 
             // Delete Action - usa policy('delete') + verifica se não está deletado
             \Callcocam\LaravelRaptor\Support\Actions\Types\DeleteAction::make("{$resourceName}.destroy")
-                ->size('sm')
-                ->variant('destructive')
+                ->size('sm') 
                 ->policy('delete'),
         ];
 

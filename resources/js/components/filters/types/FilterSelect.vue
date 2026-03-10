@@ -1,63 +1,59 @@
 <!--
- * FilterSelect - Filtro de seleção (dropdown)
- * 
- * Permite selecionar uma opção de uma lista predefinida
- * Útil para status, categorias, etc.
- -->
-<template>
-  <Select class="h-9"
-    :modelValue="modelValue ? String(modelValue) : undefined"
-    @update:modelValue="handleSelect"
-  >
-    <SelectTrigger :id="filter.name" class="w-full">
-      <SelectValue :placeholder="filter.placeholder || filter.label" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem
-        v-for="option in filter.options"
-        :key="option.value"
-        :value="String(option.value)"
-      >
-        {{ option.label }}
-      </SelectItem>
-    </SelectContent>
-  </Select>
-</template>
-
+ * FilterSelect — filtro de seleção usando SelectWithClear nativo do pacote.
+ *
+ * Recebe a configuração de filtro no padrão SelectFilter::toArray():
+ *   { name, label, placeholder, options: [{ value, label }] }
+ *
+ * Expõe clear nativo, busca opcional e keyboard navigation.
+-->
 <script setup lang="ts">
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import SelectWithClear from '~/components/ui/select/SelectWithClear.vue'
 
 interface FilterOption {
-  value: string | number
-  label: string
+    value: string | number
+    label: string
 }
 
-interface Props {
-  filter: {
+interface Filter {
     name: string
     label: string
     placeholder?: string
-    options: FilterOption[]
+    options?: FilterOption[]
+    searchable?: boolean
     [key: string]: any
-  }
-  modelValue?: string | number
+}
+
+interface Props {
+    filter: Filter
+    modelValue?: string | number | null
 }
 
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string | number): void
+    (e: 'update:modelValue', value: string | number | null): void
 }>()
 
-const handleSelect = (value: string) => {
-  // Se o valor original era número, converte de volta
-  const originalValue = props.filter.options?.find(opt => String(opt.value) === value)?.value
-  emit('update:modelValue', originalValue || value)
+const handleUpdate = (value: string | null) => {
+    if (!value) {
+        emit('update:modelValue', null)
+        return
+    }
+    // Preserva o tipo original da opção (number vs string)
+    const original = props.filter.options?.find((opt) => String(opt.value) === value)
+    emit('update:modelValue', original?.value ?? value)
 }
 </script>
+
+<template>
+    <SelectWithClear
+        :model-value="modelValue != null ? String(modelValue) : null"
+        :label="filter.label"
+        :placeholder="filter.placeholder ?? filter.label"
+        :options="filter.options ?? []"
+        option-value="value"
+        option-label="label"
+        :searchable="filter.searchable ?? (filter.options?.length ?? 0) > 6"
+        @update:model-value="handleUpdate"
+    />
+</template>

@@ -155,6 +155,7 @@ FilterRegistry.registerBulk({
     'filter-date-range': defineAsyncComponent(() => import('~/components/filters/types/FilterDateRange.vue')),
     'filter-trashed': defineAsyncComponent(() => import('~/components/filters/types/FilterTrashed.vue')),
     'filter-nullable': defineAsyncComponent(() => import('~/components/filters/types/FilterNullable.vue')),
+    'filter-select-with-clear': defineAsyncComponent(() => import('~/components/filters/types/FilterSelectWithClear.vue')),
 })
 
 FilterRegistry.markAsInitialized()
@@ -232,6 +233,10 @@ const install = (app: App, options: RaptorPluginOptions = {}): void => {
     app.component(
         'NotificationDropdown',
         defineAsyncComponent(() => import('~/components/NotificationDropdown.vue'))
+    )
+    app.component(
+        'SelectWithClear',
+        defineAsyncComponent(() => import('~/components/ui/select/SelectWithClear.vue'))
     )
 
     // Registra formatadores personalizados

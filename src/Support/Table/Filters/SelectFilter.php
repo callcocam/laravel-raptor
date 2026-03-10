@@ -15,7 +15,7 @@ class SelectFilter extends FilterBuilder
 {
     use BelongsToOptions;
 
-    protected string $component = 'filter-select';
+    protected string $component = 'filter-select-with-clear';
 
     protected function setUp(): void
     {

@@ -122,7 +122,7 @@ class UserController extends TenantController
                 \Callcocam\LaravelRaptor\Support\Actions\Types\EditAction::make(config('raptor.controllers.users.actions.edit', 'users.edit')),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\LinkAction::make('tenant.loginAs')
                     ->label(config('raptor.controllers.users.actions.login_as_label', 'Login como'))
-                    ->icon('Login')
+                    ->icon('LogIn')
                     ->visible(function ($record) {
                         return auth()->check() && method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin();
                     })

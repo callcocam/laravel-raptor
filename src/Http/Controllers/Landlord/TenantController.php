@@ -103,7 +103,7 @@ class TenantController extends LandlordController
                             ]));
                         })
                         ->targetBlank()
-                        ->icon('Login'),
+                        ->icon('LogIn'),
                 ]),
 
             StatusColumnInfolist::make('status')

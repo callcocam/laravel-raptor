@@ -46,6 +46,8 @@ class FilterBuilder
 
     protected ?FilterStrategy $filterStrategy = null;
 
+    protected ?string $classes = 'w-44';
+
     public function __construct(string $name, ?string $label = null)
     {
         $this->label($label ?? ucfirst($name));
@@ -165,6 +167,30 @@ class FilterBuilder
         return $this->strategy(new BooleanFilterStrategy);
     }
 
+    public function component(string $component): static
+    {
+        $this->component = $component;
+
+        return $this;
+    }
+
+    public function getComponent(): string
+    {
+        return $this->component;
+    }
+
+    public function classes(string $classes): static
+    {
+        $this->classes = $classes;
+
+        return $this;
+    }
+
+    public function getClasses(): string
+    {
+        return $this->classes;
+    }
+
     protected function setUp(): void
     {
         //
@@ -177,11 +203,12 @@ class FilterBuilder
             'name' => $this->getName(),
             'label' => $this->getLabel(),
             'icon' => $this->getIcon(),
-            'component' => $this->component,
+            'component' => $this->getComponent(),
             'context' => $this->getContext(),
             'strategy' => $this->filterStrategy?->getName(),
             'visible' => $this->isVisible(),
             'placeholder' => $this->getPlaceholder(),
+            'classes' => $this->getClasses(),
         ];
     }
 }

@@ -45,8 +45,7 @@ const component = computed(() => {
     if (registeredComponent) {
       return registeredComponent
     }
-  }
-  console.log('Determining component for action:', componentName)
+  } 
 
   // 2. Usa actionType se disponível (nova arquitetura)
   if (props.action.actionType) {

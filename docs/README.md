@@ -4,6 +4,15 @@ Bem-vindo à documentação do Laravel Raptor, um pacote multi-tenant para Larav
 
 ## Índice
 
+### 🎨 UI — Componentes e Estilos
+- [Visão Geral do Sistema UI](./ui/README.md) - Estrutura, filosofia e localização dos componentes
+- [Layouts](./ui/layouts.md) - RaptorLayout, ResourceLayout, RaptorHeader, modo tela-cheia, notificações, scrollbar
+- [SelectWithClear](./ui/select.md) - Select nativo com limpar, pesquisa, teclado e integração Raptor backend
+- [Sidebar](./ui/sidebar.md) - Sistema completo de sidebar: provider, collapse, mobile drawer, flyout
+- [Navegação](./ui/navigation.md) - NavMain, NavUser, NavFooter — navegação nativa sem reka-ui
+- [Componentes Base](./ui/components.md) - Button, Input, Badge, Card, Separator, Skeleton, Spinner
+- [Temas](./ui/theming.md) - Sistema de temas, variáveis CSS, dark mode, TailwindCSS v4
+
 ### 🏗️ Arquitetura
 - [Multi-Tenancy](./architecture/multi-tenancy.md) - Sistema de tenants, resolvers e contexto
 - [Tenant em Jobs e Commands](./architecture/tenant-context.md) - Como manter contexto do tenant em filas e comandos

@@ -21,7 +21,8 @@ interface Props {
   filter: {
     name: string
     label: string
-    type: string
+    /** Tipo do filtro. Opcional quando 'component' já está definido. */
+    type?: string
     component?: string
     options?: Array<{ value: string | number, label: string }>
     placeholder?: string
