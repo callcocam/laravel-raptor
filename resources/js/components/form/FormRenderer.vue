@@ -15,7 +15,7 @@
       <FieldRenderer
         :column="column"
         :index="index"
-        :error="formErrors[column.name]"
+        :error="isFlatSection(column) ? formErrors : formErrors[column.name]"
         :modelValue="formData[column.name]"
         @update:modelValue="(value) => handleFieldUpdate(column.name, value)"
       />
@@ -102,6 +102,13 @@ const formErrors = computed(() => {
   // Se for um Inertia form, use form.errors, senão use a prop errors
   return props.modelValue?.errors || props.errors || {};
 });
+
+// Seção flat: agrupamento visual cujos campos vivem no formData raiz.
+// Só se aplica ao form-field-section com flat !== false explicitamente.
+// CascadingField e outros campos com `fields` NÃO são seções flat.
+const isFlatSection = (column: FormColumn): boolean => {
+  return column.component === 'form-field-section' && column.flat !== false;
+};
 
 // Validação básica
 const isValid = computed(() => {

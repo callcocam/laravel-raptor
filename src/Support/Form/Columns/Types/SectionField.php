@@ -36,6 +36,12 @@ class SectionField extends Column
 
     protected bool $defaultOpen = false;
 
+    /**
+     * Quando true (padrão), os campos da seção são achatados no formData raiz.
+     * Use false quando a seção representa um relacionamento ou JSON aninhado.
+     */
+    protected bool $flat = true;
+
     public function __construct(string $name, ?string $label = null)
     {
         parent::__construct($name, $label);
@@ -74,6 +80,31 @@ class SectionField extends Column
         return $this->defaultOpen;
     }
 
+    /**
+     * Marca a seção como achatada: campos vivem no formData raiz (padrão).
+     */
+    public function flat(bool $flat = true): static
+    {
+        $this->flat = $flat;
+
+        return $this;
+    }
+
+    /**
+     * Marca a seção como aninhada: campos vivem em formData[name] (relacionamento/JSON).
+     */
+    public function nested(bool $nested = true): static
+    {
+        $this->flat = !$nested;
+
+        return $this;
+    }
+
+    public function isFlat(): bool
+    {
+        return $this->flat;
+    }
+
     public function toArray($model = null): array
     {
         $baseArray = parent::toArray($model);
@@ -86,6 +117,7 @@ class SectionField extends Column
         $baseArray['fields'] = $fieldsArray;
         $baseArray['collapsible'] = $this->isCollapsible();
         $baseArray['defaultOpen'] = $this->isDefaultOpen();
+        $baseArray['flat'] = $this->isFlat();
 
         return $baseArray;
     }

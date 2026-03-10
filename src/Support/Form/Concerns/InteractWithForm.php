@@ -9,10 +9,19 @@
 namespace Callcocam\LaravelRaptor\Support\Form\Concerns;
 
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
 
 trait InteractWithForm
 {
     use WithColumns;
+
+    /**
+     * Retorna true se a coluna é um SectionField flat (agrupamento visual sem chave no model).
+     */
+    protected function isFlatSection($column): bool
+    {
+        return $column instanceof SectionField && $column->isFlat();
+    }
 
     /**
      * Retorna o formulário como estrutura de dados
@@ -41,6 +50,12 @@ trait InteractWithForm
                 continue;
             }
             if (method_exists($column, 'isSheet') && $column->isSheet()) {
+                continue;
+            }
+
+            // SectionField flat: ignorar o nome da seção e processar os campos-filhos diretamente
+            if ($this->isFlatSection($column)) {
+                $rules = array_merge($rules, $this->getValidationRulesForFields($column->getFields(), $record, $request));
                 continue;
             }
 
@@ -77,6 +92,36 @@ trait InteractWithForm
     }
 
     /**
+     * Extrai regras de validação de um array de campos (usado para os filhos de SectionField flat).
+     */
+    protected function getValidationRulesForFields(array $fields, $record = null, $request = null): array
+    {
+        $rules = [];
+
+        foreach ($fields as $field) {
+            if (method_exists($field, 'isVisible') && ! $field->isVisible()) {
+                continue;
+            }
+
+            $fieldRules = $field->getRules($record);
+
+            if (! empty($fieldRules)) {
+                if (! in_array($field->getType(), ['password'])) {
+                    $rules[$field->getName()] = $fieldRules;
+                } elseif ($request && $request->filled($field->getName())) {
+                    $rules[$field->getName()] = $fieldRules;
+                }
+            } else {
+                if (! in_array($field->getType(), ['password'])) {
+                    $rules[$field->getName()] = ['nullable'];
+                }
+            }
+        }
+
+        return $rules;
+    }
+
+    /**
      * Prepara os dados do request ANTES da validação
      *
      * Converte valores formatados (ex: money) para formato validável
@@ -93,6 +138,13 @@ trait InteractWithForm
         // Aplica conversões necessárias antes da validação
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
+
+            // SectionField flat: remove a chave fantasma da seção e processa os filhos
+            if ($this->isFlatSection($column)) {
+                unset($data[$columnName]);
+                $data = $this->prepareFieldsForValidation($column->getFields(), $data, $model);
+                continue;
+            }
 
             // Verifica se o campo está presente no request
             if (! array_key_exists($columnName, $data)) {
@@ -126,6 +178,36 @@ trait InteractWithForm
     }
 
     /**
+     * Prepara os campos-filhos de uma SectionField flat para validação.
+     */
+    protected function prepareFieldsForValidation(array $fields, array $data, $model = null): array
+    {
+        foreach ($fields as $field) {
+            $fieldName = $field->getName();
+
+            if (! array_key_exists($fieldName, $data)) {
+                continue;
+            }
+
+            try {
+                $valueUsing = $field->getValueUsing($data, $model);
+
+                if ($valueUsing !== null) {
+                    if (is_array($valueUsing)) {
+                        $data = array_merge($data, $valueUsing);
+                    } else {
+                        $data[$fieldName] = $valueUsing;
+                    }
+                }
+            } catch (\Throwable $e) {
+                logger()->warning("Error preparing section field '{$fieldName}' for validation: ".$e->getMessage());
+            }
+        }
+
+        return $data;
+    }
+
+    /**
      * Extrai as mensagens de validação customizadas (incluindo items de repeater)
      */
     public function getValidationMessages(): array
@@ -133,6 +215,19 @@ trait InteractWithForm
         $messages = [];
 
         foreach ($this->getColumns() as $column) {
+            // SectionField flat: coletar mensagens dos campos-filhos
+            if ($this->isFlatSection($column)) {
+                foreach ($column->getFields() as $field) {
+                    $fieldMessages = $field->getMessages();
+                    if (! empty($fieldMessages)) {
+                        foreach ($fieldMessages as $rule => $message) {
+                            $messages["{$field->getName()}.{$rule}"] = $message;
+                        }
+                    }
+                }
+                continue;
+            }
+
             // Coleta mensagens dos items do repeater se disponível
             if (method_exists($column, 'getItemsValidationMessages')) {
                 $itemMessages = $column->getItemsValidationMessages();
@@ -163,10 +258,30 @@ trait InteractWithForm
      */
     public function getFormData($data, $model = null): array
     {
-
         // Aplica customizações apenas nos campos definidos
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
+
+            // SectionField flat: remove a chave fantasma e processa os filhos no nível raiz
+            if ($this->isFlatSection($column)) {
+                unset($data[$columnName]);
+                foreach ($column->getFields() as $field) {
+                    $fieldName = $field->getName();
+                    try {
+                        $valueUsing = $field->getValueUsing($data, $model);
+                        if ($valueUsing !== null) {
+                            if (is_array($valueUsing)) {
+                                $data = array_merge($data, $valueUsing);
+                            } else {
+                                $data[$fieldName] = $valueUsing;
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        logger()->warning("Error processing section field '{$fieldName}': ".$e->getMessage());
+                    }
+                }
+                continue;
+            }
 
             try {
                 // Tenta obter valor customizado do campo
@@ -186,7 +301,6 @@ trait InteractWithForm
             } catch (\Throwable $e) {
                 // Log error mas mantém valor original do request
                 logger()->warning("Error processing form field '{$columnName}': ".$e->getMessage());
-                // Não faz nada - mantém o valor original do request
             }
         }
 

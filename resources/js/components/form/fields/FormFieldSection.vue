@@ -1,9 +1,11 @@
 <!--
  * FormFieldSection - Section container for organizing form fields with collapsible accordion
  *
- * Groups related fields together with an optional collapsible container
- -->
- <template>
+ * Modos:
+ * - flat (padrão): os campos da seção pertencem ao formData raiz. Ideal para agrupamento visual.
+ * - nested (flat: false): os campos ficam em formData[column.name]. Ideal para JSON/relacionamentos.
+-->
+<template>
   <div class="col-span-12">
     <Collapsible
       v-if="column.collapsible"
@@ -42,7 +44,7 @@
               <FieldRenderer
                 :column="field"
                 :index="index"
-                :error="props.error?.[field.name]"
+                :error="fieldError(field.name)"
                 :modelValue="fieldValues[field.name]"
                 @update:modelValue="(value) => handleFieldUpdate(field.name, value)"
               />
@@ -75,7 +77,7 @@
           <FieldRenderer
             :column="field"
             :index="index"
-            :error="props.error?.[field.name]"
+            :error="fieldError(field.name)"
             :modelValue="fieldValues[field.name]"
             @update:modelValue="(value) => handleFieldUpdate(field.name, value)"
           />
@@ -86,120 +88,131 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { Button } from "~/components/ui/button";
-import { ChevronsUpDown } from "lucide-vue-next";
+import { computed, inject, ref, watch, type ComputedRef } from 'vue'
+import { Button } from '~/components/ui/button'
+import { ChevronsUpDown } from 'lucide-vue-next'
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "~/components/ui/collapsible";
-import FieldRenderer from "~/components/form/FieldRenderer.vue";
-import { useGridLayout } from "~/composables/useGridLayout";
-import { createMultiFieldUpdate, isMultiFieldUpdate } from "~/types/form";
-import type { FieldEmitValue } from "~/types/form";
+} from '~/components/ui/collapsible'
+import FieldRenderer from '~/components/form/FieldRenderer.vue'
+import { useGridLayout } from '~/composables/useGridLayout'
+import { createMultiFieldUpdate, isMultiFieldUpdate } from '~/types/form'
+import type { FieldEmitValue } from '~/types/form'
 
 interface SectionField {
-  name: string;
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  readonly?: boolean;
-  helpText?: string;
-  columnSpan?: string;
-  [key: string]: any;
+  name: string
+  label: string
+  placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  readonly?: boolean
+  helpText?: string
+  columnSpan?: string
+  [key: string]: any
 }
 
 interface FormColumn {
-  name: string;
-  label?: string;
-  required?: boolean;
-  tooltip?: string;
-  helpText?: string;
-  hint?: string;
-  fields?: SectionField[];
-  collapsible?: boolean;
-  defaultOpen?: boolean;
+  name: string
+  label?: string
+  required?: boolean
+  tooltip?: string
+  helpText?: string
+  hint?: string
+  fields?: SectionField[]
+  collapsible?: boolean
+  defaultOpen?: boolean
+  /**
+   * flat: true (padrão) → campos pertencem ao formData raiz (agrupamento visual).
+   * flat: false → campos ficam em formData[name] (relacionamento/JSON).
+   */
+  flat?: boolean
 }
 
 interface Props {
-  column: FormColumn;
-  modelValue?: Record<string, any> | string | null;
-  error?: Record<string, string | string[]>;
+  column: FormColumn
+  modelValue?: Record<string, any> | string | null
+  error?: Record<string, string | string[]>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: () => ({}),
   error: () => ({}),
-});
+})
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: FieldEmitValue): void;
-}>();
+  (e: 'update:modelValue', value: FieldEmitValue): void
+}>()
 
-// Grid layout composable
-const { getColumnClasses } = useGridLayout();
+const { getColumnClasses } = useGridLayout()
 
-const fieldValues = ref<Record<string, any>>({});
+// Injeta o formData raiz provido pelo FormRenderer (para modo flat)
+const rootFormData = inject<ComputedRef<Record<string, any>>>('formData')
 
-// Campos da seção do backend
-const sectionFields = computed(() => props.column.fields || []);
+// Modo flat: campos vivem no formData raiz, não aninhados sob column.name
+const isFlat = computed(() => props.column.flat !== false)
 
-// Inicializa valores dos campos
-watch(
-  () => props.modelValue,
-  (newValue) => {
-    // Normaliza o modelValue para sempre ser um objeto
-    const normalizedValue = typeof newValue === 'object' && newValue !== null ? newValue : {};
-    
-    sectionFields.value.forEach((field) => {
-      // Se o campo usa dot notation, busca o valor aninhado
-      if (field.name.includes(".")) {
-        fieldValues.value[field.name] = getNestedValue(normalizedValue, field.name) || "";
-      } else {
-        fieldValues.value[field.name] = normalizedValue[field.name] || "";
-      }
-    }); 
-  },
-  { immediate: true }
-);
+const fieldValues = ref<Record<string, any>>({})
 
-// Obtém valor de objeto aninhado usando dot notation
-// Ex: getNestedValue({settings: {theme: {color: "orange"}}}, "settings.theme.color") -> "orange"
-function getNestedValue(obj: Record<string, any>, path: string): any {
-  const keys = path.split(".");
-  let current = obj;
+const sectionFields = computed(() => props.column.fields || [])
 
-  for (const key of keys) {
-    if (
-      current &&
-      typeof current === "object" &&
-      !Array.isArray(current) &&
-      key in current
-    ) {
-      current = current[key];
-    } else {
-      return undefined;
-    }
+// Fonte de dados para leitura: raiz (flat) ou modelValue (nested)
+const sourceData = computed((): Record<string, any> => {
+  if (isFlat.value) {
+    return rootFormData?.value ?? {}
   }
+  const v = props.modelValue
+  return typeof v === 'object' && v !== null ? v : {}
+})
 
-  return current;
+// Inicializa/sincroniza os valores dos campos conforme a fonte
+watch(
+  sourceData,
+  (data) => {
+    sectionFields.value.forEach((field) => {
+      const key = field.name
+      if (key.includes('.')) {
+        fieldValues.value[key] = getNestedValue(data, key) ?? ''
+      } else {
+        fieldValues.value[key] = data[key] ?? ''
+      }
+    })
+  },
+  { immediate: true, deep: true },
+)
+
+function getNestedValue(obj: Record<string, any>, path: string): any {
+  return path.split('.').reduce((curr, key) => {
+    if (curr && typeof curr === 'object' && !Array.isArray(curr) && key in curr) {
+      return curr[key]
+    }
+    return undefined
+  }, obj as any)
+}
+
+function fieldError(fieldName: string): string | string[] | undefined {
+  return props.error?.[fieldName]
 }
 
 function handleFieldUpdate(fieldName: string, value: FieldEmitValue) {
   if (isMultiFieldUpdate(value)) {
     Object.entries(value.fields).forEach(([key, val]) => {
-      fieldValues.value[key] = val;
-    });
+      fieldValues.value[key] = val
+    })
   } else {
-    fieldValues.value[fieldName] = value;
+    fieldValues.value[fieldName] = value
   }
-  // Emite o objeto da seção sob column.name para o FormRenderer gravar em formData[column.name]
-  const sectionData = { ...fieldValues.value }; 
-  emit(
-    "update:modelValue",
-    createMultiFieldUpdate({ [props.column.name]: sectionData })
-  );
+
+  if (isFlat.value) {
+    // Modo flat: propaga cada campo diretamente para o formData raiz
+    const updated = isMultiFieldUpdate(value)
+      ? { ...value.fields }
+      : { [fieldName]: value }
+    emit('update:modelValue', createMultiFieldUpdate(updated))
+  } else {
+    // Modo nested: propaga como objeto aninhado sob column.name
+    emit('update:modelValue', createMultiFieldUpdate({ [props.column.name]: { ...fieldValues.value } }))
+  }
 }
 </script>
