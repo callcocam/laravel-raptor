@@ -19,8 +19,7 @@
     <span class="text-xs text-foreground">{{ action.label }}</span>
   </Button>
   <button
-    v-else
-    type="button"
+    v-else 
     :class="cn(actionStyle.buttonClasses, className)"
     @click="handleClick"
   >
