@@ -110,8 +110,7 @@ BreadcrumbRegistry.markAsInitialized()
 TableRegistry.registerBulk({
     'table-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')),
     'table-advanced': defineAsyncComponent(() => import('~/components/table/AdvancedTable.vue')),
-    'table-legacy-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')),
-    'table-advancy': defineAsyncComponent(() => import('~/components/table/AdvancyTable.vue')),
+    'table-legacy-default': defineAsyncComponent(() => import('~/components/table/DefaultTable.vue')), 
 })
 
 TableRegistry.markAsInitialized()
