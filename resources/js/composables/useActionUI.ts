@@ -3,8 +3,7 @@
  *
  * Centraliza a lógica repetida em componentes de ações:
  * - Mapeamento de cor para variant
- * - Cálculo de classes de ícone
- * - Carregamento dinâmico de ícones
+ * - Estilo plannerate (fundo escuro + ícone em caixa verde) vs Button padrão
  * - Configurações de tamanho e variante
  */
 
@@ -12,18 +11,48 @@ import { computed, h, type ComputedRef } from 'vue'
 import * as LucideIcons from 'lucide-vue-next'
 import type { TableAction } from '~/types/table'
 
+export type ActionVariant = 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'
+
+/**
+ * Estilo base - alinhado ao Button padrão (btn-gradient + ActionIconBox)
+ * Usa as mesmas classes do sistema para consistência visual
+ */
+export const ACTION_STYLE = {
+  buttonClasses:
+    'flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800 px-3 py-[5px] text-xs font-medium text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none btn-gradient',
+  buttonClassesDisabled: 'disabled:opacity-50 disabled:pointer-events-none',
+  iconWrapperClasses:
+    'flex items-center justify-center rounded-lg p-0.5 shrink-0 bg-primary  text-primary-foreground',
+  iconClasses: 'size-5',
+  labelClasses: 'text-sm font-semibold text-white',
+} as const
+
+/** Variantes que usam o componente Button (não o estilo plannerate) */
+const BUTTON_VARIANTS: ActionVariant[] = ['outline', 'ghost', 'destructive', 'secondary', 'link']
+
+/** Verifica se a variant deve usar o componente Button em vez do estilo plannerate */
+export function isButtonVariant(variant: ActionVariant): boolean {
+  return BUTTON_VARIANTS.includes(variant)
+}
+
 interface UseActionUIOptions {
   action: TableAction
   defaultSize?: 'default' | 'sm' | 'lg' | 'icon'
-  defaultVariant?: 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'
+  defaultVariant?: ActionVariant
 }
 
 interface UseActionUIResult {
-  variant: ComputedRef<'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'>
+  variant: ComputedRef<ActionVariant>
   size: ComputedRef<'default' | 'sm' | 'lg' | 'icon'>
   iconComponent: ComputedRef<any>
   iconClasses: ComputedRef<string>
   colorClasses: ComputedRef<string>
+  /** True quando deve usar o estilo plannerate (fundo escuro + ícone verde). False para outline/ghost/etc. */
+  isActionStyle: ComputedRef<boolean>
+  /** Constante com classes do estilo plannerate */
+  actionStyle: typeof ACTION_STYLE
+  /** Variant para ActionIconBox (default | outline | destructive) baseado na variant do botão */
+  iconBoxVariant: ComputedRef<'default' | 'outline' | 'destructive'>
 }
 
 /**
@@ -39,14 +68,14 @@ const colorToVariantMap: Record<string, 'default' | 'outline' | 'ghost' | 'destr
 }
 
 /**
- * Tailwind color classes para links
+ * Classes de cor para links - usa variáveis do tema
  */
 const colorToTextClassMap: Record<string, string> = {
-  'green': 'text-green-600 hover:text-green-700 dark:text-green-400',
-  'blue': 'text-blue-600 hover:text-blue-700 dark:text-blue-400',
-  'red': 'text-red-600 hover:text-red-700 dark:text-red-400',
-  'yellow': 'text-yellow-600 hover:text-yellow-700 dark:text-yellow-400',
-  'gray': 'text-gray-600 hover:text-gray-700 dark:text-gray-400',
+  'green': 'text-primary hover:text-primary/80',
+  'blue': 'text-primary hover:text-primary/80',
+  'red': 'text-destructive hover:text-destructive/90',
+  'yellow': 'text-muted-foreground hover:text-foreground',
+  'gray': 'text-muted-foreground hover:text-foreground',
   'default': 'text-primary hover:text-primary/80'
 }
 
@@ -118,12 +147,24 @@ export function useActionUI(options: UseActionUIOptions): UseActionUIResult {
     return h(IconComponent)
   })
 
+  const isActionStyle = computed(() => !isButtonVariant(variant.value))
+
+  const iconBoxVariant = computed((): 'default' | 'outline' | 'destructive' => {
+    const v = variant.value
+    if (v === 'destructive') return 'destructive'
+    if (v === 'outline' || v === 'secondary' || v === 'ghost') return 'outline'
+    return 'default'
+  })
+
   return {
     variant,
     size,
     iconComponent,
     iconClasses,
-    colorClasses
+    colorClasses,
+    isActionStyle,
+    actionStyle: ACTION_STYLE,
+    iconBoxVariant,
   }
 }
 

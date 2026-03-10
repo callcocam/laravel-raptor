@@ -21,8 +21,7 @@ class ForceDeleteAction extends Action
         parent::__construct($name ?? 'forceDelete');
         $this->name($name)
             ->label('Excluir Permanentemente')
-            ->icon('Trash2')
-            ->color('red')
+            ->icon('Trash2') 
             ->tooltip('Excluir este registro permanentemente')
             ->policy('forceDelete')
             ->confirm([

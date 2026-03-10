@@ -6,19 +6,34 @@
  -->
 <template>
   <Button
+    v-if="!isActionStyle"
     type="button"
     :variant="variant"
     :size="size"
-    :class="cn('gap-1.5 btn-gradient', className)"
+    :class="cn('gap-1.5', className)"
     @click="handleClick"
   >
-    <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-    <span class="text-xs">{{ action.label }}</span>
+    <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
+      <component :is="iconComponent" />
+    </ActionIconBox>
+    <span class="text-xs text-foreground">{{ action.label }}</span>
   </Button>
+  <button
+    v-else
+    type="button"
+    :class="cn(actionStyle.buttonClasses, className)"
+    @click="handleClick"
+  >
+    <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
+      <component :is="iconComponent" :class="actionStyle.iconClasses" />
+    </div>
+    <span :class="actionStyle.labelClasses">{{ action.label }}</span>
+  </button>
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
+import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { cn } from '@/lib/utils'
 import { useAction } from '~/composables/useAction'
 import { useActionUI } from '~/composables/useActionUI'
@@ -41,7 +56,7 @@ const emit = defineEmits<{
 }>()
 
 const { executeCallback } = useAction()
-const { variant, size, iconComponent, iconClasses } = useActionUI({
+const { variant, size, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 })

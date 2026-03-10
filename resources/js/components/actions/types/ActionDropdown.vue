@@ -7,11 +7,29 @@
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <Button :variant="variant" :size="computedSize" class="gap-1.5 btn-gradient">
-        <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-        <span class="text-xs">{{ action.label }}</span>
+      <Button
+        v-if="!isActionStyle"
+        :variant="variant"
+        :size="computedSize"
+        class="gap-1.5"
+      >
+        <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
+          <component :is="iconComponent" />
+        </ActionIconBox>
+        <span class="text-xs text-foreground">{{ action.label }}</span>
         <ChevronDown class="h-3 w-3" />
       </Button>
+      <button
+        v-else
+        type="button"
+        :class="actionStyle.buttonClasses"
+      >
+        <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
+          <component :is="iconComponent" :class="actionStyle.iconClasses" />
+        </div>
+        <span :class="actionStyle.labelClasses">{{ action.label }}</span>
+        <ChevronDown class="h-3 w-3" />
+      </button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end">
       <DropdownMenuItem
@@ -29,7 +47,8 @@
 
 <script setup lang="ts">
 import { computed, h } from 'vue'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
+import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -60,7 +79,7 @@ const items = computed(() => {
 })
 
 // Usa composable para variant, iconComponent e iconClasses
-const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+const { variant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 })

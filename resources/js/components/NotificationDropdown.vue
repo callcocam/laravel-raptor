@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGlobalNotifications } from '../composables/useGlobalNotifications'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
     DropdownMenu,

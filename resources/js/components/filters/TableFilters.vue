@@ -6,12 +6,12 @@
  * Suporta exibição inline ou em popover (preferência salva em cookie)
  -->
 <template>
-  <div v-if="filters && filters.length > 0" class="flex flex-col gap-2 mb-4">
+  <div v-if="filters && filters.length > 0" class="flex flex-col gap-2 mb-4 w-full">
     <!-- Barra de busca sempre visível -->
     <div class="flex items-center gap-2 w-full">
-      <div class="relative flex-1" v-if="searchable">
-        <Input placeholder="Buscar..." class="w-full h-9 pr-10" v-model="filterValues.search"/>
-        <Search class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      <div class="relative flex-1">
+        <Input  v-if="searchable" placeholder="Buscar..." class="w-full h-9 pr-10" v-model="filterValues.search"/>
+        <Search v-if="searchable" class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
       </div>
 
       <Button
@@ -103,7 +103,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, SlidersHorizontal, ChevronDown } from "lucide-vue-next";
 import FilterRenderer from "./FilterRenderer.vue";

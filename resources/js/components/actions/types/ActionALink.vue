@@ -1,24 +1,25 @@
 <!--
- * ActionLink - Componente de link de ação
+ * ActionALink - Componente de link de ação
  *
- * Renderiza um link simples para navegação
- * Útil para ações GET que apenas navegam
+ * Renderiza um link nativo <a> com aparência de botão (estilo base plannerate)
+ * Útil para ações GET que navegam (incluindo target _blank)
  -->
 <template>
   <a
     :href="action.url"
     :target="target"
-    :class="linkClasses"
+    :class="actionStyle.buttonClasses"
     @click="handleClick"
   >
-    <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-    <span class="text-xs">{{ action.label }}</span>
+    <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
+      <component :is="iconComponent" :class="actionStyle.iconClasses" />
+    </div>
+    <span :class="actionStyle.labelClasses">{{ action.label }}</span>
   </a>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { cn } from '@/lib/utils'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
 
@@ -38,18 +39,9 @@ const target = computed(() => {
 })
 
 // Usa composable para UI padronizada
-const { iconComponent, iconClasses, colorClasses } = useActionUI({
+const { iconComponent, actionStyle } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
-})
-
-// Classes do link
-const linkClasses = computed(() => {
-  return cn(
-    'inline-flex items-center gap-1.5 font-medium transition-colors rounded-md px-2 py-1 btn-gradient',
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    colorClasses.value
-  )
 })
 
 // Handler de clique

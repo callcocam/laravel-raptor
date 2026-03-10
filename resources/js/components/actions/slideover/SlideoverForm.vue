@@ -15,10 +15,10 @@
   <!-- Footer com botões -->
   <div class="border-t px-6 py-4">
     <div class="flex justify-end gap-3">
-      <Button variant="outline" @click="emit('cancel')" :disabled="form.processing">
+      <Button variant="outline" size="sm" @click="emit('cancel')" :disabled="form.processing">
         Cancelar
       </Button>
-      <Button @click="handleSubmit" :disabled="form.processing">
+      <Button size="sm" @click="handleSubmit" :disabled="form.processing">
         {{ form.processing ? 'Processando...' : confirmText }}
       </Button>
     </div>
@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import FormRenderer from '../../form/FormRenderer.vue'
 
 interface Props {

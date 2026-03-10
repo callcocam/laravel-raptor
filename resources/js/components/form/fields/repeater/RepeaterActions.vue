@@ -15,7 +15,9 @@
           size="sm"
           @click="$emit('collapseAll')"
         >
-          <ChevronsDown class="h-4 w-4 mr-2" />
+          <ActionIconBox variant="outline">
+            <ChevronsDown />
+          </ActionIconBox>
           Recolher tudo
         </Button>
         <Button
@@ -24,7 +26,9 @@
           size="sm"
           @click="$emit('expandAll')"
         >
-          <ChevronsUp class="h-4 w-4 mr-2" />
+          <ActionIconBox variant="outline">
+            <ChevronsUp />
+          </ActionIconBox>
           Expandir tudo
         </Button>
       </template>
@@ -41,7 +45,9 @@
         class="text-destructive hover:text-destructive"
         @click="$emit('clearAll')"
       >
-        <Trash2 class="h-4 w-4 mr-2" />
+        <ActionIconBox variant="destructive">
+          <Trash2 />
+        </ActionIconBox>
         Limpar tudo
       </Button>
 
@@ -53,7 +59,9 @@
         size="sm"
         @click="$emit('add')"
       >
-        <Plus class="h-4 w-4 mr-2" />
+        <ActionIconBox variant="default">
+          <Plus />
+        </ActionIconBox>
         {{ addButtonLabel }}
       </Button>
       <slot />
@@ -62,7 +70,8 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
+import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { Plus, Trash2, ChevronsDown, ChevronsUp } from 'lucide-vue-next'
 
 interface Props {

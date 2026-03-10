@@ -3,6 +3,7 @@ import { computed } from "vue";
 interface FormColumn {
   name: string;
   columnSpan?: string;
+  rowSpan?: string;
   order?: number;
   responsive?: {
     span?: { sm?: string; md?: string; lg?: string; xl?: string };
@@ -62,6 +63,22 @@ export function useGridLayout(options: GridLayoutOptions = {}) {
     full: "md:col-span-full",
   };
 
+  const rowSpanMap: Record<string, string> = {
+    "1": "md:row-span-1",
+    "2": "md:row-span-2",
+    "3": "md:row-span-3",
+    "4": "md:row-span-4",
+    "5": "md:row-span-5",
+    "6": "md:row-span-6",
+    "7": "md:row-span-7",
+    "8": "md:row-span-8",
+    "9": "md:row-span-9",
+    "10": "md:row-span-10",
+    "11": "md:row-span-11",
+    "12": "md:row-span-12",
+    full: "md:row-span-full",
+  };
+
   /**
    * Gera classes do grid container
    */
@@ -104,6 +121,14 @@ export function useGridLayout(options: GridLayoutOptions = {}) {
         classes.push(colSpanMap[xl].replace("md:", "xl:"));
     }
 
+    // Row span (vertical - ex: imagem que ocupa várias linhas no grid)
+    if (column.rowSpan) {
+      const rowSpanClass = rowSpanMap[column.rowSpan];
+      if (rowSpanClass) {
+        classes.push(rowSpanClass);
+      }
+    }
+
     return classes.join(" ");
   };
 
@@ -132,5 +157,6 @@ export function useGridLayout(options: GridLayoutOptions = {}) {
     gridColsMap,
     gapMap,
     colSpanMap,
+    rowSpanMap,
   };
 }

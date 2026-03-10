@@ -75,7 +75,7 @@
 import { computed, ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import {
   Popover,
   PopoverContent,

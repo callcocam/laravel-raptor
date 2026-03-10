@@ -25,7 +25,7 @@ class ViewAction extends Action
             ->color('blue')
             ->policy('view')
             ->component('action-button-link')
-            ->tooltip('Visualizar detalhes');
+            ->tooltip('Visualizar detalhes')->hidden(fn ($record) => ! empty($record->deleted_at));
         $this->setUp();
     }
 }

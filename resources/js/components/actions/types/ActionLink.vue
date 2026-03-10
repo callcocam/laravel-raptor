@@ -1,34 +1,34 @@
 <!--
  * ActionLink - Componente de link de ação
  *
- * Renderiza um link simples para navegação
- * Útil para ações GET que apenas navegam
+ * Renderiza um Link do Inertia com aparência de botão (estilo base plannerate)
+ * Útil para ações GET que navegam via SPA
  -->
 <template>
   <Link
     :href="to"
     :target="target"
-    :class="linkClasses"
+    :class="actionStyle.buttonClasses"
     @click="handleClick"
   >
-    <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-    <span class="text-xs">{{ action.label }}</span>
+    <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
+      <component :is="iconComponent" :class="actionStyle.iconClasses" />
+    </div>
+    <span :class="actionStyle.labelClasses">{{ action.label }}</span>
   </Link>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { cn } from '@/lib/utils'
+import { Link } from '@inertiajs/vue3'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
-import { Link } from '@inertiajs/vue3'
 
 interface Props {
   action: TableAction
 }
 
 const props = defineProps<Props>()
-  
+
 const emit = defineEmits<{
   (e: 'click', event: MouseEvent): void
 }>()
@@ -38,17 +38,10 @@ const target = props.action.target === 'modal' ? '_self' : props.action.target
 
 const to = props.action.url || '#'
 
-const { iconComponent, iconClasses, colorClasses } = useActionUI({
+const { iconComponent, actionStyle } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 })
-
-// Classes do link
-const linkClasses = computed(() => cn(
-  'inline-flex items-center gap-1.5 font-medium transition-colors rounded-md px-2 py-1 btn-gradient',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-  colorClasses.value
-))
 
 // Handler de clique
 const handleClick = (event: MouseEvent) => {

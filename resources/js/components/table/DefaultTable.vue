@@ -2,61 +2,56 @@
   <div class="space-y-4">
     <!-- Filtros e Header Actions -->
     <div class="flex flex-col space-y-4">
-      <TableFilters
-        v-if="table.filters.value.length"
-        :filters="table.filters.value"
-        :searchable="table.searchable.value"
-        @apply="table.filter"
-        @clear="table.reset"
-        class="flex-1"
-      />
+      <TableFilters v-if="table.filters.value.length" :filters="table.filters.value"
+        :searchable="table.searchable.value" @apply="table.filter" @clear="table.reset" class="flex-1" />
     </div>
 
-    <div class="rounded-lg border bg-card">
-      <div v-if="table.records.value.length" class="divide-y">
-        <div
-          v-for="record in table.records.value"
-          :key="record.id"
-          class="p-4 hover:bg-accent/50 transition-colors"
-        >
-          <div :class="tableGridClasses" class="grid">
-            <div
-              v-for="column in visibleColumns"
-              :key="column.name"
-              :class="getColumnClasses(column)"
-              :style="getColumnStyles(column)"
-            >
-              <span class="text-xs font-medium text-muted-foreground">
+    <div v-if="table.records.value.length" class="space-y-6">
+      <Card v-for="record in table.records.value" :key="record.id"
+        class="flex flex-col overflow-hidden transition-shadow hover:shadow-lg lg:flex-row">
+        <!-- Thumbnail: colunas com rowSpan (ex: imagem) -->
+        <div v-if="thumbnailColumns.length"
+          class="relative h-32 w-full shrink-0 border-r bg-muted/30 lg:h-auto lg:w-48">
+          <div class="flex h-full w-full flex-col items-center justify-center gap-2 p-2">
+            <div v-for="column in thumbnailColumns" :key="column.name"
+              class="flex h-full w-full items-center justify-center">
+              <TableColumnRenderer :record="record" :column="column" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Conteúdo: colunas sem rowSpan -->
+        <div class="flex min-w-0 flex-1 flex-col">
+          <CardContent :class="[
+            'grid flex-1 grid-cols-1 gap-2 pt-4',
+            contentGridClasses,
+          ]">
+            <div v-for="column in contentColumns" :key="column.name" :class="getColumnClasses(column)"
+              :style="getColumnStyles(column)" class="flex flex-col mb-4">
+              <span class="mb-1 text-[10px] font-bold uppercase text-muted-foreground">
                 {{ column.label }}
               </span>
-              <div class="text-sm mt-0.5">
+              <div class="text-sm font-semibold text-card-foreground">
                 <TableColumnRenderer :record="record" :column="column" />
               </div>
             </div>
-          </div>
-
-          <div v-if="getActions(record).length" class="flex gap-2 mt-3 pt-3 border-t">
-            <ActionRenderer
-              v-for="action in getActions(record)"
-              :key="action.name"
-              :action="action"
-              :record="record"
-            />
-          </div>
+          </CardContent>
+          <CardFooter v-if="getActions(record).length" class="border-t pt-4">
+            <div class="flex flex-wrap items-center gap-3">
+              <ActionRenderer v-for="action in getActions(record)" :key="action.name" :action="action"
+                :record="record" />
+            </div>
+          </CardFooter>
         </div>
-      </div>
-
-      <div v-else class="p-12 text-center text-muted-foreground">
-        Nenhum registro encontrado
-      </div>
+      </Card>
     </div>
 
-    <TablePagination
-      v-if="table.meta.value.total > 0"
-      :meta="table.meta.value"
-      @page-change="table.page"
-      @per-page-change="table.perPage"
-    />
+    <div v-else class="rounded-lg border bg-card p-12 text-center text-muted-foreground">
+      Nenhum registro encontrado
+    </div>
+
+    <TablePagination v-if="table.meta.value.total > 0" :meta="table.meta.value" @page-change="table.page"
+      @per-page-change="table.perPage" />
   </div>
 </template>
 
@@ -64,6 +59,7 @@
 import { computed } from "vue";
 import { useInertiaTable } from "~/composables/useInertiaTable";
 import { useGridLayout } from "~/composables/useGridLayout";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import TableFilters from "../filters/TableFilters.vue";
 import TablePagination from "./TablePagination.vue";
 import ActionRenderer from "../actions/ActionRenderer.vue";
@@ -91,15 +87,26 @@ const { getFormClasses, getColumnClasses, getColumnStyles } = useGridLayout({
   gap: firstColumnWithGrid.value?.gap ?? "3",
 });
 
-const tableGridClasses = computed(() => {
-  const gridColumns = firstColumnWithGrid.value?.gridColumns ?? "12";
-  const gap = firstColumnWithGrid.value?.gap ?? "1";
-  return getFormClasses(gridColumns, gap);
-});
-
 const visibleColumns = computed(() => {
   const cols = columns.value.filter((c) => c.visible !== false);
   return cols.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+});
+
+/** Colunas com rowSpan → área thumbnail (ex: imagem à esquerda) */
+const thumbnailColumns = computed(() =>
+  visibleColumns.value.filter((c) => c.rowSpan != null && c.rowSpan !== "")
+);
+
+/** Colunas sem rowSpan → grid de conteúdo */
+const contentColumns = computed(() =>
+  visibleColumns.value.filter((c) => !c.rowSpan || c.rowSpan === "")
+);
+
+/** Classes do grid de conteúdo (dinâmico ou md:grid-cols-3 padrão) */
+const contentGridClasses = computed(() => {
+  const gridCols = firstColumnWithGrid.value?.gridColumns ?? "12";
+  const gap = firstColumnWithGrid.value?.gap ?? "4";
+  return getFormClasses(gridCols, gap);
 });
 
 /**

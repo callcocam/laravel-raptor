@@ -10,14 +10,28 @@
   <div>
     <!-- Botão trigger -->
     <Button
+      v-if="!isActionStyle"
       :variant="variant"
       :size="computedSize"
-      class="gap-1.5 btn-gradient"
+      class="gap-1.5"
       @click="openSlideover"
     >
-      <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-      <span class="text-xs">{{ action.label }}</span>
+      <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
+        <component :is="iconComponent" />
+      </ActionIconBox>
+      <span class="text-xs text-foreground">{{ action.label }}</span>
     </Button>
+    <button
+      v-else
+      type="button"
+      :class="actionStyle.buttonClasses"
+      @click="openSlideover"
+    >
+      <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
+        <component :is="iconComponent" :class="actionStyle.iconClasses" />
+      </div>
+      <span :class="actionStyle.labelClasses">{{ action.label }}</span>
+    </button>
 
     <!-- Slideover Base -->
     <SlideoverBase
@@ -63,7 +77,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
+import ActionIconBox from "~/components/ui/ActionIconBox.vue";
 import SlideoverBase from "../slideover/SlideoverBase.vue";
 import SlideoverForm from "../slideover/SlideoverForm.vue";
 import SlideoverTable from "../slideover/SlideoverTable.vue";
@@ -140,7 +155,7 @@ const {
 });
 
 // Usa composable para UI (variant, iconComponent, etc)
-const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+const { variant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 }); 

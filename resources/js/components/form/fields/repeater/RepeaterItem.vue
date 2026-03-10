@@ -119,7 +119,7 @@
 
 <script setup lang="ts">
 import { computed, ref, provide, toRef } from 'vue'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import {
   ChevronDown,
   ChevronRight,

@@ -58,5 +58,12 @@ const pageTitle = computed(() => props.title || props.resourcePluralLabel || 'Da
         </div>
       </slot>
     </div>
+    <div class="row-span-2 md:row-span-1 xl:row-span-2"></div>
+    <div class="row-span-3 md:row-span-2 xl:row-span-3"></div>
+    <div class="row-span-4 md:row-span-3 xl:row-span-4"></div>
+    <div class="row-span-5 md:row-span-4 xl:row-span-5"></div>
+    <div class="row-span-6 md:row-span-5 xl:row-span-6"></div>
+    <div class="row-span-7 md:row-span-5 xl:row-span-7"></div>
+    <div class="row-span-8 md:row-span-6 xl:row-span-8"></div> 
   </AppLayout>
 </template>

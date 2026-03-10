@@ -17,7 +17,7 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\PasswordField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder; 
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
@@ -105,28 +105,25 @@ class UserController extends LandlordController
     protected function table(TableBuilder $table): TableBuilder
     {
         return $table->columns([
+            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\StatusColumn::make('status')
+                ->label('Status')
+                ->editable()
+                ->executeUrl(route('landlord.users.execute'))
+                ->columnSpanOne(),
             TextColumn::make('name', config('raptor.controllers.users.table.name', 'Nome'))
                 ->searchable()
-                ->sortable(),
+                ->sortable()->columnSpanThree(),
 
             EmailColumn::make('email', config('raptor.controllers.users.table.email', 'E-mail'))
                 ->searchable()
-                ->sortable(),
-
-            BooleanColumn::make('email_verified_at', config('raptor.controllers.users.table.email_verified_at', 'Verificado'))
-                ->trueLabel('Sim')
-                ->falseLabel('Não')
-                ->trueColor('success')
-                ->falseColor('warning')
-                ->sortable(),
-
+                ->sortable()->columnSpanFour(),
             DateColumn::make('created_at', config('raptor.controllers.users.table.created_at', 'Criado em'))
                 ->format('d/m/Y H:i')
-                ->sortable(),
+                ->sortable()->columnSpanTwo(),
 
-            DateColumn::make('updated_at', config('raptor.controllers.users.table.updated_at', 'Atualizado'))
+            DateColumn::make('updated_at', config('raptor.controllers.users.table.updated_at', 'Atualizado em'))
                 ->relative()
-                ->sortable(),
+                ->sortable()->columnSpanTwo(),
         ])
             ->filters([
                 \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),

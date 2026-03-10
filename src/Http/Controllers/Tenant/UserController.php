@@ -16,7 +16,7 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\PasswordField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
-use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder; 
+use Callcocam\LaravelRaptor\Support\Info\InfoList as InfoListBuilder;
 use Callcocam\LaravelRaptor\Support\Pages\Index;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
@@ -48,7 +48,7 @@ class UserController extends TenantController
                 ->groupCollapsible(config('raptor.controllers.users.index.groupCollapsible', true))
                 ->order(config('raptor.controllers.users.index.order', 5))
                 ->middlewares(config('raptor.controllers.users.index.middlewares', ['auth', 'verified']))
-                ->resource(config('raptor.shinobi.models.user', \App\Models\User::class)), 
+                ->resource(config('raptor.shinobi.models.user', \App\Models\User::class)),
         ];
     }
 
@@ -79,7 +79,7 @@ class UserController extends TenantController
             CheckboxField::make('roles', config('raptor.controllers.users.form.roles.label', __('Papéis')))
                 ->relationship('roles', 'name')
                 ->multiple()
-                ->defaultUsing(fn ($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
+                ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
                 ->helpText(config('raptor.controllers.users.form.roles.helpText', __('Atribua papéis ao usuário'))),
             // CheckboxField::make(
             //     'email_verified_at',
@@ -94,35 +94,25 @@ class UserController extends TenantController
     protected function table(TableBuilder $table): TableBuilder
     {
         return $table->columns([
+            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\StatusColumn::make('status')
+                ->label('Status')
+                ->editable()
+                ->executeUrl(route('tenant.users.execute'))
+                ->columnSpanOne(),
             TextColumn::make('name', config('raptor.controllers.users.table.name', 'Nome'))
                 ->searchable()
-                ->sortable(),
+                ->sortable()->columnSpanThree(),
 
             EmailColumn::make('email', config('raptor.controllers.users.table.email', 'E-mail'))
                 ->searchable()
-                ->sortable(),
-
-            // BooleanColumn::make('email_verified_at', config('raptor.controllers.users.table.email_verified_at', 'Verificado'))
-            //     ->trueLabel('Sim')
-            //     ->falseLabel('Não')
-            //     ->trueColor('success')
-            //     ->falseColor('warning')
-            //     ->sortable(),
-            BooleanColumn::make('status')
-                ->trueLabel('Ativo')
-                ->falseLabel('Inativo')
-                ->trueColor('success')
-                ->falseColor('danger')
-                ->sortable()
-                ->columnSpanFull()
-                ->editable()->executeUrl(route('tenant.users.execute')),
+                ->sortable()->columnSpanFour(),
             DateColumn::make('created_at', config('raptor.controllers.users.table.created_at', 'Criado em'))
                 ->format('d/m/Y H:i')
-                ->sortable(),
+                ->sortable()->columnSpanTwo(),
 
             DateColumn::make('updated_at', config('raptor.controllers.users.table.updated_at', 'Atualizado em'))
                 ->relative()
-                ->sortable(),
+                ->sortable()->columnSpanTwo(),
         ])
             ->filters([
                 \Callcocam\LaravelRaptor\Support\Table\Filters\TrashedFilter::make(),
@@ -137,7 +127,7 @@ class UserController extends TenantController
                         return auth()->check() && method_exists(auth()->user(), 'isAdmin') && auth()->user()->isAdmin();
                     })
                     ->color('secondary')
-                    ->url(fn ($record) => route('tenant.loginAs', ['token' => $record->id]))
+                    ->url(fn($record) => route('tenant.loginAs', ['token' => $record->id]))
                     ->actionAlink()
                     ->tooltip(config('raptor.controllers.users.actions.login_as_tooltip', 'Faça login como este usuário')),
                 \Callcocam\LaravelRaptor\Support\Actions\Types\RestoreAction::make(config('raptor.controllers.users.actions.restore', 'users.restore')),
@@ -154,11 +144,11 @@ class UserController extends TenantController
             TextInfolist::make('name', config('raptor.controllers.users.infolist.name', 'Nome')),
             TextInfolist::make('email', config('raptor.controllers.users.infolist.email', 'E-mail')),
             TextInfolist::make('email_verified_at', config('raptor.controllers.users.infolist.email_verified_at', 'E-mail Verificado'))
-                ->value(fn ($value) => $value ? 'Sim - '.\Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
+                ->value(fn($value) => $value ? 'Sim - ' . \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : 'Não'),
             TextInfolist::make('created_at', config('raptor.controllers.users.infolist.created_at', 'Criado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
             TextInfolist::make('updated_at', config('raptor.controllers.users.infolist.updated_at', 'Atualizado em'))
-                ->value(fn ($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
+                ->value(fn($value) => $value ? \Carbon\Carbon::parse($value)->format('d/m/Y H:i') : '-'),
         ]);
     }
 

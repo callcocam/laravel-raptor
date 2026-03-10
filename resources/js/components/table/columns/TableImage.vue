@@ -1,5 +1,8 @@
 <template>
-    <div class="inline-flex items-center" :title="column.tooltip">
+    <div
+        class="flex items-center justify-center h-full min-h-full w-full min-w-full border-r"
+        :title="column.tooltip"
+    >
         <button
             v-if="imageUrl && column.clickable"
             type="button"
@@ -14,7 +17,7 @@
                 :src="imageUrl || column.defaultImage"
                 :alt="altText || 'Image'"
                 :class="[
-                    'object-contain',
+                    'object-contain h-full w-full max-h-32 max-w-32',
                     roundedClasses,
                     sizeClasses
                 ]"

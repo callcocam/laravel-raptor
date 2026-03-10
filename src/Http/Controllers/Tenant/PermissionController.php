@@ -73,29 +73,26 @@ class PermissionController extends TenantController
     protected function table(TableBuilder $table): TableBuilder
     {
         return $table->columns([
+            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\StatusColumn::make('status')
+                ->label('Status')
+                ->editable()
+                ->executeUrl(route('tenant.permissions.execute'))
+                ->columnSpanOne(),
             TextColumn::make('name', config('raptor.controllers.permissions.table.name', 'Nome'))
                 ->searchable()
-                ->sortable(),
+                ->sortable()->columnSpanThree(),
 
             TextColumn::make('slug', config('raptor.controllers.permissions.table.slug', 'Slug'))
                 ->searchable()
-                ->sortable(),
-
-            BooleanColumn::make('status')
-                ->trueLabel('Ativo')
-                ->falseLabel('Inativo')
-                ->trueColor('success')
-                ->falseColor('danger')
-                ->sortable()
-                ->columnSpanFull()
-                ->editable()->executeUrl(route('tenant.permissions.execute')),
+                ->sortable()->columnSpanThree(),
+ 
             DateColumn::make('created_at', config('raptor.controllers.permissions.table.created_at', 'Criado em'))
                 ->format('d/m/Y H:i')
-                ->sortable(),
+                ->sortable()->columnSpanTwo(),
 
             DateColumn::make('updated_at', config('raptor.controllers.permissions.table.updated_at', 'Atualizado'))
                 ->relative()
-                ->sortable(),
+                ->sortable()->columnSpanTwo(),
 
             TextColumn::make('description', config('raptor.controllers.permissions.table.description', 'Descrição'))
                 ->searchable()->columnSpanFull(),

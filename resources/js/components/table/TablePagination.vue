@@ -8,110 +8,107 @@
     </div>
 
     <!-- Paginação responsiva -->
-    <div class="flex items-center gap-1 w-full sm:w-auto justify-center">
+    <div class="flex items-center gap-2 w-full sm:w-auto justify-center">
       <!-- Mobile: apenas botões de navegação -->
-      <div class="flex sm:hidden items-center gap-1">
+      <div class="flex sm:hidden items-center gap-2">
         <!-- Primeiro -->
         <Link
-          :href="firstPageUrl || '#'"
-          :class="[
-            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
-            'h-7 px-2',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-            {
-              'pointer-events-none opacity-50': !firstPageUrl
-            }
-          ]"
+          v-if="firstPageUrl"
+          :href="firstPageUrl"
           :preserve-state="true"
           :preserve-scroll="true"
+          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 btn-gradient"
         >
-          ‹‹
+          <ActionIconBox variant="default" class="[&_svg]:size-4">
+            <ChevronsLeft />
+          </ActionIconBox>
         </Link>
-        
+        <span v-else class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/50 text-white/50">
+          <ChevronsLeft class="size-4" />
+        </span>
+
         <!-- Anterior -->
         <Link
-          :href="prevPageUrl || '#'"
-          :class="[
-            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
-            'h-7 px-2',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-            {
-              'pointer-events-none opacity-50': !prevPageUrl
-            }
-          ]"
+          v-if="prevPageUrl"
+          :href="prevPageUrl"
           :preserve-state="true"
           :preserve-scroll="true"
+          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 btn-gradient"
         >
-          ‹
+          <ActionIconBox variant="default" class="[&_svg]:size-4">
+            <ChevronLeft />
+          </ActionIconBox>
         </Link>
+        <span v-else class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/50 text-white/50">
+          <ChevronLeft class="size-4" />
+        </span>
 
-        <!-- Indicador de página atual -->
-        <span class="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-3 bg-primary text-primary-foreground">
+        <!-- Indicador de página atual (destaque verde) -->
+        <span class="inline-flex h-8 min-w-[4rem] items-center justify-center rounded-xl border-2 border-primary bg-primary px-3 text-sm font-semibold text-primary-foreground shadow-md ring-2 ring-primary/30">
           {{ meta.current_page }} / {{ meta.last_page }}
         </span>
 
         <!-- Próximo -->
         <Link
-          :href="nextPageUrl || '#'"
-          :class="[
-            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
-            'h-7 px-2',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-            {
-              'pointer-events-none opacity-50': !nextPageUrl
-            }
-          ]"
+          v-if="nextPageUrl"
+          :href="nextPageUrl"
           :preserve-state="true"
           :preserve-scroll="true"
+          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 btn-gradient"
         >
-          ›
+          <ActionIconBox variant="default" class="[&_svg]:size-4">
+            <ChevronRight />
+          </ActionIconBox>
         </Link>
+        <span v-else class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/50 text-white/50">
+          <ChevronRight class="size-4" />
+        </span>
 
         <!-- Último -->
         <Link
-          :href="lastPageUrl || '#'"
-          :class="[
-            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors',
-            'h-7 px-2',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-            {
-              'pointer-events-none opacity-50': !lastPageUrl
-            }
-          ]"
+          v-if="lastPageUrl"
+          :href="lastPageUrl"
           :preserve-state="true"
           :preserve-scroll="true"
+          class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 btn-gradient"
         >
-          ››
+          <ActionIconBox variant="default" class="[&_svg]:size-4">
+            <ChevronsRight />
+          </ActionIconBox>
         </Link>
+        <span v-else class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-600 bg-slate-800/50 text-white/50">
+          <ChevronsRight class="size-4" />
+        </span>
       </div>
 
       <!-- Desktop: todos os links de paginação -->
-      <div class="hidden sm:flex items-center gap-1">
-        <Link
-          v-for="(link, index) in paginationLinks"
-          :key="index"
-          :href="link.url || '#'"
-          :class="[
-            'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors truncate',
-            'h-7 px-2 min-w-[36px]',
-            'hover:bg-accent hover:text-accent-foreground',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-            {
-              'bg-primary text-primary-foreground hover:bg-primary/90': link.active,
-              'pointer-events-none opacity-50': !link.url,
-              'text-muted-foreground': !link.active && link.label === '...',
-              ' btn-gradient': link.url && !link.active
-            }
-          ]"
-          :preserve-state="true"
-          :preserve-scroll="true"
-        >
-          <span v-html="link.label"></span>
-        </Link>
+      <div class="hidden sm:flex items-center gap-2">
+        <template v-for="(link, index) in paginationLinks" :key="index">
+          <!-- Página ativa (destaque verde) -->
+          <span
+            v-if="link.active"
+            class="inline-flex h-8 min-w-[2.25rem] shrink-0 items-center justify-center rounded-xl border-2 border-primary bg-primary px-2.5 text-sm font-semibold text-primary-foreground shadow-md ring-2 ring-primary/30"
+          >
+            <span v-html="link.label"></span>
+          </span>
+          <!-- Link clicável -->
+          <Link
+            v-else-if="link.url"
+            :href="link.url"
+            :preserve-state="true"
+            :preserve-scroll="true"
+            class="inline-flex h-8 min-w-[2.25rem] shrink-0 items-center justify-center rounded-xl border border-slate-600 bg-slate-800 px-2.5 text-sm font-medium text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 btn-gradient"
+          >
+            <span v-html="link.label"></span>
+          </Link>
+          <!-- Reticências -->
+          <span
+            v-else
+            class="inline-flex h-8 min-w-[2.25rem] items-center justify-center px-2.5 text-sm text-muted-foreground"
+          >
+            …
+          </span>
+        </template>
       </div>
     </div>
 
@@ -135,7 +132,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { TableMeta } from '~/types/table';
 
 

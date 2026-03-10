@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { computed, h } from 'vue'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import { X } from 'lucide-vue-next'
 
 interface Props {

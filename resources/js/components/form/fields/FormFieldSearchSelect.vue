@@ -71,7 +71,7 @@
 import { computed, ref, watch, nextTick } from 'vue'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { useAutoComplete } from '../../../composables/useAutoComplete'

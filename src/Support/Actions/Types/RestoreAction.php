@@ -21,8 +21,7 @@ class RestoreAction extends Action
         parent::__construct($name ?? 'restore');
         $this->name($name)
             ->label('Restaurar')
-            ->icon('RotateCcw')
-            ->color('blue')
+            ->icon('RotateCcw') 
             ->tooltip('Restaurar registro excluído')
             ->policy('restore')
             ->confirm([

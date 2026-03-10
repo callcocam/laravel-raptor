@@ -6,23 +6,39 @@
  -->
 <template>
   <Button
+    v-if="!isActionStyle"
     :type="buttonType"
     :variant="computedVariant"
     :size="computedSize"
     :as-child="asChild"
     :disabled="isDisabled"
-    :class="cn('gap-1.5 btn-gradient', className)"
+    :class="cn('gap-1.5', className)"
     @click="handleClick"
   >
-    <component v-if="iconComponent && !isProcessing" :is="iconComponent" :class="iconClasses" />
-    <span class="text-xs">{{ displayLabel }}</span>
+    <ActionIconBox v-if="iconComponent && !isProcessing" :variant="formIconBoxVariant">
+      <component :is="iconComponent" />
+    </ActionIconBox>
+    <span class="text-xs text-foreground">{{ displayLabel }}</span>
   </Button>
+  <button
+    v-else
+    :type="buttonType"
+    :disabled="isDisabled"
+    :class="cn(actionStyle.buttonClasses, actionStyle.buttonClassesDisabled, className)"
+    @click="handleClick"
+  >
+    <div v-if="iconComponent && !isProcessing" :class="actionStyle.iconWrapperClasses">
+      <component :is="iconComponent" :class="actionStyle.iconClasses" />
+    </div>
+    <span :class="actionStyle.labelClasses">{{ displayLabel }}</span>
+  </button>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { router } from '@inertiajs/vue3'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
+import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { cn } from '@/lib/utils'
 import { useActionUI } from '~/composables/useActionUI'
 import type { TableAction } from '~/types/table'
@@ -68,7 +84,7 @@ const displayLabel = computed(() => {
 })
 
 // Usa composable para variant, size, iconComponent, iconClasses
-const { variant: baseVariant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+const { variant: baseVariant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle } = useActionUI({
   action: props.action,
   defaultSize: 'sm',
   defaultVariant: props.variant
@@ -90,6 +106,13 @@ const computedVariant = computed(() => {
   }
 
   return baseVariant.value
+})
+
+const formIconBoxVariant = computed((): 'default' | 'outline' | 'destructive' => {
+  const v = computedVariant.value
+  if (v === 'destructive') return 'destructive'
+  if (v === 'outline' || v === 'secondary' || v === 'ghost') return 'outline'
+  return 'default'
 })
 
 // Handler de clique

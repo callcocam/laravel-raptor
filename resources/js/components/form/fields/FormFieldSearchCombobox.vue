@@ -70,7 +70,7 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { CheckIcon, ChevronsUpDownIcon } from "lucide-vue-next";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
 import {
   Command,

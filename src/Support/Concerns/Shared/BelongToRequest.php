@@ -49,8 +49,6 @@ trait BelongToRequest
 
     /**
      * Get a specific value from the request.
-     *
-     * @return mixed
      */
     public function getRequestValue(string $key, mixed $default = null): mixed
     {

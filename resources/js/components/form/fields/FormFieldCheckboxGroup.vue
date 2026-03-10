@@ -122,7 +122,7 @@ import { computed, ref, watch } from "vue";
 import { Field, FieldLabel, FieldDescription, FieldError } from "@/components/ui/field";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleTrigger,

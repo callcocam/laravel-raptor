@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/vue3'
 import ResourceLayout from '~/layouts/ResourceLayout.vue'
 import FormFieldCloudflareDns from '~/components/form/fields/FormFieldCloudflareDns.vue'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import { ArrowLeft, Cloud } from 'lucide-vue-next'
 import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 

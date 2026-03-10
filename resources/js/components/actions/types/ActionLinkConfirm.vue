@@ -9,10 +9,27 @@
 <template>
   <AlertDialog v-model:open="isOpen">
     <AlertDialogTrigger as-child>
-      <Button :variant="variant" :size="computedSize" class="gap-1.5 btn-gradient">
-        <component v-if="iconComponent" :is="iconComponent" :class="iconClasses" />
-        <span class="text-xs">{{ action.label }}</span>
+      <Button
+        v-if="!isActionStyle"
+        :variant="variant"
+        :size="computedSize"
+        class="gap-1.5"
+      >
+        <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
+          <component :is="iconComponent" />
+        </ActionIconBox>
+        <span class="text-xs text-foreground">{{ action.label }}</span>
       </Button>
+      <button
+        v-else
+        type="button"
+        :class="actionStyle.buttonClasses"
+      >
+        <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
+          <component :is="iconComponent" :class="actionStyle.iconClasses" />
+        </div>
+        <span :class="actionStyle.labelClasses">{{ action.label }}</span>
+      </button>
     </AlertDialogTrigger>
 
     <AlertDialogContent>
@@ -74,7 +91,8 @@
 
 <script setup lang="ts">
 import { ref, computed, h } from "vue"; 
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
+import ActionIconBox from "~/components/ui/ActionIconBox.vue";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -146,7 +164,7 @@ const isTypedWordCorrect = computed(() => {
 });
 
 // Usa composable para UI padronizada
-const { variant, size: computedSize, iconComponent, iconClasses } = useActionUI({
+const { variant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 });

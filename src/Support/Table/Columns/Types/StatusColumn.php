@@ -9,6 +9,8 @@
 namespace Callcocam\LaravelRaptor\Support\Table\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Table\Columns\Column;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class StatusColumn extends Column
 {
@@ -19,6 +21,43 @@ class StatusColumn extends Column
     protected ?string $defaultColor = 'secondary';
 
     protected ?string $defaultIcon = 'CheckCircleIcon';
+
+    public function __construct(?string $name = 'status', ?string $label = 'Status')
+    {
+        parent::__construct($name, $label);
+
+        $this
+            ->editable()
+            ->statusKey('status')
+            ->columnSpanTwo()
+            ->statuses([
+                'draft' => [
+                    'label' => 'Rascunho',
+                    'color' => 'muted',
+                    'icon' => 'FileText',
+                ],
+                'published' => [
+                    'label' => 'Publicado',
+                    'color' => 'success',
+                    'icon' => 'CheckCircle',
+                ],
+            ])
+            ->callback(function (Request $request, Model $model) {
+                $statusKey = $request->input('fieldName', 'status');
+                $newValue = $request->input($statusKey);
+                $model->update([
+                    $statusKey => $newValue == 'inactive' ? 'draft' : 'published',
+                ]);
+
+                return [
+                    'notification' => [
+                        'title' => 'Status Atualizado',
+                        'text' => 'O status foi atualizado com sucesso.',
+                        'type' => 'success',
+                    ],
+                ];
+            });
+    }
 
     public function status(string $value, string $label, ?string $color = null, ?string $icon = null): self
     {

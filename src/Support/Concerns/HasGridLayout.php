@@ -16,7 +16,7 @@ namespace Callcocam\LaravelRaptor\Support\Concerns;
  */
 trait HasGridLayout
 {
-    use HasColSpan;
+    use HasColSpan, HasRowSpan;
 
     /**
      * Número de colunas do grid interno
@@ -27,6 +27,11 @@ trait HasGridLayout
      * Quantas colunas este item ocupa no grid pai
      */
     protected ?string $columnSpan = null;
+
+    /**
+     * Quantas linhas este item ocupa no grid pai
+     */
+    protected ?string $rowSpan = null;
 
     /**
      * Ordem de exibição
@@ -95,6 +100,18 @@ trait HasGridLayout
     public function columnSpan(string $span): self
     {
         $this->columnSpan = $span;
+
+        return $this;
+    }
+
+    /**
+     * Define quantas linhas este item ocupa no grid pai
+     *
+     * @param  string  $span  '1', '2', '3', '4', ..., '12'
+     */
+    public function rowSpan(string $span): self
+    {
+        $this->rowSpan = $span;
 
         return $this;
     }
@@ -183,6 +200,7 @@ trait HasGridLayout
         return array_filter([
             'gridColumns' => $this->gridColumns,
             'columnSpan' => $this->columnSpan,
+            'rowSpan' => $this->rowSpan,
             'order' => $this->order,
             'gap' => $this->gap,
             'maxWidth' => $this->maxWidth,
@@ -214,6 +232,11 @@ trait HasGridLayout
     public function getColumnSpan(): ?string
     {
         return $this->columnSpan;
+    }
+
+    public function getRowSpan(): ?string
+    {
+        return $this->rowSpan;
     }
 
     public function getOrder(): ?int

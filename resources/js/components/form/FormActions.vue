@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-vue-next'
 import ActionRenderer from '~/components/actions/ActionRenderer.vue'
 import type { TableAction } from '~/types/table'
 
+
 interface Props {
   actions?: TableAction[]
   processing?: boolean
@@ -33,6 +34,8 @@ const preparedActions = computed(() => {
 })
 
 function getComponentForActionType(actionType: string): string {
+
+  ActionRegi
   const typeMap: Record<string, string> = {
     'submit': 'action-form-button',
     'cancel': 'action-form-button',

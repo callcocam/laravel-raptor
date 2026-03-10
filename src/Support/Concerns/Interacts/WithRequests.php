@@ -139,8 +139,9 @@ trait WithRequests
             \Callcocam\LaravelRaptor\Support\Actions\Types\CancelAction::make("{$resourceName}.index")
                 ->color('gray')
                 ->size('sm')
-                ->label(__('Back :resource'  , ['resource' => $this->getResourceLabel()])),
+                ->label(__('Back :resource', ['resource' => $this->getResourceLabel()])),
             \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
+                ->component('person-action-submit')
                 ->variant('default')
                 ->size('sm')
                 ->label(__('Save :resource', ['resource' => $this->getResourceLabel()])),

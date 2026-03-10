@@ -25,7 +25,7 @@ class EditAction extends Action
             ->color('blue')
             ->component('action-button-link')
             ->policy('update')
-            ->tooltip('Editar registro');
+            ->tooltip('Editar registro')->hidden(fn ($record) => ! empty($record->deleted_at));
         $this->setUp();
     }
 }

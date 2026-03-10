@@ -59,7 +59,7 @@
 
 <script setup lang="ts">
 import { computed, provide, toRef } from "vue";
-import { Button } from "@/components/ui/button";
+import { Button } from "~/components/ui/button";
 import { GripVertical, Trash2 } from "lucide-vue-next";
 import FieldRenderer from "../../FieldRenderer.vue";
 

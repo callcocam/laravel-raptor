@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import { Field, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
 import { Search } from 'lucide-vue-next'
 import { createMultiFieldUpdate } from '~/types/form'

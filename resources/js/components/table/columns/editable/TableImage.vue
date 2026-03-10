@@ -39,7 +39,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { Button } from '~/components/ui/button'
 import Icon from '~/components/icon.vue'
 import { useEditableColumn, getNestedValue } from '~/composables/useEditableColumn'
 
