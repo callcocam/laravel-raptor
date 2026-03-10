@@ -1,9 +1,10 @@
 <template>
   <div class="space-y-4">
     <!-- Filtros e Header Actions -->
-    <div class="flex flex-col space-y-4">
-      <TableFilters v-if="table.filters.value.length || table.searchable.value"
-        :filters="table.filters.value" :searchable="table.searchable.value" class="flex-1" />
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <TableFilters v-if="table.filters.value.length || table.searchable.value" :filters="table.filters.value"
+        :searchable="table.searchable.value" class="flex-1 min-w-0" />
+      <HeaderActions v-if="table.headerActions.value.length" :actions="table.headerActions.value" class="shrink-0" />
     </div>
 
     <div v-if="table.records.value.length" class="space-y-6">
@@ -33,11 +34,8 @@
               </div>
               <!-- Colunas filhas: info secundária abaixo do valor principal -->
               <div v-if="column.columns?.length" class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                <div
-                  v-for="childCol in column.columns"
-                  :key="childCol.name"
-                  class="inline-flex items-center text-xs text-muted-foreground"
-                >
+                <div v-for="childCol in column.columns" :key="childCol.name"
+                  class="inline-flex items-center text-xs text-muted-foreground">
                   <span v-if="childCol.label" class="mr-1 font-medium text-muted-foreground/60">
                     {{ childCol.label }}:
                   </span>
@@ -73,6 +71,7 @@ import TableFilters from "../filters/TableFilters.vue";
 import TablePagination from "./TablePagination.vue";
 import ActionRenderer from "../actions/ActionRenderer.vue";
 import TableColumnRenderer from "./TableColumnRenderer.vue";
+import HeaderActions from "./HeaderActions.vue";
 
 const props = withDefaults(
   defineProps<{
