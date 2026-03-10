@@ -140,8 +140,7 @@ trait WithRequests
                 ->color('gray')
                 ->size('sm')
                 ->label(__('Back :resource', ['resource' => $this->getResourceLabel()])),
-            \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit')
-                ->component('person-action-submit')
+            \Callcocam\LaravelRaptor\Support\Actions\Types\SubmitAction::make('submit') 
                 ->variant('default')
                 ->size('sm')
                 ->label(__('Save :resource', ['resource' => $this->getResourceLabel()])),
