@@ -5,57 +5,34 @@
  * This allows dependent fields to be populated based on the selected value
  -->
 <template>
-  <Field
-    orientation="vertical"
-    :data-invalid="hasError"
-    class="gap-y-1"
-    :class="fieldClasses"
-  >
+  <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1" :class="fieldClasses">
     <FieldLabel v-if="column.label" :for="column.name">
       {{ column.label }}
       <span v-if="column.required" class="text-destructive">*</span>
     </FieldLabel>
 
-    <div class="relative">
-      <Select v-model="internalValue" :required="column.required" :disabled="isDisabled">
-        <SelectTrigger
-          :class="hasError ? 'border-destructive' : ''"
-          :aria-invalid="hasError"
-        >
+    <div class="relative" :class="{
+      'pointer-events-none opacity-60 cursor-not-allowed': isDisabled,
+    }">
+      <Select :key="`${column.name}-${isDisabled}`" v-model="internalValue" :required="column.required"
+        :disabled="isDisabled">
+        <SelectTrigger :class="hasError ? 'border-destructive' : ''" :aria-invalid="hasError"
+          :aria-disabled="isDisabled">
           <SelectValue :placeholder="column.placeholder || 'Selecione...'" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="option in options"
-            :key="getOptionValue(option)"
-            :value="getOptionValue(option)"
-            :label="getOptionLabel(option)"
-          >
+          <SelectItem v-for="option in options" :key="getOptionValue(option)" :value="getOptionValue(option)"
+            :label="getOptionLabel(option)">
             {{ getOptionLabel(option) }}
           </SelectItem>
         </SelectContent>
       </Select>
 
-      <button
-        v-if="internalValue"
-        type="button"
-        @click="clearSelection"
+      <button v-if="internalValue && !isDisabled" type="button" @click="clearSelection"
         class="absolute right-8 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-400 transition-colors"
-        :aria-label="`Limpar seleção de ${column.label || column.name}`"
-        title="Limpar seleção"
-      >
-        <svg
-          class="w-4 h-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
+        :aria-label="`Limpar seleção de ${column.label || column.name}`" title="Limpar seleção">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
     </div>
@@ -105,18 +82,26 @@ interface FormColumn {
 interface Props {
   column: FormColumn
   modelValue?: string | number | null
+  /** Value of the field this one depends on (from parent). Used so isDisabled stays reactive. */
+  dependencyValue?: string | number | null
   error?: string | string[]
   inertia?: {
     preserveScroll?: boolean
     preserveState?: boolean
     only?: string[]
-  }
+  },
+  actionName?: string | null
+  actionType?: string | null
+  executeUrl?: string | null
+  executeMethod?: string | null
+  executeParams?: string | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
+  dependencyValue: undefined,
   error: undefined,
-}) 
+})
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string | number | null): void
 }>()
@@ -128,7 +113,6 @@ const getCascadingValues = inject<() => Record<string, any>>('getCascadingValues
 const allFieldsRef = inject<ComputedRef<FormColumn[]>>('cascadingFields')
 
 const hasError = computed(() => !!props.error)
-
 // Generate grid classes based on columnSpan
 const fieldClasses = computed(() => {
   const classes: string[] = []
@@ -168,7 +152,6 @@ const errorArray = computed(() => {
 
 const options = computed(() => {
   if (!props.column.options) return []
-
   if (!Array.isArray(props.column.options)) {
     return Object.entries(props.column.options).map(([value, label]) => ({
       value,
@@ -180,12 +163,11 @@ const options = computed(() => {
 })
 
 // Disable field if it depends on another field and that field has no value
+// Use prop dependencyValue from parent so Vue tracks it and updates when parent state changes
 const isDisabled = computed(() => {
-  if (!props.column.dependsOn) return false 
-  const cascadingValues = getCascadingValues()
-  const dependencyValue = cascadingValues[props.column.dependsOn]
-
-  return !dependencyValue
+  if (!props.column.dependsOn) return false
+  const val = props.dependencyValue
+  return val === undefined || val === null || val === ''
 })
 
 const getOptionValue = (option: SelectOption | string): string => {
@@ -239,13 +221,15 @@ const reloadWithCascadingValues = (newValue: string | number | null | undefined)
   // This ensures child fields are cleared when parent changes
   clearDependentFieldValues(params)
 
-  // Reload page with Inertia, preserving state but excluding flash messages
+  // Reload so the backend re-renders the form with options for the next dependent field.
+  // Request the 'form' prop (where columns/fields live); empty only would not update the next field.
+  const onlyProps = (props.inertia?.only?.length ? props.inertia.only : ['form', 'isDisabled'])
+  console.log(onlyProps)
   router.get(window.location.pathname, params, {
     preserveState: props.inertia?.preserveState,
     preserveScroll: props.inertia?.preserveScroll,
-    replace: true,
-    only: props.inertia?.only || [], // Only reload form data
-    except: ['success', 'error', 'flash'] // Exclude flash messages
+    only: onlyProps,
+    except: ['success', 'error', 'flash']
   })
 }
 

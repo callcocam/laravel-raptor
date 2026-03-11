@@ -33,6 +33,12 @@ abstract class Column extends AbstractColumn
 
     protected Closure|string|Builder|\Illuminate\Database\Query\Builder|null $queryUsing = null;
 
+    protected Closure|string|null $executeUrl = null;
+
+    protected Closure|string|null $executeMethod = null;
+
+    protected Closure|string|null $executeParams = null;
+
     protected int $index = 0;
 
     public function __construct($name, $label = null)
@@ -51,6 +57,41 @@ abstract class Column extends AbstractColumn
 
             return null;
         });
+    }
+
+    public function executeUrl(Closure|string|null $executeUrl): static
+    {
+        $this->executeUrl = $executeUrl;
+
+        return $this;
+    }
+
+    public function executeMethod(Closure|string|null $executeMethod): static
+    {
+        $this->executeMethod = $executeMethod;
+
+        return $this;
+    }
+
+    public function executeParams(Closure|string|null $executeParams): static
+    {
+        $this->executeParams = $executeParams;
+
+        return $this;
+    }
+    public function getExecuteUrl(): ?string
+    {
+        return $this->evaluate($this->executeUrl);
+    }
+
+    public function getExecuteMethod(): ?string
+    {
+        return $this->evaluate($this->executeMethod);
+    }
+
+    public function getExecuteParams(): ?string
+    {
+        return $this->evaluate($this->executeParams);
     }
 
     public function valueUsing(Closure $callback): static
@@ -168,6 +209,9 @@ abstract class Column extends AbstractColumn
                 'readonly' => $this->isReadOnly(),
                 'disabled' => $this->isDisabled(),
             ]),
+            'executeUrl' => $this->getExecuteUrl(),
+            'executeMethod' => $this->getExecuteMethod(),
+            'executeParams' => $this->getExecuteParams(),
         ], $this->getGridLayoutConfig());
     }
 }

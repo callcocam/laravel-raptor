@@ -103,6 +103,7 @@ const formData = useForm(initialData);
               :errors="formData.errors"
               :action="action"
               :method="'put'"
+              :execute-url="form?.executeUrl"
             >
               <template #actions>
                 <FormActions

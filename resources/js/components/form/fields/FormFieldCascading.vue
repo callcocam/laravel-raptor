@@ -41,7 +41,12 @@ interface FormCascadingColumn {
   helpText?: string;
   required?: boolean;
   fields?: FormColumn[];
-  fieldsUsing?: string | null; // Esse e o nome do campo que determina qual campo vai ser atualizado na tabela do banco de dados
+  fieldsUsing?: string | null;
+  executeUrl?: string | null;
+  executeMethod?: string | null;
+  executeParams?: string | null;
+  actionType?: string | null;
+  actionName?: string | null;
   inertia?: {
     preserveScroll?: boolean;
     preserveState?: boolean;
@@ -81,8 +86,39 @@ const inertia = computed(() => {
 // Provide fields immediately so child components can access it
 provide("cascadingFields", fields);
 
+// Quando true, os itens usam router.post(executeUrl) e as options vêm via page.props.cascading_options
+const cascadingUseExecuteUrl = computed(() => !!props.column.executeUrl);
+provide("cascadingUseExecuteUrl", cascadingUseExecuteUrl);
+
 // Internal state for all cascading field values
 const cascadingValues = ref<Record<string, any>>({});
+
+// Overrides de options por campo (preenchido via redirect + flash cascading_options)
+const fieldOptionsOverrides = ref<Record<string, Array<{ value: string | number; label: string }> | Record<string, string>>>({});
+
+const setFieldOptions = (fieldName: string, options: Array<{ value: string | number; label: string }> | Record<string, string>) => {
+  fieldOptionsOverrides.value = { ...fieldOptionsOverrides.value, [fieldName]: options };
+};
+provide("setFieldOptions", setFieldOptions);
+
+const getFieldWithOptions = (field: FormColumn): FormColumn => {
+  const overrides = fieldOptionsOverrides.value[field.name];
+  if (overrides !== undefined) return { ...field, options: overrides };
+  return field;
+};
+
+// Quando o backend retorna redirect com flash cascading_options, o router recarrega e as props trazem os dados
+watch(
+  () => (page.props as any).cascading_options,
+  (data: { targetFieldName?: string | null; options?: Record<string, string> | Array<{ value: string | number; label: string }> } | undefined) => {
+    if (!data?.targetFieldName || data.options == null) return;
+    const options = Array.isArray(data.options)
+      ? data.options
+      : Object.entries(data.options).map(([value, label]) => ({ value, label }));
+    setFieldOptions(data.targetFieldName, options);
+  },
+  { immediate: true }
+);
 
 /**
  * Initialize cascading values from URL query parameters or props.modelValue
@@ -177,11 +213,14 @@ provide("getCascadingValues", getCascadingValues);
     <FieldLegend>{{ column.label }}</FieldLegend>
     <FieldDescription v-if="column.helpText"> {{ column.helpText }} </FieldDescription>
     <FieldGroup class="grid grid-cols-12 gap-4">
-      <FormFieldCascadingItem v-for="field in fields" :key="field.name" :column="field" :inertia="{
-        preserveScroll: inertia.preserveScroll,
-        preserveState: inertia.preserveState,
-        only: inertia.only,
-      }" :modelValue="getFieldValue(field.name)" :error="error"
+      <FormFieldCascadingItem v-for="field in fields" :key="field.name" :column="getFieldWithOptions(field)"
+        :dependency-value="field.dependsOn ? getFieldValue(field.dependsOn) : undefined"
+        :actionType="column.actionType" :actionName="column.actionName" :executeUrl="column.executeUrl"
+        :executeMethod="column.executeMethod" :executeParams="column.executeParams" :inertia="{
+          preserveScroll: inertia.preserveScroll,
+          preserveState: inertia.preserveState,
+          only: inertia.only,
+        }" :modelValue="getFieldValue(field.name)" :error="error"
         @update:modelValue="(value: any) => updateCascadingValue(field.name, value)" />
     </FieldGroup>
   </FieldSet>

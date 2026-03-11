@@ -113,7 +113,7 @@ const action = computed(() => {
         <Card>
           <CardContent>
             <FormRenderer v-if="form?.columns" :columns="form.columns" v-model="formData" :errors="formData.errors"
-              :action="action" :method="'post'" @success="formData.reset()">
+              :action="action" :method="'post'" :execute-url="form?.executeUrl" @success="formData.reset()">
               <template #actions>
                 <FormActions :actions="form?.formActions" :processing="formData.processing" />
               </template>

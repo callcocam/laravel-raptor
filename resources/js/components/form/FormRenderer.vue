@@ -46,6 +46,7 @@ interface Props {
   gap?: string; // Espaçamento entre campos (padrão: 4)
   action?: string; // URL para submit (se não fornecido, usa comportamento legacy com evento @submit)
   method?: "post" | "put" | "patch" | "delete"; // Método HTTP (GET não permitido em formulários)
+  executeUrl?: string; // URL da rota execute (POST) para ações como cascading options
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -56,6 +57,7 @@ const props = withDefaults(defineProps<Props>(), {
   gap: "4",
   action: undefined,
   method: "post",
+  executeUrl: undefined,
 });
  
 const emit = defineEmits<{
@@ -77,6 +79,8 @@ const formData = computed(() => props.modelValue);
 
 // Provê formData para componentes filhos (para cálculos)
 provide('formData', formData);
+// URL da rota execute (POST) para cascading e outras ações que retornam JSON
+provide('formExecuteUrl', computed(() => props.executeUrl));
 
 /**
  * Atualiza o form conforme o contrato FieldEmitValue.

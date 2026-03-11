@@ -82,8 +82,8 @@ abstract class AbstractController extends ResourceController
             'breadcrumbs' => $this->breadcrumbs(),
             'form' => $this->form(Form::make($model, 'model')->defaultActions($this->getFormActions()))->render(),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'create'))
-                ->map(fn ($action) => $action->render($model, $request))
-                ->filter(fn ($action) => $action['visible'] ?? true)
+                ->map(fn($action) => $action->render($model, $request))
+                ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
             'action' => $this->getFormDefaultStoreAction($request->route()->getAction('as'), null),
@@ -111,8 +111,8 @@ abstract class AbstractController extends ResourceController
             $validationRules = array_merge(
                 $form->getValidationRules(null, $request),
                 $this->rules()
-            ); 
-            $validationMessages = $form->getValidationMessages(); 
+            );
+            $validationMessages = $form->getValidationMessages();
             // Valida os dados já preparados
             $validator = \Illuminate\Support\Facades\Validator::make(
                 $preparedData,
@@ -120,7 +120,7 @@ abstract class AbstractController extends ResourceController
                 $validationMessages
             );
 
-            $validated = $this->beforeExtraStore($validator->validate(), $request); 
+            $validated = $this->beforeExtraStore($validator->validate(), $request);
 
             $record = $model->create($validated);
 
@@ -161,8 +161,8 @@ abstract class AbstractController extends ResourceController
             'model' => $model,
             'infolist' => $this->infolist(InfoList::make($model, 'model'))->render($model),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'show'))
-                ->map(fn ($action) => $action->render($model, $request))
-                ->filter(fn ($action) => $action['visible'] ?? true)
+                ->map(fn($action) => $action->render($model, $request))
+                ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
             'actionName' => __('Visualizar :resource', ['resource' => $this->getTitle()]),
@@ -189,8 +189,8 @@ abstract class AbstractController extends ResourceController
             'model' => $model,
             'form' => $this->form(Form::make($model, 'model')->model($model)->defaultActions($this->getFormActions()))->render($model),
             'pageHeaderActions' => collect($this->getPageHeaderActions($model, 'edit'))
-                ->map(fn ($action) => $action->render($model, $request))
-                ->filter(fn ($action) => $action['visible'] ?? true)
+                ->map(fn($action) => $action->render($model, $request))
+                ->filter(fn($action) => $action['visible'] ?? true)
                 ->values()
                 ->toArray(),
             'actionName' => __('Editar :resource', ['resource' => $this->getTitle()]),
@@ -359,7 +359,7 @@ abstract class AbstractController extends ResourceController
             $this->beforeBulkAction($request, $ids);
 
             // Chama método dinâmico baseado na action
-            $methodName = 'bulk'.ucfirst($action);
+            $methodName = 'bulk' . ucfirst($action);
 
             if (method_exists($this, $methodName)) {
                 $result = $this->$methodName($ids);
@@ -415,14 +415,14 @@ abstract class AbstractController extends ResourceController
                 'header' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getHeaderActions()),
                 'bulk' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getBulkActions()),
                 'actions' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getActions($model)),
-                'column' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getColumns())->filter(fn ($column) => $column->getName() === $fieldName),
-                'form' => collect($this->form(Form::make($model))->getActions()),
-                'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn ($column) => $column->getName() === $fieldName)->flatMap(function ($column) {
+                'column' => collect($this->table(TableBuilder::make($this->model(), 'model'))->getColumns())->filter(fn($column) => $column->getName() === $fieldName),
+                'form' => collect($this->form(Form::make($model))->getColumns()),
+                'field' => collect($this->form(Form::make($model))->getColumns())->filter(fn($column) => $column->getName() === $fieldName)->flatMap(function ($column) {
                     return $column->getActions();
                 }),
                 default => collect([])
             };
-            $callback = $actions->filter(fn ($action) => $action->getName() === $actionName)->first();
+            $callback = $actions->filter(fn($action) => $action->getName() === $actionName)->first();
             if (! $callback) {
                 return redirect()
                     ->back()
@@ -447,7 +447,6 @@ abstract class AbstractController extends ResourceController
             }
             // Executa o callback da action
             $result = $callback->executeCallback($request, $model);
-
             // Coluna editável sem callback: atualiza o campo do modelo (blur/saída do campo)
             if ($result === null && $type === 'column' && $model && method_exists($callback, 'isEditable') && $callback->isEditable()) {
                 $fieldKey = method_exists($callback, 'getStatusKey') ? $callback->getStatusKey() : $callback->getName();
@@ -481,8 +480,7 @@ abstract class AbstractController extends ResourceController
                 $notification = data_get($result, 'notification', []);
                 $type = data_get($notification, 'type', 'success');
                 $message = data_get($notification, 'text') ?? data_get($notification, 'message', 'Ação executada com sucesso.');
-
-                return redirect()->back()->with($type, $message);
+                return redirect()->back()->with($type, $message)->with($result);
             }
 
             return redirect()->back()
