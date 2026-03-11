@@ -139,9 +139,17 @@ trait InteractWithForm
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
 
-            // SectionField flat: remove a chave fantasma da seção e processa os filhos
+            // SectionField flat: remove a chave fantasma da seção e garante que todos os
+            // campos-filhos estejam presentes em $data (com null como padrão quando ausentes).
+            // Sem isso, campos não preenchidos não são enviados pelo frontend e ficam fora
+            // do $validated, quebrando saves quando o campo tem regra required.
             if ($this->isFlatSection($column)) {
                 unset($data[$columnName]);
+                foreach ($column->getFields() as $field) {
+                    if (! array_key_exists($field->getName(), $data)) {
+                        $data[$field->getName()] = null;
+                    }
+                }
                 $data = $this->prepareFieldsForValidation($column->getFields(), $data, $model);
                 continue;
             }
@@ -262,11 +270,15 @@ trait InteractWithForm
         foreach ($this->getColumns() as $column) {
             $columnName = $column->getName();
 
-            // SectionField flat: remove a chave fantasma e processa os filhos no nível raiz
+            // SectionField flat: remove a chave fantasma e processa os filhos no nível raiz.
+            // Garante que campos ausentes recebam null para aparecerem no $validated.
             if ($this->isFlatSection($column)) {
                 unset($data[$columnName]);
                 foreach ($column->getFields() as $field) {
                     $fieldName = $field->getName();
+                    if (! array_key_exists($fieldName, $data)) {
+                        $data[$fieldName] = null;
+                    }
                     try {
                         $valueUsing = $field->getValueUsing($data, $model);
                         if ($valueUsing !== null) {

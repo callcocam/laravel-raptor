@@ -17,6 +17,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse as BaseRedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -119,7 +120,7 @@ abstract class AbstractController extends ResourceController
                 $validationMessages
             );
 
-            $validated = $this->beforeExtraStore($validator->validate(), $request);
+            $validated = $this->beforeExtraStore($validator->validate(), $request); 
 
             $record = $model->create($validated);
 

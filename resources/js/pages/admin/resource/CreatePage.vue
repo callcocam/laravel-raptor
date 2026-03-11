@@ -39,15 +39,32 @@ const layoutProps = {
   breadcrumbs: props.breadcrumbs,
 }
 
+// Retorna true para seções flat (agrupamento visual cujos campos vivem no formData raiz)
+const isFlatSection = (column: FormColumn): boolean =>
+  column.component === 'form-field-section' && column.flat !== false
+
+// Inicializa uma coluna no data com seu default ou null
+const initColumn = (data: Record<string, any>, column: FormColumn): void => {
+  if (column.name in data) return
+  if (column.default !== undefined && column.default !== null) {
+    data[column.name] = column.default
+  } else if (column.component === 'form-field-repeater') {
+    data[column.name] = []
+  } else {
+    data[column.name] = null
+  }
+}
+
 // Inicializa o formulário: input antigo (após erro) > model do backend > defaults das colunas
 const initialData = computed(() => {
   const data: Record<string, any> = {}
 
   props.form?.columns?.forEach(column => {
-    if (column.default !== undefined && column.default !== null) {
-      data[column.name] = column.default
-    } else if (column.component === 'form-field-repeater') {
-      data[column.name] = []
+    if (isFlatSection(column)) {
+      // Seção flat: não adiciona a chave da seção — adiciona cada campo-filho diretamente
+      column.fields?.forEach((field: FormColumn) => initColumn(data, field))
+    } else {
+      initColumn(data, column)
     }
   })
 

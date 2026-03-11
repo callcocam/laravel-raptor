@@ -54,9 +54,70 @@ packages/callcocam/laravel-raptor/resources/js/components/ui/
 │   └── ... (outros)
 ├── skeleton/
 │   └── Skeleton.vue
-└── spinner/
-    └── Spinner.vue
+├── spinner/
+│   └── Spinner.vue
+├── select/
+│   ├── Select.vue
+│   ├── SelectTrigger.vue
+│   ├── SelectValue.vue
+│   ├── SelectContent.vue
+│   ├── SelectItem.vue
+│   ├── SelectGroup.vue
+│   ├── SelectLabel.vue
+│   ├── SelectSeparator.vue
+│   ├── SelectWithClear.vue
+│   └── index.ts
+├── field/
+│   ├── Field.vue
+│   ├── FieldLabel.vue
+│   ├── FieldDescription.vue
+│   ├── FieldError.vue
+│   ├── FieldSet.vue
+│   ├── FieldLegend.vue
+│   ├── FieldGroup.vue
+│   └── index.ts
+├── checkbox/
+│   ├── Checkbox.vue
+│   └── index.ts
+├── textarea/
+│   ├── Textarea.vue
+│   └── index.ts
+├── collapsible/
+│   ├── Collapsible.vue
+│   ├── CollapsibleTrigger.vue
+│   ├── CollapsibleContent.vue
+│   └── index.ts
+├── popover/
+│   ├── Popover.vue
+│   ├── PopoverTrigger.vue
+│   ├── PopoverContent.vue
+│   └── index.ts
+└── command/
+    ├── Command.vue
+    ├── CommandInput.vue
+    ├── CommandList.vue
+    ├── CommandGroup.vue
+    ├── CommandItem.vue
+    ├── CommandEmpty.vue
+    └── index.ts
 ```
+
+## Utilitários do pacote
+
+```
+packages/callcocam/laravel-raptor/resources/js/lib/utils.ts
+```
+
+O pacote possui sua própria cópia de `lib/utils.ts` para ser **independente do app**:
+
+```typescript
+import { cn } from '~/lib/utils'          // merge de classes Tailwind
+import { toUrl } from '~/lib/utils'        // normaliza href para string
+import { urlIsActive } from '~/lib/utils'  // compara URL com URL atual
+```
+
+> Sempre importe de `~/lib/utils` dentro do pacote. **Nunca** de `@/lib/utils` (app),
+> pois isso quebraria instalações onde o app não tem essa função.
 
 ## Documentação por Seção
 
@@ -66,5 +127,5 @@ packages/callcocam/laravel-raptor/resources/js/components/ui/
 | [sidebar.md](./sidebar.md) | Sistema completo de sidebar: provider, collapse, mobile drawer, flyout |
 | [navigation.md](./navigation.md) | NavMain, NavUser, NavFooter — navegação nativa sem reka-ui |
 | [select.md](./select.md) | SelectWithClear — select nativo com limpar, pesquisa, teclado e backend Raptor |
-| [components.md](./components.md) | Componentes base: Button, Input, Badge, Card, etc. |
+| [components.md](./components.md) | Componentes base: Button, Input, Badge, Card, Select, Field, Checkbox, Textarea, Collapsible, Popover, Command |
 | [theming.md](./theming.md) | Sistema de temas, variáveis CSS, dark mode |

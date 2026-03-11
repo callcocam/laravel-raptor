@@ -45,12 +45,23 @@ const layoutProps = {
 // Inicializa o formulário Inertia com os valores do modelo
 const initialData = props.form?.model || props.model || {};
 
-// Garantir que todos os campos das colunas do formulário existam
-// Isso é necessário para o Inertia form rastrear corretamente
+// Garante que todos os campos das colunas existam no initialData (null como padrão).
+// Para seções flat: não adiciona a chave da seção — garante cada campo-filho diretamente.
 if (props.form?.columns) {
   props.form.columns.forEach((column: any) => {
-    if (!(column.name in initialData)) {
-      initialData[column.name] = null;
+    const isFlatSection =
+      column.component === 'form-field-section' && column.flat !== false;
+
+    if (isFlatSection) {
+      column.fields?.forEach((field: any) => {
+        if (!(field.name in initialData)) {
+          initialData[field.name] = null;
+        }
+      });
+    } else {
+      if (!(column.name in initialData)) {
+        initialData[column.name] = null;
+      }
     }
   });
 }

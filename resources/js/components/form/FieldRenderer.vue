@@ -16,7 +16,8 @@ import type { FormColumn, FieldEmitValue } from '~/types/form'
 interface Props {
   column: FormColumn
   modelValue?: any
-  error?: string | string[]
+  // Aceita string/array (campos simples) ou objeto (seções flat, onde as chaves são os nomes dos filhos)
+  error?: string | string[] | Record<string, string | string[]>
   index?: number
 }
 

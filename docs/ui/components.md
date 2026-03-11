@@ -307,6 +307,252 @@ SVG animado com `animate-spin`, usa `currentColor` para herdar a cor do texto pa
 
 ---
 
+## Select
+
+```
+ui/select/
+├── Select.vue          ← raiz (provide/inject)
+├── SelectTrigger.vue   ← botão de abertura
+├── SelectValue.vue     ← exibe o label selecionado ou placeholder
+├── SelectContent.vue   ← dropdown (posicionado absolute)
+├── SelectItem.vue      ← cada opção
+├── SelectGroup.vue     ← agrupador visual
+├── SelectLabel.vue     ← rótulo de grupo
+├── SelectSeparator.vue ← divisor
+├── SelectWithClear.vue ← variante com botão de limpar
+└── index.ts
+```
+
+### Uso básico
+
+```vue
+<Select v-model="value">
+    <SelectTrigger>
+        <SelectValue placeholder="Selecione..." />
+    </SelectTrigger>
+    <SelectContent>
+        <SelectItem value="opt1" label="Opção 1">Opção 1</SelectItem>
+        <SelectItem value="opt2" label="Opção 2">Opção 2</SelectItem>
+    </SelectContent>
+</Select>
+```
+
+> **Importante**: sempre passe `:label` idêntico ao texto do slot em cada `SelectItem`.
+> Isso permite que `SelectValue` exiba o label correto ao carregar com valor pré-selecionado,
+> sem precisar abrir o dropdown.
+
+### Com grupo
+
+```vue
+<SelectContent>
+    <SelectGroup>
+        <SelectLabel>Frutas</SelectLabel>
+        <SelectItem value="apple" label="Maçã">Maçã</SelectItem>
+        <SelectItem value="banana" label="Banana">Banana</SelectItem>
+    </SelectGroup>
+    <SelectSeparator />
+    <SelectGroup>
+        <SelectLabel>Legumes</SelectLabel>
+        <SelectItem value="carrot" label="Cenoura">Cenoura</SelectItem>
+    </SelectGroup>
+</SelectContent>
+```
+
+### Props
+
+**`Select`**
+
+| Prop | Tipo | Padrão | Descrição |
+|------|------|--------|-----------|
+| `modelValue` (v-model) | `string \| number \| null` | — | Valor selecionado |
+| `disabled` | `boolean` | `false` | Desabilita o select |
+| `required` | `boolean` | `false` | Campo obrigatório |
+
+**`SelectItem`**
+
+| Prop | Tipo | Padrão | Descrição |
+|------|------|--------|-----------|
+| `value` | `string` | — | Valor da opção (obrigatório) |
+| `label` | `string` | — | Label exibido no trigger (obrigatório para pré-seleção) |
+| `disabled` | `boolean` | `false` | Desabilita a opção |
+
+### Funcionamento interno
+
+O `Select` usa `provide/inject` para compartilhar estado entre os subcomponentes:
+- `SelectContent` usa `v-show` (não `v-if`) para manter os `SelectItem`s sempre montados
+- `SelectItem` registra seu label **sincronamente no `setup()`** via `registerItem`
+- `SelectValue` lê do registro para exibir o label correto desde a primeira renderização
+- Fecha ao clicar fora (`pointerdown` no `Select` root com `data-select-root`) ou pressionar `Escape`
+
+---
+
+## Field (primitivos de formulário)
+
+```
+ui/field/
+├── Field.vue            ← wrapper com orientação
+├── FieldLabel.vue       ← rótulo acessível
+├── FieldDescription.vue ← texto de ajuda
+├── FieldError.vue       ← exibe erros de validação
+├── FieldSet.vue         ← fieldset semântico
+├── FieldLegend.vue      ← legenda do fieldset
+├── FieldGroup.vue       ← grupo de campos inline
+└── index.ts
+```
+
+### Uso
+
+```vue
+<Field orientation="vertical" :data-invalid="hasError">
+    <FieldLabel for="name">
+        Nome <span class="text-destructive">*</span>
+    </FieldLabel>
+
+    <Input id="name" v-model="name" />
+
+    <FieldDescription>Digite seu nome completo.</FieldDescription>
+    <FieldError :errors="[{ message: 'Nome é obrigatório.' }]" />
+</Field>
+```
+
+### Props `FieldError`
+
+| Prop | Tipo | Descrição |
+|------|------|-----------|
+| `errors` | `Array<{ message: string }>` | Lista de erros a exibir |
+
+---
+
+## Checkbox (nativo)
+
+```
+ui/checkbox/Checkbox.vue
+```
+
+### Uso
+
+```vue
+<Checkbox v-model:checked="ativo" :indeterminate="parcial" />
+```
+
+### Props
+
+| Prop | Tipo | Padrão | Descrição |
+|------|------|--------|-----------|
+| `checked` (v-model) | `boolean` | `false` | Estado marcado |
+| `indeterminate` | `boolean` | `false` | Estado intermediário |
+| `disabled` | `boolean` | `false` | Desabilitado |
+
+---
+
+## Textarea (nativo)
+
+```
+ui/textarea/Textarea.vue
+```
+
+### Uso
+
+```vue
+<Textarea v-model="descricao" placeholder="Digite aqui..." :rows="4" />
+```
+
+---
+
+## Collapsible
+
+```
+ui/collapsible/
+├── Collapsible.vue         ← raiz com provide
+├── CollapsibleTrigger.vue  ← botão toggle
+├── CollapsibleContent.vue  ← conteúdo animado
+└── index.ts
+```
+
+### Uso
+
+```vue
+<Collapsible :default-open="true">
+    <CollapsibleTrigger as-child>
+        <Button variant="ghost">
+            Configurações avançadas <ChevronsUpDown class="ml-2 h-4 w-4" />
+        </Button>
+    </CollapsibleTrigger>
+    <CollapsibleContent>
+        <!-- conteúdo que expande/colapsa com transição -->
+    </CollapsibleContent>
+</Collapsible>
+```
+
+### Props `Collapsible`
+
+| Prop | Tipo | Padrão | Descrição |
+|------|------|--------|-----------|
+| `defaultOpen` | `boolean` | `false` | Abre ao montar |
+
+---
+
+## Popover
+
+```
+ui/popover/
+├── Popover.vue         ← raiz com provide
+├── PopoverTrigger.vue  ← elemento que abre
+├── PopoverContent.vue  ← conteúdo flutuante (absolute)
+└── index.ts
+```
+
+### Uso
+
+```vue
+<Popover>
+    <PopoverTrigger as-child>
+        <Button variant="outline">Abrir popover</Button>
+    </PopoverTrigger>
+    <PopoverContent class="w-80">
+        <p>Conteúdo do popover</p>
+    </PopoverContent>
+</Popover>
+```
+
+Fecha ao pressionar `Escape` ou clicar fora (via `useEventListener`).
+
+---
+
+## Command (paleta de comandos / combobox)
+
+```
+ui/command/
+├── Command.vue       ← raiz com busca via provide
+├── CommandInput.vue  ← campo de busca
+├── CommandList.vue   ← lista filtrada
+├── CommandGroup.vue  ← grupo de itens
+├── CommandItem.vue   ← cada item
+├── CommandEmpty.vue  ← estado vazio
+└── index.ts
+```
+
+### Uso (combobox)
+
+```vue
+<Command>
+    <CommandInput placeholder="Buscar..." />
+    <CommandList>
+        <CommandEmpty>Nenhum resultado.</CommandEmpty>
+        <CommandGroup heading="Sugestões">
+            <CommandItem value="laravel" @select="select('laravel')">
+                Laravel
+            </CommandItem>
+            <CommandItem value="vue" @select="select('vue')">
+                Vue
+            </CommandItem>
+        </CommandGroup>
+    </CommandList>
+</Command>
+```
+
+---
+
 ## Como Importar os Componentes
 
 ### No pacote (componentes internos)
