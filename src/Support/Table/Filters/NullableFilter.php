@@ -25,7 +25,7 @@ use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
  */
 class NullableFilter extends FilterBuilder
 {
-    protected string $component = 'filter-nullable';
+    protected ?string $component = 'filter-nullable';
 
     protected string $trueLabel = 'Not Null';
 

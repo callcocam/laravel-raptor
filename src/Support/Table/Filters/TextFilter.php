@@ -12,7 +12,7 @@ use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
 
 class TextFilter extends FilterBuilder
 {
-    protected string $component = 'filter-text';
+    protected ?string $component = 'filter-text';
 
     protected function setUp(): void
     {

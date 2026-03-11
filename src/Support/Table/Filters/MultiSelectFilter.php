@@ -15,7 +15,7 @@ class MultiSelectFilter extends FilterBuilder
 {
     use BelongsToOptions;
 
-    protected string $component = 'filter-multi-select';
+    protected ?string $component = 'filter-multi-select';
 
     protected bool $searchable = true;
 

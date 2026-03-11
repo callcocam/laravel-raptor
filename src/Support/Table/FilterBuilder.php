@@ -38,7 +38,7 @@ class FilterBuilder
     use EvaluatesClosures;
     use FactoryPattern;
 
-    protected string $component = 'filter-text';
+    protected ?string $component = 'filter-text';
 
     protected ?Closure $applyCallback = null;
 
@@ -47,6 +47,10 @@ class FilterBuilder
     protected ?FilterStrategy $filterStrategy = null;
 
     protected ?string $classes = 'w-44';
+    /**
+     * Ordem de exibição
+     */
+    protected ?int $order = 0;
 
     public function __construct(string $name, ?string $label = null)
     {
@@ -191,6 +195,18 @@ class FilterBuilder
         return $this->classes;
     }
 
+    public function order(?int $order = null): static
+    {
+        $this->order = $order;
+
+        return $this;
+    }
+
+    public function getOrder(): ?int
+    {
+        return $this->order;
+    }
+
     protected function setUp(): void
     {
         //
@@ -209,6 +225,7 @@ class FilterBuilder
             'visible' => $this->isVisible(),
             'placeholder' => $this->getPlaceholder(),
             'classes' => $this->getClasses(),
+            'order' => $this->getOrder(),
         ];
     }
 }

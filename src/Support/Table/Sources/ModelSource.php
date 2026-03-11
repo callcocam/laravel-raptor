@@ -145,18 +145,99 @@ class ModelSource extends AbstractSource
     {
         $filters = $this->getFilters();
 
-        // Injeta valores do contexto em cada filtro
         foreach ($filters as $filter) {
-            $filterName = $filter->getName();
-            $value = $this->getContext()?->getRequestValue($filterName);
-
-            if ($value !== null && $value !== '') {
-                // Adiciona propriedade temporária para QueryBuilder acessar
+            $value = $this->getFilterContextValue($filter);
+            if ($value !== null && $value !== '' && (! is_array($value) || $value !== [])) {
                 $filter->_contextValue = $value;
             }
         }
 
         return $filters;
+    }
+
+    /**
+     * Obtém o valor do request para aplicar no filtro.
+     *
+     * Comportamento por tipo de filtro:
+     *
+     * 1) Filtro normal: valor vem em request[filter->getName()].
+     *
+     * 2) Filtro em cascata (SelectCascadingFilter):
+     *    - Na URL vêm os níveis: segmento_varejista, departamento, ..., subsegmento (não o nome do filtro).
+     *    - Modo "só último nível" (default): retorna o valor do ÚLTIMO nível selecionado (ex.: subsegmento).
+     *      Aplica where(column, value) — produtos daquela categoria exata.
+     *    - Modo "incluir pais": ativado quando request[filter->getIncludeParentsParam()] é truthy.
+     *      Retorna ARRAY com todos os níveis selecionados (do primeiro ao último).
+     *      Aplica whereIn(column, values) — produtos da categoria ou de qualquer pai no caminho.
+     */
+    protected function getFilterContextValue($filter): mixed
+    {
+        $context = $this->getContext();
+        if ($context === null) {
+            return null;
+        }
+
+        if (! method_exists($filter, 'getFields') || ! method_exists($filter, 'hasFields') || ! $filter->hasFields()) {
+            return $context->getRequestValue($filter->getName());
+        }
+
+        $fields = $filter->getFields();
+        // Filtro pode definir só os campos que são "níveis" (IDs), ex. excluindo TernaryFilter
+        $fieldNames = method_exists($filter, 'getLevelFieldNames') && $filter->getLevelFieldNames() !== null
+            ? $filter->getLevelFieldNames()
+            : $this->extractFieldNames($fields);
+
+        if ($fieldNames === []) {
+            return null;
+        }
+
+        // Modo "incluir pais": frontend envia param ex. category_id_include_parents=1
+        $includeParentsParam = method_exists($filter, 'getIncludeParentsParam') ? $filter->getIncludeParentsParam() : null;
+        $includeParents = $includeParentsParam !== null
+            && $context->getRequestValue($includeParentsParam);
+
+        if ($includeParents) {
+            // Coleta todos os valores selecionados (do primeiro ao último nível) para whereIn()
+            $values = [];
+            foreach ($fieldNames as $name) {
+                $v = $context->getRequestValue($name);
+                if ($v !== null && $v !== '') {
+                    $values[] = $v;
+                }
+            }
+
+            return $values !== [] ? $values : null;
+        }
+
+        // Modo "só último nível": retorna apenas o último valor preenchido (comportamento padrão)
+        for ($i = count($fieldNames) - 1; $i >= 0; $i--) {
+            $value = $context->getRequestValue($fieldNames[$i]);
+            if ($value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Extrai nomes dos campos do filtro em cascata (objects com getName() ou arrays com 'name').
+     *
+     * @return array<int, string>
+     */
+    protected function extractFieldNames(array $fields): array
+    {
+        $names = [];
+        foreach ($fields as $field) {
+            $name = is_object($field) && method_exists($field, 'getName')
+                ? $field->getName()
+                : (is_array($field) ? ($field['name'] ?? null) : null);
+            if ($name !== null) {
+                $names[] = $name;
+            }
+        }
+
+        return $names;
     }
 
     /**

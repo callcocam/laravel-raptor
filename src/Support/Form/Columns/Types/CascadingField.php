@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Concerns\Shared\BelongsToFields;
+use Callcocam\LaravelRaptor\Support\Concerns\Shared\ResolvesCascadingOptions;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,12 +17,16 @@ use Illuminate\Database\Eloquent\Builder;
 class CascadingField extends Column
 {
     use BelongsToFields;
+    use ResolvesCascadingOptions;
 
     protected bool $isRequired = false;
 
     protected ?string $placeholder = null;
 
     protected bool $searchable = false;
+
+    /** Query para alimentar as opções dos níveis (diferente de queryUsing do Column). */
+    protected Closure|string|Builder|\Illuminate\Database\Query\Builder|null $queryUsingCascading = null;
 
     protected ?Closure $queryUsingCallback = null;
 
@@ -91,6 +96,36 @@ class CascadingField extends Column
         return $this;
     }
 
+    /**
+     * Query para alimentar as opções dos níveis da cascata (não confundir com queryUsing do Column).
+     */
+    public function queryUsingCascading(Closure|string|Builder|\Illuminate\Database\Query\Builder|null $query): self
+    {
+        $this->queryUsingCascading = $query;
+
+        return $this;
+    }
+
+    public function getQueryUsingCascading(): Builder|\Illuminate\Database\Query\Builder|null
+    {
+        if ($this->queryUsingCascading !== null) {
+            if (is_string($this->queryUsingCascading)) {
+                return app($this->queryUsingCascading);
+            }
+            if ($this->queryUsingCascading instanceof Builder || $this->queryUsingCascading instanceof \Illuminate\Database\Query\Builder) {
+                return $this->queryUsingCascading;
+            }
+
+            $result = $this->evaluate($this->queryUsingCascading);
+
+            return $result instanceof Builder || $result instanceof \Illuminate\Database\Query\Builder ? $result : null;
+        }
+
+        $q = $this->getQueryUsing();
+
+        return $q instanceof Builder || $q instanceof \Illuminate\Database\Query\Builder ? $q : null;
+    }
+
     public function queryUsingCallback(?Closure $callback): self
     {
         $this->queryUsingCallback = $callback;
@@ -119,6 +154,18 @@ class CascadingField extends Column
         return $this;
     }
 
+    protected function getCascadingQueryCallback(): ?Closure
+    {
+        return $this->queryUsingCallback;
+    }
+
+    protected function getCascadingQuery(mixed $context): ?Builder
+    {
+        $q = $this->getQueryUsingCascading();
+
+        return $q instanceof Builder ? $q : null;
+    }
+
     protected function cascadingFields($model = null): array
     {
         $fields = $this->getFields();
@@ -127,75 +174,15 @@ class CascadingField extends Column
             $this->fieldLevelNames[] = $field->getName();
         }
 
+        $resolved = $this->resolveCascadingOptionsToArray($model);
+        $byName = collect($resolved)->keyBy('name');
         $cascadingFields = [];
-        if ($this->queryUsingCallback instanceof Closure) {
-            $cascadingFields = (array) $this->evaluate($this->queryUsingCallback, [
-                'model' => $model,
-                'fields' => $fields,
-            ]) ?? [];
-
-            return $cascadingFields;
-        }
-        $queryUsing = $this->getQueryUsing();
-
-        if (! $queryUsing instanceof Builder) {
-            foreach ($fields as $field) {
-                $cascadingFields[] = $field;
-            }
-
-            return $cascadingFields;
-        }
-
-        // Pega os dados do cascading do modelo (se existir)
-        $cascadingData = null;
-        if ($model) {
-            $cascadingAttribute = $this->getName();
-            $cascadingData = $model->{$cascadingAttribute} ?? [];
-        }
 
         foreach ($fields as $field) {
-            $query = null;
-            if (method_exists($field, 'getQueryUsing')) {
-                $fieldQueryUsing = $field->getQueryUsing();
-                if ($fieldQueryUsing instanceof Builder) {
-                    $query = clone $fieldQueryUsing;
-                } else {
-                    $query = clone $queryUsing;
-                }
-            } else {
-                $query = clone $queryUsing;
+            $item = $byName->get($field->getName());
+            if ($item && method_exists($field, 'options')) {
+                $field->options($item['options'] ?? []);
             }
-            $dependency = $field->getDependsOn();
-
-            if ($dependency) {
-                // Prioridade 1: pega da URL query (quando o usuário seleciona um campo)
-                $dependencyValue = request()->query($dependency);
-
-                // Prioridade 2: pega do modelo (quando está carregando a página de edição)
-                if (! $dependencyValue && $cascadingData && isset($cascadingData[$dependency])) {
-                    $dependencyValue = $cascadingData[$dependency];
-                }
-
-                if ($dependencyValue) {
-                    if ($fieldUsing = $this->getFieldsUsing()) {
-                        // Se for campo de relacionamento, filtra pelo campo correto
-                        $query->where($fieldUsing, $dependencyValue);
-                    } else {
-                        $query->where($dependency, $dependencyValue);
-                    }
-                    $field->options($query->pluck($this->getOptionLabel(), $this->getOptionKey())->toArray());
-                } else {
-                    // Se não tem valor do campo pai, deixa vazio
-                    $field->options([]);
-                }
-            } else {
-                // Se não tem dependência, busca os registros raiz (whereNull)
-                if ($fieldUsing = $this->getFieldsUsing()) {
-                    $query->whereNull($fieldUsing);
-                }
-                $field->options($query->pluck($this->getOptionLabel(), $this->getOptionKey())->toArray());
-            }
-
             $cascadingFields[] = $field;
         }
 

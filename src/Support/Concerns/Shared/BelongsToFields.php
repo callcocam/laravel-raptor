@@ -26,14 +26,20 @@ trait BelongsToFields
         return $this;
     }
 
-    public function getField(string $name): ?AbstractColumn
+    public function getField(string $name): mixed
     {
         return collect($this->fields)->firstWhere('name', $name);
     }
 
-    public function addField(AbstractColumn $field, $order = 0): static
+    public function addField($field, $order = 0): static
     {
-        $this->fields[] = $field->order($order)->relationshipName($this->getRelationshipName() ?? $this->getName());
+        if ($field) {
+            if ($field instanceof AbstractColumn) {
+                $this->fields[] = $field->order($order)->relationshipName($this->getRelationshipName() ?? $this->getName());
+            } else {
+                $this->fields[] = $field->order($order);
+            }
+        }
 
         return $this;
     }
@@ -50,7 +56,7 @@ trait BelongsToFields
 
     public function getFieldsForForm(): array
     {
-        return array_map(fn (AbstractColumn $field) => $field->toArray(), $this->fields);
+        return array_map(fn(AbstractColumn $field) => $field->toArray(), $this->fields);
     }
 
     public function fieldsUsing(Closure|string|null $callback): static

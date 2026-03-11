@@ -12,7 +12,7 @@ use Callcocam\LaravelRaptor\Support\Table\FilterBuilder;
 
 class DateFilter extends FilterBuilder
 {
-    protected string $component = 'filter-date';
+    protected ?string $component = 'filter-date';
 
     protected function setUp(): void
     {

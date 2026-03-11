@@ -15,7 +15,7 @@ class TrashedFilter extends FilterBuilder
 {
     use BelongsToOptions;
 
-    protected string $component = 'filter-trashed';
+    protected ?string $component = 'filter-trashed';
 
     public function __construct(string $name = 'trashed', ?string $label = null)
     {

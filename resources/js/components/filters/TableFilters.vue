@@ -59,8 +59,8 @@
               <div v-for="filter in filters" :key="filter.name" class="w-full">
                 <FilterRenderer
                   :filter="filter"
-                  :modelValue="filterValues[filter.name]"
-                  @update:modelValue="(value) => updateFilter(filter.name, value)"
+                  :modelValue="getFilterModelValue(filter)"
+                  @update:modelValue="(value) => onFilterUpdate(filter, value)"
                   class="w-full"
                 />
               </div>
@@ -89,8 +89,8 @@
           <div v-for="filter in filters" :key="filter.name" class="w-full">
             <FilterRenderer
               :filter="filter"
-              :modelValue="filterValues[filter.name]"
-              @update:modelValue="(value) => updateFilter(filter.name, value)"
+              :modelValue="getFilterModelValue(filter)"
+              @update:modelValue="(value) => onFilterUpdate(filter, value)"
               class="w-full"
             />
           </div>
@@ -119,6 +119,10 @@ interface Filter {
   component?: string;
   options?: Array<{ value: string | number; label: string }>;
   placeholder?: string;
+  /** Campos do filtro em cascata (cada um vira um param na URL) */
+  fields?: Array<{ name: string; label?: string; dependsOn?: string; [key: string]: any }>;
+  /** Se presente, filtro cascata tem opção "Incluir pais"; param na URL (ex: category_id_include_parents) */
+  includeParentsParam?: string;
   [key: string]: any;
 }
 
@@ -209,25 +213,39 @@ const activeFiltersCount = computed(() => {
 // Inicializa valores dos filtros da URL
 const initializeFromQuery = () => {
   const params = Object.fromEntries(new URLSearchParams(route.value.search));
-  
+
   // Inicializa o campo de busca
   if (params.search) {
     filterValues.value.search = params.search;
   }
-  
+
   // Inicializa outros filtros
   props.filters?.forEach((filter) => {
-    const queryValue = params[filter.name];
-    if (queryValue !== undefined && queryValue !== null && queryValue !== "") {
-      // Para date range, tenta fazer parse do JSON
-      if (filter.type === "date-range" && typeof queryValue === "string") {
-        try {
-          filterValues.value[filter.name] = JSON.parse(queryValue);
-        } catch {
+    if (filter.fields?.length) {
+      filter.fields.forEach((field) => {
+        const queryValue = params[field.name];
+        if (queryValue !== undefined && queryValue !== null && queryValue !== "") {
+          filterValues.value[field.name] = queryValue;
+        }
+      });
+      if (filter.includeParentsParam) {
+        const v = params[filter.includeParentsParam];
+        if (v !== undefined && v !== null && v !== "") {
+          filterValues.value[filter.includeParentsParam] = v === "1" || v === "true" || v === true;
+        }
+      }
+    } else {
+      const queryValue = params[filter.name];
+      if (queryValue !== undefined && queryValue !== null && queryValue !== "") {
+        if (filter.type === "date-range" && typeof queryValue === "string") {
+          try {
+            filterValues.value[filter.name] = JSON.parse(queryValue);
+          } catch {
+            filterValues.value[filter.name] = queryValue;
+          }
+        } else {
           filterValues.value[filter.name] = queryValue;
         }
-      } else {
-        filterValues.value[filter.name] = queryValue;
       }
     }
   });
@@ -249,6 +267,63 @@ const hasActiveFilters = computed(() => {
 });
 
 /**
+ * Valor de modelValue a passar para cada filtro (suporta cascata com vários campos).
+ */
+const getFilterModelValue = (filter: Filter): any => {
+  if (filter.fields?.length) {
+    const acc = filter.fields.reduce<Record<string, any>>((a, field) => {
+      a[field.name] = filterValues.value[field.name] ?? null;
+      return a;
+    }, {});
+    if (filter.includeParentsParam) {
+      const v = filterValues.value[filter.includeParentsParam];
+      acc[filter.includeParentsParam] = v === true || v === "1" || v === "true";
+    }
+    return acc;
+  }
+  return filterValues.value[filter.name];
+};
+
+/**
+ * Handler de update: filtro normal (name → value) ou cascata (payload { fieldName, value }).
+ */
+const onFilterUpdate = (filter: Filter, value: any) => {
+  const isCascadingPayload =
+    filter.fields?.length &&
+    value !== null &&
+    typeof value === "object" &&
+    "fieldName" in value &&
+    "value" in value;
+
+  if (isCascadingPayload) {
+    if (filter.includeParentsParam && value.fieldName === filter.includeParentsParam) {
+      updateFilter(value.fieldName as string, value.value ? "1" : "");
+      return;
+    }
+    updateCascadingField(filter, value.fieldName as string, value.value);
+    return;
+  }
+  updateFilter(filter.name, value);
+};
+
+/**
+ * Atualiza um campo de filtro em cascata: seta o valor e limpa os níveis abaixo; depois aplica.
+ */
+const updateCascadingField = (filter: Filter, fieldName: string, value: any) => {
+  if (value === null || value === undefined || value === "") {
+    delete filterValues.value[fieldName];
+  } else {
+    filterValues.value[fieldName] = value;
+  }
+  const fieldNames = filter.fields!.map((f) => f.name);
+  const idx = fieldNames.indexOf(fieldName);
+  for (let i = idx + 1; i < fieldNames.length; i++) {
+    delete filterValues.value[fieldNames[i]];
+  }
+  applyFilters();
+};
+
+/**
  * Atualiza um filtro específico
  */
 const updateFilter = (name: string, value: any) => {
@@ -258,11 +333,9 @@ const updateFilter = (name: string, value: any) => {
     filterValues.value[name] = value;
   }
 
-  // Aplica imediatamente para filtros não-texto (selects, checkboxes, etc)
   if (name !== "search") {
     applyFilters();
   } else {
-    // Para campos de busca, aplica com debounce
     debouncedApplyFilters();
   }
 };
@@ -272,12 +345,23 @@ const updateFilter = (name: string, value: any) => {
  */
 const applyFilters = () => {
   const params = Object.fromEntries(new URLSearchParams(route.value.search));
-  // Remove page ao aplicar filtros (volta para página 1)
   delete params.page;
-  // Adiciona os filtros ativos
-  Object.entries(filterValues.value).forEach(([key, value]) => {
+
+  // Sincroniza params com filterValues: seta os ativos e remove os que foram limpos
+  const filterKeys = new Set<string>();
+  props.filters?.forEach((filter) => {
+    if (filter.fields?.length) {
+      filterKeys.add(filter.name);
+      filter.fields.forEach((field) => filterKeys.add(field.name));
+      if (filter.includeParentsParam) filterKeys.add(filter.includeParentsParam);
+    } else {
+      filterKeys.add(filter.name);
+    }
+  });
+
+  filterKeys.forEach((key) => {
+    const value = filterValues.value[key];
     if (value !== null && value !== undefined && value !== "") {
-      // Para date range e objetos, serializa como JSON
       if (typeof value === "object") {
         params[key] = JSON.stringify(value);
       } else {
@@ -287,9 +371,8 @@ const applyFilters = () => {
       delete params[key];
     }
   });
-  // Atualiza URL e faz request Inertia
+
   router.get(window.location.pathname, params, { preserveState: true, replace: true });
-  // Emite evento
   emit("apply", filterValues.value);
 };
 
@@ -307,7 +390,13 @@ const clearFilters = () => {
     delete params.search;
   }
   props.filters?.forEach((filter) => {
-    delete params[filter.name];
+    if (filter.fields?.length) {
+      delete params[filter.name];
+      filter.fields.forEach((field) => delete params[field.name]);
+      if (filter.includeParentsParam) delete params[filter.includeParentsParam];
+    } else {
+      delete params[filter.name];
+    }
   });
   // Remove page também
   delete params.page;

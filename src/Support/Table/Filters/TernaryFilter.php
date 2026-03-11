@@ -20,7 +20,7 @@ class TernaryFilter extends FilterBuilder
 {
     use BelongsToOptions;
 
-    protected string $component = 'filter-select';
+    protected ?string $component = 'filter-select';
 
     protected ?string $placeholderLabel = null;
 

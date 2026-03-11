@@ -157,6 +157,7 @@ FilterRegistry.registerBulk({
     'filter-trashed': defineAsyncComponent(() => import('~/components/filters/types/FilterTrashed.vue')),
     'filter-nullable': defineAsyncComponent(() => import('~/components/filters/types/FilterNullable.vue')),
     'filter-select-with-clear': defineAsyncComponent(() => import('~/components/filters/types/FilterSelectWithClear.vue')),
+    'filter-select-cascading': defineAsyncComponent(() => import('~/components/filters/types/FilterSelectCascading.vue')),
 })
 
 FilterRegistry.markAsInitialized()
