@@ -175,10 +175,11 @@ const isSelectingAll = ref(false);
 // Estado interno para gerenciar valores selecionados
 const selectedValues = ref<(string | number)[]>([]);
 
-// Sincronizar modelValue -> selectedValues (quando props.modelValue mudar)
+// Sincronizar modelValue -> selectedValues (sempre normalizar para string[] para comparações)
 watch(() => props.modelValue, (newModelValue) => {
-  selectedValues.value = Array.isArray(newModelValue) ? [...newModelValue] : [];
-}, { immediate: true });
+  const arr = Array.isArray(newModelValue) ? newModelValue : []
+  selectedValues.value = arr.map((v) => String(v))
+}, { immediate: true })
 
 // Sincronizar selectedValues -> modelValue (quando selectedValues mudar)
 watch(selectedValues, (newSelectedArray) => {
@@ -192,10 +193,10 @@ watch(selectedValues, (newSelectedArray) => {
     );
 
   if (!isSameContent) {
-    const valueToEmit = newSelectedArray.length > 0 ? [...newSelectedArray] : [];
-    emit("update:modelValue", valueToEmit);
+    const valueToEmit = newSelectedArray.length > 0 ? [...newSelectedArray] : []
+    emit("update:modelValue", valueToEmit)
   }
-}, { deep: true });
+}, { deep: true })
 
 const hasError = computed(() => !!props.error);
 const hasSearch = computed(
@@ -260,9 +261,17 @@ const isSomeSelected = computed(() => {
   );
 });
 
-const isChecked = (value: string | number) => {
-  return selectedValues.value.some(v => String(v) === String(value));
-};
+/** Map option value -> checked; computed para reatividade explícita com selectedValues */
+const checkedStateMap = computed(() => {
+  const map = new Map<string, boolean>()
+  const selected = new Set(selectedValues.value.map(String))
+  for (const option of filteredOptions.value) {
+    map.set(String(option.value), selected.has(String(option.value)))
+  }
+  return map
+})
+
+const isChecked = (value: string | number) => checkedStateMap.value.get(String(value)) ?? false
 
 const toggleOption = (value: string | number, checked: boolean) => {
   const stringValue = String(value);

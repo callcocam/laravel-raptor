@@ -5,9 +5,15 @@
  -->
 <template>
   <Field orientation="horizontal" :data-invalid="hasError" class="gap-y-1">
-    <Checkbox :id="column.name" :name="column.name" :required="column.required" :disabled="column.disabled"
-      :checked="internalValue" @update:model-value="(val: boolean | 'indeterminate') => updateValue(val)"
-      :aria-invalid="hasError" />
+    <Checkbox
+      :id="column.name"
+      :name="column.name"
+      :required="column.required"
+      :disabled="column.disabled"
+      :model-value="internalValue"
+      :aria-invalid="hasError"
+      @update:model-value="updateValue"
+    />
 
     <div class="space-y-1">
       <FieldLabel :for="column.name">
@@ -68,11 +74,17 @@ const errorArray = computed(() => {
 })
 
 const internalValue = computed(() => {
-  if (props.modelValue !== null) {
-    return props.modelValue
-  }
-  return props.column.default || false
+  const raw = props.modelValue !== null && props.modelValue !== undefined
+    ? props.modelValue
+    : (props.column.default ?? false)
+  return toBoolean(raw)
 })
+
+function toBoolean(value: boolean | string | number | null | undefined): boolean {
+  if (value === true || value === 'true' || value === 1) return true
+  if (value === false || value === 'false' || value === 0) return false
+  return Boolean(value)
+}
 
 const updateValue = (value: boolean | 'indeterminate') => {
   const booleanValue = value === 'indeterminate' ? false : value
