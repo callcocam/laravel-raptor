@@ -54,17 +54,20 @@ class PermissionController extends TenantController
             TextField::make('name', config('raptor.controllers.permissions.form.name.label', __('Nome')))
                 ->required()
                 ->placeholder(config('raptor.controllers.permissions.form.name.placeholder', 'Ex: Editar Usuários'))
-                ->helpText(config('raptor.controllers.permissions.form.name.helpText', __('Nome descritivo da permissão'))),
+                ->helpText(config('raptor.controllers.permissions.form.name.helpText', __('Nome descritivo da permissão')))
+                ->columnSpan(config('raptor.controllers.permissions.form.name.columnSpan', '6')),
 
             TextField::make('slug', config('raptor.controllers.permissions.form.slug.label', __('Slug')))
                 ->required()
                 ->placeholder(config('raptor.controllers.permissions.form.slug.placeholder', 'Ex: users.edit'))
-                ->helpText(config('raptor.controllers.permissions.form.slug.helpText', __('Identificador único da permissão (formato: recurso.acao)'))),
+                ->helpText(config('raptor.controllers.permissions.form.slug.helpText', __('Identificador único da permissão (formato: recurso.acao)')))
+                ->columnSpan(config('raptor.controllers.permissions.form.slug.columnSpan', '6')),
 
             TextareaField::make('description', config('raptor.controllers.permissions.form.description.label', __('Descrição')))
                 ->rows(3)
                 ->placeholder(config('raptor.controllers.permissions.form.description.placeholder', __('Descreva o que esta permissão permite fazer')))
-                ->helpText(config('raptor.controllers.permissions.form.description.helpText', __('Descrição detalhada da permissão'))),
+                ->helpText(config('raptor.controllers.permissions.form.description.helpText', __('Descrição detalhada da permissão')))
+                ->columnSpan(config('raptor.controllers.permissions.form.description.columnSpan', '12')),
         ]);
 
         return $form;

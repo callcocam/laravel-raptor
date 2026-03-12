@@ -55,17 +55,20 @@ class RoleController extends TenantController
             TextField::make('name', config('raptor.controllers.roles.form.name.label', __('Nome')))
                 ->required()
                 ->placeholder(config('raptor.controllers.roles.form.name.placeholder', 'Ex: Administrador'))
-                ->helpText(config('raptor.controllers.roles.form.name.helpText', __('Nome único para identificar a role'))),
+                ->helpText(config('raptor.controllers.roles.form.name.helpText', __('Nome único para identificar a role')))
+                ->columnSpan(config('raptor.controllers.roles.form.name.columnSpan', '6')),
 
             TextField::make('slug', config('raptor.controllers.roles.form.slug.label', __('Slug')))
                 ->required()
                 ->placeholder(config('raptor.controllers.roles.form.slug.placeholder', 'Ex: admin'))
-                ->helpText(config('raptor.controllers.roles.form.slug.helpText', __('Identificador único da role (sem espaços)'))),
+                ->helpText(config('raptor.controllers.roles.form.slug.helpText', __('Identificador único da role (sem espaços)')))
+                ->columnSpan(config('raptor.controllers.roles.form.slug.columnSpan', '6')),
 
             TextareaField::make('description', config('raptor.controllers.roles.form.description.label', __('Descrição')))
                 ->rows(3)
                 ->placeholder(config('raptor.controllers.roles.form.description.placeholder', __('Descreva as responsabilidades desta role')))
-                ->helpText(config('raptor.controllers.roles.form.description.helpText', __('Descrição detalhada da role'))),
+                ->helpText(config('raptor.controllers.roles.form.description.helpText', __('Descrição detalhada da role')))
+                ->columnSpan(config('raptor.controllers.roles.form.description.columnSpan', '12')),
 
             CheckboxField::make('permissions', config('raptor.controllers.roles.form.permissions.label', __('Permissões')))
                 ->relationship('permissions', 'name')
@@ -74,11 +77,13 @@ class RoleController extends TenantController
                 ->searchable()
                 ->showSelectAll(true)
                 ->defaultUsing(fn ($request, $model) => $model ? $model->permissions->pluck('id')->toArray() : [])
-                ->helpText(config('raptor.controllers.roles.form.permissions.helpText', __('Selecione as permissões associadas a esta role'))),
+                ->helpText(config('raptor.controllers.roles.form.permissions.helpText', __('Selecione as permissões associadas a esta role')))
+                ->columnSpan(config('raptor.controllers.roles.form.permissions.columnSpan', '12')),
 
             CheckboxField::make('special', config('raptor.controllers.roles.form.special.label', __('Permissões Especiais')))
                 ->helpText(config('raptor.controllers.roles.form.special.helpText', __('Marque se esta role deve ter permissões especiais de administrador')))
-                ->editable(false),
+                ->editable(false)
+                ->columnSpan(config('raptor.controllers.roles.form.special.columnSpan', '12')),
         ]);
 
         return $form;

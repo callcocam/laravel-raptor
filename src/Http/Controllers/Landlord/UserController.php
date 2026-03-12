@@ -62,10 +62,11 @@ class UserController extends LandlordController
             )
                 ->relationship('tenant', 'name')
                 ->placeholder(config('raptor.controllers.users.form.tenant_id.placeholder', __('Selecione o tenant')))
-                ->helpText(config('raptor.controllers.users.form.tenant_id.helpText', __('Atribua o usuário a um tenant'))),
+                ->helpText(config('raptor.controllers.users.form.tenant_id.helpText', __('Atribua o usuário a um tenant')))
+                ->columnSpan(config('raptor.controllers.users.form.tenant_id.columnSpan', '12')),
             TextField::make('name', config('raptor.controllers.users.form.name.label', __('Nome')))
                 ->required()
-                ->columnSpan('7')
+                ->columnSpan(config('raptor.controllers.users.form.name.columnSpan', '7'))
                 ->placeholder(config('raptor.controllers.users.form.name.placeholder', __('Nome completo do usuário')))
                 ->helpText(config('raptor.controllers.users.form.name.helpText', __('Nome completo do usuário'))),
 
@@ -82,21 +83,22 @@ class UserController extends LandlordController
                 ->required()
                 ->minLength(8)
                 ->showToggle()
-                ->columnSpan('6')
+                ->columnSpan(config('raptor.controllers.users.form.password.columnSpan', '6'))
                 ->helpText(config('raptor.controllers.users.form.password.helpText', __('Senha com no mínimo 8 caracteres'))),
 
             PasswordField::make('password_confirmation', config('raptor.controllers.users.form.password_confirmation.label', __('Confirmar Senha')))
                 ->required()
                 ->minLength(8)
                 ->showToggle()
-                ->columnSpan('6')
+                ->columnSpan(config('raptor.controllers.users.form.password_confirmation.columnSpan', '6'))
                 ->helpText(config('raptor.controllers.users.form.password_confirmation.helpText', __('Digite a senha novamente'))),
 
             CheckboxField::make('roles', config('raptor.controllers.users.form.roles.label', __('Papéis')))
                 ->relationship('roles', 'name')
                 ->multiple()
                 ->defaultUsing(fn($request, $model) => $model ? $model->roles->pluck('id')->toArray() : [])
-                ->helpText(config('raptor.controllers.users.form.roles.helpText', __('Atribua papéis ao usuário'))),
+                ->helpText(config('raptor.controllers.users.form.roles.helpText', __('Atribua papéis ao usuário')))
+                ->columnSpan(config('raptor.controllers.users.form.roles.columnSpan', '12')),
         ]);
 
         return $form;
