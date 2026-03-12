@@ -349,6 +349,9 @@ const applyFilters = () => {
 
   // Sincroniza params com filterValues: seta os ativos e remove os que foram limpos
   const filterKeys = new Set<string>();
+  if (props.searchable) {
+    filterKeys.add("search");
+  }
   props.filters?.forEach((filter) => {
     if (filter.fields?.length) {
       filterKeys.add(filter.name);
