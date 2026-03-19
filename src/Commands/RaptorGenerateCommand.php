@@ -59,6 +59,7 @@ class RaptorGenerateCommand extends Command
             $this->call('raptor:make-controller', [
                 'name' => $name,
                 '--table' => $tableName,
+                '--model' => $name,
                 '--context' => $this->option('context') ?: 'Tenant',
                 '--force' => $this->option('force'),
             ]);

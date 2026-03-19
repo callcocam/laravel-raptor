@@ -87,6 +87,7 @@ import RepeaterEmptyState from './repeater/RepeaterEmptyState.vue'
 import HintRenderer from '../HintRenderer.vue'
 import { useRepeaterCalculations, type Calculation } from '~/composables/useRepeaterCalculations'
 import ActionRenderer from '~/components/actions/ActionRenderer.vue'
+import { isMultiFieldUpdate, type FieldEmitValue } from '~/types/form'
 
 interface FormColumn {
   name: string
@@ -316,9 +317,15 @@ function moveItemDown(index: number): void {
   emitValue()
 }
 
-function updateItemField(index: number, fieldName: string, value: any): void {
+function updateItemField(index: number, fieldName: string, value: FieldEmitValue): void {
   if (items.value[index]) {
-    items.value[index][fieldName] = value
+    if (isMultiFieldUpdate(value)) {
+      Object.entries(value.fields).forEach(([key, fieldValue]) => {
+        items.value[index][key] = fieldValue
+      })
+    } else {
+      items.value[index][fieldName] = value
+    }
 
     // Atualiza campos calculados se houver
     updateCalculatedFields()

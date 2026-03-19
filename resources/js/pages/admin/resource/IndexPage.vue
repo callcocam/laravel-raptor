@@ -3,8 +3,7 @@ import { computed } from 'vue'
 import TableRegistry from '~/utils/TableRegistry'
 import ResourceLayout from "~/layouts/ResourceLayout.vue";
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
-import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
-import HeaderActions from "~/components/table/HeaderActions.vue";
+import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue"; 
 
 interface Props {
   message?: string;

@@ -10,6 +10,7 @@ interface AutoCompleteField {
   source: string | number | boolean | null
   target: string
   isFixedValue?: boolean
+  onlyIfEmpty?: boolean
 }
 
 interface AutoCompleteConfig {
@@ -31,6 +32,18 @@ export function useAutoComplete(
   // Se não tem autoComplete configurado, não faz nada
   if (!autoComplete || !autoComplete.enabled || !formData) {
     return
+  }
+
+  const isEmptyValue = (value: unknown): boolean => {
+    if (value === null || value === undefined || value === '') {
+      return true
+    }
+
+    if (Array.isArray(value)) {
+      return value.length === 0
+    }
+
+    return false
   }
 
   // Observa mudanças no valor do campo
@@ -61,6 +74,10 @@ export function useAutoComplete(
         }
         
         if (sourceValue !== undefined && sourceValue !== null) {
+          if (field.onlyIfEmpty && !isEmptyValue(formData.value[field.target])) {
+            return
+          }
+
           // Atualiza o campo target no formData
           formData.value[field.target] = sourceValue
         }

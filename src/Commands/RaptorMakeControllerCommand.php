@@ -64,10 +64,28 @@ class RaptorMakeControllerCommand extends GeneratorCommand
         $stub = str_replace('{{ context }}', $context, $stub);
         $stub = str_replace('{{ routePrefix }}', $routePrefix, $stub);
 
+        // Resolve model class and import
+        $modelOption = $this->option('model');
+        if ($modelOption) {
+            $namespacedModel = $this->qualifyModel($modelOption);
+            $modelClass = class_basename($namespacedModel);
+            $modelImport = "use {$namespacedModel};";
+        } else {
+            $controllerBasename = str_replace('Controller', '', class_basename($name));
+            $namespacedModel = $this->qualifyModel($controllerBasename);
+            $modelClass = class_basename($namespacedModel);
+            $modelImport = class_exists($namespacedModel) ? "use {$namespacedModel};" : '';
+        }
+        $stub = str_replace('{{ modelImport }}', $modelImport, $stub);
+        $stub = str_replace('{{ modelClass }}', $modelClass, $stub);
+
         // Se a tabela existe, gera colunas baseadas no schema
         if (Schema::hasTable($tableName)) {
             $this->info("Generating controller based on table: {$tableName}");
             $stub = $this->generateColumnsFromTable($stub, $tableName);
+        } else {
+            $stub = str_replace('{{ formFields }}', $this->defaultFormFields(), $stub);
+            $stub = str_replace('{{ tableColumns }}', $this->defaultTableColumns(), $stub);
         }
 
         return $stub;
@@ -87,8 +105,8 @@ class RaptorMakeControllerCommand extends GeneratorCommand
         // Gera colunas da tabela
         $tableColumns = $this->generateTableColumns($columns);
 
-        // Substitui no stub (se houver placeholders)
-        // Nota: Você pode adicionar {{ formFields }} e {{ tableColumns }} no stub se quiser
+        $stub = str_replace('{{ formFields }}', $formFields, $stub);
+        $stub = str_replace('{{ tableColumns }}', $tableColumns, $stub);
 
         return $stub;
     }
@@ -190,10 +208,58 @@ class RaptorMakeControllerCommand extends GeneratorCommand
         return '['.implode(', ', $rules).']';
     }
 
+    protected function defaultFormFields(): string
+    {
+        return <<<'PHP'
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('name')
+                    ->label('Nome')
+                    ->required()
+                    ->rules(['required', 'string', 'max:255'])
+                    ->columnSpan('6'),
+
+            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField::make('description')
+                    ->label('Descrição')
+                    ->rules([])
+                    ->columnSpan('6'),
+        PHP;
+    }
+
+    protected function defaultTableColumns(): string
+    {
+        return <<<'PHP'
+            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn::make('name')
+                    ->label('Nome')
+                    ->searchable()
+                    ->sortable(),
+
+            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn::make('slug')
+                    ->label('Slug')
+                    ->searchable()
+                    ->sortable(),
+
+            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn::make('description')
+                    ->label('Descrição'),
+        PHP;
+    }
+
+    protected function qualifyModel(string $model): string
+    {
+        $model = ltrim($model, '\\/');
+        $model = str_replace('/', '\\', $model);
+        $rootNamespace = $this->rootNamespace();
+
+        if (Str::startsWith($model, $rootNamespace)) {
+            return $model;
+        }
+
+        return $rootNamespace.'Models\\'.$model;
+    }
+
     protected function getOptions(): array
     {
         return [
             ['table', 't', InputOption::VALUE_OPTIONAL, 'The database table name'],
+            ['model', 'm', InputOption::VALUE_OPTIONAL, 'The model class for this controller'],
             ['context', 'c', InputOption::VALUE_OPTIONAL, 'The context directory (Tenant, Landlord, Admin)', 'Tenant'],
             ['force', 'f', InputOption::VALUE_NONE, 'Create the class even if the controller already exists'],
         ];

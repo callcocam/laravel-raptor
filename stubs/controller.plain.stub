@@ -8,7 +8,7 @@
 
 namespace {{ namespace }};
 
-
+{{ modelImport }}
 use Callcocam\LaravelRaptor\Http\Controllers\AbstractController;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\InfoList;
@@ -31,7 +31,8 @@ class {{ class }} extends AbstractController
                 // ->group('Operacional')
                 // ->groupCollapsible(true)
                 ->order(20)
-                ->middlewares(['auth', 'verified']),
+                ->middlewares(['auth', 'verified'])
+                ->resource({{ modelClass }}::class),
             'create' => Create::route('/{{ tableName }}/create')
                 ->label('Criar {{ resourceTitle }}')
                 ->name('{{ routePrefix }}{{ tableName }}.create')
@@ -79,18 +80,7 @@ class {{ class }} extends AbstractController
     protected function form(Form $form): Form
     {
         $form->columns([
-            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField::make('name')
-                ->label('Nome')
-                ->required()
-                ->rules(['required', 'string', 'max:255'])
-                ->placeholder('Digite o nome')
-                ->columnSpanFull(), 
-
-            \Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextareaField::make('description')
-                ->label('Descrição')
-                ->placeholder('Descrição')
-                ->rows(4)
-                ->columnSpanFull(),
+{{ formFields }}
         ]);
 
         return $form;
@@ -99,18 +89,7 @@ class {{ class }} extends AbstractController
     protected function table(TableBuilder $table): TableBuilder
     {
         $table->columns([
-            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn::make('name')
-                ->label('Nome')
-                ->searchable()
-                ->sortable(),
-
-            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn::make('slug')
-                ->label('Slug')
-                ->searchable()
-                ->sortable(),
-
-            \Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn::make('description')
-                ->label('Descrição'),
+{{ tableColumns }}
         ]);
 
         $table->filters([

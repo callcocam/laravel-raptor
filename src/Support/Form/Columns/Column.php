@@ -39,6 +39,8 @@ abstract class Column extends AbstractColumn
 
     protected Closure|string|null $executeParams = null;
 
+    protected Closure|bool|null $reload = null;
+
     protected int $index = 0;
 
     public function __construct($name, $label = null)
@@ -93,6 +95,19 @@ abstract class Column extends AbstractColumn
     {
         return $this->evaluate($this->executeParams);
     }
+
+    public function reload(Closure|bool|null $reload = true): static
+    {
+        $this->reload = $reload;
+
+        return $this;
+    }
+
+    public function getReload(): ?bool
+    {
+        return $this->evaluate($this->reload);
+    }
+ 
 
     public function valueUsing(Closure $callback): static
     {
@@ -212,6 +227,7 @@ abstract class Column extends AbstractColumn
             'executeUrl' => $this->getExecuteUrl(),
             'executeMethod' => $this->getExecuteMethod(),
             'executeParams' => $this->getExecuteParams(),
+            'reload' => $this->getReload(),
         ], $this->getGridLayoutConfig());
     }
 }

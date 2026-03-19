@@ -26,6 +26,24 @@ trait HasAutoComplete
             'source' => $sourceField,
             'target' => $targetField,
             'isFixedValue' => ! is_string($sourceField) || is_numeric($sourceField),
+            'onlyIfEmpty' => false,
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Define um campo que será preenchido automaticamente apenas quando o target estiver vazio.
+     *
+     * @param  string|int|float|bool|null  $sourceField
+     */
+    public function completeWhenEmpty(string|int|float|bool|null $sourceField, string $targetField): static
+    {
+        $this->autoCompleteFields[] = [
+            'source' => $sourceField,
+            'target' => $targetField,
+            'isFixedValue' => ! is_string($sourceField) || is_numeric($sourceField),
+            'onlyIfEmpty' => true,
         ];
 
         return $this;
