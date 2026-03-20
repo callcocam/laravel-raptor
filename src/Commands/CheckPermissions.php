@@ -35,6 +35,7 @@ class CheckPermissions extends Command
         'segements',
         'layer',
         'layers',
+        'plannerates'
     ];
 
     /**
