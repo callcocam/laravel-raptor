@@ -8,6 +8,9 @@
 
 namespace Callcocam\LaravelRaptor\Commands;
 
+use App\Models\Client;
+use App\Models\Store;
+use Callcocam\LaravelRaptor\Models\Tenant;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
@@ -23,7 +26,7 @@ class TenantMigrateCommand extends Command
                             {--skip-main : Não executa migrations no banco principal}
                             {--type= : Filtra os bancos por tipo (tenant,client,store). Aceita múltiplos separados por vírgula}';
 
-    protected $description = 'Executa migrations no banco principal e nos bancos resolvidos pelos models tenant/client/store configurados';
+    protected $description = 'Executa migrations no banco principal e nos bancos resolvidos pelas tabelas tenants/clients/stores';
 
     protected string $defaultConnection;
 
@@ -56,9 +59,9 @@ class TenantMigrateCommand extends Command
             }
         }
 
-        // PASSO 2: Resolver bancos a partir dos models configurados e rodar as migrations dos paths correspondentes
+        // PASSO 2: Resolver bancos a partir das tabelas tenants/clients/stores e rodar migrations nos paths fixos
         $this->newLine();
-        $this->info('📦 PASSO 2: Migrando bancos (tenants/clients/stores) pelos models configurados...');
+        $this->info('📦 PASSO 2: Migrando bancos (tenants/clients/stores) pelas tabelas...');
         $this->migrateDatabasesFromConfig($fresh, $seed, $selectedTypes);
 
         $this->newLine();
@@ -109,17 +112,17 @@ class TenantMigrateCommand extends Command
     }
 
     /**
-     * Resolve bancos a partir dos models configurados e roda as migrations em seus paths.
+    * Resolve bancos a partir das tabelas tenants/clients/stores e roda migrations em paths fixos.
      */
     protected function migrateDatabasesFromConfig(bool $fresh, bool $seed, array $selectedTypes = []): void
     {
         $databases = $this->collectDatabasesFromModels($selectedTypes);
        
         if (empty($databases)) {
-            $message = '   Nenhum banco encontrado nos models configurados.';
+            $message = '   Nenhum banco encontrado nas tabelas tenants/clients/stores.';
             if ($selectedTypes !== []) {
                 $message = sprintf(
-                    '   Nenhum banco encontrado nos models configurados para os tipos: %s.',
+                    '   Nenhum banco encontrado nas tabelas tenants/clients/stores para os tipos: %s.',
                     implode(', ', $selectedTypes)
                 );
             }
@@ -158,231 +161,121 @@ class TenantMigrateCommand extends Command
     }
 
     /**
-     * Monta a lista de bancos a migrar a partir dos models tenant/client/store configurados.
-     * Mantém database_models apenas como fallback para tipos customizados adicionais.
+    * Monta a lista de bancos a migrar a partir das tabelas tenants/clients/stores.
      *
      * @return array<int, array{type: string, name: string, database: string, paths: array<int, string>}>
      */
     protected function collectDatabasesFromModels(array $selectedTypes = []): array
     {
         $selectedTypes = array_map('strtolower', $selectedTypes);
-        $standardEntries = $this->getStandardMigrationEntries();
-        $customEntries = $this->getCustomMigrationEntries(['tenant', 'client', 'store']);
-        $hasHierarchyEntries = $standardEntries !== [];
-
         $list = [];
         $seen = [];
-        $processedTypes = [];
+        $clientPaths = $this->normalizePaths(['database/migrations/clients']);
+        $storePaths = $this->normalizePaths(['database/migrations/clients/stores']);
 
-        if ($hasHierarchyEntries) {
-            $tenantEntry = $standardEntries['tenant'] ?? null;
-            $clientEntry = $standardEntries['client'] ?? null;
-            $storeEntry = $standardEntries['store'] ?? null;
+        $tenants = $this->queryRecordsForMigration(Tenant::class)->keyBy(fn ($record) => (string) $record->getKey());
+        $clients = $this->queryRecordsForMigration(Client::class);
+        $clientsByTenant = $clients->groupBy(fn ($record) => (string) ($record->tenant_id ?? ''));
+        $stores = $this->queryRecordsForMigration(Store::class);
+        $storesByClient = $stores->groupBy(fn ($record) => (string) ($record->client_id ?? ''));
+        $processedClientIds = [];
+        $processedStoreIds = [];
 
-            $tenantClass = $this->resolveModelClass($tenantEntry['model'] ?? null);
-            $clientClass = $this->resolveModelClass($clientEntry['model'] ?? null);
-            $storeClass = $this->resolveModelClass($storeEntry['model'] ?? null);
+        foreach ($tenants as $tenant) {
+            $tenantClients = $clientsByTenant->get((string) $tenant->getKey(), collect());
 
-            $tenants = $this->queryRecordsForMigration($tenantClass)->keyBy(fn ($record) => (string) $record->getKey());
-            $clients = $this->queryRecordsForMigration($clientClass);
-            $stores = $this->queryRecordsForMigration($storeClass);
+            if ($tenantClients->isEmpty()) {
+                continue;
+            }
 
-            $clientsByTenant = $clients->groupBy(fn ($record) => (string) ($record->tenant_id ?? ''));
-            $storesByClient = $stores->groupBy(fn ($record) => (string) ($record->client_id ?? ''));
+            foreach ($tenantClients as $client) {
+                $processedClientIds[(string) $client->getKey()] = true;
+                $clientStores = $storesByClient->get((string) $client->getKey(), collect());
+                $storesWithDatabase = $clientStores->filter(function ($store) {
+                    return trim((string) ($store->database ?? '')) !== '';
+                });
 
-            foreach ($tenants as $tenant) {
-                if ($tenantEntry && $this->shouldIncludeType('tenant', $selectedTypes)) {
-                    $database = $this->resolveDatabaseName(null, null, $tenant);
-                    $this->appendMigrationTarget($list, $seen, [
-                        'type' => $tenantEntry['type'] ?? 'Tenant',
-                        'name' => $tenant->{$tenantEntry['name_key'] ?? 'name'} ?? (string) $tenant->getKey(),
-                        'database' => $database,
-                        'paths' => $tenantEntry['paths'] ?? [],
-                    ]);
-                    $processedTypes['tenant'] = true;
-                }
-
-                foreach ($clientsByTenant->get((string) $tenant->getKey(), collect()) as $client) {
-                    if ($clientEntry && $this->shouldIncludeType('client', $selectedTypes)) {
-                        $this->appendClientMigrationTargets(
-                            $list,
-                            $seen,
-                            $clientEntry,
-                            $client,
-                            $tenant,
-                            $storesByClient->get((string) $client->getKey(), collect())
-                        );
-                        $processedTypes['client'] = true;
-                    }
-
-                    foreach ($storesByClient->get((string) $client->getKey(), collect()) as $store) {
-                        if ($storeEntry && $this->shouldIncludeType('store', $selectedTypes)) {
-                            $database = $this->resolveDatabaseName($store, $client, $tenant);
+                if ($storesWithDatabase->isNotEmpty()) {
+                    if ($this->shouldIncludeType('store', $selectedTypes)) {
+                        foreach ($storesWithDatabase as $store) {
+                            $processedStoreIds[(string) $store->getKey()] = true;
                             $this->appendMigrationTarget($list, $seen, [
-                                'type' => $storeEntry['type'] ?? 'Store',
-                                'name' => $store->{$storeEntry['name_key'] ?? 'name'} ?? (string) $store->getKey(),
-                                'database' => $database,
-                                'paths' => $storeEntry['paths'] ?? [],
+                                'type' => 'Store',
+                                'name' => $store->name ?? (string) $store->getKey(),
+                                'database' => $this->resolveDatabaseName($store),
+                                'paths' => $storePaths,
                             ]);
-                            $processedTypes['store'] = true;
                         }
                     }
-                }
-            }
 
-            foreach ($clients->filter(fn ($record) => blank($record->tenant_id)) as $client) {
-                if ($clientEntry && $this->shouldIncludeType('client', $selectedTypes)) {
-                    $this->appendClientMigrationTargets(
-                        $list,
-                        $seen,
-                        $clientEntry,
-                        $client,
-                        null,
-                        $storesByClient->get((string) $client->getKey(), collect())
-                    );
-                    $processedTypes['client'] = true;
+                    continue;
                 }
 
-                foreach ($storesByClient->get((string) $client->getKey(), collect()) as $store) {
-                    if ($storeEntry && $this->shouldIncludeType('store', $selectedTypes)) {
-                        $database = $this->resolveDatabaseName($store, $client, null);
-                        $this->appendMigrationTarget($list, $seen, [
-                            'type' => $storeEntry['type'] ?? 'Store',
-                            'name' => $store->{$storeEntry['name_key'] ?? 'name'} ?? (string) $store->getKey(),
-                            'database' => $database,
-                            'paths' => $storeEntry['paths'] ?? [],
-                        ]);
-                        $processedTypes['store'] = true;
-                    }
-                }
-            }
-
-            foreach ($stores->filter(fn ($record) => blank($record->client_id)) as $store) {
-                if ($storeEntry && $this->shouldIncludeType('store', $selectedTypes)) {
-                    $database = $this->resolveDatabaseName($store, null, null);
+                if ($this->shouldIncludeType('client', $selectedTypes)) {
                     $this->appendMigrationTarget($list, $seen, [
-                        'type' => $storeEntry['type'] ?? 'Store',
-                        'name' => $store->{$storeEntry['name_key'] ?? 'name'} ?? (string) $store->getKey(),
-                        'database' => $database,
-                        'paths' => $storeEntry['paths'] ?? [],
+                        'type' => 'Client',
+                        'name' => $client->name ?? (string) $client->getKey(),
+                        'database' => $this->resolveDatabaseName(null, $client),
+                        'paths' => $clientPaths,
                     ]);
-                    $processedTypes['store'] = true;
                 }
             }
         }
 
-        foreach ($customEntries as $entry) {
-            $paths = $entry['paths'] ?? [];
-            if (empty($paths) || ! is_array($paths)) {
+        $orphanClients = $clients->filter(function ($client) use ($processedClientIds) {
+            return ! isset($processedClientIds[(string) $client->getKey()]);
+        });
+
+        foreach ($orphanClients as $client) {
+            $processedClientIds[(string) $client->getKey()] = true;
+
+            $clientStores = $storesByClient->get((string) $client->getKey(), collect());
+            $storesWithDatabase = $clientStores->filter(function ($store) {
+                return trim((string) ($store->database ?? '')) !== '';
+            });
+
+            if ($storesWithDatabase->isNotEmpty()) {
+                if ($this->shouldIncludeType('store', $selectedTypes)) {
+                    foreach ($storesWithDatabase as $store) {
+                        $processedStoreIds[(string) $store->getKey()] = true;
+                        $this->appendMigrationTarget($list, $seen, [
+                            'type' => 'Store',
+                            'name' => $store->name ?? (string) $store->getKey(),
+                            'database' => $this->resolveDatabaseName($store),
+                            'paths' => $storePaths,
+                        ]);
+                    }
+                }
+
                 continue;
             }
 
-            $type = strtolower((string) ($entry['type'] ?? ''));
-            if ($type !== '' && isset($processedTypes[$type])) {
-                continue;
-            }
-
-            if ($selectedTypes !== [] && ! in_array($type, $selectedTypes, true)) {
-                continue;
-            }
-
-            $modelClass = $this->resolveModelClass($entry['model'] ?? null);
-            if (! $modelClass || ! class_exists($modelClass)) {
-                continue;
-            }
-
-            $nameKey = $entry['name_key'] ?? 'name';
-
-            foreach ($this->queryRecordsForMigration($modelClass) as $record) {
+            if ($this->shouldIncludeType('client', $selectedTypes)) {
                 $this->appendMigrationTarget($list, $seen, [
-                    'type' => $entry['type'] ?? class_basename($modelClass),
-                    'name' => $record->{$nameKey} ?? (string) $record->getKey(),
-                    'database' => $record->database ?? null,
-                    'paths' => $paths,
+                    'type' => 'Client',
+                    'name' => $client->name ?? (string) $client->getKey(),
+                    'database' => $this->resolveDatabaseName(null, $client),
+                    'paths' => $clientPaths,
+                ]);
+            }
+        }
+
+        $orphanStores = $stores->filter(function ($store) use ($processedStoreIds) {
+            return ! isset($processedStoreIds[(string) $store->getKey()]);
+        });
+
+        if ($this->shouldIncludeType('store', $selectedTypes)) {
+            foreach ($orphanStores as $store) {
+                $this->appendMigrationTarget($list, $seen, [
+                    'type' => 'Store',
+                    'name' => $store->name ?? (string) $store->getKey(),
+                    'database' => $this->resolveDatabaseName($store),
+                    'paths' => $storePaths,
                 ]);
             }
         }
 
         return $list;
-    }
-
-    /**
-     * @return array<string, array{model: string, type: string, name_key: string, paths: array<int, string>}>
-     */
-    protected function getStandardMigrationEntries(): array
-    {
-        $entries = [
-            'tenant' => [
-                'model' => config('raptor.migrations.models.tenant', config('raptor.landlord.models.tenant')),
-                'type' => 'Tenant',
-                'name_key' => 'name',
-                'paths' => $this->normalizePaths([
-                    config('raptor.migrations.default'),
-                    config('raptor.migrations.tenant'),
-                ]),
-            ],
-            'client' => [
-                'model' => config('raptor.migrations.models.client'),
-                'type' => 'Client',
-                'name_key' => 'name',
-                'paths' => $this->normalizePaths([
-                    config('raptor.migrations.client'),
-                ]),
-            ],
-            'store' => [
-                'model' => config('raptor.migrations.models.store'),
-                'type' => 'Store',
-                'name_key' => 'name',
-                'paths' => $this->normalizePaths([
-                    config('raptor.migrations.default'),
-                    config('raptor.migrations.store'),
-                ]),
-            ],
-        ];
-
-        $resolved = [];
-
-        foreach ($entries as $type => $entry) {
-            $modelClass = $this->resolveModelClass($entry['model'] ?? null);
-            if (! is_string($modelClass) || $modelClass === '' || ($entry['paths'] ?? []) === []) {
-                continue;
-            }
-
-            $entry['model'] = $modelClass;
-            $resolved[$type] = $entry;
-        }
-
-        return $resolved;
-    }
-
-    /**
-     * @param  array<int, string>  $reservedTypes
-     * @return array<int, array{model: string, type: string, name_key?: string, paths: array<int, string>}>
-     */
-    protected function getCustomMigrationEntries(array $reservedTypes = []): array
-    {
-        $reservedTypes = array_map('strtolower', $reservedTypes);
-        $entries = [];
-
-        foreach (config('raptor.migrations.database_models', []) as $entry) {
-            $type = strtolower((string) ($entry['type'] ?? ''));
-            if ($type === '' || in_array($type, $reservedTypes, true)) {
-                continue;
-            }
-
-            $paths = $this->normalizePaths($entry['paths'] ?? []);
-            $modelClass = $this->resolveModelClass($entry['model'] ?? null);
-
-            if (! is_string($modelClass) || $modelClass === '' || $paths === []) {
-                continue;
-            }
-
-            $entry['model'] = $modelClass;
-            $entry['paths'] = $paths;
-            $entries[] = $entry;
-        }
-
-        return $entries;
     }
 
     /**
@@ -426,53 +319,6 @@ class TenantMigrateCommand extends Command
         }
 
         return $query->get();
-    }
-
-    protected function appendClientMigrationTargets(
-        array &$list,
-        array &$seen,
-        array $clientEntry,
-        object $client,
-        ?object $tenant,
-        $stores
-    ): void {
-        $clientName = $client->{$clientEntry['name_key'] ?? 'name'} ?? (string) $client->getKey();
-        $paths = $clientEntry['paths'] ?? [];
-
-        $storeTargets = collect($stores)
-            ->map(function ($store) use ($clientEntry, $clientName, $paths) {
-                $database = $this->resolveDatabaseName($store, null, null);
-                if ($database === null) {
-                    return null;
-                }
-
-                $storeName = $store->{$clientEntry['name_key'] ?? 'name'} ?? (string) $store->getKey();
-
-                return [
-                    'type' => $clientEntry['type'] ?? 'Client',
-                    'name' => sprintf('%s → %s', $clientName, $storeName),
-                    'database' => $database,
-                    'paths' => $paths,
-                ];
-            })
-            ->filter()
-            ->unique(fn ($target) => ($target['database'] ?? '').'|'.implode(',', $target['paths'] ?? []))
-            ->values();
-
-        if ($storeTargets->isNotEmpty()) {
-            foreach ($storeTargets as $target) {
-                $this->appendMigrationTarget($list, $seen, $target);
-            }
-
-            return;
-        }
-
-        $this->appendMigrationTarget($list, $seen, [
-            'type' => $clientEntry['type'] ?? 'Client',
-            'name' => $clientName,
-            'database' => $this->resolveDatabaseName(null, $client, $tenant),
-            'paths' => $paths,
-        ]);
     }
 
     protected function resolveDatabaseName($store = null, $client = null, $tenant = null): ?string

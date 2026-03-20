@@ -302,39 +302,6 @@ return [
             'store' => env('RAPTOR_MIGRATIONS_STORE_MODEL', null),
         ],
 
-        /*
-        |----------------------------------------------------------------------
-        | Tipos customizados adicionais para tenant:migrate
-        |----------------------------------------------------------------------
-        | tenant/client/store usam diretamente raptor.migrations.models + os paths
-        | principais. Use database_models apenas para tipos extras fora dessa
-        | hierarquia padrão. Nunca cria nem apaga banco — só migrate.
-        */
-        'database_models' => [
-            [
-                'model' => 'raptor.migrations.models.tenant',
-                'type' => 'Tenant',
-                'name_key' => 'name',
-                'paths' => [
-                    'database/migrations/',
-                    'database/migrations/tenant/',
-                ],
-            ],
-            // [
-            //     'model' => 'raptor.migrations.models.client',
-            //     'type' => 'Client',
-            //     'id_key' => 'client_id',
-            //     'name_key' => 'name',
-            //     'paths' => ['database/migrations/', 'database/migrations/clients/'],
-            // ],
-            // [
-            //     'model' => 'raptor.migrations.models.store',
-            //     'type' => 'Store',
-            //     'id_key' => 'store_id',
-            //     'name_key' => 'name',
-            //     'paths' => ['database/migrations/', 'database/migrations/stores/'],
-            // ],
-        ],
     ],
 
     /*
