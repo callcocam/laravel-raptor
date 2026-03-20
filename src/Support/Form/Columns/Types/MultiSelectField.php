@@ -6,7 +6,7 @@
  * https://www.sigasmart.com.br
  */
 
-namespace App\Form\Fields;
+namespace Callcocam\LaravelRaptor\Support\Form\Columns\Types;
 
 use Callcocam\LaravelRaptor\Support\Form\Columns\Column;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Concerns\HasAutoComplete;
