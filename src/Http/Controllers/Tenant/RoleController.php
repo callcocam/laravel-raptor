@@ -81,8 +81,7 @@ class RoleController extends TenantController
                 ->columnSpan(config('raptor.controllers.roles.form.permissions.columnSpan', '12')),
 
             CheckboxField::make('special', config('raptor.controllers.roles.form.special.label', __('Permissões Especiais')))
-                ->helpText(config('raptor.controllers.roles.form.special.helpText', __('Marque se esta role deve ter permissões especiais de administrador')))
-                ->editable(false)
+                ->helpText(config('raptor.controllers.roles.form.special.helpText', __('Marque se esta role deve ter permissões especiais de administrador'))) 
                 ->columnSpan(config('raptor.controllers.roles.form.special.columnSpan', '12')),
         ]);
 
