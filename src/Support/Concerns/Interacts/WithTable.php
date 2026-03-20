@@ -139,7 +139,13 @@ trait WithTable
             $columnName = $column->getName();
             $value = data_get($item, $columnName);
             if ($value !== null && $value !== '') {
-                $row[$columnName] = $column->render($value, $item);
+                $renderedValue = $column->render($value, $item);
+
+                if (str_contains($columnName, '.')) {
+                    data_set($row, $columnName, $renderedValue);
+                } else {
+                    $row[$columnName] = $renderedValue;
+                }
             }
 
             // Renderiza colunas filhas no mesmo $row (valores achatados)
@@ -149,7 +155,13 @@ trait WithTable
                     $childName = $childColumn->getName();
                     $childValue = data_get($item, $childName);
                     if ($childValue !== null && $childValue !== '') {
-                        $row[$childName] = $childColumn->render($childValue, $item);
+                        $renderedChildValue = $childColumn->render($childValue, $item);
+
+                        if (str_contains($childName, '.')) {
+                            data_set($row, $childName, $renderedChildValue);
+                        } else {
+                            $row[$childName] = $renderedChildValue;
+                        }
                     }
                 }
             }
