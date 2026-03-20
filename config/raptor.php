@@ -290,10 +290,10 @@ return [
         'tenant' => 'database/migrations/tenant/',
 
         // Migrations específicas para bancos de CLIENTS
-        'client' => 'database/migrations/client/',
+        'client' => 'database/migrations/clients/',
 
         // Migrations específicas para bancos de STORES
-        'store' => 'database/migrations/store/',
+        'store' => 'database/migrations/stores/',
 
         // Models customizados (opcional, usa padrão se não especificado)
         'models' => [
@@ -304,11 +304,11 @@ return [
 
         /*
         |----------------------------------------------------------------------
-        | Models com campo "database" para tenant:migrate
+        | Tipos customizados adicionais para tenant:migrate
         |----------------------------------------------------------------------
-        | Para cada entry: busca registros do model com campo database preenchido e
-        | roda as migrations das pastas em "paths". Nunca cria nem apaga banco — só migrate.
-        | Cada item: model, type, paths (array), name_key, id_key (opcionais).
+        | tenant/client/store usam diretamente raptor.migrations.models + os paths
+        | principais. Use database_models apenas para tipos extras fora dessa
+        | hierarquia padrão. Nunca cria nem apaga banco — só migrate.
         */
         'database_models' => [
             [
@@ -325,14 +325,14 @@ return [
             //     'type' => 'Client',
             //     'id_key' => 'client_id',
             //     'name_key' => 'name',
-            //     'paths' => ['database/migrations/', 'database/migrations/client/'],
+            //     'paths' => ['database/migrations/', 'database/migrations/clients/'],
             // ],
             // [
             //     'model' => 'raptor.migrations.models.store',
             //     'type' => 'Store',
             //     'id_key' => 'store_id',
             //     'name_key' => 'name',
-            //     'paths' => ['database/migrations/', 'database/migrations/store/'],
+            //     'paths' => ['database/migrations/', 'database/migrations/stores/'],
             // ],
         ],
     ],
