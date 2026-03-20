@@ -8,10 +8,10 @@
 
 namespace Callcocam\LaravelRaptor\Support\Concerns\Shared;
 
-use Callcocam\LaravelRaptor\Support\Table\Filters\SelectFilter;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Trait compartilhado para resolver opções em cascata (hierárquicas).
@@ -48,14 +48,10 @@ trait ResolvesCascadingOptions
             return $this->normalizeResolvedCascadingFields($resolved, $fields);
         }
 
-        $queryUsing = $this->getCascadingQuery($context);
-        if (! $queryUsing instanceof Builder) {
-            return $this->fieldsToResolvedArray($fields, []);
-        }
-
         $cascadingData = $this->getCascadingDependencyValues($context);
-        $optionLabel = $this->getOptionLabel();
-        $optionKey = $this->getOptionKey();
+        $queryUsing = $this->getCascadingQuery($context);
+        $optionLabel = $this->resolveOptionLabelColumn();
+        $optionKey = $this->resolveOptionKeyColumn();
         $fieldsUsing = $this->getFieldsUsing();
         $result = [];
 
@@ -63,15 +59,16 @@ trait ResolvesCascadingOptions
             $name = $this->getFieldName($field);
             $label = $this->getFieldLabel($field);
             $dependency = $this->getFieldDependsOn($field);
-            if ($field instanceof SelectFilter) {
+
+            $options = $this->getFallbackFieldOptions($field, $context);
+            $dependencyValue = request()->query($dependency ?? '')
+                ?? ($dependency ? ($cascadingData[$dependency] ?? null) : null);
+
+            if ($queryUsing instanceof Builder) {
                 $query = $this->cloneQueryForField($field, $queryUsing);
 
                 if ($dependency) {
-                    $dependencyValue = request()->query($dependency)
-                        ?? $cascadingData[$dependency]
-                        ?? null;
-
-                    if ($dependencyValue !== null) {
+                    if ($this->hasCascadingValue($dependencyValue)) {
                         if ($fieldsUsing) {
                             $query->where($fieldsUsing, $dependencyValue);
                         } else {
@@ -87,9 +84,9 @@ trait ResolvesCascadingOptions
                     }
                     $options = $query->pluck($optionLabel, $optionKey)->toArray();
                 }
-            } else {
-                $options = $field->getOptions();
             }
+
+            $this->logPlanogramEmptyDependentOptions($context, $name, $dependency, $dependencyValue, $options);
 
             $result[] = [
                 'name' => $name,
@@ -100,6 +97,79 @@ trait ResolvesCascadingOptions
         }
 
         return $result;
+    }
+
+    private function resolveOptionLabelColumn(): string
+    {
+        $label = $this->getOptionLabel();
+
+        return is_string($label) && $label !== '' ? $label : 'name';
+    }
+
+    private function resolveOptionKeyColumn(): string
+    {
+        $key = $this->getOptionKey();
+
+        return is_string($key) && $key !== '' ? $key : 'id';
+    }
+
+    private function getFallbackFieldOptions(mixed $field, Model|array|null $context): array
+    {
+        if (is_array($field)) {
+            $options = $field['options'] ?? [];
+
+            return is_array($options) ? $options : [];
+        }
+
+        if (is_object($field) && method_exists($field, 'getOptions')) {
+            $options = $field->getOptions($context instanceof Model ? $context : null);
+
+            return is_array($options) ? $options : [];
+        }
+
+        return [];
+    }
+
+    private function hasCascadingValue(mixed $value): bool
+    {
+        if (is_array($value)) {
+            return $value !== [];
+        }
+
+        return $value !== null && $value !== '';
+    }
+
+    private function logPlanogramEmptyDependentOptions(
+        Model|array|null $context,
+        string $fieldName,
+        ?string $dependency,
+        mixed $dependencyValue,
+        array $options
+    ): void {
+        if (! $context instanceof Model || $dependency === null) {
+            return;
+        }
+
+        if (strtolower((string) $context->getTable()) !== 'planograms') {
+            return;
+        }
+
+        if (! $this->hasCascadingValue($dependencyValue)) {
+            return;
+        }
+
+        if (count($options) > 0) {
+            return;
+        }
+
+        Log::warning('Planogram cascading options empty for dependent level', [
+            'planogram_id' => (string) $context->getKey(),
+            'cascading_field' => method_exists($this, 'getName') ? $this->getName() : null,
+            'field_name' => $fieldName,
+            'dependency' => $dependency,
+            'dependency_value' => $dependencyValue,
+            'options_count' => 0,
+        ]);
     }
 
     /**
