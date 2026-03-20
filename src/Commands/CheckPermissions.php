@@ -20,6 +20,24 @@ class CheckPermissions extends Command
     use GeneratesPermissionIds;
 
     /**
+     * Recursos que não devem ser gerenciados diretamente pelo sync de permissões.
+     *
+     * @var array<int, string>
+     */
+    protected array $ignoredResources = [
+        'section',
+        'sections',
+        'shelf',
+        'shelves',
+        'segment',
+        'segments',
+        'segement',
+        'segements',
+        'layer',
+        'layers',
+    ];
+
+    /**
      * Ações cuja permissão deve ser criada somente se a rota nomeada existir.
      *
      * @var array<int, string>
@@ -180,7 +198,10 @@ class CheckPermissions extends Command
             return ! $existingPermissions->contains($perm['slug']);
         });
 
-        $extra = $existingPermissions->diff($expectedSlugs);
+        $extra = $existingPermissions
+            ->diff($expectedSlugs)
+            ->reject(fn (string $slug) => $this->shouldIgnorePermissionSlug($slug))
+            ->values();
 
         // Mostrar resultados
         if ($this->option('missing')) {
@@ -256,16 +277,40 @@ class CheckPermissions extends Command
 
         if ($this->confirm('Deseja resetar as permissões existentes antes de criar as faltantes?')) {
             $permissionModel = config('raptor.shinobi.models.permission');
+            $permissionsTable = config('raptor.shinobi.tables.permissions', 'permissions');
+            $permissionRoleTable = config('raptor.shinobi.tables.permission_role', 'permission_role');
+            $permissionUserTable = config('raptor.shinobi.tables.permission_user', 'permission_user');
+            $permissionsToDelete = app($permissionModel)
+                ->query()
+                ->get(['id', 'slug'])
+                ->reject(function ($permission) {
+                    return $this->shouldIgnorePermissionSlug((string) data_get($permission, 'slug'));
+                })
+                ->pluck('id')
+                ->filter()
+                ->values();
 
-            // Remove todas as relações permission_role e permission_user primeiro (landlord)
             $conn = $this->landlordConnection();
-            DB::connection($conn)->table('permission_role')->delete();
-            DB::connection($conn)->table('permission_user')->delete();
+            if ($permissionsToDelete->isNotEmpty()) {
+                foreach ($permissionsToDelete->chunk(1000) as $permissionChunk) {
+                    DB::connection($conn)
+                        ->table($permissionRoleTable)
+                        ->whereIn('permission_id', $permissionChunk->all())
+                        ->delete();
 
-            // Remove todas as permissions usando delete() para respeitar foreign keys
-            app($permissionModel)->query()->forceDelete();
+                    DB::connection($conn)
+                        ->table($permissionUserTable)
+                        ->whereIn('permission_id', $permissionChunk->all())
+                        ->delete();
 
-            $this->info('🗑️ Permissões e suas relações foram removidas.');
+                    DB::connection($conn)
+                        ->table($permissionsTable)
+                        ->whereIn('id', $permissionChunk->all())
+                        ->delete();
+                }
+            }
+
+            $this->info('🗑️ Permissões gerenciadas pelo comando e suas relações foram removidas.');
         }
 
         $permissions = collect();
@@ -292,6 +337,10 @@ class CheckPermissions extends Command
             $resourceName = $this->getResourceName($controller['name']);
 
             if (! $resourceName) {
+                continue;
+            }
+
+            if ($this->shouldIgnoreResource($resourceName)) {
                 continue;
             }
 
@@ -323,6 +372,39 @@ class CheckPermissions extends Command
         }
 
         return $permissions;
+    }
+
+    protected function shouldIgnoreResource(string $resource): bool
+    {
+        return in_array($this->normalizeResourceName($resource), $this->ignoredResources, true);
+    }
+
+    protected function shouldIgnorePermissionSlug(string $slug): bool
+    {
+        $resource = $this->extractResourceFromSlug($slug);
+
+        return $resource !== null && $this->shouldIgnoreResource($resource);
+    }
+
+    protected function extractResourceFromSlug(string $slug): ?string
+    {
+        $parts = explode('.', $slug);
+        $count = count($parts);
+
+        if ($count >= 3) {
+            return $parts[1] ?? null;
+        }
+
+        if ($count === 2) {
+            return $parts[0] ?? null;
+        }
+
+        return null;
+    }
+
+    protected function normalizeResourceName(string $resource): string
+    {
+        return Str::kebab(Str::plural(Str::lower($resource)));
     }
 
     protected function shouldExpectPermission(string $slug, string $action): bool
