@@ -5,9 +5,12 @@ import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 interface Props {
   message?: string
   resourceLabel?: string
+  resourcePluralLabel?: string
   breadcrumbs?: BackendBreadcrumb[]
   headerActions?: any
   table?: any
+  tabs?: any[]
+  actionName?: string
 }
 
 defineProps<Props>()
