@@ -3,12 +3,11 @@ import { useForm } from "@inertiajs/vue3";
 import ResourceLayout from "~/layouts/ResourceLayout.vue";
 import FormRenderer from "~/components/form/FormRenderer.vue";
 import FormActions from "~/components/form/FormActions.vue";
-import BreadcrumbRenderer from "~/components/breadcrumbs/BreadcrumbRenderer.vue";
 import HeaderActions from "~/components/table/HeaderActions.vue";
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import {
   Card,
-  CardContent 
+  CardContent
 } from "@/components/ui/card";
 
 interface FormColumn {
@@ -70,27 +69,9 @@ const formData = useForm(initialData);
 </script>
 
 <template>
-  <ResourceLayout v-bind="layoutProps" :title="actionName || `Editar ${resourceLabel}`">
-    <template #header>
-      <!-- Breadcrumbs com Header Actions -->
-      <div v-if="breadcrumbs && breadcrumbs.length > 0" class="border-b bg-background">
-        <div class="w-full flex items-center pb-4">
-          <BreadcrumbRenderer
-            :items="breadcrumbs"
-            :config="{
-              component: 'breadcrumb-page-header',
-              resourceLabel: `Editar ${resourceLabel}`,
-              message: message,
-            }"
-          >
-            <!-- Header Actions renderizadas ao lado dos breadcrumbs -->
-            <HeaderActions
-              v-if="pageHeaderActions && pageHeaderActions.length"
-              :actions="pageHeaderActions"
-            />
-          </BreadcrumbRenderer>
-        </div>
-      </div>
+  <ResourceLayout v-bind="layoutProps" :title="actionName || `Editar ${resourceLabel ?? ''}`">
+    <template v-if="pageHeaderActions && pageHeaderActions.length" #header-actions>
+      <HeaderActions :actions="pageHeaderActions" />
     </template>
     <template #content>
       <div class="space-y-4">

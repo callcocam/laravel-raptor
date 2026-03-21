@@ -22,11 +22,13 @@ const toggle   = inject<() => void>('selectToggle')!
         :aria-invalid="props.ariaInvalid"
         :disabled="disabled"
         :class="cn(
-            'flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2',
-            'text-sm ring-offset-background placeholder:text-muted-foreground',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'flex h-9 w-full items-center justify-between rounded-lg bg-[var(--color-input-surface)] border-[1.5px] border-transparent px-3 py-2',
+            'text-sm placeholder:text-muted-foreground',
+            'transition-[border-color,box-shadow,background-color]',
+            'focus:outline-none focus:bg-card focus:border-[var(--color-input-focus)] focus:ring-2 focus:ring-[var(--color-input-focus)]/15',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            open && 'ring-2 ring-ring ring-offset-2',
+            open && 'bg-card border-[var(--color-input-focus)] ring-2 ring-[var(--color-input-focus)]/15',
+            props.ariaInvalid && 'border-destructive ring-2 ring-destructive/20',
             props.class,
         )"
         @click="toggle"

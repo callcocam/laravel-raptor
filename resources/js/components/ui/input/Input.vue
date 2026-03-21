@@ -45,11 +45,11 @@ function handleInput(event: Event) {
         :max="max"
         :step="step"
         :class="cn(
-            'flex h-9 w-full min-w-0 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs',
+            'flex h-9 w-full min-w-0 rounded-lg bg-[var(--color-input-surface)] border-[1.5px] border-transparent px-3 py-1 text-sm',
             'text-foreground placeholder:text-muted-foreground',
-            'transition-[color,box-shadow] outline-none',
-            'focus-visible:border-primary focus-visible:ring-[3px] focus-visible:ring-primary/20',
-            'dark:bg-input/30 dark:border-input dark:text-foreground dark:placeholder:text-muted-foreground dark:focus-visible:ring-primary/30',
+            'transition-[color,border-color,box-shadow,background-color] outline-none',
+            'focus:bg-card focus:border-[var(--color-input-focus)] focus:ring-2 focus:ring-[var(--color-input-focus)]/15',
+            'dark:focus:ring-[var(--color-input-focus)]/20',
             'disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
             'file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground',
             'selection:bg-primary selection:text-primary-foreground',

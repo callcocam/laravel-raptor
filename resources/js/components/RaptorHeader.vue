@@ -35,7 +35,7 @@ const toggleDark = () => {
 
 <template>
     <header
-        class="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur-md transition-[height] group-has-data-[collapsible=icon]/sidebar-wrapper:h-11"
+        class="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-4 backdrop-blur-md transition-[height] group-has-data-[collapsible=icon]/sidebar-wrapper:h-10"
     >
         <!-- ── Esquerda: trigger + separador + breadcrumbs ──────────────────── -->
         <div class="flex flex-1 items-center gap-2 min-w-0">

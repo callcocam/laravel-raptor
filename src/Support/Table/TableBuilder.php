@@ -36,6 +36,8 @@ class TableBuilder
 
     protected Closure|string|null $component = 'table-default';
 
+    protected ?array $tabs = null;
+
     public function __construct($model = null, $type = 'model')
     {
 
@@ -168,5 +170,17 @@ class TableBuilder
     public function getComponent(): mixed
     {
         return $this->evaluate($this->component);
+    }
+
+    public function tabs(array $tabs): self
+    {
+        $this->tabs = $tabs;
+
+        return $this;
+    }
+
+    public function getTabs(): ?array
+    {
+        return $this->tabs;
     }
 }
