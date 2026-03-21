@@ -7,10 +7,9 @@
  */
 
 namespace Callcocam\LaravelRaptor\Policies;
- 
+
 
 class InspirationPolicy extends AbstractPolicy
 {
-    protected $permission = 'inspirations';
- 
+    protected ?string $permission = 'inspirations';
 }
