@@ -1,10 +1,12 @@
 <template>
   <div class="space-y-4">
     <!-- Filtros e Header Actions -->
-    <div class="flex flex-wrap items-start justify-between gap-3">
-      <TableFilters v-if="table.filters.value.length || table.searchable.value" :filters="table.filters.value"
-        :searchable="table.searchable.value" class="flex-1 min-w-0" />
-      <HeaderActions v-if="table.headerActions.value.length" :actions="table.headerActions.value" class="shrink-0" />
+    <div class="rounded-lg border border-border bg-card p-4 shadow-sm">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <TableFilters v-if="table.filters.value.length || table.searchable.value" :filters="table.filters.value"
+          :searchable="table.searchable.value" class="flex-1 min-w-0" />
+        <HeaderActions v-if="table.headerActions.value.length" :actions="table.headerActions.value" class="shrink-0" />
+      </div>
     </div>
 
     <div v-if="table.records.value.length" class="space-y-6">

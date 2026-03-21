@@ -10,6 +10,7 @@ namespace Callcocam\LaravelRaptor\Support\Table;
 
 use Callcocam\LaravelRaptor\Support\Cast\CastRegistry;
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithTable;
+use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithTabs;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSearch;
 use Callcocam\LaravelRaptor\Support\Table\Concerns\HasSorting;
 use Callcocam\LaravelRaptor\Support\Table\Sources\ModelSource;
@@ -21,6 +22,7 @@ class TableBuilder
     use HasSearch;
     use HasSorting;
     use WithTable;
+    use WithTabs;
 
     protected $dataSource;
 
@@ -36,7 +38,6 @@ class TableBuilder
 
     protected Closure|string|null $component = 'table-default';
 
-    protected ?array $tabs = null;
 
     public function __construct($model = null, $type = 'model')
     {
@@ -172,15 +173,4 @@ class TableBuilder
         return $this->evaluate($this->component);
     }
 
-    public function tabs(array $tabs): self
-    {
-        $this->tabs = $tabs;
-
-        return $this;
-    }
-
-    public function getTabs(): ?array
-    {
-        return $this->tabs;
-    }
 }

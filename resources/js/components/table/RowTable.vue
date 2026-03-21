@@ -181,18 +181,20 @@ const getRowActions = (record: any): any[] => {
     <div class="flex flex-col gap-3">
 
         <!-- Filtros + ações de header -->
-        <div class="flex flex-wrap items-start justify-between gap-3">
-            <TableFilters
-                v-if="table.filters.value.length || table.searchable.value"
-                :filters="table.filters.value"
-                :searchable="table.searchable.value"
-                class="flex-1 min-w-0"
-            />
-            <HeaderActions
-                v-if="table.headerActions.value.length"
-                :actions="table.headerActions.value"
-                class="shrink-0"
-            />
+        <div class="rounded-lg border border-border bg-card p-4 shadow-sm">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <TableFilters
+                    v-if="table.filters.value.length || table.searchable.value"
+                    :filters="table.filters.value"
+                    :searchable="table.searchable.value"
+                    class="flex-1 min-w-0"
+                />
+                <HeaderActions
+                    v-if="table.headerActions.value.length"
+                    :actions="table.headerActions.value"
+                    class="shrink-0"
+                />
+            </div>
         </div>
 
         <!-- Tabs de filtro rápido -->
@@ -223,7 +225,7 @@ const getRowActions = (record: any): any[] => {
         </div>
 
         <!-- Linhas -->
-        <div v-if="table.records.value.length" class="flex flex-col divide-y divide-border rounded-lg border">
+        <div v-if="table.records.value.length" class="flex flex-col divide-y divide-border rounded-lg border bg-card">
             <div
                 v-for="record in table.records.value"
                 :key="record.id"
@@ -260,6 +262,9 @@ const getRowActions = (record: any): any[] => {
                         class="flex flex-col justify-center gap-0.5 overflow-hidden"
                         :class="rowColClasses.primary"
                     >
+                        <span v-if="primaryCol.label" class="mb-0.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">
+                            {{ primaryCol.label }}
+                        </span>
                         <div class="truncate text-sm font-semibold leading-tight text-foreground">
                             <TableColumnRenderer :record="record" :column="primaryCol" />
                         </div>

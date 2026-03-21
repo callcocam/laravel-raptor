@@ -57,7 +57,7 @@ trait WithTable
             'hasBulkActions' => $this->hasBulkActions(), // Indica se tem bulk actions
             'queryParams' => $this->getQueryParams(),
             'component' => $this->getComponent(),
-            'tabs'      => $this->getTabs(),
+            'tabs'      => $this->getArrayTabs(),
         ]);
 
         return $result;

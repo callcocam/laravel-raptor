@@ -4,6 +4,16 @@ import TableRegistry from '~/utils/TableRegistry'
 import ResourceLayout from "~/layouts/ResourceLayout.vue";
 import type { BackendBreadcrumb } from '~/composables/useBreadcrumbs'
 import HeaderActions from '~/components/table/HeaderActions.vue'
+import BackendTabs from '~/components/table/BackendTabs.vue'
+
+interface BackendTab {
+  key: string;
+  name: string;
+  href: string;
+  icon?: string;
+  badge?: number | null;
+  active?: boolean;
+}
 
 interface Props {
   message?: string;
@@ -12,6 +22,7 @@ interface Props {
   breadcrumbs?: BackendBreadcrumb[];
   headerActions?: any;
   table?: any;
+  tabs?: BackendTab[];
   action?: string;
   actionName?: string;
 }
@@ -30,6 +41,8 @@ const getComponent = computed(() => {
   const registeredComponent = TableRegistry.get(componentName)
   return registeredComponent ?? TableRegistry.get('table-default')
 })
+
+const tableTabs = computed<BackendTab[] | undefined>(() => props.table?.tabs ?? props.tabs ?? undefined)
 </script>
 
 <template>
@@ -39,7 +52,8 @@ const getComponent = computed(() => {
     </template>
     <template #content>
       <div class="space-y-4">
-        <component :is="getComponent" v-bind="table.props" />
+        <BackendTabs v-if="tableTabs?.length" :tabs="tableTabs" current-tab="list" />
+        <component :is="getComponent" v-bind="table?.props" />
       </div>
     </template>
   </ResourceLayout>

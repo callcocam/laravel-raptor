@@ -1,5 +1,5 @@
 <template>
-  <main class="px-6 py-2 w-full border-t border-slate-200">
+  <main class="px-6 py-2 w-full border-t border-border">
     <!-- Breadcrumbs & Actions -->
     <div class="mb-6 mt-4 flex flex-col items-center justify-between gap-4 md:flex-row">
       <slot name="tabs" /> 
