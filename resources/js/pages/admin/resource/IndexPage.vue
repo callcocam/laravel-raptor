@@ -46,7 +46,7 @@ const tableTabs = computed<BackendTab[] | undefined>(() => props.table?.tabs ?? 
 </script>
 
 <template>
-  <ResourceLayout v-bind="layoutProps" :title="actionName || 'List'">
+  <ResourceLayout v-bind="layoutProps" :title="actionName || 'Listar'">
     <template v-if="headerActions && headerActions.length" #header-actions>
       <HeaderActions :actions="headerActions" />
     </template>
