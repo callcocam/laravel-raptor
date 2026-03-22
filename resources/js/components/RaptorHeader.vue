@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import type { BreadcrumbItem } from '@/types';
+import { useAppearance } from '@/composables/useAppearance';
 import { SidebarTrigger } from '~/components/ui/sidebar';
 import NotificationDropdown from '~/components/NotificationDropdown.vue';
 import { ChevronRight, Sun, Moon } from 'lucide-vue-next';
@@ -15,21 +16,31 @@ withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
 });
 
+const { appearance, updateAppearance } = useAppearance();
+
 // ── Dark mode toggle ─────────────────────────────────────────────────────────
-const isDark = ref(false);
+const isSystemDark = ref(false);
 
 onMounted(() => {
-    isDark.value = document.documentElement.classList.contains('dark');
+    isSystemDark.value = document.documentElement.classList.contains('dark');
+
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+        isSystemDark.value = event.matches;
+    });
+});
+
+const isDark = computed(() => {
+    if (appearance.value === 'system') {
+        return isSystemDark.value;
+    }
+
+    return appearance.value === 'dark';
 });
 
 const toggleDark = () => {
-    document.documentElement.classList.toggle('dark');
-    isDark.value = document.documentElement.classList.contains('dark');
-    try {
-        localStorage.setItem('theme', isDark.value ? 'dark' : 'light');
-    } catch {
-        // ignora se localStorage não estiver disponível
-    }
+    const nextAppearance = isDark.value ? 'light' : 'dark';
+
+    updateAppearance(nextAppearance);
 };
 </script>
 

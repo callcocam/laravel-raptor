@@ -1,14 +1,17 @@
 <!--
- * FormFieldText - Text input field using shadcn-vue Field primitives
+ * FormFieldPhone - Phone input field using shadcn-vue Field primitives
  *
- * Modern replacement for FormColumnText with improved accessibility
+ * Text input configured for phone entry with tel type and autocomplete
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
     <!-- Input with conditional addons -->
     <AddonsContext
@@ -16,12 +19,13 @@
       :append="column.append"
       :prefix="column.prefix"
       :suffix="column.suffix"
+      :icon="column.icon"
       v-slot="{ inputClass: addonClass }"
     >
       <Input
         :id="column.name"
         :name="column.name"
-        :type="column.type || 'text'"
+        type="tel"
         :placeholder="column.placeholder || column.label"
         :required="column.required"
         :disabled="column.disabled"
@@ -30,11 +34,12 @@
         @update:modelValue="updateValue"
         :aria-invalid="hasError"
         :class="[hasError ? 'border-destructive' : '', addonClass]"
+        autocomplete="tel"
       />
     </AddonsContext>
 
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -46,23 +51,24 @@ import { computed, onMounted } from 'vue'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import AddonsContext from '../AddonsContext.vue'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
   name: string
   label?: string
-  type?: string
   placeholder?: string
   required?: boolean
   disabled?: boolean
   readonly?: boolean
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
   default?: string | number
   prepend?: string
   append?: string
   prefix?: string
   suffix?: string
+  icon?: string
 }
 
 interface Props {
@@ -99,7 +105,7 @@ const internalValue = computed({
   },
   set: (value) => {
     emit('update:modelValue', value)
-  }
+  },
 })
 
 const updateValue = (value: string | number | null) => {

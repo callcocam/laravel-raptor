@@ -5,10 +5,13 @@
  -->
 <template>
     <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-        <FieldLabel v-if="column.label" :for="column.name">
-            {{ column.label }}
-            <span v-if="column.required" class="text-destructive">*</span>
-        </FieldLabel>
+        <div class="flex items-center justify-between w-full">
+            <FieldLabel v-if="column.label" :for="column.name">
+                {{ column.label }}
+                <span v-if="column.required" class="text-destructive">*</span>
+            </FieldLabel>
+            <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+        </div>
 
         <div class="relative">
             <Select
@@ -42,28 +45,15 @@
                 v-if="internalValue"
                 type="button"
                 @click="clearSelection"
-                class="absolute top-1/2 right-10 -translate-y-1/2 p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                title="Limpar seleção"
+                class="absolute top-1/2 right-10 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Limpar seleção"
             >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clip-rule="evenodd"
-                    />
-                </svg>
+                <X class="h-4 w-4" />
             </button>
         </div>
 
-        <FieldDescription
-            v-if="column.helpText || column.hint || column.tooltip"
-        >
-            {{ column.helpText || column.hint || column.tooltip }}
+        <FieldDescription v-if="column.helpText">
+            {{ column.helpText }}
         </FieldDescription>
 
         <FieldError :errors="errorArray" />
@@ -73,6 +63,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { computed, inject, onMounted, type Ref } from 'vue';
+import { X } from 'lucide-vue-next';
 import {
     Field,
     FieldDescription,
@@ -86,6 +77,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '~/components/ui/select';
+import HintRenderer from '../HintRenderer.vue';
 import {
     createMultiFieldUpdate,
     type FieldEmitValue,
@@ -109,7 +101,7 @@ interface FormColumn {
     optionsData?: Record<string, any>;
     tooltip?: string;
     helpText?: string;
-    hint?: string;
+    hint?: string | any[];
     default?: string | number | null;
     reload?: boolean;
     autoComplete?: {

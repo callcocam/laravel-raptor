@@ -5,29 +5,42 @@
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
-    <Input
-      :id="column.name"
-      :name="column.name"
-      type="text"
-      :placeholder="column.placeholder || column.label"
-      :required="column.required"
-      :disabled="column.disabled"
-      :readonly="column.readonly"
-      :modelValue="maskedValue"
-      @input="handleInput"
-      @blur="handleBlur"
-      :aria-invalid="hasError"
-      :class="hasError ? 'border-destructive' : ''"
-      :maxlength="maxLength"
-    />
+    <!-- Input with conditional addons -->
+    <AddonsContext
+      :prepend="column.prepend"
+      :append="column.append"
+      :prefix="column.prefix"
+      :suffix="column.suffix"
+      :icon="column.icon"
+      v-slot="{ inputClass: addonClass }"
+    >
+      <Input
+        :id="column.name"
+        :name="column.name"
+        type="text"
+        :placeholder="column.placeholder || column.label"
+        :required="column.required"
+        :disabled="column.disabled"
+        :readonly="column.readonly"
+        :modelValue="maskedValue"
+        @input="handleInput"
+        @blur="handleBlur"
+        :aria-invalid="hasError"
+        :class="[hasError ? 'border-destructive' : '', addonClass]"
+        :maxlength="maxLength"
+      />
+    </AddonsContext>
 
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -38,6 +51,8 @@
 import { computed } from "vue";
 import { Input } from "~/components/ui/input";
 import { Field, FieldLabel, FieldDescription, FieldError } from "~/components/ui/field";
+import AddonsContext from '../AddonsContext.vue'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
   name: string;
@@ -48,10 +63,15 @@ interface FormColumn {
   readonly?: boolean;
   tooltip?: string;
   helpText?: string;
-  hint?: string;
+  hint?: string | any[];
   default?: string | number;
   mask?: string; // Ex: '(##) ####-####', '###.###.###-##', etc.
   maskTokens?: Record<string, RegExp>; // Custom tokens
+  prepend?: string;
+  append?: string;
+  prefix?: string;
+  suffix?: string;
+  icon?: string;
 }
 
 interface Props {
@@ -99,10 +119,10 @@ function applyMask(value: string): string {
 
   const mask = props.column.mask;
   const tokens = { ...defaultTokens, ...(props.column.maskTokens || {}) };
-  
+
   // Remove caracteres não numéricos/alfabéticos
   const cleanValue = value.replace(/[^\w]/g, '');
-  
+
   let masked = '';
   let valueIndex = 0;
 
@@ -141,11 +161,11 @@ const maskedValue = computed(() => {
 function handleInput(event: Event) {
   const input = event.target as HTMLInputElement;
   const masked = applyMask(input.value);
-  
+
   // Emite o valor sem máscara (apenas números/letras)
   const unmasked = masked.replace(/[^\w]/g, '');
   emit('update:modelValue', unmasked || null);
-  
+
   // Atualiza o cursor
   requestAnimationFrame(() => {
     input.value = masked;

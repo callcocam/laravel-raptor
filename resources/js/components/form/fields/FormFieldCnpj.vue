@@ -5,10 +5,13 @@
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
     <!-- Input Group with Button -->
     <div class="flex gap-2">
@@ -64,8 +67,8 @@
       </Button>
     </div>
 
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError v-if="searchError" :errors="[{ message: searchError }]" />
@@ -79,6 +82,7 @@ import { Input } from '~/components/ui/input'
 import { Button } from '~/components/ui/button'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Search } from 'lucide-vue-next'
+import HintRenderer from '../HintRenderer.vue'
 import { createMultiFieldUpdate } from '~/types/form'
 import type { FieldEmitValue } from '~/types/form'
 
@@ -91,7 +95,7 @@ interface FormColumn {
   readonly?: boolean
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
   default?: string | number
   fieldMapping?: Record<string, any>
 }

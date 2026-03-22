@@ -16,13 +16,16 @@
     />
 
     <div class="space-y-1">
-      <FieldLabel :for="column.name">
-        {{ column.label }}
-        <span v-if="column.required" class="text-destructive">*</span>
-      </FieldLabel>
+      <div class="flex items-center gap-x-1">
+        <FieldLabel :for="column.name">
+          {{ column.label }}
+          <span v-if="column.required" class="text-destructive">*</span>
+        </FieldLabel>
+        <HintRenderer v-if="column.hint" :hint="column.hint" />
+      </div>
 
-      <FieldDescription v-if="column.description || column.helpText || column.hint || column.tooltip">
-        {{ column.description || column.helpText || column.hint || column.tooltip }}
+      <FieldDescription v-if="column.description || column.helpText">
+        {{ column.description || column.helpText }}
       </FieldDescription>
 
       <FieldError :errors="errorArray" />
@@ -34,6 +37,7 @@
 import { computed } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Checkbox } from '~/components/ui/checkbox'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
   name: string
@@ -44,7 +48,7 @@ interface FormColumn {
   description?: string
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
   default?: boolean
 }
 

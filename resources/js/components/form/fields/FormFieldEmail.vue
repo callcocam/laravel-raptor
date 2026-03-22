@@ -5,28 +5,41 @@
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
-    <Input
-      :id="column.name"
-      :name="column.name"
-      type="email"
-      :placeholder="column.placeholder || column.label"
-      :required="column.required"
-      :disabled="column.disabled"
-      :readonly="column.readonly"
-      :modelValue="modelValue || undefined"
-      @update:modelValue="updateValue"
-      :aria-invalid="hasError"
-      :class="hasError ? 'border-destructive' : ''"
-      autocomplete="email"
-    />
+    <!-- Input with conditional addons -->
+    <AddonsContext
+      :prepend="column.prepend"
+      :append="column.append"
+      :prefix="column.prefix"
+      :suffix="column.suffix"
+      :icon="column.icon"
+      v-slot="{ inputClass: addonClass }"
+    >
+      <Input
+        :id="column.name"
+        :name="column.name"
+        type="email"
+        :placeholder="column.placeholder || column.label"
+        :required="column.required"
+        :disabled="column.disabled"
+        :readonly="column.readonly"
+        :modelValue="internalValue || undefined"
+        @update:modelValue="updateValue"
+        :aria-invalid="hasError"
+        :class="[hasError ? 'border-destructive' : '', addonClass]"
+        autocomplete="email"
+      />
+    </AddonsContext>
 
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -34,9 +47,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
+import AddonsContext from '../AddonsContext.vue'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
   name: string
@@ -47,7 +62,13 @@ interface FormColumn {
   readonly?: boolean
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
+  default?: string
+  prepend?: string
+  append?: string
+  prefix?: string
+  suffix?: string
+  icon?: string
 }
 
 interface Props {
@@ -75,7 +96,25 @@ const errorArray = computed(() => {
   return [{ message: props.error }]
 })
 
-const updateValue = (value: any) => {
+const internalValue = computed({
+  get: () => {
+    if (props.modelValue !== null && props.modelValue !== undefined) {
+      return props.modelValue
+    }
+    return props.column.default || null
+  },
+  set: (value) => {
+    emit('update:modelValue', value)
+  },
+})
+
+const updateValue = (value: string | null) => {
   emit('update:modelValue', value)
 }
+
+onMounted(() => {
+  if (props.modelValue === null && props.column.default) {
+    emit('update:modelValue', props.column.default)
+  }
+})
 </script>

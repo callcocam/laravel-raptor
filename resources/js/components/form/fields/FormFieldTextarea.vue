@@ -5,10 +5,13 @@
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
     <Textarea
       :id="column.name"
@@ -26,16 +29,16 @@
     />
 
     <div v-if="column.maxLength" class="flex justify-between items-center gap-2">
-      <FieldDescription v-if="column.helpText || column.hint || column.tooltip" class="flex-1">
-        {{ column.helpText || column.hint || column.tooltip }}
+      <FieldDescription v-if="column.helpText" class="flex-1">
+        {{ column.helpText }}
       </FieldDescription>
       <span class="text-xs text-muted-foreground">
         {{ charCount }} / {{ column.maxLength }}
       </span>
     </div>
 
-    <FieldDescription v-else-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-else-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -46,6 +49,7 @@
 import { computed } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Textarea } from '~/components/ui/textarea/index'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
   name: string
@@ -58,7 +62,7 @@ interface FormColumn {
   maxLength?: number
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
 }
 
 interface Props {

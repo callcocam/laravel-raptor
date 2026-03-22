@@ -5,10 +5,13 @@
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
     <!-- Input with currency prefix -->
     <div class="flex rounded-md shadow-sm">
@@ -36,8 +39,8 @@
       />
     </div>
 
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -48,6 +51,7 @@
 import { computed, ref, watch, inject } from 'vue'
 import { Input } from '~/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
+import HintRenderer from '../HintRenderer.vue'
 import { useFieldCalculations, type FieldCalculation } from '~/composables/useFieldCalculations'
 
 interface FormColumn {
@@ -59,7 +63,7 @@ interface FormColumn {
   readonly?: boolean
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
   currency?: string
   locale?: string
   decimals?: number

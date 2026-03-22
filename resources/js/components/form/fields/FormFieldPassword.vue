@@ -5,10 +5,13 @@
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
     <div class="relative">
       <Input
@@ -39,8 +42,8 @@
       </button>
     </div>
 
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -52,6 +55,7 @@ import { ref, computed } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Input } from '~/components/ui/input'
 import { Eye, EyeOff } from 'lucide-vue-next'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
   name: string
@@ -64,7 +68,7 @@ interface FormColumn {
   showToggle?: boolean
   tooltip?: string
   helpText?: string
-  hint?: string
+  hint?: string | any[]
 }
 
 interface Props {

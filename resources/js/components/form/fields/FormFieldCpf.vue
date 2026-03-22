@@ -1,66 +1,45 @@
 <!--
- * FormFieldText - Text input field using shadcn-vue Field primitives
+ * FormFieldCpf - CPF input field with mask
  *
- * Modern replacement for FormColumnText with improved accessibility
+ * Formats CPF as ###.###.###-## and emits the cleaned value
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
-    <FieldLabel v-if="column.label" :for="column.name">
-      {{ column.label }}
-      <span v-if="column.required" class="text-destructive">*</span>
-    </FieldLabel>
+    <div class="flex items-center justify-between w-full">
+      <FieldLabel v-if="column.label" :for="column.name">
+        {{ column.label }}
+        <span v-if="column.required" class="text-destructive">*</span>
+      </FieldLabel>
+      <HintRenderer v-if="column.hint" :hint="column.hint" class="ml-2" />
+    </div>
 
-    <!-- Input with prepend/append addons -->
-    <div v-if="hasPrependOrAppend" class="flex rounded-md shadow-sm">
-      <div
-        v-if="column.prepend || column.prefix"
-        class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm"
-      >
-        <component v-if="prependIcon" :is="prependIcon" class="h-4 w-4" />
-        <span v-else>{{ column.prepend || column.prefix }}</span>
-      </div>
-
+    <!-- Input with conditional addons -->
+    <AddonsContext
+      :prepend="column.prepend"
+      :append="column.append"
+      :prefix="column.prefix"
+      :suffix="column.suffix"
+      :icon="column.icon"
+      v-slot="{ inputClass: addonClass }"
+    >
       <Input
         :id="column.name"
         :name="column.name"
-        :type="column.type || 'text'"
-        :placeholder="column.placeholder || column.label"
+        type="text"
+        :placeholder="column.placeholder || '###.###.###-##'"
         :required="column.required"
         :disabled="column.disabled"
         :readonly="column.readonly"
         :modelValue="internalValue || undefined"
         @update:modelValue="updateValue"
         :aria-invalid="hasError"
-        :class="[hasError ? 'border-destructive' : '', inputClass]"
+        :class="[hasError ? 'border-destructive' : '', addonClass]"
+        maxlength="14"
       />
+    </AddonsContext>
 
-      <div
-        v-if="column.append || column.suffix"
-        class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-input bg-muted text-muted-foreground text-sm"
-      >
-        <component v-if="appendIcon" :is="appendIcon" class="h-4 w-4" />
-        <span v-else>{{ column.append || column.suffix }}</span>
-      </div>
-    </div>
-
-    <!-- Input without addons -->
-    <Input
-      v-else
-      :id="column.name"
-      :name="column.name"
-      :type="column.type || 'text'"
-      :placeholder="column.placeholder || column.label"
-      :required="column.required"
-      :disabled="column.disabled"
-      :readonly="column.readonly"
-      :modelValue="internalValue || undefined"
-      @update:modelValue="updateValue"
-      :aria-invalid="hasError"
-      :class="hasError ? 'border-destructive' : ''"
-    />
-
-    <FieldDescription v-if="column.helpText || column.hint || column.tooltip">
-      {{ column.helpText || column.hint || column.tooltip }}
+    <FieldDescription v-if="column.helpText">
+      {{ column.helpText }}
     </FieldDescription>
 
     <FieldError :errors="errorArray" />
@@ -68,105 +47,87 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted } from "vue";
-import { Input } from "~/components/ui/input";
-import { Field, FieldLabel, FieldDescription, FieldError } from "~/components/ui/field";
-import * as LucideIcons from "lucide-vue-next";
+import { computed, onMounted } from 'vue'
+import { Input } from '~/components/ui/input'
+import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
+import AddonsContext from '../AddonsContext.vue'
+import HintRenderer from '../HintRenderer.vue'
 
 interface FormColumn {
-  name: string;
-  label?: string;
-  type?: string;
-  placeholder?: string;
-  required?: boolean;
-  disabled?: boolean;
-  readonly?: boolean;
-  tooltip?: string;
-  helpText?: string;
-  hint?: string;
-  default?: string | number;
-  prepend?: string;
-  append?: string;
-  prefix?: string;
-  suffix?: string;
+  name: string
+  label?: string
+  type?: string
+  placeholder?: string
+  required?: boolean
+  disabled?: boolean
+  readonly?: boolean
+  tooltip?: string
+  helpText?: string
+  hint?: string | any[]
+  default?: string | number
+  prepend?: string
+  append?: string
+  prefix?: string
+  suffix?: string
+  icon?: string
 }
 
 interface Props {
-  column: FormColumn;
-  modelValue?: string | number | null;
-  error?: string | string[];
+  column: FormColumn
+  modelValue?: string | number | null
+  error?: string | string[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: null,
   error: undefined,
-});
+})
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string | number | null): void;
-}>();
+  (e: 'update:modelValue', value: string | number | null): void
+}>()
 
-const hasError = computed(() => !!props.error);
-
-const hasPrependOrAppend = computed(() => {
-  return !!(
-    props.column.prepend ||
-    props.column.append ||
-    props.column.prefix ||
-    props.column.suffix
-  );
-});
-
-const inputClass = computed(() => {
-  const classes = [];
-  if (props.column.prepend || props.column.prefix) {
-    classes.push("rounded-l-none");
-  }
-  if (props.column.append || props.column.suffix) {
-    classes.push("rounded-r-none");
-  }
-  return classes.join(" ");
-});
-
-const prependIcon = computed(() => {
-  if (!props.column.prepend) return null;
-  const IconComponent = (LucideIcons as any)[props.column.prepend];
-  return IconComponent ? h(IconComponent) : null;
-});
-
-const appendIcon = computed(() => {
-  if (!props.column.append) return null;
-  const IconComponent = (LucideIcons as any)[props.column.append];
-  return IconComponent ? h(IconComponent) : null;
-});
+const hasError = computed(() => !!props.error)
 
 const errorArray = computed(() => {
-  if (!props.error) return [];
+  if (!props.error) return []
   if (Array.isArray(props.error)) {
-    return props.error.map((msg) => ({ message: msg }));
+    return props.error.map(msg => ({ message: msg }))
   }
-  return [{ message: props.error }];
-});
+  return [{ message: props.error }]
+})
+
+function formatCpf(value: string): string {
+  const cleaned = value.replace(/\D/g, '')
+  if (cleaned.length <= 3) return cleaned
+  if (cleaned.length <= 6) return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`
+  if (cleaned.length <= 9) return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`
+  return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`
+}
 
 const internalValue = computed({
   get: () => {
-    if (props.modelValue !== null && props.modelValue !== undefined) {
-      return props.modelValue;
-    }
-    return props.column.default || null;
+    const raw = props.modelValue !== null && props.modelValue !== undefined
+      ? props.modelValue
+      : (props.column.default || null)
+    return raw ? formatCpf(String(raw)) : null
   },
   set: (value) => {
-    emit("update:modelValue", value);
+    emit('update:modelValue', value)
   },
-});
+})
 
 const updateValue = (value: string | number | null) => {
-  emit("update:modelValue", value);
-};
+  if (value) {
+    emit('update:modelValue', formatCpf(String(value)))
+  } else {
+    emit('update:modelValue', null)
+  }
+}
 
 onMounted(() => {
   if (props.modelValue === null && props.column.default) {
-    emit("update:modelValue", props.column.default);
+    emit('update:modelValue', props.column.default)
   }
-});
+})
 </script>
