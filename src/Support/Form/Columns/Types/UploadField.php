@@ -61,8 +61,7 @@ class UploadField extends Column
 
         // Configuração padrão segura
         $this->valueUsing(function ($data, $model) {
-            $url = $this->handleUpload($data, $model);
-
+            $url = $this->handleUpload($data, $model); 
             return [
                 $this->getName() => $url,
                 $this->getRealName() ?? $this->getName() => $url,

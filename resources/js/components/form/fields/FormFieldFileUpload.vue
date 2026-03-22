@@ -1,7 +1,8 @@
 <!--
  * FormFieldFileUpload - File upload field with local preview
  *
- * Simple upload with instant preview before form submission
+ * Upload por arquivo (clique/drag) ou por URL (fetch no browser; pode falhar por CORS).
+ * Coluna: allowUrlImport (default true) para exibir o campo "Cole a URL da imagem".
  -->
 <template>
   <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
@@ -32,46 +33,69 @@
     </div>
 
     <!-- Upload area (oculto se já tem arquivo) -->
-    <div
-      v-show="selectedFiles.length === 0"
-      class="relative border-2 border-dashed rounded-lg p-6 transition-colors"
-      :class="{
-        'border-primary bg-primary/5': isDragging,
-        'border-border hover:border-primary/50': !isDragging && !hasError,
-        'border-destructive': hasError,
-      }"
-      @dragover.prevent="handleDragOver"
-      @dragleave.prevent="handleDragLeave"
-      @drop.prevent="handleDrop"
-    >
-      <input
-        :id="column.name"
-        ref="fileInputRef"
-        type="file"
-        :name="column.name"
-        :accept="acceptAttribute"
-        :multiple="column.multiple"
-        :required="column.required"
-        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        @change="handleFileChange"
-        :aria-invalid="hasError"
-      />
+    <div v-show="selectedFiles.length === 0" class="space-y-4">
+      <div
+        class="relative border-2 border-dashed rounded-lg p-6 transition-colors"
+        :class="{
+          'border-primary bg-primary/5': isDragging,
+          'border-border hover:border-primary/50': !isDragging && !hasError,
+          'border-destructive': hasError,
+        }"
+        @dragover.prevent="handleDragOver"
+        @dragleave.prevent="handleDragLeave"
+        @drop.prevent="handleDrop"
+      >
+        <input
+          :id="column.name"
+          ref="fileInputRef"
+          type="file"
+          :name="column.name"
+          :accept="acceptAttribute"
+          :multiple="column.multiple"
+          :required="column.required"
+          class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          @change="handleFileChange"
+          :aria-invalid="hasError"
+        />
 
-      <div class="text-center">
-        <Upload class="mx-auto h-12 w-12 text-muted-foreground mb-2" />
+        <div class="text-center">
+          <Upload class="mx-auto h-12 w-12 text-muted-foreground mb-2" />
 
-        <div class="text-sm">
-          <span class="font-medium text-primary">Clique para selecionar</span>
-          <span class="text-muted-foreground"> ou arraste o arquivo aqui</span>
+          <div class="text-sm">
+            <span class="font-medium text-primary">Clique para selecionar</span>
+            <span class="text-muted-foreground"> ou arraste o arquivo aqui</span>
+          </div>
+
+          <p v-if="acceptedTypesText" class="text-xs text-muted-foreground mt-2">
+            Formatos aceitos: {{ acceptedTypesText }}
+          </p>
+
+          <p v-if="column.maxSize" class="text-xs text-muted-foreground">
+            Tamanho máximo: {{ column.maxSize }}MB
+          </p>
         </div>
+      </div>
 
-        <p v-if="acceptedTypesText" class="text-xs text-muted-foreground mt-2">
-          Formatos aceitos: {{ acceptedTypesText }}
-        </p>
-
-        <p v-if="column.maxSize" class="text-xs text-muted-foreground">
-          Tamanho máximo: {{ column.maxSize }}MB
-        </p>
+      <div v-if="allowUrlImport" class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <Input
+          v-model="imageUrl"
+          type="url"
+          placeholder="Cole a URL da imagem (https://...)"
+          class="flex-1"
+          :disabled="loadingUrl"
+          autocomplete="off"
+          @keydown.enter.prevent="handleDownloadFromUrl"
+        />
+        <Button
+          type="button"
+          variant="secondary"
+          class="shrink-0"
+          :disabled="!imageUrl.trim() || loadingUrl"
+          @click="handleDownloadFromUrl"
+        >
+          <Loader2 v-if="loadingUrl" class="mr-2 h-4 w-4 animate-spin" />
+          Baixar da URL
+        </Button>
       </div>
     </div>
 
@@ -113,7 +137,8 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Button } from '~/components/ui/button'
-import { Upload, FileIcon, X } from 'lucide-vue-next'
+import { Input } from '~/components/ui/input'
+import { Upload, FileIcon, X, Loader2 } from 'lucide-vue-next'
 
 interface FormColumn {
   name: string
@@ -122,6 +147,8 @@ interface FormColumn {
   acceptedFileTypes?: string[]
   maxSize?: number
   multiple?: boolean
+  /** Se false, oculta o campo "Baixar da URL". Default: true */
+  allowUrlImport?: boolean
   tooltip?: string
   helpText?: string
   hint?: string
@@ -138,8 +165,6 @@ const props = withDefaults(defineProps<Props>(), {
   error: undefined,
 })
 
-console.log('Props:', props.modelValue)
-
 const emit = defineEmits<{
   (e: 'update:modelValue', value: File | File[] | null): void
 }>()
@@ -149,6 +174,10 @@ const selectedFiles = ref<File[]>([])
 const isDragging = ref(false)
 const localErrorMessage = ref('')
 const previewUrl = ref<string | null>(null)
+const imageUrl = ref('')
+const loadingUrl = ref(false)
+
+const allowUrlImport = computed(() => props.column.allowUrlImport !== false)
 
 // Inicializa preview com URL existente
 onMounted(() => {
@@ -363,6 +392,95 @@ const handleDrop = (event: DragEvent) => {
   isDragging.value = false
   if (event.dataTransfer?.files) {
     addFiles(event.dataTransfer.files)
+  }
+}
+
+const MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': '.jpg',
+  'image/jpg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+  'image/svg+xml': '.svg',
+  'image/bmp': '.bmp',
+  'image/x-icon': '.ico',
+}
+
+function extensionFromMime(mime: string): string {
+  const key = mime.split(';')[0].trim().toLowerCase()
+  return MIME_TO_EXT[key] ?? ''
+}
+
+function buildFilenameFromUrl(parsedUrl: URL, contentType: string, blob: Blob): string {
+  const segments = parsedUrl.pathname.split('/').filter(Boolean)
+  let base = segments.length ? decodeURIComponent(segments[segments.length - 1]!) : 'download'
+  base = base.replace(/[<>:"/\\|?*]/g, '_')
+  const hasExtension = /\.[a-z0-9]{2,8}$/i.test(base)
+  if (!hasExtension) {
+    const mime = contentType.split(';')[0].trim() || blob.type
+    const ext = extensionFromMime(mime)
+    if (ext) {
+      base += ext
+    } else if (mime.startsWith('image/')) {
+      base += '.jpg'
+    }
+  }
+  return base || 'download.jpg'
+}
+
+function normalizeDownloadedFile(blob: Blob, filename: string, contentTypeHeader: string): File {
+  const headerMime = contentTypeHeader.split(';')[0].trim()
+  let type = headerMime
+  if (!type || type === 'application/octet-stream') {
+    type =
+      blob.type && blob.type !== 'application/octet-stream'
+        ? blob.type
+        : headerMime || 'application/octet-stream'
+  }
+  return new File([blob], filename, { type })
+}
+
+const handleDownloadFromUrl = async () => {
+  localErrorMessage.value = ''
+  const raw = imageUrl.value.trim()
+  if (!raw) {
+    return
+  }
+
+  let parsedUrl: URL
+  try {
+    parsedUrl = new URL(raw)
+  } catch {
+    localErrorMessage.value = 'URL inválida.'
+    return
+  }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    localErrorMessage.value = 'Use uma URL http ou https.'
+    return
+  }
+
+  loadingUrl.value = true
+  try {
+    const response = await fetch(parsedUrl.toString(), { mode: 'cors' })
+    if (!response.ok) {
+      localErrorMessage.value = `Falha ao baixar (${response.status}).`
+      return
+    }
+
+    const blob = await response.blob()
+    const contentType = response.headers.get('content-type')?.split(';')[0].trim() ?? blob.type ?? ''
+
+    const filename = buildFilenameFromUrl(parsedUrl, contentType, blob)
+    const file = normalizeDownloadedFile(blob, filename, contentType)
+
+    addFiles([file])
+    imageUrl.value = ''
+  } catch {
+    localErrorMessage.value =
+      'Não foi possível baixar a URL (rede ou bloqueio CORS). Tente fazer upload do arquivo ou use um proxy no backend.'
+  } finally {
+    loadingUrl.value = false
   }
 }
 </script>
