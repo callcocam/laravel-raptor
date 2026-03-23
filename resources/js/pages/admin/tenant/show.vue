@@ -5,6 +5,7 @@ import type { BackendBreadcrumb } from '@/composables/useBreadcrumbs'
 interface Props {
   message?: string
   resourceLabel?: string
+  maxWidth?: string
   breadcrumbs?: BackendBreadcrumb[]
   model?: any
   infolist?: Record<string, any>

@@ -6,6 +6,7 @@ interface Props {
   message?: string
   resourceLabel?: string
   resourcePluralLabel?: string
+  maxWidth?: string
   breadcrumbs?: BackendBreadcrumb[]
   headerActions?: any
   table?: any

@@ -9,6 +9,7 @@ import PageHeaderActions from '~/components/PageHeaderActions.vue'
 interface Props {
   message?: string
   resourceLabel?: string
+  maxWidth?: string
   breadcrumbs?: BackendBreadcrumb[]
   model?: any
   infolist?: Record<string, any>
@@ -20,6 +21,7 @@ const props = defineProps<Props>()
 const layoutProps = {
   message: props.message,
   resourceLabel: props.resourceLabel,
+  maxWidth: props.maxWidth,
   breadcrumbs: props.breadcrumbs,
 }
 

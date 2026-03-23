@@ -149,7 +149,7 @@ abstract class ResourceController extends Controller
     {
         $value = $this->evaluate($this->maxWidth);
 
-        return is_null($value) ? '7xl' : __($value);
+        return is_null($value) ? '7xl' : (string) $value;
     }
 
     /**

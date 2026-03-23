@@ -19,6 +19,7 @@ interface Props {
   message?: string;
   resourceLabel?: string;
   resourcePluralLabel?: string;
+  maxWidth?: string;
   breadcrumbs?: BackendBreadcrumb[];
   headerActions?: any;
   table?: any;
@@ -33,6 +34,7 @@ const layoutProps = {
   message: props.message,
   resourceLabel: props.resourceLabel,
   resourcePluralLabel: props.resourcePluralLabel,
+  maxWidth: props.maxWidth,
   breadcrumbs: props.breadcrumbs,
 };
 

@@ -13,6 +13,7 @@ interface FormColumn {
 interface Props {
   message?: string
   resourceLabel?: string
+  maxWidth?: string
   breadcrumbs?: BackendBreadcrumb[]
   model?: any
   form?: {
