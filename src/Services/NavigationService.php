@@ -74,7 +74,13 @@ class NavigationService
 
         usort($navigationItems, fn ($a, $b) => ($a['order'] ?? 50) <=> ($b['order'] ?? 50));
 
-        return $this->applyGroupIconFallback($navigationItems);
+        // Aplicar fallback de ícone de grupo
+        $navigationItems = $this->applyGroupIconFallback($navigationItems);
+
+        // Calcular ordem de bloco global para cada item (necessário para ordenação frontend consistente)
+        $navigationItems = $this->applyBlockOrdering($navigationItems);
+
+        return $navigationItems;
     }
 
     /**
@@ -243,6 +249,42 @@ class NavigationService
         foreach ($navigationItems as $index => $item) {
             $groupName = $item['group'] ?? 'Geral';
             $navigationItems[$index]['groupIcon'] = $item['groupIcon'] ?? ($groupIcons[$groupName] ?? $item['icon'] ?? null);
+        }
+
+        return $navigationItems;
+    }
+
+    /**
+     * Calcula a ordem de bloco para cada item, considerando:
+     * - Item direto (sem grupo): blockOrder = seu order
+     * - Item agrupado: blockOrder = menor order entre todos os itens do grupo
+     *
+     * Isso permite que o frontend ordene blocos globalmente de forma consistente.
+     *
+     * @param  array<int, array<string, mixed>>  $navigationItems
+     * @return array<int, array<string, mixed>>
+     */
+    protected function applyBlockOrdering(array $navigationItems): array
+    {
+        // Primeira passagem: calcular o blockOrder para cada grupo (menor order do grupo)
+        $groupBlockOrders = [];
+        foreach ($navigationItems as $item) {
+            $groupKey = $item['group'] ?? 'direct';
+            $itemOrder = $item['order'] ?? 50;
+
+            if (! isset($groupBlockOrders[$groupKey])) {
+                $groupBlockOrders[$groupKey] = $itemOrder;
+            } else {
+                $groupBlockOrders[$groupKey] = min($groupBlockOrders[$groupKey], $itemOrder);
+            }
+        }
+
+        // Segunda passagem: adicionar metadados de bloco a cada item
+        foreach ($navigationItems as $index => $item) {
+            $groupKey = $item['group'] ?? 'direct';
+            $navigationItems[$index]['blockOrder'] = $groupBlockOrders[$groupKey];
+            $navigationItems[$index]['groupKey'] = $groupKey;
+            $navigationItems[$index]['isDirect'] = $groupKey === 'direct';
         }
 
         return $navigationItems;

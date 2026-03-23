@@ -8,9 +8,6 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
     SidebarSeparator,
 } from './ui/sidebar';
 import { type NavItem } from '@/types';
@@ -41,9 +38,9 @@ const navigationItems = computed(() => {
     return navData.map(item => ({
         ...item,
         icon: typeof item.icon === 'string' ? getIconComponent(item.icon) : item.icon,
-        groupIcon: typeof (item as any).groupIcon === 'string'
-            ? getIconComponent((item as any).groupIcon)
-            : (item as any).groupIcon,
+        groupIcon: typeof item.groupIcon === 'string'
+            ? getIconComponent(item.groupIcon)
+            : item.groupIcon,
     }));
 });
 
@@ -58,41 +55,74 @@ const footerNavItems = computed(() => {
 });
 
 const groupedNavigation = computed(() => {
-    const groups = new Map<string, NavItem[]>();
+    // Etapa 1: Montar blocos (diretos e grupos) com seus metadados de ordenação
+    const blockMap = new Map<string, { key: string; blockOrder: number; isDirect: boolean; items: NavItem[] }>();
 
     navigationItems.value.forEach(item => {
-        const groupName = item.group || 'Geral';
-        if (!groups.has(groupName)) {
-            groups.set(groupName, []);
+        const blockKey = item.groupKey || item.group || 'direct';
+        const blockOrder = item.blockOrder ?? item.order ?? 50;
+        const isDirect = item.isDirect ?? !item.group;
+
+        if (!blockMap.has(blockKey)) {
+            blockMap.set(blockKey, {
+                key: blockKey,
+                blockOrder,
+                isDirect,
+                items: [],
+            });
         }
-        groups.get(groupName)!.push(item);
+
+        blockMap.get(blockKey)!.items.push(item);
     });
 
-    groups.forEach(items => {
-        items.sort((a, b) => (a.order || 50) - (b.order || 50));
-    });
+    // Etapa 2: Converter blocos para array e ordenar globalmente por blockOrder (com desempate por chave)
+    const sortedBlocks = Array.from(blockMap.values())
+        .sort((a, b) => {
+            const orderDiff = a.blockOrder - b.blockOrder;
+            if (orderDiff !== 0) {
+                return orderDiff;
+            }
+            // Desempate estável: ordem alfabética da chave de bloco
+            return a.key.localeCompare(b.key);
+        });
 
-    return Array.from(groups.entries()).map(([name, items]) => {
-        const isCollapsible = items.some(item => item.groupCollapsible);
+    // Etapa 3: Processar cada bloco para renderização
+    return sortedBlocks.map(block => {
+        // Ordenar itens dentro do bloco por seu order individual
+        block.items.sort((a, b) => (a.order || 50) - (b.order || 50));
+
+        // Se é bloco direto (sem grupo), renderiza itens sem rótulo de seção
+        if (block.isDirect) {
+            return { name: 'direct', items: block.items, collapsible: false };
+        }
+
+        // Se é bloco de grupo, verificar se tem groupCollapsible
+        const isCollapsible = block.items.some(item => item.groupCollapsible);
 
         if (isCollapsible) {
-            const firstItem = items[0];
-            const groupIcon = items.find(item => (item as any).groupIcon)?.groupIcon || firstItem.icon;
+            const firstItem = block.items[0];
+            const groupIcon = block.items.find(item => item.groupIcon)?.groupIcon || firstItem.icon;
+            const groupName = firstItem.group || 'Geral';
 
             return {
-                name,
+                name: groupName,
                 items: [{
-                    title: name,
-                    label: name,
+                    title: groupName,
+                    label: groupName,
                     href: firstItem.href,
                     icon: groupIcon,
-                    children: items,
+                    children: block.items,
                 }],
                 collapsible: true,
             };
         }
 
-        return { name, items, collapsible: false };
+        // Grupo não-colapsável: renderiza com rótulo de seção e itens
+        return {
+            name: block.key,
+            items: block.items,
+            collapsible: false,
+        };
     });
 });
 </script>
@@ -127,7 +157,7 @@ const groupedNavigation = computed(() => {
                     class="mx-3 my-0.5 bg-sidebar-border/40"
                 />
                 <NavMain
-                    :group-label="group.collapsible ? undefined : group.name"
+                    :group-label="(group.collapsible || group.name === 'direct') ? undefined : group.name"
                     :items="group.items"
                 />
             </template>
