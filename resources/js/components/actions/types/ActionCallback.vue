@@ -56,7 +56,7 @@ const emit = defineEmits<{
 }>()
 
 const { executeCallback } = useAction()
-const { variant, size, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
+const { variant, size, iconComponent, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 })

@@ -34,8 +34,6 @@ const preparedActions = computed(() => {
 })
 
 function getComponentForActionType(actionType: string): string {
-
-  ActionRegi
   const typeMap: Record<string, string> = {
     'submit': 'action-form-button',
     'cancel': 'action-form-button',

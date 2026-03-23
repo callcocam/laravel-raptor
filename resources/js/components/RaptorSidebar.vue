@@ -59,7 +59,7 @@ const groupedNavigation = computed(() => {
     const blockMap = new Map<string, { key: string; blockOrder: number; isDirect: boolean; items: NavItem[] }>();
 
     navigationItems.value.forEach(item => {
-        const blockKey = item.groupKey || item.group || 'direct';
+        const blockKey = item.groupKey || (item.group ? item.group : `direct:${item.routeName || item.href}`);
         const blockOrder = item.blockOrder ?? item.order ?? 50;
         const isDirect = item.isDirect ?? !item.group;
 
@@ -93,7 +93,12 @@ const groupedNavigation = computed(() => {
 
         // Se é bloco direto (sem grupo), renderiza itens sem rótulo de seção
         if (block.isDirect) {
-            return { name: 'direct', items: block.items, collapsible: false };
+            return {
+                name: `direct:${block.key}`,
+                items: block.items,
+                collapsible: false,
+                isDirect: true,
+            };
         }
 
         // Se é bloco de grupo, verificar se tem groupCollapsible
@@ -114,14 +119,16 @@ const groupedNavigation = computed(() => {
                     children: block.items,
                 }],
                 collapsible: true,
+                isDirect: false,
             };
         }
 
         // Grupo não-colapsável: renderiza com rótulo de seção e itens
         return {
-            name: block.key,
+            name: block.items[0]?.group || block.key,
             items: block.items,
             collapsible: false,
+            isDirect: false,
         };
     });
 });
@@ -157,7 +164,7 @@ const groupedNavigation = computed(() => {
                     class="mx-3 my-0.5 bg-sidebar-border/40"
                 />
                 <NavMain
-                    :group-label="(group.collapsible || group.name === 'direct') ? undefined : group.name"
+                    :group-label="(group.collapsible || group.isDirect) ? undefined : group.name"
                     :items="group.items"
                 />
             </template>

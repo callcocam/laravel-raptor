@@ -68,7 +68,7 @@ class NavigationService
         $navigationItems = [];
 
         foreach ($controllers as $controllerClass) {
-            $items = $this->processController($controllerClass, $user);
+            $items = $this->processController($controllerClass, $user, $context);
             $navigationItems = array_merge($navigationItems, $items);
         }
 
@@ -150,7 +150,7 @@ class NavigationService
         }
     }
 
-    protected function processController(string $controllerClass, User $user): array
+    protected function processController(string $controllerClass, User $user, string $context): array
     {
         try {
             $controller = new $controllerClass;
@@ -172,7 +172,7 @@ class NavigationService
             $items = [];
             foreach ($indexPages as $page) {
                 if ($page->isVisible()) {
-                    $item = $this->generateNavigationItem($page, $modelClass);
+                    $item = $this->generateNavigationItem($page, $modelClass, $context);
                     $items[] = $item;
                 }
             }
@@ -203,10 +203,10 @@ class NavigationService
         }
     }
 
-    public function generateNavigationItem(Page $page, ?string $modelClass): array
+    public function generateNavigationItem(Page $page, ?string $modelClass, string $context): array
     {
-
         $title = $page->getLabel() ?: ($modelClass ? (new $modelClass)->getTable() : $this->generateLabelFromPath($page->getPath()));
+        $group = $this->normalizeGroup($page->getGroup(), $context);
 
         return [
             'title' => __($title),
@@ -214,13 +214,42 @@ class NavigationService
             'href' => $page->getPath(),
             'routeName' => $page->getName(),
             'icon' => $page->getIcon(),
-            'group' => $page->getGroup(),
+            'group' => $group,
             'groupIcon' => $page->getGroupIcon(),
             'groupCollapsible' => $page->isGroupCollapsible(),
             'order' => $page->getOrder(),
             'badge' => $page->getBadge(),
             'isActive' => false,
         ];
+    }
+
+    protected function normalizeGroup(?string $group, string $context): ?string
+    {
+        $normalized = is_string($group) ? trim($group) : null;
+
+        if ($normalized === null || $normalized === '') {
+            return null;
+        }
+
+        $contextDefaultGroup = config("raptor.navigation.contexts.{$context}.default_group");
+        $defaultGroups = array_filter([
+            'Geral',
+            __('Geral'),
+            is_string($contextDefaultGroup) ? $contextDefaultGroup : null,
+            is_string($contextDefaultGroup) ? __($contextDefaultGroup) : null,
+        ]);
+
+        $normalizedLower = str($normalized)->lower()->toString();
+
+        foreach ($defaultGroups as $defaultGroup) {
+            $defaultLower = str((string) $defaultGroup)->lower()->toString();
+
+            if ($normalizedLower === $defaultLower) {
+                return null;
+            }
+        }
+
+        return $normalized;
     }
 
     /**
@@ -232,12 +261,18 @@ class NavigationService
         $groupIcons = [];
 
         foreach ($navigationItems as $item) {
-            $groupName = $item['group'] ?? 'Geral';
+            $groupName = $item['group'] ?? null;
+
+            if (! $groupName) {
+                continue;
+            }
+
             $explicitGroupIcon = $item['groupIcon'] ?? null;
             $itemIcon = $item['icon'] ?? null;
 
             if (! isset($groupIcons[$groupName])) {
                 $groupIcons[$groupName] = $explicitGroupIcon ?: $itemIcon;
+
                 continue;
             }
 
@@ -247,7 +282,14 @@ class NavigationService
         }
 
         foreach ($navigationItems as $index => $item) {
-            $groupName = $item['group'] ?? 'Geral';
+            $groupName = $item['group'] ?? null;
+
+            if (! $groupName) {
+                $navigationItems[$index]['groupIcon'] = $item['groupIcon'] ?? ($item['icon'] ?? null);
+
+                continue;
+            }
+
             $navigationItems[$index]['groupIcon'] = $item['groupIcon'] ?? ($groupIcons[$groupName] ?? $item['icon'] ?? null);
         }
 
@@ -256,7 +298,7 @@ class NavigationService
 
     /**
      * Calcula a ordem de bloco para cada item, considerando:
-     * - Item direto (sem grupo): blockOrder = seu order
+     * - Item direto (sem grupo): blockOrder = seu order (cada item direto é um bloco)
      * - Item agrupado: blockOrder = menor order entre todos os itens do grupo
      *
      * Isso permite que o frontend ordene blocos globalmente de forma consistente.
@@ -269,7 +311,13 @@ class NavigationService
         // Primeira passagem: calcular o blockOrder para cada grupo (menor order do grupo)
         $groupBlockOrders = [];
         foreach ($navigationItems as $item) {
-            $groupKey = $item['group'] ?? 'direct';
+            $groupKey = $item['group'] ?? null;
+
+            // Direct items não participam do cálculo de grupo
+            if (! $groupKey) {
+                continue;
+            }
+
             $itemOrder = $item['order'] ?? 50;
 
             if (! isset($groupBlockOrders[$groupKey])) {
@@ -281,10 +329,21 @@ class NavigationService
 
         // Segunda passagem: adicionar metadados de bloco a cada item
         foreach ($navigationItems as $index => $item) {
-            $groupKey = $item['group'] ?? 'direct';
-            $navigationItems[$index]['blockOrder'] = $groupBlockOrders[$groupKey];
-            $navigationItems[$index]['groupKey'] = $groupKey;
-            $navigationItems[$index]['isDirect'] = $groupKey === 'direct';
+            $groupKey = $item['group'] ?? null;
+            $isDirect = ! $groupKey;
+
+            // Para items diretos, blockOrder = seu próprio order
+            // Para items agrupados, blockOrder = min order do grupo
+            if ($isDirect) {
+                $navigationItems[$index]['blockOrder'] = $item['order'] ?? 50;
+                $directKey = $item['routeName'] ?? $item['href'] ?? "item_{$index}";
+                $navigationItems[$index]['groupKey'] = "direct:{$directKey}";
+            } else {
+                $navigationItems[$index]['blockOrder'] = $groupBlockOrders[$groupKey] ?? ($item['order'] ?? 50);
+                $navigationItems[$index]['groupKey'] = $groupKey;
+            }
+
+            $navigationItems[$index]['isDirect'] = $isDirect;
         }
 
         return $navigationItems;

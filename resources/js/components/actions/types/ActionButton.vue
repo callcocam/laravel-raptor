@@ -65,7 +65,7 @@ const emit = defineEmits<{
 }>()
 
 const { execute, isExecuting } = useAction()
-const { variant: computedVariant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
+const { variant: computedVariant, size: computedSize, iconComponent, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm',
   defaultVariant: props.variant

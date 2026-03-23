@@ -84,7 +84,7 @@ const displayLabel = computed(() => {
 })
 
 // Usa composable para variant, size, iconComponent, iconClasses
-const { variant: baseVariant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle } = useActionUI({
+const { variant: baseVariant, size: computedSize, iconComponent, isActionStyle, actionStyle } = useActionUI({
   action: props.action,
   defaultSize: 'sm',
   defaultVariant: props.variant

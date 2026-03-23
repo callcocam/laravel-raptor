@@ -191,7 +191,7 @@ const {
 })
 
 // Usa composable para UI padronizada (variant, iconComponent, iconClasses)
-const { variant, size: computedSize, iconComponent, iconClasses, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
+const { variant, size: computedSize, iconComponent, isActionStyle, actionStyle, iconBoxVariant } = useActionUI({
   action: props.action,
   defaultSize: 'sm'
 })
