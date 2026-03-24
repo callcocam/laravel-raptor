@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('slug')->unique()->comment('Identificador único amigável para URLs');
             
             // Identificadores de acesso
+            $table->string('subdomain')->nullable()->comment('Subdomínio do tenant (ex: landlord, tenant)');
             $table->string('domain')->nullable()->comment('Domínio base do tenant (ex: example.com)');
             
             // Configurações de banco de dados (para multi-database)
