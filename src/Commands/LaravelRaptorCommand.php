@@ -241,7 +241,11 @@ class LaravelRaptorCommand extends Command
 
             // Executar migrações
             $this->comment('   Executando migrações...');
-            Artisan::call('migrate', ['--force' => true, '--fresh' => true]);
+            if ($this->option('fresh')) {
+                Artisan::call('migrate:fresh', ['--force' => true]);
+            } else {
+                Artisan::call('migrate', ['--force' => true]);
+            }
             $this->comment('   ✓ Migrações executadas');
         } catch (\Exception $e) {
             $this->error('   ✗ Erro ao executar migrações: '.$e->getMessage());
