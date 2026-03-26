@@ -23,7 +23,7 @@
         <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
           <component :is="iconComponent" />
         </ActionIconBox>
-        <span class="text-xs text-foreground">{{ action.label }}</span>
+        <span class="text-xs">{{ action.label }}</span>
       </Button>
       <button
         v-else

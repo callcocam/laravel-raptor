@@ -16,7 +16,7 @@
         <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
           <component :is="iconComponent" />
         </ActionIconBox>
-        <span class="text-xs text-foreground">{{ action.label }}</span>
+        <span class="text-xs">{{ action.label }}</span>
         <ChevronDown class="h-3 w-3" />
       </Button>
       <button

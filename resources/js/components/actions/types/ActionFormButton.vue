@@ -18,7 +18,7 @@
     <ActionIconBox v-if="iconComponent && !isProcessing" :variant="formIconBoxVariant">
       <component :is="iconComponent" />
     </ActionIconBox>
-    <span class="text-xs text-foreground">{{ displayLabel }}</span>
+    <span class="text-xs">{{ displayLabel }}</span>
   </Button>
   <button
     v-else
@@ -45,7 +45,7 @@ import type { TableAction } from '~/types/table'
 
 interface Props {
   action: TableAction & { processing?: boolean }
-  variant?: 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'
+  variant?: 'default' | 'create' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link' | 'success' | 'warning'
   size?: 'default' | 'sm' | 'lg' | 'icon'
   asChild?: boolean
   className?: string

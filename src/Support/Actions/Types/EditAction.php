@@ -23,6 +23,7 @@ class EditAction extends Action
             ->label('Editar')
             ->icon('Edit')
             ->color('blue')
+            ->variant('secondary')
             ->component('action-button-link')
             ->policy('update')
             ->tooltip('Editar registro')->hidden(fn ($record) => ! empty($record->deleted_at));

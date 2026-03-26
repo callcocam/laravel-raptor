@@ -19,7 +19,7 @@
     <ActionIconBox v-else-if="iconComponent" :variant="iconBoxVariant">
       <component :is="iconComponent" />
     </ActionIconBox>
-    <span :class="isActionStyle ? actionStyle.labelClasses : 'text-xs text-foreground'">{{ action.label }}</span>
+    <span :class="isActionStyle ? actionStyle.labelClasses : 'text-xs'">{{ action.label }}</span>
   </Link>
 </template>
 
@@ -33,7 +33,7 @@ import type { TableAction } from "~/types/table";
 
 interface Props {
   action: TableAction;
-  variant?: 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link';
+  variant?: 'default' | 'create' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link' | 'success' | 'warning';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   asChild?: boolean;
   className?: string;

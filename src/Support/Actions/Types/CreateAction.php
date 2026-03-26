@@ -24,6 +24,7 @@ class CreateAction extends Action
             ->label('Criar Novo')
             ->icon('PlusCircle')
             ->color('green')
+            ->variant('create')
             ->component('action-button-link')
             ->tooltip('Criar novo registro');
         $this->setUp();

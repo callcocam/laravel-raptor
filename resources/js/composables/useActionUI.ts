@@ -11,7 +11,7 @@ import { computed, h, type ComputedRef } from 'vue'
 import * as LucideIcons from 'lucide-vue-next'
 import type { TableAction } from '~/types/table'
 
-export type ActionVariant = 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'
+export type ActionVariant = 'default' | 'create' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link' | 'success' | 'warning'
 
 /**
  * Estilo base - alinhado ao Button padrão (btn-gradient + ActionIconBox)
@@ -28,7 +28,7 @@ export const ACTION_STYLE = {
 } as const
 
 /** Variantes que usam o componente Button (não o estilo plannerate) */
-const BUTTON_VARIANTS: ActionVariant[] = ['outline', 'ghost', 'destructive', 'secondary', 'link']
+const BUTTON_VARIANTS: ActionVariant[] = ['default', 'create', 'outline', 'ghost', 'destructive', 'secondary', 'link', 'success', 'warning']
 
 /** Verifica se a variant deve usar o componente Button em vez do estilo plannerate */
 export function isButtonVariant(variant: ActionVariant): boolean {
@@ -58,11 +58,11 @@ interface UseActionUIResult {
 /**
  * Color mapping - mapeia cores genéricas para variants do shadcn
  */
-const colorToVariantMap: Record<string, 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'link'> = {
-  'green': 'default',
+const colorToVariantMap: Record<string, ActionVariant> = {
+  'green': 'create',
   'blue': 'default',
   'red': 'destructive',
-  'yellow': 'outline',
+  'yellow': 'warning',
   'gray': 'secondary',
   'default': 'default'
 }
@@ -152,7 +152,8 @@ export function useActionUI(options: UseActionUIOptions): UseActionUIResult {
   const iconBoxVariant = computed((): 'default' | 'outline' | 'destructive' => {
     const v = variant.value
     if (v === 'destructive') return 'destructive'
-    if (v === 'outline' || v === 'secondary' || v === 'ghost') return 'outline'
+    if (v === 'create' || v === 'success') return 'default'
+    if (v === 'default' || v === 'outline' || v === 'secondary' || v === 'ghost' || v === 'warning' || v === 'link') return 'outline'
     return 'default'
   })
 

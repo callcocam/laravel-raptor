@@ -29,7 +29,7 @@ const wrapperClasses = computed(() => {
   const variants: Record<Variant, string> = {
     default: 'bg-[#a3e635] text-slate-900',
     outline: 'border border-input bg-muted/50 text-foreground dark:text-primary-foreground',
-    destructive: 'bg-destructive/20 text-destructive dark:text-primary-foreground',
+    destructive: 'border border-destructive/40 bg-destructive/85 text-destructive-foreground',
     secondary: 'bg-secondary text-secondary-foreground dark:text-primary-foreground',
     ghost: 'bg-muted/50 text-muted-foreground dark:text-primary-foreground',
   }

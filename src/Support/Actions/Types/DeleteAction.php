@@ -20,7 +20,8 @@ class DeleteAction extends Action
         $this->name($name) // ✅ Sempre define o name
             ->label('Excluir')
             ->icon('Trash2')
-            // ->color('red')
+            ->color('red')
+            ->variant('destructive')
             ->tooltip('Excluir registro')
             ->policy('delete')
             ->confirm([

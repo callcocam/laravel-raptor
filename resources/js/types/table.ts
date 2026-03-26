@@ -33,7 +33,7 @@ export interface TableAction {
     only?: string[]
   }
   modalSize?: 'sm' | 'md' | 'lg' | 'xl' | 'full'
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  variant?: 'default' | 'create' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link' | 'success' | 'warning'
   size?: 'default' | 'sm' | 'lg' | 'icon'
   processingLabel?: string
   successMessage?: string
