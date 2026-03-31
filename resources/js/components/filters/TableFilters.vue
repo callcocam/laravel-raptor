@@ -48,14 +48,13 @@
             </Badge>
           </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-80 p-4" align="end">
-          <div class="space-y-4 w-full">
-            <div class="space-y-2">
-              <h4 class="font-medium text-sm">Filtros Avançados</h4>
-              <p class="text-xs text-muted-foreground">Refine sua pesquisa</p>
-            </div>
-            
-            <div class="space-y-3">
+        <PopoverContent class="w-80 p-0" align="end">
+          <div class="space-y-2 px-4 pt-4 pb-2 border-b border-border">
+            <h4 class="font-medium text-sm">Filtros Avançados</h4>
+            <p class="text-xs text-muted-foreground">Refine sua pesquisa</p>
+          </div>
+          <div class="max-h-[70vh] overflow-y-auto">
+            <div class="space-y-3 p-4">
               <div v-for="filter in filters" :key="filter.name" class="w-full">
                 <FilterRenderer
                   :filter="filter"
