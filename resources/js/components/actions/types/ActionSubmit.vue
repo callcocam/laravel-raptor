@@ -12,6 +12,7 @@
     :as-child="asChild"
     :class="cn('gap-1.5', className)"
     @click="handleClick"
+    type="submit"
   >
     <ActionIconBox v-if="iconComponent" :variant="iconBoxVariant">
       <component :is="iconComponent" />
@@ -22,6 +23,7 @@
     v-else 
     :class="cn(actionStyle.buttonClasses, className)"
     @click="handleClick"
+    type="submit"
   >
     <div v-if="iconComponent" :class="actionStyle.iconWrapperClasses">
       <component :is="iconComponent" :class="actionStyle.iconClasses" />
