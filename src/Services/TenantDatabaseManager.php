@@ -173,11 +173,10 @@ class TenantDatabaseManager
         $this->setupConnection($database);
         $table = $this->tenantsTable();
         $row = $this->tenantModelToRow($tenant);
-        if (DB::connection($this->defaultConnection)->table($table)->where('id', $tenant->getKey())->exists()) {
-            DB::connection($this->defaultConnection)->table($table)->where('id', $tenant->getKey())->update($row);
-        } else {
-            DB::connection($this->defaultConnection)->table($table)->insert($row);
-        }
+        DB::connection($this->defaultConnection)->table($table)->updateOrInsert(
+            ['slug' => $tenant->getAttribute('slug')],
+            $row
+        );
     }
 
     /**
