@@ -385,6 +385,7 @@ class TenantController extends LandlordController
             return;
         }
         $manager = app(TenantDatabaseManager::class);
+        // Cria o banco (se não existir), roda migrations e copia o registro do tenant (apenas se não existir)
         $manager->ensureDatabaseAndRunMigrations(
             $database,
             $this->tenantMigrationPaths(),
@@ -400,11 +401,10 @@ class TenantController extends LandlordController
             return;
         }
         $manager = app(TenantDatabaseManager::class);
-        $manager->ensureDatabaseAndRunMigrations(
-            $database,
-            $this->tenantMigrationPaths(),
-            $model
-        );
+        // Roda apenas as migrations pendentes — nunca recria o banco nem sobrescreve dados
+        $manager->ensureDatabaseAndRunMigrations($database, $this->tenantMigrationPaths());
+        // Sincroniza os metadados do tenant sem alterar o id (preserva FKs)
+        $manager->syncTenantRecordToTenantDatabase($model);
         $manager->createTenantConfiguration($model);
     }
 
@@ -419,10 +419,8 @@ class TenantController extends LandlordController
         if (empty($database)) {
             return;
         }
-        app(TenantDatabaseManager::class)->ensureDatabaseAndRunMigrations(
-            $database,
-            $this->tenantMigrationPaths(),
-            $model
-        );
+        $manager = app(TenantDatabaseManager::class);
+        $manager->ensureDatabaseAndRunMigrations($database, $this->tenantMigrationPaths());
+        $manager->syncTenantRecordToTenantDatabase($model);
     }
 }

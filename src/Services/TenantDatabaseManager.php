@@ -164,35 +164,60 @@ class TenantDatabaseManager
     }
 
     /**
-     * Insere uma cópia exata do registro na tabela tenants do banco do tenant (mesmo id).
-     * Se o tenant não tiver database preenchido, usa o banco default do env.
+     * Insere uma cópia do registro na tabela tenants do banco do tenant (apenas se não existir).
+     * Usado no fluxo de criação — nunca sobrescreve um registro existente.
+     * Considera existente qualquer registro com mesmo id OU mesmo slug.
      */
     public function copyTenantRecordToTenantDatabase(Model $tenant): void
     {
         $database = $tenant->getAttribute('database') ?: $this->getDefaultDatabaseName();
         $this->setupConnection($database);
         $table = $this->tenantsTable();
+
+        $alreadyExists = DB::connection($this->defaultConnection)
+            ->table($table)
+            ->where('id', $tenant->getKey())
+            ->orWhere('slug', $tenant->getAttribute('slug'))
+            ->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
         $row = $this->tenantModelToRow($tenant);
-        DB::connection($this->defaultConnection)->table($table)->updateOrInsert(
-            ['slug' => $tenant->getAttribute('slug')],
-            $row
-        );
+        DB::connection($this->defaultConnection)->table($table)->insert($row);
     }
 
     /**
-     * Atualiza o registro na tabela tenants do banco do tenant (mesmo id).
-     * Se o tenant não tiver database preenchido, usa o banco default do env.
+     * Sincroniza os dados do tenant no banco do tenant (apenas campos não-PK).
+     * Usado no fluxo de update/restore — nunca altera o id para não quebrar FKs.
+     * Busca o registro existente por id (prioritário) ou por slug (fallback para inconsistência).
+     * Se não existir nenhum registro, insere o registro completo (banco recém-criado).
      */
     public function syncTenantRecordToTenantDatabase(Model $tenant): void
     {
         $database = $tenant->getAttribute('database') ?: $this->getDefaultDatabaseName();
         $this->setupConnection($database);
         $table = $this->tenantsTable();
+        $conn = DB::connection($this->defaultConnection);
         $row = $this->tenantModelToRow($tenant);
-        DB::connection($this->defaultConnection)->table($table)->updateOrInsert(
-            ['id' => $tenant->getKey()],
-            $row
-        );
+        $updateRow = collect($row)->except($tenant->getKeyName())->toArray();
+
+        if ($conn->table($table)->where('id', $tenant->getKey())->exists()) {
+            $conn->table($table)->where('id', $tenant->getKey())->update($updateRow);
+
+            return;
+        }
+
+        if ($conn->table($table)->where('slug', $tenant->getAttribute('slug'))->exists()) {
+            // Registro existe com id diferente (inconsistência de dados) — atualiza campos não-PK apenas
+            $conn->table($table)->where('slug', $tenant->getAttribute('slug'))->update($updateRow);
+
+            return;
+        }
+
+        // Banco recém-criado sem registro de tenant — insere completo
+        $conn->table($table)->insert($row);
     }
 
     /**
