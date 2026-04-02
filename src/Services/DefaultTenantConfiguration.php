@@ -139,6 +139,15 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
                 ->first();
 
             if ($existing !== null) {
+                // Garante que tenant_id está correto mesmo para usuários criados antes do escopo estar ativo
+                if (empty($existing->tenant_id) || $existing->tenant_id !== $tenant->getKey()) {
+                    DB::connection($tenantConnection)
+                        ->table($usersTable)
+                        ->where('id', $existing->id)
+                        ->update(['tenant_id' => $tenant->getKey()]);
+                    $existing->tenant_id = $tenant->getKey();
+                }
+
                 return [$this->userLike($existing), null];
             }
 
