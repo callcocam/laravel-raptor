@@ -120,11 +120,14 @@ abstract class AbstractController extends ResourceController
                 $validationMessages
             );
 
-            $validated = $this->beforeExtraStore($validator->validate(), $request);
+            $validated = $validator->validate();
+            $dataToSave = $form->mergeValidatedDataWithFormData($validated, $preparedData, $model);
+            $dataToSave = $this->beforeExtraStore($dataToSave, $request);
 
-            $record = $model->create($validated);
+            $record = $model->create($dataToSave);
 
-            $form->saveRelatedData($validated, $record, $request);
+            $formDataForRelations = $form->getFormDataForRelations($validated, $preparedData, $model);
+            $form->saveRelatedData(array_merge($formDataForRelations, $dataToSave), $record, $request);
 
             // Hook: depois de criar
             $this->afterCreate($request, $record);
@@ -229,12 +232,15 @@ abstract class AbstractController extends ResourceController
                 $validationMessages
             );
 
-            $validated = $this->beforeExtraUpdate($validator->validate(), $request, $model);
+            $validated = $validator->validate();
+            $dataToSave = $form->mergeValidatedDataWithFormData($validated, $preparedData, $model);
+            $dataToSave = $this->beforeExtraUpdate($dataToSave, $request, $model);
 
-            $model->update($validated);
+            $model->update($dataToSave);
 
             // Vamo fazer atualizações de relacionados se necessário
-            $form->updateRelatedData($validated, $model, $request);
+            $formDataForRelations = $form->getFormDataForRelations($validated, $preparedData, $model);
+            $form->updateRelatedData(array_merge($formDataForRelations, $dataToSave), $model, $request);
 
             // Hook: depois de atualizar
             $this->afterUpdate($request, $model);

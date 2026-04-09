@@ -10,10 +10,19 @@ namespace Callcocam\LaravelRaptor\Support\Form\Concerns;
 
 use Callcocam\LaravelRaptor\Support\Concerns\Interacts\WithColumns;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SectionField;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 trait InteractWithForm
 {
     use WithColumns;
+
+    /**
+     * Cache local de colunas por conexão+tabela para evitar chamadas repetidas ao Schema.
+     *
+     * @var array<string, array<string>>
+     */
+    protected array $modelColumnListingCache = [];
 
     /**
      * Retorna true se a coluna é um SectionField flat (agrupamento visual sem chave no model).
@@ -320,6 +329,76 @@ trait InteractWithForm
         }
 
         return $data;
+    }
+
+    /**
+     * Combina os dados validados com dados do formulário sem regra de validação.
+     *
+     * Mantém os valores validados como prioridade e filtra o payload final
+     * para colunas reais da tabela do model (quando disponível).
+     */
+    public function mergeValidatedDataWithFormData(array $validated, array $preparedData, ?Model $model = null): array
+    {
+        $formData = $this->getFormData($preparedData, $model);
+        $merged = array_merge($formData, $validated);
+
+        return $this->filterPersistableModelData($merged, $model);
+    }
+
+    /**
+     * Monta os dados de formulário para rotinas relacionadas (ex.: sync de relações).
+     */
+    public function getFormDataForRelations(array $validated, array $preparedData, ?Model $model = null): array
+    {
+        $formData = $this->getFormData($preparedData, $model);
+
+        return array_merge($formData, $validated);
+    }
+
+    /**
+     * Filtra apenas campos que existem como colunas reais no model.
+     */
+    protected function filterPersistableModelData(array $data, ?Model $model = null): array
+    {
+        if (! $model) {
+            return $data;
+        }
+
+        $columns = $this->getModelColumnListing($model);
+        if (empty($columns)) {
+            return $data;
+        }
+
+        return array_filter($data, fn ($value, $key) => in_array($key, $columns, true), ARRAY_FILTER_USE_BOTH);
+    }
+
+    /**
+     * Retorna (com cache) as colunas da tabela do model.
+     *
+     * Em caso de erro de schema, retorna array vazio para não bloquear o fluxo.
+     *
+     * @return array<string>
+     */
+    protected function getModelColumnListing(Model $model): array
+    {
+        $connection = $model->getConnectionName() ?: config('database.default');
+        $table = $model->getTable();
+        $cacheKey = "{$connection}.{$table}";
+
+        if (isset($this->modelColumnListingCache[$cacheKey])) {
+            return $this->modelColumnListingCache[$cacheKey];
+        }
+
+        try {
+            $columns = Schema::connection($connection)->getColumnListing($table);
+        } catch (\Throwable $e) {
+            logger()->warning("Error loading column listing for '{$cacheKey}': ".$e->getMessage());
+            $columns = [];
+        }
+
+        $this->modelColumnListingCache[$cacheKey] = $columns;
+
+        return $columns;
     }
 
     /**
