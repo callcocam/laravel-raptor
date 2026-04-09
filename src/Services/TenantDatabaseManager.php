@@ -487,6 +487,15 @@ class TenantDatabaseManager
 
         $conn->beginTransaction();
         try {
+            // Discover FK child tables referencing tenants.id so they can be
+            // re-parented within the same transaction (avoids FK violations).
+            $children = $this->getFkChildRows($conn, $table, $keyName, $existingId);
+
+            // Delete child rows that reference the old id (saved above).
+            foreach ($children as $childTable => $data) {
+                $conn->table($childTable)->where($data['column'], $existingId)->delete();
+            }
+
             $affected = $conn->table($table)
                 ->where($keyName, $existingId)
                 ->where('slug', $slug)
@@ -498,6 +507,15 @@ class TenantDatabaseManager
                     $database,
                     $slug
                 ));
+            }
+
+            // Re-insert child rows with the new parent id.
+            foreach ($children as $childTable => $data) {
+                foreach ($data['rows'] as $row) {
+                    $rowArr = (array) $row;
+                    $rowArr[$data['column']] = $targetId;
+                    $conn->table($childTable)->insert($rowArr);
+                }
             }
 
             $conn->table($table)->where($keyName, $targetId)->update($updateRow);
@@ -513,5 +531,68 @@ class TenantDatabaseManager
                 $e->getMessage()
             ), 0, $e);
         }
+    }
+
+    /**
+     * Descobre tabelas filhas que têm FK apontando para $parentTable.$keyName
+     * e retorna os registros que referenciam $parentId.
+     *
+     * Suporta PostgreSQL e MySQL. Para outros drivers retorna array vazio.
+     *
+     * @return array<string, array{column: string, rows: array<int, object>}>
+     */
+    protected function getFkChildRows(
+        ConnectionInterface $conn,
+        string $parentTable,
+        string $keyName,
+        string $parentId
+    ): array {
+        $driver = $conn->getDriverName();
+
+        $childMeta = match ($driver) {
+            'pgsql' => $conn->select("
+                SELECT kcu.table_name  AS child_table,
+                       kcu.column_name AS fk_column
+                FROM   information_schema.table_constraints     AS tc
+                JOIN   information_schema.key_column_usage      AS kcu
+                       ON  tc.constraint_name  = kcu.constraint_name
+                       AND tc.table_schema     = kcu.table_schema
+                JOIN   information_schema.constraint_column_usage AS ccu
+                       ON  ccu.constraint_name = tc.constraint_name
+                       AND ccu.table_schema    = tc.table_schema
+                WHERE  tc.constraint_type = 'FOREIGN KEY'
+                  AND  ccu.table_name     = ?
+                  AND  ccu.column_name    = ?
+                  AND  tc.table_schema    = current_schema()
+            ", [$parentTable, $keyName]),
+
+            'mysql' => $conn->select("
+                SELECT TABLE_NAME  AS child_table,
+                       COLUMN_NAME AS fk_column
+                FROM   information_schema.KEY_COLUMN_USAGE
+                WHERE  REFERENCED_TABLE_NAME   = ?
+                  AND  REFERENCED_COLUMN_NAME  = ?
+                  AND  TABLE_SCHEMA            = DATABASE()
+            ", [$parentTable, $keyName]),
+
+            default => [],
+        };
+
+        $result = [];
+        foreach ($childMeta as $meta) {
+            $childTable = (string) ($meta->child_table ?? $meta->TABLE_NAME ?? '');
+            $fkColumn = (string) ($meta->fk_column ?? $meta->COLUMN_NAME ?? '');
+
+            if ($childTable === '' || $fkColumn === '' || $childTable === $parentTable) {
+                continue;
+            }
+
+            $rows = $conn->table($childTable)->where($fkColumn, $parentId)->get()->toArray();
+            if (! empty($rows)) {
+                $result[$childTable] = ['column' => $fkColumn, 'rows' => $rows];
+            }
+        }
+
+        return $result;
     }
 }
