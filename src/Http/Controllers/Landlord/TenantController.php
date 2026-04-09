@@ -451,6 +451,7 @@ class TenantController extends LandlordController
             $model,
             true
         );
+        $manager->syncTenantPermissions($model, $database);
         $manager->createTenantConfiguration($model);
     }
 
@@ -468,6 +469,7 @@ class TenantController extends LandlordController
             $manager->ensureDatabaseAndRunMigrations($database, $this->tenantMigrationPaths());
             // Sincroniza metadados garantindo id canônico.
             $manager->syncTenantRecordToTenantDatabase($model, $database, true);
+            $manager->syncTenantPermissions($model, $database);
             $manager->createTenantConfiguration($model);
         }
 

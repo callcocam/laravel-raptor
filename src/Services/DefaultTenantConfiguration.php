@@ -107,10 +107,8 @@ class DefaultTenantConfiguration implements TenantConfigurationContract
     protected function ensurePermissionsExist(string $tenantConnection): void
     {
         try {
-            $tenantDirectories = config('raptor.route_injector.contexts.tenant', []);
-            PermissionGenerator::generate($tenantDirectories)
-                ->forConnection($tenantConnection)
-                ->save(false);
+            app(PermissionCatalogService::class)
+                ->syncPermissionsForConnection($tenantConnection, 'tenant', false);
         } catch (\Throwable $e) {
             Log::warning('DefaultTenantConfiguration: falha ao garantir permissões.', [
                 'error' => $e->getMessage(),

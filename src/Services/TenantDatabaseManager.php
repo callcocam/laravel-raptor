@@ -388,6 +388,33 @@ class TenantDatabaseManager
     }
 
     /**
+     * Sincroniza permissões do contexto tenant no banco do tenant.
+     *
+     * Não remove permissões extras; apenas cria faltantes e normaliza existentes.
+     *
+     * @return array{expected:int, created:int, updated:int}
+     */
+    public function syncTenantPermissions(Model $tenant, ?string $database = null): array
+    {
+        $targetDatabase = $this->resolveTargetDatabase($tenant, $database);
+        if (empty($targetDatabase)) {
+            return [
+                'expected' => 0,
+                'created' => 0,
+                'updated' => 0,
+            ];
+        }
+
+        $this->setupConnection($targetDatabase);
+
+        return app(PermissionCatalogService::class)->syncPermissionsForConnection(
+            $this->defaultConnection,
+            'tenant',
+            false
+        );
+    }
+
+    /**
      * Verifica se o banco da conexão default (tenant) está vazio (sem users, roles ou permissions).
      * Em erro (ex.: tabelas ainda não existem), considera vazio para rodar a configuração.
      */
