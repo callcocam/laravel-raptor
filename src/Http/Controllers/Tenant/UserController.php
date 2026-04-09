@@ -161,11 +161,10 @@ class UserController extends TenantController
             return;
         }
 
-        $tenant = app('current.tenant');
         $userModel = config('raptor.shinobi.models.user', \App\Models\User::class);
-        $count = $userModel::where('tenant_id', $tenant->id)->withoutTrashed()->count();
+        $roleIds = (array) $request->input('roles', []);
 
-        app(\App\Services\TenantLimitService::class)->enforce('max_users', $count, 'usuários');
+        app(\App\Services\TenantLimitService::class)->enforceByRoles($roleIds, $userModel);
     }
 
     /**

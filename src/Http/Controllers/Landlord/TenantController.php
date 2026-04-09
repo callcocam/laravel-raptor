@@ -339,20 +339,25 @@ class TenantController extends LandlordController
                         ->label('Limites de Cadastro')
                         ->nested()
                         ->fields([
-                            TextField::make('max_users')
-                                ->label('Máx. Usuários')
+                            TextField::make('max_admins')
+                                ->label('Máx. Administradores')
                                 ->placeholder('0 = sem limite')
-                                ->columnSpan('4'),
+                                ->columnSpan('3'),
+
+                            TextField::make('max_users')
+                                ->label('Máx. Usuários Gerais')
+                                ->placeholder('0 = sem limite')
+                                ->columnSpan('3'),
 
                             TextField::make('max_clients')
                                 ->label('Máx. Clientes')
                                 ->placeholder('0 = sem limite')
-                                ->columnSpan('4'),
+                                ->columnSpan('3'),
 
                             TextField::make('max_stores')
                                 ->label('Máx. Lojas')
                                 ->placeholder('0 = sem limite')
-                                ->columnSpan('4'),
+                                ->columnSpan('3'),
                         ])
                         ->placeholder('Limites de cadastro por recurso (0 ou vazio = sem limite)')
                         ->columnSpanFull(),
