@@ -30,6 +30,9 @@ use Illuminate\Http\Request;
 
 class TenantController extends LandlordController
 {
+    protected ?string $previousTenantDatabase = null;
+    protected ?string $previousTenantSlug = null;
+
     /**
      * Define o model que será usado pelo controller
      */
@@ -331,6 +334,38 @@ class TenantController extends LandlordController
                         ])
                         ->placeholder('Configurações de tema')
                         ->columnSpanFull(),
+
+                    SectionField::make('limits')
+                        ->label('Limites de Cadastro')
+                        ->fields([
+                            TextField::make('max_users')
+                                ->label('Máx. Usuários')
+                                ->placeholder('0 = sem limite')
+                                ->columnSpan('4'),
+
+                            TextField::make('max_clients')
+                                ->label('Máx. Clientes')
+                                ->placeholder('0 = sem limite')
+                                ->columnSpan('4'),
+
+                            TextField::make('max_stores')
+                                ->label('Máx. Lojas')
+                                ->placeholder('0 = sem limite')
+                                ->columnSpan('4'),
+                        ])
+                        ->placeholder('Limites de cadastro por recurso (0 ou vazio = sem limite)')
+                        ->columnSpanFull(),
+
+                    SectionField::make('features')
+                        ->label('Funcionalidades')
+                        ->fields([
+                            CheckboxField::make('single_session')
+                                ->label('Login Único — derrubar sessão anterior ao fazer novo login')
+                                ->default(false)
+                                ->columnSpan('12'),
+                        ])
+                        ->placeholder('Controles de comportamento do tenant')
+                        ->columnSpanFull(),
                 ])
                 ->placeholder('Configurações gerais do inquilino')
                 ->columnSpanFull(),
@@ -347,6 +382,13 @@ class TenantController extends LandlordController
         return 'landlord';
     }
 
+    protected function beforeUpdate(Request $request, string $id): void
+    {
+        $model = $this->model()::findOrFail($id);
+        $this->previousTenantDatabase = $model->getAttribute('database');
+        $this->previousTenantSlug = $model->getAttribute('slug');
+    }
+
     protected function beforeDelete(string $id): void
     {
         $model = $this->model()::findOrFail($id);
@@ -360,8 +402,9 @@ class TenantController extends LandlordController
     {
         $model = $this->model()::withTrashed()->findOrFail($id);
         $database = $model->getAttribute('database');
-        if (! empty($database)) {
-            app(TenantDatabaseManager::class)->dropDatabase($database);
+        $manager = app(TenantDatabaseManager::class);
+        if (! empty($database) && $manager->isDedicatedTenantDatabase($database)) {
+            $manager->dropDatabase($database);
         }
     }
 
@@ -384,28 +427,43 @@ class TenantController extends LandlordController
         if (empty($database)) {
             return;
         }
+
         $manager = app(TenantDatabaseManager::class);
-        // Cria o banco (se não existir), roda migrations e copia o registro do tenant (apenas se não existir)
+        if (! $manager->isDedicatedTenantDatabase($database)) {
+            return;
+        }
+
+        // Cria o banco (se não existir), roda migrations e sincroniza o tenant com id canônico.
         $manager->ensureDatabaseAndRunMigrations(
             $database,
             $this->tenantMigrationPaths(),
-            $model
+            $model,
+            true
         );
         $manager->createTenantConfiguration($model);
     }
 
     protected function afterUpdate(Request $request, $model): void
     {
-        $database = $model->getAttribute('database');
-        if (empty($database)) {
-            return;
-        }
         $manager = app(TenantDatabaseManager::class);
-        // Roda apenas as migrations pendentes — nunca recria o banco nem sobrescreve dados
-        $manager->ensureDatabaseAndRunMigrations($database, $this->tenantMigrationPaths());
-        // Sincroniza os metadados do tenant sem alterar o id (preserva FKs)
-        $manager->syncTenantRecordToTenantDatabase($model);
-        $manager->createTenantConfiguration($model);
+        $previousDatabase = $this->previousTenantDatabase;
+        $previousSlug = $this->previousTenantSlug;
+        $this->previousTenantDatabase = null;
+        $this->previousTenantSlug = null;
+
+        $database = $model->getAttribute('database');
+        if (! empty($database) && $manager->isDedicatedTenantDatabase($database)) {
+            // Roda apenas as migrations pendentes no banco dedicado atual.
+            $manager->ensureDatabaseAndRunMigrations($database, $this->tenantMigrationPaths());
+            // Sincroniza metadados garantindo id canônico.
+            $manager->syncTenantRecordToTenantDatabase($model, $database, true);
+            $manager->createTenantConfiguration($model);
+        }
+
+        $databaseChanged = $previousDatabase !== null && $previousDatabase !== $database;
+        if ($databaseChanged && $manager->isDedicatedTenantDatabase($previousDatabase)) {
+            $manager->deleteTenantRecordFromDatabase($model, $previousDatabase, $previousSlug);
+        }
     }
 
     protected function afterDelete(string $id, $model): void
@@ -420,7 +478,11 @@ class TenantController extends LandlordController
             return;
         }
         $manager = app(TenantDatabaseManager::class);
+        if (! $manager->isDedicatedTenantDatabase($database)) {
+            return;
+        }
+
         $manager->ensureDatabaseAndRunMigrations($database, $this->tenantMigrationPaths());
-        $manager->syncTenantRecordToTenantDatabase($model);
+        $manager->syncTenantRecordToTenantDatabase($model, $database, true);
     }
 }

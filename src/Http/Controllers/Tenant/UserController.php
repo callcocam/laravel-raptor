@@ -155,6 +155,19 @@ class UserController extends TenantController
         ]);
     }
 
+    protected function beforeCreate(\Illuminate\Http\Request $request): void
+    {
+        if (! app()->bound('current.tenant') || ! class_exists(\App\Services\TenantLimitService::class)) {
+            return;
+        }
+
+        $tenant = app('current.tenant');
+        $userModel = config('raptor.shinobi.models.user', \App\Models\User::class);
+        $count = $userModel::where('tenant_id', $tenant->id)->withoutTrashed()->count();
+
+        app(\App\Services\TenantLimitService::class)->enforce('max_users', $count, 'usuários');
+    }
+
     /**
      * Define o resource path para as views
      */

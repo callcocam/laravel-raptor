@@ -109,7 +109,7 @@ trait HasTranslations
     protected function getTenantId(): ?string
     {
         // Pode ser sobrescrito nos controllers
-        return request()->header('X-Tenant-Id') ?? session('tenant_id');
+        return request()->header('X-Tenant-Id') ?? session('tenant_id', app('tenant')?->id);
     }
 
     /**

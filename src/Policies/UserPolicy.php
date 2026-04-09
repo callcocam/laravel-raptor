@@ -15,6 +15,23 @@ class UserPolicy extends AbstractPolicy
 {
     protected ?string $permission = 'users';
 
+    public function create(Authorizable $user): bool
+    {
+        if (! parent::create($user)) {
+            return false;
+        }
+
+        if (! app()->bound('current.tenant') || ! class_exists(\App\Services\TenantLimitService::class)) {
+            return true;
+        }
+
+        $tenant = app('current.tenant');
+        $userModel = config('raptor.shinobi.models.user', \App\Models\User::class);
+        $count = $userModel::where('tenant_id', $tenant->id)->withoutTrashed()->count();
+
+        return ! app(\App\Services\TenantLimitService::class)->hasReachedLimit('max_users', $count);
+    }
+
     /**
      * Determine whether the user can permanently delete the model.
      */

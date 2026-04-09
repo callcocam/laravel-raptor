@@ -47,6 +47,7 @@ class TenantResolver implements TenantResolverInterface
 
         $tenant = $this->detectTenant($request);
         $this->resolved = true;
+ 
 
         $this->tenant = $tenant;
         if ($tenant === null) {
@@ -69,7 +70,7 @@ class TenantResolver implements TenantResolverInterface
 
         // tenant_domains no banco do tenant: complemento (domainable)
         $domain = str($request->getHost())->replace('www.', '')->toString();
-        $domainData = $this->findByTenantDomains($domain);
+        $domainData = $this->findByTenantDomains($domain); 
 
         $this->storeTenantContext($tenant, $domainData);
 

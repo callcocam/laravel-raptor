@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Services;
 
 use Callcocam\LaravelRaptor\Support\ResolvedTenantConfig;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
@@ -29,6 +30,28 @@ class TenantDatabaseManager
     public function getDefaultDatabaseName(): string
     {
         return (string) config("database.connections.{$this->defaultConnection}.database");
+    }
+
+    /**
+     * Retorna o nome do banco da conexão landlord (banco principal/canônico).
+     */
+    public function getLandlordDatabaseName(): string
+    {
+        $landlordConnection = config('raptor.database.landlord_connection_name', 'landlord');
+
+        return (string) config("database.connections.{$landlordConnection}.database");
+    }
+
+    /**
+     * Retorna se o banco informado é dedicado (diferente do banco principal).
+     */
+    public function isDedicatedTenantDatabase(?string $database): bool
+    {
+        if (empty($database)) {
+            return false;
+        }
+
+        return $database !== $this->getLandlordDatabaseName();
     }
 
     /**
@@ -129,14 +152,19 @@ class TenantDatabaseManager
     }
 
     /**
-     * Garante que o banco existe, aponta a default para ele, roda as migrations e insere o tenant.
-     * Ordem: 1) verificar/criar banco (via conexão landlord) 2) trocar default para o banco 3) rodar migrations 4) inserir tenant.
+     * Garante que o banco existe, aponta a default para ele, roda as migrations e sincroniza o tenant.
+     * Ordem: 1) verificar/criar banco (via conexão landlord) 2) trocar default para o banco 3) rodar migrations 4) sincronizar tenant.
      *
      * @param  array<int, string>  $migrationPaths  Pastas de migrations (ex: ['database/migrations/', 'database/migrations/tenant/'])
-     * @param  Model|null  $tenant  Se informado, copia os dados do tenant para a nova base; se null, só roda as migrations
+     * @param  Model|null  $tenant  Se informado, sincroniza os dados do tenant para a nova base; se null, só roda as migrations
+     * @param  bool  $enforceExactId  Se true, garante cópia com mesmo id canônico do landlord
      */
-    public function ensureDatabaseAndRunMigrations(string $database, array $migrationPaths, ?Model $tenant = null): void
-    {
+    public function ensureDatabaseAndRunMigrations(
+        string $database,
+        array $migrationPaths,
+        ?Model $tenant = null,
+        bool $enforceExactId = false
+    ): void {
         if (empty($database)) {
             return;
         }
@@ -151,7 +179,7 @@ class TenantDatabaseManager
             Artisan::call('migrate', array_merge($options, ['--path' => $path]));
         }
         if ($tenant !== null) {
-            $this->copyTenantRecordToTenantDatabase($tenant);
+            $this->copyTenantRecordToTenantDatabase($tenant, $database, $enforceExactId);
         }
     }
 
@@ -164,60 +192,151 @@ class TenantDatabaseManager
     }
 
     /**
-     * Insere uma cópia do registro na tabela tenants do banco do tenant (apenas se não existir).
-     * Usado no fluxo de criação — nunca sobrescreve um registro existente.
-     * Considera existente qualquer registro com mesmo id OU mesmo slug.
+     * Insere/sincroniza o registro na tabela tenants do banco do tenant.
+     * No modo estrito, força alinhamento do id canônico em caso de conflito por slug.
      */
-    public function copyTenantRecordToTenantDatabase(Model $tenant): void
-    {
-        $database = $tenant->getAttribute('database') ?: $this->getDefaultDatabaseName();
-        $this->setupConnection($database);
-        $table = $this->tenantsTable();
-
-        $alreadyExists = DB::connection($this->defaultConnection)
-            ->table($table)
-            ->where('id', $tenant->getKey())
-            ->orWhere('slug', $tenant->getAttribute('slug'))
-            ->exists();
-
-        if ($alreadyExists) {
-            return;
-        }
-
-        $row = $this->tenantModelToRow($tenant);
-        DB::connection($this->defaultConnection)->table($table)->insert($row);
+    public function copyTenantRecordToTenantDatabase(
+        Model $tenant,
+        ?string $database = null,
+        bool $enforceExactId = false
+    ): void {
+        $this->syncTenantRecordToTenantDatabase($tenant, $database, $enforceExactId);
     }
 
     /**
-     * Sincroniza os dados do tenant no banco do tenant (apenas campos não-PK).
-     * Usado no fluxo de update/restore — nunca altera o id para não quebrar FKs.
-     * Busca o registro existente por id (prioritário) ou por slug (fallback para inconsistência).
-     * Se não existir nenhum registro, insere o registro completo (banco recém-criado).
+     * Sincroniza os dados do tenant no banco do tenant.
+     *
+     * - Se existir por id: atualiza campos não-PK.
+     * - Se existir por slug com id diferente:
+     *   - modo estrito: tenta realinhar o id para o canônico do landlord.
+     *   - modo normal: atualiza campos não-PK sem trocar id.
+     * - Se não existir: insere registro completo.
+     *
+     * @param  string|null  $database  Banco alvo para sincronização (quando null, usa tenant.database)
+     * @param  bool  $enforceExactId  Se true, exige id idêntico ao landlord (lança exceção em falha)
      */
-    public function syncTenantRecordToTenantDatabase(Model $tenant): void
-    {
-        $database = $tenant->getAttribute('database') ?: $this->getDefaultDatabaseName();
-        $this->setupConnection($database);
+    public function syncTenantRecordToTenantDatabase(
+        Model $tenant,
+        ?string $database = null,
+        bool $enforceExactId = false
+    ): void {
+        $targetDatabase = $this->resolveTargetDatabase($tenant, $database);
+        if (empty($targetDatabase)) {
+            return;
+        }
+
+        $this->setupConnection($targetDatabase);
+
         $table = $this->tenantsTable();
         $conn = DB::connection($this->defaultConnection);
         $row = $this->tenantModelToRow($tenant);
-        $updateRow = collect($row)->except($tenant->getKeyName())->toArray();
+        $keyName = $tenant->getKeyName();
+        $tenantId = (string) $tenant->getKey();
+        $slug = (string) ($tenant->getAttribute('slug') ?? '');
+        $updateRow = collect($row)->except($keyName)->toArray();
 
-        if ($conn->table($table)->where('id', $tenant->getKey())->exists()) {
-            $conn->table($table)->where('id', $tenant->getKey())->update($updateRow);
-
-            return;
-        }
-
-        if ($conn->table($table)->where('slug', $tenant->getAttribute('slug'))->exists()) {
-            // Registro existe com id diferente (inconsistência de dados) — atualiza campos não-PK apenas
-            $conn->table($table)->where('slug', $tenant->getAttribute('slug'))->update($updateRow);
+        if ($conn->table($table)->where($keyName, $tenantId)->exists()) {
+            $conn->table($table)->where($keyName, $tenantId)->update($updateRow);
 
             return;
         }
 
-        // Banco recém-criado sem registro de tenant — insere completo
+        if ($slug !== '' && $conn->table($table)->where('slug', $slug)->exists()) {
+            $conflictingId = (string) $conn->table($table)
+                ->where('slug', $slug)
+                ->value($keyName);
+
+            if ($conflictingId !== '' && $conflictingId !== $tenantId && $enforceExactId) {
+                $this->realignTenantIdBySlug(
+                    $conn,
+                    $table,
+                    $keyName,
+                    $slug,
+                    $tenantId,
+                    $updateRow,
+                    $targetDatabase
+                );
+
+                return;
+            }
+
+            $conn->table($table)->where('slug', $slug)->update($updateRow);
+
+            return;
+        }
+
         $conn->table($table)->insert($row);
+    }
+
+    /**
+     * Retorna o diagnóstico de identidade de um tenant em um banco específico.
+     *
+     * @return array{database:string, canonical_id:string, slug:string, exists_by_id:bool, exists_by_slug:bool, slug_conflict_id:?string}
+     */
+    public function inspectTenantIdentity(Model $tenant, ?string $database = null): array
+    {
+        $targetDatabase = $this->resolveTargetDatabase($tenant, $database);
+        if (empty($targetDatabase)) {
+            return [
+                'database' => '',
+                'canonical_id' => (string) $tenant->getKey(),
+                'slug' => (string) ($tenant->getAttribute('slug') ?? ''),
+                'exists_by_id' => false,
+                'exists_by_slug' => false,
+                'slug_conflict_id' => null,
+            ];
+        }
+
+        $this->setupConnection($targetDatabase);
+
+        $table = $this->tenantsTable();
+        $conn = DB::connection($this->defaultConnection);
+        $keyName = $tenant->getKeyName();
+        $tenantId = (string) $tenant->getKey();
+        $slug = (string) ($tenant->getAttribute('slug') ?? '');
+
+        $existsById = $conn->table($table)->where($keyName, $tenantId)->exists();
+        $existsBySlug = $slug !== '' && $conn->table($table)->where('slug', $slug)->exists();
+
+        $slugConflictId = null;
+        if (! $existsById && $existsBySlug) {
+            $foundId = $conn->table($table)->where('slug', $slug)->value($keyName);
+            if ($foundId !== null && (string) $foundId !== $tenantId) {
+                $slugConflictId = (string) $foundId;
+            }
+        }
+
+        return [
+            'database' => $targetDatabase,
+            'canonical_id' => $tenantId,
+            'slug' => $slug,
+            'exists_by_id' => $existsById,
+            'exists_by_slug' => $existsBySlug,
+            'slug_conflict_id' => $slugConflictId,
+        ];
+    }
+
+    /**
+     * Remove o registro da tabela tenants de um banco específico (por id/slug).
+     */
+    public function deleteTenantRecordFromDatabase(Model $tenant, string $database, ?string $slug = null): void
+    {
+        if (empty($database)) {
+            return;
+        }
+
+        $this->setupConnection($database);
+        $table = $this->tenantsTable();
+        $query = DB::connection($this->defaultConnection)
+            ->table($table)
+            ->where($tenant->getKeyName(), $tenant->getKey());
+
+        $slugToMatch = $slug ?? $tenant->getAttribute('slug');
+        if (! empty($slugToMatch)) {
+            $query->orWhere('slug', (string) $slugToMatch);
+        }
+
+        $query->delete();
     }
 
     /**
@@ -226,12 +345,11 @@ class TenantDatabaseManager
     public function deleteTenantRecordFromTenantDatabase(Model $tenant): void
     {
         $database = $tenant->getAttribute('database');
-        if (empty($database)) {
+        if (! $this->isDedicatedTenantDatabase($database)) {
             return;
         }
-        $this->setupConnection($database);
-        $table = $this->tenantsTable();
-        DB::connection($this->defaultConnection)->table($table)->where('id', $tenant->getKey())->delete();
+
+        $this->deleteTenantRecordFromDatabase($tenant, (string) $database);
     }
 
     /**
@@ -314,5 +432,86 @@ class TenantDatabaseManager
         }
 
         return $out;
+    }
+
+    /**
+     * Resolve o banco alvo para operações de sincronização.
+     */
+    protected function resolveTargetDatabase(Model $tenant, ?string $database = null): string
+    {
+        if (! empty($database)) {
+            return (string) $database;
+        }
+
+        $tenantDatabase = $tenant->getAttribute('database');
+        if (! empty($tenantDatabase)) {
+            return (string) $tenantDatabase;
+        }
+
+        return $this->getDefaultDatabaseName();
+    }
+
+    /**
+     * Realinha o id do registro existente no banco do tenant para o id canônico do landlord.
+     *
+     * @param  array<string, mixed>  $updateRow
+     */
+    protected function realignTenantIdBySlug(
+        ConnectionInterface $conn,
+        string $table,
+        string $keyName,
+        string $slug,
+        string $targetId,
+        array $updateRow,
+        string $database
+    ): void {
+        $existingId = (string) $conn->table($table)
+            ->where('slug', $slug)
+            ->value($keyName);
+
+        if ($existingId === '' || $existingId === $targetId) {
+            $conn->table($table)->where('slug', $slug)->update($updateRow);
+
+            return;
+        }
+
+        if ($conn->table($table)->where($keyName, $targetId)->exists()) {
+            throw new \RuntimeException(sprintf(
+                'Conflito de identidade do tenant no banco "%s": já existe registro com id "%s" e slug "%s" associado a id "%s".',
+                $database,
+                $targetId,
+                $slug,
+                $existingId
+            ));
+        }
+
+        $conn->beginTransaction();
+        try {
+            $affected = $conn->table($table)
+                ->where($keyName, $existingId)
+                ->where('slug', $slug)
+                ->update([$keyName => $targetId]);
+
+            if ($affected !== 1) {
+                throw new \RuntimeException(sprintf(
+                    'Falha ao realinhar id do tenant no banco "%s" (slug "%s").',
+                    $database,
+                    $slug
+                ));
+            }
+
+            $conn->table($table)->where($keyName, $targetId)->update($updateRow);
+            $conn->commit();
+        } catch (\Throwable $e) {
+            $conn->rollBack();
+
+            throw new \RuntimeException(sprintf(
+                'Falha ao forçar identidade canônica do tenant no banco "%s" para id "%s" (slug "%s"): %s',
+                $database,
+                $targetId,
+                $slug,
+                $e->getMessage()
+            ), 0, $e);
+        }
     }
 }
