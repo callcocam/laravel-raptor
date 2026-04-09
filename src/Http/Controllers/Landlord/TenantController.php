@@ -274,11 +274,11 @@ class TenantController extends LandlordController
 
             SectionField::make('settings')
                 ->label('Configurações (JSON)')
-                // ->collapsible(true) // Habilita accordion
-                // ->defaultOpen(true) // Inicia aberto
+                ->nested()
                 ->fields([
                     SectionField::make('theme')
                         ->label('Tema')
+                        ->nested()
                         ->fields([
                             SelectField::make('color')
                                 ->label('Cor do Tema')
@@ -337,6 +337,7 @@ class TenantController extends LandlordController
 
                     SectionField::make('limits')
                         ->label('Limites de Cadastro')
+                        ->nested()
                         ->fields([
                             TextField::make('max_users')
                                 ->label('Máx. Usuários')
@@ -358,9 +359,14 @@ class TenantController extends LandlordController
 
                     SectionField::make('features')
                         ->label('Funcionalidades')
+                        ->nested()
                         ->fields([
                             CheckboxField::make('single_session')
                                 ->label('Login Único — derrubar sessão anterior ao fazer novo login')
+                                ->default(false)
+                                ->columnSpan('12'),
+                            CheckboxField::make('use_workflow')
+                                ->label('Usar Workflow — habilitar módulo de workflow (Raptor Flow) para este tenant')
                                 ->default(false)
                                 ->columnSpan('12'),
                         ])
