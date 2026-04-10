@@ -62,7 +62,7 @@ class SocialiteController extends Controller
         $tenant = app()->bound('current.tenant') ? app('current.tenant') : null;
 
         return $userModel::firstOrCreate(
-            ['email' => $socialUser->getEmail()],
+            ['email' => $socialUser->getEmail(), 'tenant_id' => $tenant?->id],
             [
                 'name'              => $socialUser->getName() ?? $socialUser->getNickname() ?? 'Usuário',
                 'email_verified_at' => now(),
