@@ -61,6 +61,8 @@ class SocialiteController extends Controller
         $userModel = config('raptor.shinobi.models.user', \App\Models\User::class);
         $tenant = app()->bound('current.tenant') ? app('current.tenant') : null;
 
+        
+
         return $userModel::firstOrCreate(
             ['email' => $socialUser->getEmail(), 'tenant_id' => $tenant?->id],
             [
