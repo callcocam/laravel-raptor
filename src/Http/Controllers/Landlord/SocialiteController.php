@@ -14,7 +14,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Fortify\Features;
+use Illuminate\Support\Facades\Log;
+use Laravel\Fortify\Features; 
 
 class SocialiteController extends Controller
 {
@@ -40,6 +41,10 @@ class SocialiteController extends Controller
         try {
             $socialUser = $this->service->handleCallback($provider);
         } catch (\Throwable $e) {
+            Log::error('Erro no callback do login social', [
+                'provider' => $provider,
+                'error' => $e->getMessage(),
+            ]);
             return redirect()->route('login')
                 ->withErrors(['email' => 'Falha ao autenticar com '.$provider.'. Tente novamente.']);
         }
@@ -62,6 +67,10 @@ class SocialiteController extends Controller
         $userModel = config('raptor.shinobi.models.user', \App\Models\User::class);
         $tenant = app()->bound('current.tenant') ? app('current.tenant') : null;
 
+        Log::info('Tentando encontrar ou criar usuário para login social', [
+            'email' => $socialUser->getEmail(),
+            'tenant_id' => $tenant?->id,
+        ]);
         $existing = $userModel::where('email', $socialUser->getEmail())
             ->where('tenant_id', $tenant?->id)
             ->first();
