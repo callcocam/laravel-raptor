@@ -11,4 +11,18 @@
  * Use para rotas públicas do landlord.
  */
 
-// Adicione aqui rotas guest/públicas do landlord se necessário
+use Callcocam\LaravelRaptor\Http\Controllers\Landlord\SocialiteController;
+
+/*
+|--------------------------------------------------------------------------
+| Rotas de Login Social (OAuth)
+|--------------------------------------------------------------------------
+|
+| Rotas públicas para o fluxo OAuth via Laravel Socialite.
+| O provider é validado contra a lista de drivers suportados.
+|
+*/
+Route::prefix('auth/social')->name('social.')->group(function () {
+    Route::get('{provider}/redirect', [SocialiteController::class, 'redirect'])->name('redirect');
+    Route::get('{provider}/callback', [SocialiteController::class, 'callback'])->name('callback');
+});

@@ -9,6 +9,7 @@
 namespace Callcocam\LaravelRaptor\Http\Middleware;
 
 use Callcocam\LaravelRaptor\Services\NavigationService;
+use Callcocam\LaravelRaptor\Services\SocialiteService;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,6 +23,19 @@ class ShareRaptorData
      */
     public function handle(Request $request, Closure $next)
     {
+        // Compartilha providers de login social disponíveis para o tenant atual (acessível em todas as páginas)
+        Inertia::share([
+            'socialProviders' => function () {
+                try {
+                    $tenant = app()->bound('current.tenant') ? app('current.tenant') : null;
+
+                    return app(SocialiteService::class)->activeProvidersForTenant($tenant)->values();
+                } catch (\Throwable) {
+                    return [];
+                }
+            },
+        ]);
+
         // Compartilha dados do Raptor apenas quando há usuário autenticado
         Inertia::share([
             'raptor' => function () use ($request) {

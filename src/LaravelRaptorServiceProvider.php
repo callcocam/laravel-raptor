@@ -29,11 +29,13 @@ use Callcocam\LaravelRaptor\Models\Auth\User;
 use Callcocam\LaravelRaptor\Models\Inspiration;
 use Callcocam\LaravelRaptor\Models\Permission;
 use Callcocam\LaravelRaptor\Models\Role;
+use Callcocam\LaravelRaptor\Models\SocialProvider;
 use Callcocam\LaravelRaptor\Models\Tenant;
 use Callcocam\LaravelRaptor\Notifications\Channels\TenantAwareDatabaseChannel;
 use Callcocam\LaravelRaptor\Policies\InspirationPolicy;
 use Callcocam\LaravelRaptor\Policies\PermissionPolicy;
 use Callcocam\LaravelRaptor\Policies\RolePolicy;
+use Callcocam\LaravelRaptor\Policies\SocialProviderPolicy;
 use Callcocam\LaravelRaptor\Policies\TenantPolicy;
 use Callcocam\LaravelRaptor\Policies\UserPolicy;
 use Callcocam\LaravelRaptor\Services\DomainDetectionService;
@@ -92,6 +94,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
                 'create_translation_groups_table',
                 'create_translation_overrides_table',
                 'create_inspirations_table',
+
+                // Provedores de login social por tenant
+                'create_social_providers_table',
             ])
             ->hasCommands([
                 LaravelRaptorCommand::class,
@@ -325,5 +330,6 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         Gate::policy(Tenant::class, TenantPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Inspiration::class, InspirationPolicy::class);
+        Gate::policy(SocialProvider::class, SocialProviderPolicy::class);
     }
 }
