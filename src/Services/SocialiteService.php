@@ -72,7 +72,7 @@ class SocialiteService
     private function configureSocialite(string $provider, SocialProvider $config): void
     {
         $redirect = $config->redirect_uri
-            ?? route('social.callback', ['provider' => $provider]);
+            ?? url('/auth/social/'.$provider.'/callback');
 
         config([
             "services.{$provider}" => [
