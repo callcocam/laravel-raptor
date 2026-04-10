@@ -340,12 +340,12 @@ class TenantController extends LandlordController
                         ->nested()
                         ->fields([
                             TextField::make('max_admins')
-                                ->label('Máx. Administradores')
+                                ->label('Máx. Editores')
                                 ->placeholder('0 = sem limite')
                                 ->columnSpan('3'),
 
                             TextField::make('max_users')
-                                ->label('Máx. Usuários Gerais')
+                                ->label('Máx. Usuários Executores')
                                 ->placeholder('0 = sem limite')
                                 ->columnSpan('3'),
 
