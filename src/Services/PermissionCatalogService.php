@@ -38,6 +38,17 @@ class PermissionCatalogService
         'layer',
         'layers',
         'plannerates',
+        'horizon',
+        'analysis',
+        'execution',
+        'verification',
+        'cloudflare',
+        'api',
+        'login',
+        'logout',
+        'password',
+        'register',
+        'email', 
     ];
 
     /**
