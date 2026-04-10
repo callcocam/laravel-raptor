@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Laravel\Fortify\Features;
 
 class SocialiteController extends Controller
 {
@@ -61,17 +62,25 @@ class SocialiteController extends Controller
         $userModel = config('raptor.shinobi.models.user', \App\Models\User::class);
         $tenant = app()->bound('current.tenant') ? app('current.tenant') : null;
 
-        
+        $existing = $userModel::where('email', $socialUser->getEmail())
+            ->where('tenant_id', $tenant?->id)
+            ->first();
 
-        return $userModel::firstOrCreate(
-            ['email' => $socialUser->getEmail(), 'tenant_id' => $tenant?->id],
-            [
-                'name'              => $socialUser->getName() ?? $socialUser->getNickname() ?? 'Usuário',
-                'email_verified_at' => now(),
-                'password'          => bcrypt(str()->random(32)),
-                'tenant_id'         => $tenant?->id,
-                'status'            => 'published',
-            ]
-        );
+        if ($existing) {
+            return $existing;
+        }
+
+        if (! Features::enabled(Features::registration())) {
+            abort(403, 'Cadastro de novos usuários está desabilitado. Entre em contato com o administrador.');
+        }
+
+        return $userModel::create([
+            'email'             => $socialUser->getEmail(),
+            'name'              => $socialUser->getName() ?? $socialUser->getNickname() ?? 'Usuário',
+            'email_verified_at' => now(),
+            'password'          => bcrypt(str()->random(32)),
+            'tenant_id'         => $tenant?->id,
+            'status'            => 'published',
+        ]);
     }
 }
