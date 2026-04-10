@@ -66,6 +66,17 @@ class Tenant extends AbstractModel
     }
 
     /**
+     * Relacionamento: providers de login social ativos do tenant.
+     * Expõe apenas campos não-sensíveis — nunca client_id ou client_secret.
+     */
+    public function activeSocialProviders(): HasMany
+    {
+        return $this->hasMany(SocialProvider::class, 'tenant_id')
+            ->where('status', 'published')
+            ->select(['id', 'tenant_id', 'provider', 'name']);
+    }
+
+    /**
      * Relacionamento: Tenant tem muitos domínios
      */
     public function domains(): HasMany

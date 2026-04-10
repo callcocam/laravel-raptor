@@ -54,7 +54,7 @@ class SocialiteService
             ->map(fn (SocialProvider $p) => [
                 'provider' => $p->provider,
                 'label'    => $p->name,
-                'url'      => route('social.redirect', $p->provider),
+                'url'      => url('/auth/social/'.$p->provider.'/redirect'),
                 'icon'     => $p->provider,
             ]);
     }

@@ -9,7 +9,6 @@
 namespace Callcocam\LaravelRaptor\Http\Middleware;
 
 use Callcocam\LaravelRaptor\Services\NavigationService;
-use Callcocam\LaravelRaptor\Services\SocialiteService;
 use Closure;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,7 +28,19 @@ class ShareRaptorData
                 try {
                     $tenant = app()->bound('current.tenant') ? app('current.tenant') : null;
 
-                    return app(SocialiteService::class)->activeProvidersForTenant($tenant)->values();
+                    if (! $tenant) {
+                        return [];
+                    }
+
+                    return $tenant->activeSocialProviders()
+                        ->get()
+                        ->map(fn ($p) => [
+                            'provider' => $p->provider,
+                            'label'    => $p->name,
+                            'url'      => url('/auth/social/'.$p->provider.'/redirect'),
+                            'icon'     => $p->provider,
+                        ])
+                        ->values();
                 } catch (\Throwable) {
                     return [];
                 }
