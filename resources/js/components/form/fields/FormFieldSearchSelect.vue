@@ -6,15 +6,17 @@
     </FieldLabel>
 
     <div class="relative w-full" ref="containerRef">
-      <Button type="button" ref="triggerRef" variant="outline" role="combobox" :disabled="column.disabled"
+      <button type="button" ref="triggerRef" role="combobox" :disabled="column.disabled"
         :aria-expanded="open" :aria-invalid="hasError" :class="[
-          'w-full justify-between',
-          hasError ? 'border-destructive' : '',
-          !selectedOption && 'text-muted-foreground'
+          'flex h-9 w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm',
+          'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+          'disabled:cursor-not-allowed disabled:opacity-50',
+          hasError ? 'border-destructive' : 'border-input',
+          !selectedOption ? 'text-muted-foreground' : 'text-foreground',
         ]" @click="toggleOpen">
-        {{ selectedOption?.label || column.placeholder || 'Selecione...' }}
+        <span class="truncate">{{ selectedOption?.label || column.placeholder || 'Selecione...' }}</span>
         <ChevronsUpDownIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
-      </Button>
+      </button>
 
       <Teleport to="body">
         <Transition enter-active-class="transition ease-out duration-200" enter-from-class="opacity-0 scale-95"
@@ -26,8 +28,9 @@
             <div class="flex flex-col w-full">
               <!-- Campo de busca -->
               <div class="border-b px-3 py-2">
-                <Input ref="searchInput" v-model="searchQuery" type="text"
-                  :placeholder="column.searchPlaceholder || 'Buscar...'" class="h-9" autofocus :disabled="isSearching"
+                <input ref="searchInput" v-model="searchQuery" type="text"
+                  :placeholder="column.searchPlaceholder || 'Buscar...'" autofocus :disabled="isSearching"
+                  class="flex h-9 w-full rounded-sm bg-transparent px-2 py-1 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                   @keydown.enter.prevent="selectFirstOption" @keydown.escape="open = false" />
               </div>
 
@@ -71,8 +74,6 @@
 import { computed, ref, watch, nextTick } from 'vue'
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-vue-next'
 import { cn } from '~/lib/utils'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { useAutoComplete } from '../../../composables/useAutoComplete'
 import { onClickOutside } from '@vueuse/core'
@@ -128,7 +129,7 @@ const emit = defineEmits<{
 
 const open = ref(false)
 const searchQuery = ref('')
-const searchInput = ref<InstanceType<typeof Input> | null>(null)
+const searchInput = ref<HTMLInputElement | null>(null)
 const triggerRef = ref<HTMLButtonElement | null>(null)
 const containerRef = ref<HTMLElement | null>(null)
 const dropdownRef = ref<HTMLDivElement | null>(null)
@@ -267,10 +268,7 @@ function selectFirstOption() {
 }
 
 onClickOutside(dropdownRef, (event) => {
-  if (triggerRef.value) {
-    const triggerEl = (triggerRef.value as any).$el as HTMLElement || triggerRef.value
-    if (triggerEl?.contains?.(event.target as Node)) return
-  }
+  if (triggerRef.value?.contains?.(event.target as Node)) return
   open.value = false
 }, { ignore: [containerRef] })
 
@@ -288,7 +286,7 @@ function performSearch(query: string) {
     onFinish: () => {
       isSearching.value = false
       nextTick(() => {
-        searchInput.value?.$el?.focus()
+        searchInput.value?.focus()
       })
     }
   }

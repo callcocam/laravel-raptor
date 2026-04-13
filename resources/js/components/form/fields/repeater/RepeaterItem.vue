@@ -49,52 +49,44 @@
       <!-- Actions -->
       <div class="flex items-center gap-2">
         <!-- Move Up -->
-        <Button
+        <button
           v-if="orderable && index > 0"
           type="button"
-          variant="ghost"
-          size="icon"
-          class="h-7 w-7"
+          class="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           @click.stop="$emit('moveUp', index)"
         >
           <ChevronUp class="h-4 w-4" />
-        </Button>
+        </button>
 
         <!-- Move Down -->
-        <Button
+        <button
           v-if="orderable && !isLast"
           type="button"
-          variant="ghost"
-          size="icon"
-          class="h-7 w-7"
+          class="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           @click.stop="$emit('moveDown', index)"
         >
           <ChevronDown class="h-4 w-4" />
-        </Button>
+        </button>
 
         <!-- Duplicate -->
-        <Button
+        <button
           v-if="canDuplicate"
           type="button"
-          variant="ghost"
-          size="icon"
-          class="h-7 w-7"
+          class="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           @click.stop="$emit('duplicate', index)"
         >
           <Copy class="h-4 w-4" />
-        </Button>
+        </button>
 
         <!-- Remove -->
-        <Button
+        <button
           v-if="canRemove"
           type="button"
-          variant="ghost"
-          size="icon"
-          class="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+          class="inline-flex h-7 w-7 items-center justify-center rounded-md text-destructive hover:bg-destructive/10 transition-colors"
           @click.stop="$emit('remove', index)"
         >
           <Trash2 class="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </div>
 
@@ -119,7 +111,6 @@
 
 <script setup lang="ts">
 import { computed, ref, provide, toRef } from 'vue'
-import { Button } from '~/components/ui/button'
 import {
   ChevronDown,
   ChevronRight,

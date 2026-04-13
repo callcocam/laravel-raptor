@@ -16,7 +16,7 @@
     <!-- Input Group with Button -->
     <div class="flex gap-2">
       <div class="relative flex-1">
-        <Input
+        <input
           :id="column.name"
           :name="column.name"
           type="text"
@@ -24,12 +24,17 @@
           :required="column.required"
           :disabled="column.disabled || isLoading"
           :readonly="column.readonly"
-          :modelValue="internalCnpjValue || undefined"
-          @update:modelValue="updateValue"
+          :value="internalCnpjValue || undefined"
+          @input="updateValue(($event.target as HTMLInputElement).value)"
           @blur="handleBlur"
           :aria-invalid="hasError"
-          :class="hasError ? 'border-destructive' : ''"
           maxlength="18"
+          :class="[
+            'flex h-9 w-full rounded-md border bg-background px-3 py-2 text-sm',
+            'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-50',
+            hasError ? 'border-destructive' : 'border-input',
+          ]"
         />
         <div v-if="isLoading" class="absolute right-3 top-1/2 -translate-y-1/2">
           <svg
@@ -55,16 +60,14 @@
         </div>
       </div>
 
-      <Button
+      <button
         type="button"
-        variant="outline"
-        size="default"
         @click="searchCnpj"
         :disabled="!canSearch || isLoading"
-        class="shrink-0"
+        class="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
       >
-        <Search class="h-4 w-4 mr-2" /> 
-      </Button>
+        <Search class="h-4 w-4" />
+      </button>
     </div>
 
     <FieldDescription v-if="column.helpText">
@@ -78,8 +81,6 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Input } from '~/components/ui/input'
-import { Button } from '~/components/ui/button'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
 import { Search } from 'lucide-vue-next'
 import HintRenderer from '../HintRenderer.vue'

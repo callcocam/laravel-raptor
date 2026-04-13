@@ -11,12 +11,15 @@
       {{ emptyDescription }}
     </p>
     <div class="mt-4 flex justify-center items-center gap-x-2">
-      <Button v-if="showAddButton" type="button" variant="outline" size="sm" @click="$emit('add')">
-        <ActionIconBox variant="outline">
-          <Plus />
-        </ActionIconBox>
+      <button
+        v-if="showAddButton"
+        type="button"
+        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
+        @click="$emit('add')"
+      >
+        <Plus class="h-4 w-4" />
         {{ addButtonLabel }}
-      </Button>
+      </button>
       <template v-if="actions.length > 0">
         <ActionRenderer v-for="(action, index) in actions" :key="index" :action="action" :column="column" />
       </template>
@@ -26,8 +29,6 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Button } from '~/components/ui/button'
-import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { Plus, PackageOpen } from 'lucide-vue-next'
 import ActionRenderer from '~/components/actions/ActionRenderer.vue'
 

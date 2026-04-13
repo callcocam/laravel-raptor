@@ -25,11 +25,11 @@
             {{ column.helpText || column.hint || column.tooltip }}
           </p>
         </div>
-        <CollapsibleTrigger as-child>
-          <Button variant="ghost" size="sm" class="w-9 p-0">
+        <CollapsibleTrigger as-child v-slot="{ toggle }">
+          <button type="button" class="h-9 w-9 p-0 inline-flex items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors" @click="toggle">
             <ChevronsUpDown class="h-4 w-4" />
             <span class="sr-only">Toggle</span>
-          </Button>
+          </button>
         </CollapsibleTrigger>
       </div>
 
@@ -89,7 +89,6 @@
 
 <script setup lang="ts">
 import { computed, inject, ref, watch, type ComputedRef } from 'vue'
-import { Button } from '~/components/ui/button'
 import { ChevronsUpDown } from 'lucide-vue-next'
 import {
   Collapsible,

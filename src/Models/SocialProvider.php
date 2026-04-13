@@ -34,7 +34,7 @@ class SocialProvider extends AbstractModel
      */
     public static function availableProviders(): array
     {
-        return ['google', 'facebook', 'github', 'twitter', 'linkedin', 'microsoft'];
+        return ['google', 'facebook', 'github', 'twitter', 'linkedin', 'microsoft', 'azure'];
     }
 
     public function tenant(): BelongsTo

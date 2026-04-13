@@ -45,9 +45,11 @@ use Callcocam\LaravelRaptor\Support\Landlord\LandlordServiceProvider;
 use Callcocam\LaravelRaptor\Support\Shinobi\ShinobiServiceProvider;
 use Callcocam\LaravelRaptor\Traits\RequestMacrosTrait;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Route;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -179,6 +181,9 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
 
         // Registra as policies
         $this->registerPolicies();
+
+        // Registra drivers Socialite de terceiros (Microsoft, Azure AD)
+        $this->registerSocialiteDrivers();
     }
 
     /**
@@ -331,5 +336,17 @@ class LaravelRaptorServiceProvider extends PackageServiceProvider
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Inspiration::class, InspirationPolicy::class);
         Gate::policy(SocialProvider::class, SocialProviderPolicy::class);
+    }
+
+    /**
+     * Registra drivers Socialite de terceiros via evento SocialiteWasCalled.
+     * Suporta: Microsoft (contas pessoais) e Azure AD / Microsoft Entra ID (corporativo).
+     */
+    protected function registerSocialiteDrivers(): void
+    {
+        Event::listen(SocialiteWasCalled::class, function (SocialiteWasCalled $event) {
+            $event->extendSocialite('microsoft', \SocialiteProviders\Microsoft\Provider::class);
+            $event->extendSocialite('azure', \SocialiteProviders\Azure\Provider::class);
+        });
     }
 }

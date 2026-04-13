@@ -16,15 +16,13 @@
       <div class="relative w-full max-w-md mx-auto rounded-lg overflow-hidden border-2 border-border">
         <img :src="previewUrl" :alt="selectedFiles[0]?.name || 'Preview'" class="w-full h-auto" />
         <div class="absolute top-2 right-2">
-          <Button
+          <button
             type="button"
-            variant="destructive"
-            size="icon"
-            class="h-8 w-8"
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-destructive text-white hover:bg-destructive/90 transition-colors"
             @click="removeFile(0)"
           >
             <X class="h-4 w-4" />
-          </Button>
+          </button>
         </div>
       </div>
       <p v-if="selectedFiles[0]" class="text-center text-sm text-muted-foreground mt-2">
@@ -77,25 +75,24 @@
       </div>
 
       <div v-if="allowUrlImport" class="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <Input
+        <input
           v-model="imageUrl"
           type="url"
           placeholder="Cole a URL da imagem (https://...)"
-          class="flex-1"
           :disabled="loadingUrl"
           autocomplete="off"
+          class="flex h-9 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50"
           @keydown.enter.prevent="handleDownloadFromUrl"
         />
-        <Button
+        <button
           type="button"
-          variant="secondary"
-          class="shrink-0"
           :disabled="!imageUrl.trim() || loadingUrl"
+          class="inline-flex h-9 shrink-0 items-center gap-2 rounded-md bg-secondary px-3 text-sm text-secondary-foreground hover:bg-secondary/80 disabled:opacity-50 transition-colors"
           @click="handleDownloadFromUrl"
         >
-          <Loader2 v-if="loadingUrl" class="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 v-if="loadingUrl" class="h-4 w-4 animate-spin" />
           Baixar da URL
-        </Button>
+        </button>
       </div>
     </div>
 
@@ -113,15 +110,13 @@
             <p class="text-xs text-muted-foreground">{{ formatFileSize(file.size) }}</p>
           </div>
         </div>
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          size="icon"
-          class="h-8 w-8 flex-shrink-0"
+          class="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
           @click="removeFile(index)"
         >
           <X class="h-4 w-4" />
-        </Button>
+        </button>
       </div>
     </div>
 
@@ -136,8 +131,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { Field, FieldLabel, FieldDescription, FieldError } from '~/components/ui/field'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
 import { Upload, FileIcon, X, Loader2 } from 'lucide-vue-next'
 
 interface FormColumn {

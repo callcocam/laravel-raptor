@@ -14,6 +14,7 @@ use Callcocam\LaravelRaptor\Support\Form\Columns\Types\CheckboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\ComboboxField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\EmailField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\PasswordField;
+use Callcocam\LaravelRaptor\Support\Form\Columns\Types\SelectSearchField;
 use Callcocam\LaravelRaptor\Support\Form\Columns\Types\TextField;
 use Callcocam\LaravelRaptor\Support\Form\Form;
 use Callcocam\LaravelRaptor\Support\Info\Columns\Types\TextColumn as TextInfolist;
@@ -56,7 +57,7 @@ class UserController extends LandlordController
     protected function form(Form $form): Form
     {
         $form->columns([
-            ComboboxField::make(
+            SelectSearchField::make(
                 'tenant_id',
                 config('raptor.controllers.users.form.tenant_id.label', __('Tenant'))
             )

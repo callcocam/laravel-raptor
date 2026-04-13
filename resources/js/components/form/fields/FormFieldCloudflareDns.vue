@@ -43,10 +43,11 @@
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-12">
           <div class="sm:col-span-4">
             <label class="mb-1 block text-sm font-medium">Nome (subdomínio ou FQDN)</label>
-            <Input
+            <input
               v-model="form.name"
+              type="text"
               placeholder="www ou sub.seudominio.com"
-              class="w-full"
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             />
           </div>
           <div class="sm:col-span-2">
@@ -62,25 +63,26 @@
           </div>
           <div class="sm:col-span-4">
             <label class="mb-1 block text-sm font-medium">Conteúdo</label>
-            <Input
+            <input
               v-model="form.content"
+              type="text"
               placeholder="IP ou valor do registro"
-              class="w-full"
+              class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             />
           </div>
           <div class="sm:col-span-2 flex items-end gap-2">
-            <label class="flex items-center gap-2 text-sm">
-              <Checkbox :checked="form.proxied" @update:model-value="(v: boolean | 'indeterminate') => (form.proxied = v === true)" />
+            <label class="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" v-model="form.proxied" class="h-4 w-4 rounded border-primary accent-primary" />
               Proxied
             </label>
-            <Button
+            <button
               type="button"
-              size="sm"
               :disabled="!canCreate || creating"
+              class="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
               @click="createRecord"
             >
               {{ creating ? 'Criando...' : 'Criar' }}
-            </Button>
+            </button>
           </div>
         </div>
         <p v-if="createError" class="text-sm text-destructive">{{ createError }}</p>
@@ -90,15 +92,14 @@
       <div v-if="selectedZoneId" class="space-y-2">
         <div class="flex items-center justify-between">
           <h4 class="text-sm font-medium">Registros da zone</h4>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
             :disabled="loadingRecords"
+            class="inline-flex h-8 items-center rounded-md px-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground disabled:opacity-50 transition-colors"
             @click="fetchRecords"
           >
             {{ loadingRecords ? 'Atualizando...' : 'Atualizar' }}
-          </Button>
+          </button>
         </div>
         <div v-if="loadingRecords && records.length === 0" class="text-sm text-muted-foreground">
           Carregando registros...
@@ -113,16 +114,14 @@
             class="flex items-center justify-between px-3 py-2 text-sm"
           >
             <span>{{ r.type }} {{ r.name }} → {{ r.content }}</span>
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="sm"
-              class="text-destructive hover:text-destructive"
               :disabled="deletingId === r.id"
+              class="inline-flex h-7 items-center rounded px-2 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50 transition-colors"
               @click="deleteRecord(r)"
             >
               {{ deletingId === r.id ? 'Removendo...' : 'Remover' }}
-            </Button>
+            </button>
           </li>
         </ul>
       </div>
@@ -138,8 +137,6 @@ import {
   FieldLegend,
   FieldDescription,
 } from '~/components/ui/field'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
 import {
   Select,
   SelectContent,
@@ -147,7 +144,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '~/components/ui/select'
-import { Checkbox } from '~/components/ui/checkbox'
 
 interface FormColumn {
   name: string

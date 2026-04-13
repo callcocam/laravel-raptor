@@ -9,69 +9,54 @@
     <div class="flex items-center gap-2">
       <!-- Collapse/Expand All -->
       <template v-if="collapsible && totalItems > 0">
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="sm"
+          class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
           @click="$emit('collapseAll')"
         >
-          <ActionIconBox variant="outline">
-            <ChevronsDown />
-          </ActionIconBox>
+          <ChevronsDown class="h-4 w-4" />
           Recolher tudo
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          variant="outline"
-          size="sm"
+          class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm hover:bg-accent hover:text-accent-foreground transition-colors"
           @click="$emit('expandAll')"
         >
-          <ActionIconBox variant="outline">
-            <ChevronsUp />
-          </ActionIconBox>
+          <ChevronsUp class="h-4 w-4" />
           Expandir tudo
-        </Button>
+        </button>
       </template>
     </div>
 
     <!-- Right Actions -->
     <div class="flex items-center gap-2">
       <!-- Clear All -->
-      <Button
+      <button
         v-if="totalItems > 0 && canClearAll"
         type="button"
-        variant="outline"
-        size="sm"
-        class="text-destructive hover:text-destructive"
+        class="inline-flex h-8 items-center gap-1.5 rounded-md border border-input bg-background px-3 text-sm text-destructive hover:bg-destructive/10 transition-colors"
         @click="$emit('clearAll')"
       >
-        <ActionIconBox variant="destructive">
-          <Trash2 />
-        </ActionIconBox>
+        <Trash2 class="h-4 w-4" />
         Limpar tudo
-      </Button>
+      </button>
 
       <!-- Add Button -->
-      <Button
+      <button
         v-if="canAdd"
         type="button"
-        variant="default"
-        size="sm"
+        class="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-sm text-primary-foreground hover:bg-primary/90 transition-colors"
         @click="$emit('add')"
       >
-        <ActionIconBox variant="default">
-          <Plus />
-        </ActionIconBox>
+        <Plus class="h-4 w-4" />
         {{ addButtonLabel }}
-      </Button>
+      </button>
       <slot />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Button } from '~/components/ui/button'
-import ActionIconBox from '~/components/ui/ActionIconBox.vue'
 import { Plus, Trash2, ChevronsDown, ChevronsUp } from 'lucide-vue-next'
 
 interface Props {

@@ -1,12 +1,8 @@
 <!--
  * FormFieldMultiSelect - Multi-select field component
  *
- * Features:
- * - Multiple selections with v-model binding
- * - Static options or dynamic API loading
- * - Search functionality with debounce
- * - Autocomplete fields support
- * - Popover UI for better UX
+ * Componente nativo sem dependências shadcn/vue.
+ * Suporte a múltiplas seleções, busca, API e autoComplete.
  -->
 <template>
     <Field orientation="vertical" :data-invalid="hasError" class="gap-y-1">
@@ -26,94 +22,123 @@
             <span class="text-sm text-muted-foreground">Carregando opções...</span>
         </div>
 
-        <!-- Multi-Select with Popover -->
-        <Popover v-else :open="isOpen" @update:open="isOpen = $event">
-            <PopoverTrigger as-child>
-                <Button
-                    variant="outline"
-                    :class="[
-                        'w-full justify-start text-left font-normal',
-                        !selectedValues.length && 'text-muted-foreground',
-                    ]"
-                >
-                    <span v-if="selectedValues.length === 0">
-                        {{ column.placeholder || 'Selecionar...' }}
-                    </span>
-                    <span v-else>
-                        {{ selectedValues.length }} selecionado(s)
-                    </span>
-                    <ChevronDown class="ml-auto h-4 w-4 opacity-50" />
-                </Button>
-            </PopoverTrigger>
+        <!-- Multi-Select nativo -->
+        <div v-else class="relative" ref="containerRef">
+            <!-- Trigger -->
+            <button
+                type="button"
+                :class="[
+                    'flex h-9 w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm',
+                    'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                    hasError ? 'border-destructive' : 'border-input',
+                    !selectedValues.length ? 'text-muted-foreground' : 'text-foreground',
+                ]"
+                @click="toggleOpen"
+            >
+                <span v-if="selectedValues.length === 0">
+                    {{ column.placeholder || 'Selecionar...' }}
+                </span>
+                <span v-else class="text-foreground">
+                    {{ selectedValues.length }} selecionado(s)
+                </span>
+                <div class="flex items-center gap-1">
+                    <button
+                        v-if="selectedValues.length > 0"
+                        type="button"
+                        class="text-muted-foreground hover:text-foreground"
+                        @click.stop="clearAll"
+                        aria-label="Limpar seleção"
+                    >
+                        <X class="h-3.5 w-3.5" />
+                    </button>
+                    <ChevronDown class="h-4 w-4 opacity-50" />
+                </div>
+            </button>
 
-            <PopoverContent class="w-80 p-0">
-                <div class="space-y-2 p-3">
-                    <!-- Search input if searchable -->
-                    <div v-if="column.searchable" class="px-1">
-                        <Input
+            <!-- Dropdown -->
+            <Transition
+                enter-active-class="transition-all duration-150 ease-out"
+                leave-active-class="transition-all duration-100 ease-in"
+                enter-from-class="opacity-0 scale-95"
+                enter-to-class="opacity-100 scale-100"
+                leave-from-class="opacity-100 scale-100"
+                leave-to-class="opacity-0 scale-95"
+            >
+                <div
+                    v-if="isOpen"
+                    class="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md"
+                >
+                    <div class="p-2 space-y-2">
+                        <!-- Search input -->
+                        <input
+                            v-if="column.searchable"
+                            ref="searchInputRef"
                             v-model="searchQuery"
                             type="text"
                             placeholder="Buscar..."
-                            class="h-8"
+                            class="flex h-8 w-full rounded-sm border border-input bg-background px-2 py-1 text-sm outline-none placeholder:text-muted-foreground focus:ring-1 focus:ring-ring"
                             @input="handleSearch"
+                            @keydown.escape="close"
                         />
-                    </div>
 
-                    <!-- Selected items as badges with remove -->
-                    <div
-                        v-if="selectedValues.length > 0"
-                        class="flex flex-wrap gap-2 rounded-md bg-muted/50 p-2"
-                    >
-                        <Badge
-                            v-for="value in selectedValues"
-                            :key="value"
-                            variant="secondary"
-                            class="gap-1 whitespace-nowrap"
-                        >
-                            {{ getLabelForValue(value) }}
-                            <button
-                                type="button"
-                                class="ml-1 hover:text-foreground"
-                                @click="removeValue(value)"
-                                @keydown.enter="removeValue(value)"
-                                @keydown.space="removeValue(value)"
-                            >
-                                <X class="h-3 w-3" />
-                            </button>
-                        </Badge>
-                    </div>
-
-                    <!-- Options list -->
-                    <div class="max-h-48 overflow-y-auto rounded-md border">
+                        <!-- Selected badges -->
                         <div
-                            v-if="availableOptions.length === 0"
-                            class="py-6 text-center text-sm text-muted-foreground"
+                            v-if="selectedValues.length > 0"
+                            class="flex flex-wrap gap-1 rounded-md bg-muted/50 p-2"
                         >
-                            {{
-                                searchQuery
-                                    ? 'Nenhuma opção encontrada'
-                                    : 'Nenhuma opção disponível'
-                            }}
+                            <span
+                                v-for="value in selectedValues"
+                                :key="value"
+                                class="inline-flex items-center gap-1 rounded-full border border-transparent bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs font-semibold"
+                            >
+                                {{ getLabelForValue(value) }}
+                                <button
+                                    type="button"
+                                    class="ml-0.5 hover:text-foreground"
+                                    @click.stop="removeValue(value)"
+                                >
+                                    <X class="h-3 w-3" />
+                                </button>
+                            </span>
                         </div>
 
-                        <button
-                            v-for="option in availableOptions"
-                            :key="getOptionValue(option)"
-                            type="button"
-                            class="flex w-full cursor-pointer items-center justify-start gap-2 px-2 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:outline-none"
-                            @click="toggleValue(option)"
-                        >
-                            <Checkbox
-                                :model-value="isSelected(option)"
-                                :disabled="false"
-                                class="pointer-events-none"
-                            />
-                            <span class="flex-1 text-start">{{ getOptionLabel(option) }}</span>
-                        </button>
+                        <!-- Options list -->
+                        <div class="max-h-48 overflow-y-auto rounded-md border border-border">
+                            <div
+                                v-if="availableOptions.length === 0"
+                                class="py-6 text-center text-sm text-muted-foreground"
+                            >
+                                {{
+                                    searchQuery
+                                        ? 'Nenhuma opção encontrada'
+                                        : 'Nenhuma opção disponível'
+                                }}
+                            </div>
+                            <button
+                                v-for="option in availableOptions"
+                                :key="getOptionValue(option)"
+                                type="button"
+                                class="flex w-full items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:outline-none"
+                                @click.stop="toggleValue(option)"
+                            >
+                                <!-- Native checkbox visual -->
+                                <span
+                                    :class="[
+                                        'inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary',
+                                        isSelected(option)
+                                            ? 'bg-primary text-primary-foreground'
+                                            : 'bg-background',
+                                    ]"
+                                >
+                                    <Check v-if="isSelected(option)" class="h-3 w-3 stroke-[3]" />
+                                </span>
+                                <span class="flex-1 text-left">{{ getOptionLabel(option) }}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </PopoverContent>
-        </Popover>
+            </Transition>
+        </div>
 
         <FieldDescription v-if="column.helperText">
             {{ column.helperText }}
@@ -124,23 +149,10 @@
 </template>
 
 <script setup lang="ts">
-import { Badge } from '~/components/ui/badge';
-import { Button } from '~/components/ui/button';
-import { Checkbox } from '~/components/ui/checkbox';
-import {
-    Field,
-    FieldDescription,
-    FieldError,
-    FieldLabel,
-} from '~/components/ui/field';
-import { Input } from '~/components/ui/input';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '~/components/ui/popover';
-import { ChevronDown, Loader2, X } from 'lucide-vue-next';
-import { computed, onMounted, ref, watch } from 'vue';
+import { Check, ChevronDown, Loader2, X } from 'lucide-vue-next';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import { onClickOutside } from '@vueuse/core';
+import { Field, FieldDescription, FieldError, FieldLabel } from '~/components/ui/field';
 
 interface FormColumn {
     name: string;
@@ -182,17 +194,17 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: string[]): void;
-    (
-        e: 'autoComplete',
-        data: { source: string; target: string; value: any },
-    ): void;
+    (e: 'autoComplete', data: { source: string; target: string; value: any }): void;
 }>();
 
-// State
 const loading = ref(false);
 const searchQuery = ref('');
 const localOptions = ref<any[]>([]);
 const isOpen = ref(false);
+const containerRef = ref<HTMLElement | null>(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
+
+onClickOutside(containerRef, () => close());
 
 const selectedValues = computed({
     get: () => (Array.isArray(props.modelValue) ? props.modelValue : []),
@@ -201,94 +213,52 @@ const selectedValues = computed({
 
 const availableOptions = computed(() => {
     let options = localOptions.value;
-
     if (searchQuery.value && props.column.searchable) {
         const query = searchQuery.value.toLowerCase();
-        options = options.filter((opt) => {
-            const label = getOptionLabel(opt).toLowerCase();
-            return label.includes(query);
-        });
+        options = options.filter((opt) => getOptionLabel(opt).toLowerCase().includes(query));
     }
-
     return options;
 });
 
-const hasError = computed(() => {
-    return (
-        props.error &&
-        (Array.isArray(props.error) ? props.error.length > 0 : true)
-    );
-});
+const hasError = computed(
+    () => props.error && (Array.isArray(props.error) ? props.error.length > 0 : true),
+);
 
 const errorArray = computed(() => {
     if (!props.error) return [];
     const errors = Array.isArray(props.error) ? props.error : [props.error];
-    return errors.map((error) =>
-        typeof error === 'string' ? { message: error } : error
-    );
+    return errors.map((error) => (typeof error === 'string' ? { message: error } : error));
 });
 
-// Methods
 const getOptionValue = (option: any): string => {
-    if (typeof option === 'string' || typeof option === 'number') {
-        return String(option);
-    }
-
-    // Try 'value' key first (new format)
-    if ('value' in option) {
-        return String(option.value);
-    }
-
-    // Fallback to configured key
-    const valueKey =
-        props.column.autoComplete?.optionValueKey ||
-        props.column.valueColumn ||
-        'id';
+    if (typeof option === 'string' || typeof option === 'number') return String(option);
+    if ('value' in option) return String(option.value);
+    const valueKey = props.column.autoComplete?.optionValueKey || props.column.valueColumn || 'id';
     return String(option[valueKey] ?? option.id);
 };
 
 const getOptionLabel = (option: any): string => {
     if (typeof option === 'string') return option;
     if (typeof option === 'number') return String(option);
-
-    // Try 'label' key first (new format)
-    if ('label' in option && option.label) {
-        return String(option.label);
-    }
-
-    // Fallback to configured key
-    const labelKey =
-        props.column.autoComplete?.optionLabelKey ||
-        props.column.labelColumn ||
-        'name';
+    if ('label' in option && option.label) return String(option.label);
+    const labelKey = props.column.autoComplete?.optionLabelKey || props.column.labelColumn || 'name';
     return String(option[labelKey] ?? option.name ?? option.id);
 };
 
 const getLabelForValue = (value: string): string => {
-    const option = localOptions.value.find(
-        (opt) => getOptionValue(opt) === value,
-    );
+    const option = localOptions.value.find((opt) => getOptionValue(opt) === value);
     return option ? getOptionLabel(option) : value;
 };
 
-const isSelected = (option: any): boolean => {
-    const value = getOptionValue(option);
-    return selectedValues.value.includes(value);
-};
+const isSelected = (option: any): boolean => selectedValues.value.includes(getOptionValue(option));
 
 const toggleValue = (option: any) => {
     const value = getOptionValue(option);
-
     if (isSelected(option)) {
         selectedValues.value = selectedValues.value.filter((v) => v !== value);
     } else {
         selectedValues.value = [...selectedValues.value, value];
-
-        // Trigger autoComplete if configured
-        if (
-            props.column.autoComplete?.enabled &&
-            props.column.autoComplete.fields.length > 0
-        ) {
+        if (props.column.autoComplete?.enabled && props.column.autoComplete.fields.length > 0) {
             const optionData = props.optionsData[value] || option;
             props.column.autoComplete.fields.forEach((field) => {
                 emit('autoComplete', {
@@ -305,12 +275,27 @@ const removeValue = (value: string) => {
     selectedValues.value = selectedValues.value.filter((v) => v !== value);
 };
 
+const clearAll = () => {
+    selectedValues.value = [];
+};
+
+function toggleOpen() {
+    isOpen.value = !isOpen.value;
+    if (isOpen.value && props.column.searchable) {
+        nextTick(() => searchInputRef.value?.focus());
+    }
+}
+
+function close() {
+    isOpen.value = false;
+    searchQuery.value = '';
+}
+
 const handleSearch = (() => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     return () => {
         if (timeout) clearTimeout(timeout);
         if (!props.column.searchable) return;
-
         timeout = setTimeout(() => {
             if (props.column.apiEndpoint && searchQuery.value.length > 0) {
                 loadFromApi();
@@ -321,21 +306,16 @@ const handleSearch = (() => {
 
 const loadOptions = async () => {
     loading.value = true;
-
     try {
         if (props.column.options) {
-            // Use provided options
             const opts = props.column.options;
             if (Array.isArray(opts)) {
                 localOptions.value = opts;
             } else {
-                // Convert object to array
-                localOptions.value = Object.entries(opts).map(
-                    ([value, label]) => ({
-                        id: value,
-                        name: label,
-                    }),
-                );
+                localOptions.value = Object.entries(opts).map(([value, label]) => ({
+                    id: value,
+                    name: label,
+                }));
             }
         } else if (props.column.apiEndpoint) {
             await loadFromApi();
@@ -349,20 +329,13 @@ const loadOptions = async () => {
 
 const loadFromApi = async () => {
     if (!props.column.apiEndpoint) return;
-
     try {
         const url = new URL(props.column.apiEndpoint, window.location.origin);
-        if (searchQuery.value) {
-            url.searchParams.append('search', searchQuery.value);
-        }
-
+        if (searchQuery.value) url.searchParams.append('search', searchQuery.value);
         const response = await fetch(url.toString());
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
         const data = await response.json();
-        localOptions.value = Array.isArray(data)
-            ? data
-            : data.data || data.options || [];
+        localOptions.value = Array.isArray(data) ? data : data.data || data.options || [];
     } catch (error) {
         console.error('Error loading options from API:', error);
         localOptions.value = [];
@@ -371,14 +344,10 @@ const loadFromApi = async () => {
 
 const loadFromTable = async () => {
     if (!props.column.table) return;
-
     try {
-        // This would typically use a route helper or similar
-        // For now, we'll assume an API endpoint format
         const endpoint = `/api/${props.column.table}`;
         const response = await fetch(endpoint);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
         const data = await response.json();
         localOptions.value = Array.isArray(data) ? data : data.data || [];
     } catch (error) {
@@ -387,18 +356,12 @@ const loadFromTable = async () => {
     }
 };
 
-// Lifecycle
-onMounted(() => {
-    loadOptions();
-});
+onMounted(() => loadOptions());
 
-// Watch for changes to apiEndpoint to reload
 watch(
     () => props.column.apiEndpoint,
     () => {
-        if (props.column.apiEndpoint) {
-            loadOptions();
-        }
+        if (props.column.apiEndpoint) loadOptions();
     },
 );
 </script>

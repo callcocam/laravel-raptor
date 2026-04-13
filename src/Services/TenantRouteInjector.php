@@ -78,7 +78,7 @@ class TenantRouteInjector
     protected function loadDirectories(array $directories = [], ?string $context = null): void
     {
         if (! empty($directories)) {
-            $this->controllerDirectories = $directories;
+            $this->controllerDirectories = array_merge($directories, config("raptor.route_injector.contexts.{$context}", []));
 
             return;
         }
