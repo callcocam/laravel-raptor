@@ -20,6 +20,8 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 class PermissionController extends TenantController
 {
@@ -46,6 +48,26 @@ class PermissionController extends TenantController
                 ->resource(config('raptor.shinobi.models.permission', \Callcocam\LaravelRaptor\Support\Shinobi\Models\Permission::class))
                 ->middlewares(config('raptor.controllers.permissions.index.middlewares', ['auth', 'verified'])),
         ];
+    }
+
+    protected function queryBuilder(): Builder
+    {
+        $model = app($this->model());
+        $query = $model->newQuery();
+        $connection = $model->getConnectionName() ?: config('database.default');
+        $table = $model->getTable();
+
+        if (Schema::connection($connection)->hasColumn($table, 'context')) {
+            $query->where('context', 'tenant');
+        }
+
+        if (Schema::connection($connection)->hasColumn($table, 'tenant_id')) {
+            $query->where(function (Builder $inner) {
+                $inner->where('tenant_id', tenant_id())->orWhereNull('tenant_id');
+            });
+        }
+
+        return $query;
     }
 
     protected function form(Form $form): Form

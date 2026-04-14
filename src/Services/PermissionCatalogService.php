@@ -41,9 +41,13 @@ class PermissionCatalogService
         'horizon',
         'analysis',
         'execution',
+        'executions',
         'verification',
         'cloudflare',
         'api',
+        'filepond',
+        'profile',
+        'profiles',
         'login',
         'logout',
         'password',
@@ -68,6 +72,8 @@ class PermissionCatalogService
     protected array $actionAliases = [
         'store' => 'create',
         'update' => 'edit',
+        'destroy' => 'delete',
+        'execute' => 'create',
         'viewAny' => 'index',
     ];
 
@@ -136,6 +142,17 @@ class PermissionCatalogService
         'categories' => 'Categorias',
         'clients' => 'Clientes',
         'clusters' => 'Clusters',
+        'dashboards' => 'Dashboards',
+        'dimensions' => 'Dimensões',
+        'gondolas' => 'Gôndolas',
+        'images' => 'Imagens',
+        'incons' => 'Ícones',
+        'settings' => 'Configurações',
+        'social-providers' => 'Provedores Sociais',
+        'translates' => 'Traduções',
+        'providers' => 'Fornecedores',
+        'sales' => 'Vendas',
+        'workflows' => 'Fluxos',
         'orders' => 'Pedidos',
         'planograms' => 'Planogramas',
         'products' => 'Produtos',
@@ -190,7 +207,7 @@ class PermissionCatalogService
 
                 $permissions->push([
                     'slug' => $slug,
-                    'name' => $this->getFriendlyName($normalizedAction, $resourceName),
+                    'name' => $this->getFriendlyName($normalizedAction, $resourceName, $context),
                     'description' => $this->getFriendlyDescription($normalizedAction, $resourceName),
                     'resource' => $resourceName,
                     'action' => $normalizedAction,
@@ -271,16 +288,31 @@ class PermissionCatalogService
     /**
      * Lista slugs de permissões existentes na conexão informada.
      */
-    public function getExistingPermissionSlugs(string $connection): Collection
+    public function getExistingPermissionSlugs(string $connection, ?string $context = null): Collection
     {
         $table = $this->getPermissionsTable();
         if (! $this->tableExists($connection, $table)) {
             return collect();
         }
 
+        $columns = $this->getTableColumns($connection, $table);
         $query = DB::connection($connection)->table($table);
         if ($this->tableHasColumn($connection, $table, 'deleted_at')) {
             $query->whereNull('deleted_at');
+        }
+
+        if (is_string($context) && $context !== '') {
+            if (in_array('context', $columns, true)) {
+                $query->where(function ($inner) use ($context) {
+                    $inner->where('context', $context)
+                        ->orWhere(function ($legacy) use ($context) {
+                            $legacy->whereNull('context')
+                                ->where('slug', 'like', "{$context}.%");
+                        });
+                });
+            } else {
+                $query->where('slug', 'like', "{$context}.%");
+            }
         }
 
         return $query->pluck('slug')
@@ -290,6 +322,13 @@ class PermissionCatalogService
 
     public function shouldIgnorePermissionSlug(string $slug): bool
     {
+        $parts = explode('.', $slug);
+        $context = $parts[0] ?? null;
+
+        if (is_string($context) && $context !== '' && $this->shouldIgnoreResource($context)) {
+            return true;
+        }
+
         $resource = $this->extractResourceFromSlug($slug);
 
         return $resource !== null && $this->shouldIgnoreResource($resource);
@@ -306,6 +345,24 @@ class PermissionCatalogService
         }
 
         return Route::has($slug);
+    }
+
+    /**
+     * Retorna aliases de ações para normalização canônica.
+     *
+     * @return array<string, string>
+     */
+    public function getActionAliases(): array
+    {
+        return $this->actionAliases;
+    }
+
+    /**
+     * Normaliza uma ação para sua forma canônica.
+     */
+    public function canonicalAction(string $action): string
+    {
+        return $this->normalizeAction($action);
     }
 
     protected function discoverControllersByContext(): array
@@ -359,7 +416,38 @@ class PermissionCatalogService
 
     protected function shouldIgnoreResource(string $resource): bool
     {
-        return in_array($this->normalizeResourceName($resource), $this->ignoredResources, true);
+        $normalized = Str::kebab(Str::lower($resource));
+        if ($this->isIgnoredToken($normalized)) {
+            return true;
+        }
+
+        // Cobre casos compostos como "api-sections", "api-shelves", etc.
+        $tokens = array_values(array_filter(explode('-', $normalized)));
+        foreach ($tokens as $token) {
+            if ($this->isIgnoredToken($token)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function isIgnoredToken(string $token): bool
+    {
+        $token = Str::kebab(Str::lower($token));
+        $candidates = [
+            $token,
+            Str::singular($token),
+            Str::plural($token),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if (in_array($candidate, $this->ignoredResources, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     protected function extractResourceFromSlug(string $slug): ?string
@@ -388,12 +476,13 @@ class PermissionCatalogService
         return $this->actionAliases[$action] ?? $action;
     }
 
-    protected function getFriendlyName(string $action, string $resource): string
+    protected function getFriendlyName(string $action, string $resource, ?string $context = null): string
     {
         $actionLabel = data_get($this->actionLabels, "{$action}.name", Str::title($action));
         $resourceLabel = $this->getResourceLabel($resource);
+        $contextPrefix = $context === 'landlord' ? 'Admin ' : '';
 
-        return "{$actionLabel} {$resourceLabel}";
+        return "{$contextPrefix}{$actionLabel} {$resourceLabel}";
     }
 
     protected function getFriendlyDescription(string $action, string $resource): string
@@ -548,4 +637,3 @@ class PermissionCatalogService
         }
     }
 }
-

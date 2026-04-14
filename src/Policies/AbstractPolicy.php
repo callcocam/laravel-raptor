@@ -132,7 +132,8 @@ abstract class AbstractPolicy
             return false;
         }
 
-        return $this->hasAnyPermission($user, $this->generatePermissionName('delete'));
+        return $this->hasAnyPermission($user, $this->generatePermissionName('delete'))
+            || $this->hasAnyPermission($user, $this->generatePermissionName('destroy'));
     }
 
     /**

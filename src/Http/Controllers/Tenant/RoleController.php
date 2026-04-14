@@ -21,6 +21,8 @@ use Callcocam\LaravelRaptor\Support\Table\Columns\Types\BooleanColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\DateColumn;
 use Callcocam\LaravelRaptor\Support\Table\Columns\Types\TextColumn;
 use Callcocam\LaravelRaptor\Support\Table\TableBuilder;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Schema;
 
 class RoleController extends TenantController
 {
@@ -71,7 +73,34 @@ class RoleController extends TenantController
                 ->columnSpan(config('raptor.controllers.roles.form.description.columnSpan', '12')),
 
             CheckboxField::make('permissions', config('raptor.controllers.roles.form.permissions.label', __('Permissões')))
-                ->relationship('permissions', 'name')
+                ->relationship('permissions', 'name', 'id', function ($query, $request, $relationshipField = 'name') {
+                    if (! $query instanceof Builder) {
+                        $query = $query->newQuery();
+                    }
+
+                    $model = $query->getModel();
+                    $connection = $model->getConnectionName() ?: config('database.default');
+                    $table = $model->getTable();
+
+                    if (Schema::connection($connection)->hasColumn($table, 'context')) {
+                        $query->where('context', 'tenant');
+                    }
+
+                    if (Schema::connection($connection)->hasColumn($table, 'tenant_id')) {
+                        $tenantId = function_exists('tenant_id') ? tenant_id() : null;
+                        $query->where(function (Builder $inner) use ($tenantId) {
+                            if ($tenantId) {
+                                $inner->where('tenant_id', $tenantId)->orWhereNull('tenant_id');
+
+                                return;
+                            }
+
+                            $inner->whereNull('tenant_id');
+                        });
+                    }
+
+                    return $query->orderBy($relationshipField);
+                })
                 ->multiple()
                 ->columns(2)
                 ->searchable()
