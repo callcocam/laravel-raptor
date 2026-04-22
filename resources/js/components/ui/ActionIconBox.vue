@@ -33,6 +33,6 @@ const wrapperClasses = computed(() => {
     secondary: 'bg-secondary text-secondary-foreground dark:text-primary-foreground',
     ghost: 'bg-muted/50 text-muted-foreground dark:text-primary-foreground',
   }
-  return cn(base, variants[props.variant], props.class)
+  return cn(base,   props.class)
 })
 </script>
