@@ -22,7 +22,7 @@ export const ACTION_STYLE = {
     'flex items-center gap-2 rounded-xl border border-slate-600 bg-slate-800 px-3 py-[5px] text-xs font-medium text-white shadow-xs transition-all hover:border-slate-500 hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none btn-gradient',
   buttonClassesDisabled: 'disabled:opacity-50 disabled:pointer-events-none',
   iconWrapperClasses:
-    'flex items-center justify-center rounded-lg p-0.5 shrink-0 bg-primary  text-primary-foreground',
+    '',
   iconClasses: 'size-5',
   labelClasses: 'text-sm font-semibold text-white',
 } as const
