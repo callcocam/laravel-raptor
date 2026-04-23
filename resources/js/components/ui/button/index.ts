@@ -8,15 +8,15 @@ export const buttonVariants = cva(
         variants: {
             variant: {
                 default:
-                    'border-border bg-foreground text-background shadow-xs hover:bg-foreground/90 dark:border-border dark:bg-foreground dark:text-background dark:hover:bg-foreground/90',
+                    'border-border/70 bg-transparent text-foreground shadow-none hover:border-border hover:bg-accent/45 hover:text-accent-foreground dark:border-border/70 dark:bg-transparent dark:text-foreground dark:hover:border-border dark:hover:bg-accent/35',
                 create:
                     'border-slate-600/80 bg-primary text-primary-foreground shadow-xs hover:border-slate-500 hover:bg-primary/90 btn-gradient dark:border-slate-500/60 dark:hover:border-slate-400/60',
                 destructive:
-                    'border-destructive/80 bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/70 dark:border-destructive/60',
+                    'border-destructive/35 bg-transparent text-destructive/80 shadow-none hover:border-destructive/55 hover:bg-destructive/8 hover:text-destructive focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-transparent dark:border-destructive/40 dark:text-destructive/80',
                 outline:
                     'border-border bg-background text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:text-foreground dark:hover:bg-input/50',
                 secondary:
-                    'border-secondary/80 bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80 dark:border-secondary/60',
+                    'border-muted-foreground/25 bg-transparent text-muted-foreground shadow-none hover:border-muted-foreground/40 hover:bg-muted/45 hover:text-foreground dark:border-muted-foreground/30 dark:bg-transparent dark:text-muted-foreground dark:hover:border-muted-foreground/45 dark:hover:bg-muted/35 dark:hover:text-foreground',
                 ghost:
                     'border-transparent text-foreground hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
                 link: 'border-transparent text-primary underline-offset-4 hover:underline',
